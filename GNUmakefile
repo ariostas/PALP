@@ -28,30 +28,33 @@ CFLAGS ?= -O3 -g -W -Wall
 #             command
 #             ...
 
-all:	poly class cws nef mori
+.PHONY: all
+all: poly.x class.x cws.x nef.x mori.x
 
+.PHONY: clean
 clean:	;	rm -f *.o
 
+.PHONY: cleanall
 cleanall: ;	rm -f *.o *.x palp_* core
 
 
-poly:	poly.o $(OBJECTS) LG.o Global.h LG.h
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o poly.x poly.o $(OBJECTS) LG.o
+poly.x: poly.o $(OBJECTS) LG.o Global.h LG.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ poly.o $(OBJECTS) LG.o
 
-class:	class.o $(OBJECTS) $(CLASS_OBJ) Global.h Subpoly.h
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o class.x \
+class.x: class.o $(OBJECTS) $(CLASS_OBJ) Global.h Subpoly.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ \
                 class.o $(OBJECTS) $(CLASS_OBJ)
 
-cws:    cws.o $(OBJECTS) LG.o Global.h LG.h
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o cws.x \
+cws.x: cws.o $(OBJECTS) LG.o Global.h LG.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ \
                 cws.o $(OBJECTS) LG.o
 
-nef:    nef.o $(OBJECTS) $(NEF_OBJ) Global.h 
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o nef.x \
+nef.x: nef.o $(OBJECTS) $(NEF_OBJ) Global.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ \
                 nef.o $(OBJECTS) $(NEF_OBJ)
 
-mori:   mori.o  $(OBJECTS) $(MORI_OBJ) LG.o Mori.h 
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o mori.x \
+mori.x: mori.o $(OBJECTS) $(MORI_OBJ) LG.o Mori.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ \
                 mori.o $(OBJECTS) $(MORI_OBJ) LG.o
 
 
