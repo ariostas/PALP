@@ -1,5 +1,15 @@
 # PALP
 
+This is a first attempt to crate a gitlab repository for the PALP project as explained in 
+http://hep.itp.tuwien.ac.at/~kreuzer/CY/CYpalp.html
+
+##
+##
+##
+##
+
+The rest is the original README file from gitlab
+
 
 
 ## Getting started
