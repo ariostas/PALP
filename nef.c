@@ -112,7 +112,7 @@ int Make_Mirror(EPoly *_EP, int h[][POLY_Dmax], int D, int dim);
 int main(int narg, char *fn[])
 {
     Flags F;
-    int N = 0, n = 0, FilterFlag = 0, VPmax = POINT_Nmax-1, VPmin = 0, Ef=0;
+    int N = 0, n = 0, FilterFlag = 0, VPmax = POINT_Nmax-1, VPmin = 0;
     CWS CW;
     Weight W;
     int D[2], codim=2;
@@ -187,8 +187,6 @@ int main(int narg, char *fn[])
 		F.N = 1;
 	    else if (fn[n][1] == 'v')
 		F.VP = 1;
-	    else if (fn[n][1] == 'e')
-		Ef=1;
 	    else if (fn[n][1] == 'n'){
 		F.n = 1;
 		F.p = 1;

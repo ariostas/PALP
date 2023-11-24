@@ -442,7 +442,7 @@ int  GLZ_Start_Simplex(PolyPointList *_P, VertexNumList *_V, CEqList *_C)
 	E=&_C->e[1]; E->c=0;
 	for(i=0;i<*d;i++)E->a[i]=Z[i];
 	E->c=-Eval_Eq_on_V(E,X,_P->n); 
-	assert(XX=Eval_Eq_on_V(E,_P->x[_V->v[*d-1]],_P->n)); 
+	XX=Eval_Eq_on_V(E,_P->x[_V->v[*d-1]],_P->n); assert(XX);
 	if(XX<0) {for(i=0;i<*d;i++)E->a[i]=-Z[i]; E->c*=-1;}
         for(x=*d-2;x>=0;x--)			/* omit vertex #x */
 	{   r=*d-x; for(y=x+1;y<*d;y++)
@@ -452,7 +452,7 @@ int  GLZ_Start_Simplex(PolyPointList *_P, VertexNumList *_V, CEqList *_C)
 	E=&_C->e[(_C->ne)++]; E->c=0;
 	for(i=0;i<*d;i++)E->a[i]=Z[i];
 	E->c=-Eval_Eq_on_V(E,X,_P->n); 
-	assert(XX=Eval_Eq_on_V(E,_P->x[_V->v[x]],_P->n)); 
+	XX=Eval_Eq_on_V(E,_P->x[_V->v[x]],_P->n);  assert(XX);
 	if(XX<0) {for(i=0;i<*d;i++)E->a[i]=-Z[i]; E->c*=-1;}
 	}
      } 

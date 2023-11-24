@@ -840,8 +840,8 @@ Long Aux_Vol_Barycent(PolyPointList *A, VertexNumList *V, EqList *E,
      if(A->np==1+D) return Simp_Vol_Barycent(A,F,_B,_N);
      p=A->np-1; *_N=1; 
      for(i=0;i<D;i++){_B[i]=A->x[0][i];		      /* choose origin _B[] */
-	for(j=0;j<A->np;j++)A->x[j][i]-=_B[i];} 
-     Find_Equations(A,V,E); assert(A->np=V->nv); for(e=0;e<D;e++) B[e]=0;
+       for(j=0;j<A->np;j++)A->x[j][i]-=_B[i];}
+     Find_Equations(A,V,E); assert(A->np==V->nv); for(e=0;e<D;e++) B[e]=0;
      for(i=0;i<p;i++)for(j=0;j<D;j++)P[i][j]=A->x[i+1][j];
      for(e=0;e<E->ne;e++) if(E->e[e].c){Eq[ne++]=E->e[e];assert(E->e[e].c>0);}
      for(e=0;e<ne;e++)
@@ -2620,7 +2620,7 @@ int Fano5d(PolyPointList *P,VertexNumList *V,EqList *E){
       Circuit(d,Y,C); for(i=0;i<=d;i++) {sum+=C[i]; 
 	if(C[i]>0) {if(C[i]>1) p2++; else p1++;} 
 	else if(C[i]<0) {if(C[i]<-1) m2++; else m1++;}}
-      if(sum || (m2*p2)) return 0;     /* Batyrev :: inconsistent projection */
+      if(sum || (m2 && p2)) return 0;  /* Batyrev :: inconsistent projection */
       CI[nc]=0; for(i=0;i<=d;i++) {D[p[i]]=0; if(C[i])CI[nc]+=1<<p[i];}
       for(i=0;i<nc;i++) if(CI[nc]==CI[i]) break;  /* already known circuit? */
       if(i==nc) {for(i=0;i<np;i++) CC[nc][i]=0;	  /* init new circuit */

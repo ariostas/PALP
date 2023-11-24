@@ -747,6 +747,7 @@ int int_ld(Long w){int i=-1; while (w) {w /= 2; i++;} return i;}
 
 void Initialize_C5S(C5stats *_C5S, int n){
   int k;
+  if (n < 5) {puts("Option '-Q' requires POLY_Dmax > 4!"); exit(0);};
   _C5S->n_nonIP = 0;
   _C5S->n_IP_nonRef = 0;
   _C5S->n_ref = 0;
@@ -768,6 +769,7 @@ void Initialize_C5S(C5stats *_C5S, int n){
 }
 
 void Update_C5S(BaHo *_BH, int *nf, Long *W, C5stats *_C5S){
+  assert(POLY_Dmax>4);
   if (_BH->np) { // reflexive case
     int i, chi = 48+6*(_BH->h1[1]-_BH->h1[2]+_BH->h1[3]), ld = int_ld(W[5]);
     assert(0<=ld); assert(ld<MAXLD);
@@ -796,6 +798,7 @@ void Update_C5S(BaHo *_BH, int *nf, Long *W, C5stats *_C5S){
     
 void Print_C5S(C5stats *_C5S){
   int i;
+  assert(POLY_Dmax>4);
   printf("non-IP: #=%ld\n", _C5S->n_nonIP);
   printf("IP, non-reflexive: #=%ld, max_mp=%d, max_mv=%d, max_nv=%d, max_w=%ld\n",
 	 _C5S->n_IP_nonRef, _C5S->nr_max_mp, _C5S->nr_max_mv, _C5S->nr_max_nv,

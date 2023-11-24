@@ -13,7 +13,7 @@
 
 #include "Global.h"
 #include "LG.h"
-#define OSL (41)  /* opt_string's length */
+#define OSL (42)  /* opt_string's length */
 
 
 FILE *inFILE, *outFILE;
@@ -36,6 +36,7 @@ void  PrintUsage(char *c){
   "r  ignore non-reflexive input       ",
   "o  ignore non-IP input       ",
   "q  quick version of og, incompatible with other options",   
+  "Q  like 'q', with statistics on weights for 5d classification",   
   "D  dual polytope as input (ref only)",
   "n  do not complete polytope or calculate Hodge numbers        ",
   "i  incidence information            ",
@@ -81,7 +82,7 @@ typedef	struct 	{int p[SYM_Nmax][VERT_Nmax];}		VPermList;
 int main (int narg, char* fn[]){
   int n=0, k, FilterFlag=0, lg=0, s=0, i=0, m=0, p=0, v=0, e=0, d=0, t=0, z=0,
     S=0, N=0, I=0, r=0, nc=0, g=0, D=0, IP, R, Tr, T=0, PS=0, VS=0, CD=0, ZS=1,
-    A=0, B=0, G=0, F=0, U=0, dd=0, Einstein=0, o=0, q=0;
+    A=0, B=0, G=0, F=0, U=0, dd=0, Einstein=0, o=0, q=0, Q=0;
   char c; 
   CWS *CW=(CWS *) malloc(sizeof(CWS));
   Weight W;
@@ -133,6 +134,7 @@ int main (int narg, char* fn[]){
       else if(c=='r') r=1;
       else if(c=='o') o=1;
       else if(c=='q') q=1;
+      else if(c=='Q') Q=1;
       else if(c=='n') nc=1;
       else if(c=='P') PS=1;
       else if(c=='V') VS=1;
@@ -161,14 +163,14 @@ int main (int narg, char* fn[]){
   if(i){
     FI=(FaceInfo *) malloc(sizeof(FaceInfo));
     if (FI==NULL) {puts("Unable to allocate space for FaceInfo FI"); exit(0);}}
-  if(q) Initialize_C5S(&C5S, _P->n); // Initialize statistics
+  if(Q) Initialize_C5S(&C5S, POLY_Dmax); // Initialize statistics
   if(Einstein) Einstein_Metric(CW,_P,&V,E);
   while(lg ? Read_W_PP(&W,_P) : Read_CWS_PP(CW,_P)) {
-    if(q) {
+    if(q||Q) {
       FaceInfo FI;
-      if (!QuickAnalysis(_P, &BH, &FI)) {C5S.n_nonIP++; continue;} //non-IP
+      if(!QuickAnalysis(_P, &BH, &FI)) {if(Q) C5S.n_nonIP++; continue;} //non-IP
       Print_CWH(CW, &BH);
-      Update_C5S(&BH, FI.nf, CW->W[0], &C5S);
+      if(Q) Update_C5S(&BH, FI.nf, CW->W[0], &C5S);
       continue;}
     if(T) {
       if (CW->nw) {
@@ -222,10 +224,10 @@ int main (int narg, char* fn[]){
 		       "Pairing matrix of vertices and equations of P");
     if(d&&(_DP->np>E->ne)) Print_PPL(_DP, "Points of P-dual");
     if(S||N||t){
-      int SymNum, VPMSymNum; Long NF[POLY_Dmax][VERT_Nmax]; 
+      int SymNum /*, VPMSymNum*/; Long NF[POLY_Dmax][VERT_Nmax]; 
       VPermList *VP = (VPermList*) malloc(sizeof(VPermList)); 
       assert(VP!=NULL);
-      VPMSymNum=Make_Poly_Sym_NF(_P, &V, E, &SymNum, VP->p, NF, t, S, N);
+      /* VPMSymNum=*/ Make_Poly_Sym_NF(_P, &V, E, &SymNum, VP->p, NF, t, S, N);
       free(VP);}
     if(R&&(PS||VS||CD)) IP_Simplices(_DP, (!D)*E->ne, PS*ZS, VS*ZS, CD);
     if(G) {
@@ -247,6 +249,6 @@ int main (int narg, char* fn[]){
       Make_ANF(_P,&V,E,ANF); 
       Print_Matrix(ANF, _P->n, V.nv,"Affine normal form");}
     fflush(outFILE);     }
-  if(q) Print_C5S(&C5S);
+  if(Q) Print_C5S(&C5S);
   return 0;
 }

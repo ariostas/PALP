@@ -591,7 +591,7 @@ void IREgcd(Long *vec_in, int *d, Long *vec_out){
       inv_perm[perm_j]=j-1;}
     REgcd(perm_vec_in, d, perm_vec_out);
     abs_sum=0;
-    for (j=0;j<*d;j++) abs_sum+=abs(perm_vec_out[j]);
+    for (j=0;j<*d;j++) abs_sum+=labs(perm_vec_out[j]);
     if ((i==0)||(abs_sum<max_abs_sum)){
       max_abs_sum=abs_sum;
       for (j=0;j<*d;j++) vec_out[j]=perm_vec_out[inv_perm[j]];    }  }
@@ -970,10 +970,12 @@ void Make_All_Sublat(NF_List *_L, int n, int v, subl_int diag[POLY_Dmax],
 		Print_PPL(_P,"");		}}}}}
 }
 
+subl_int SI_abs(subl_int x){return (x>0 ? x : -x);}
+
 int Line_Recomb(int i, int line, int v, int f, subl_int x[][VERT_Nmax]){
   int j, k, changes=0; 
   subl_int y11, y12, y21, y22, g, new_;	
-  if (abs(x[i][i])==1) return 0;
+  if (SI_abs(x[i][i])==1) return 0;
   for (j=line;j<f;j++){
     /* take a combination of i'th and j'th line such that x[i][i] becomes
        gcd(x[i][i],x[j][i]) */
@@ -1053,9 +1055,9 @@ void MakePolyOnSublat(NF_List *_L, subl_int x[VERT_Nmax][VERT_Nmax],
     for (lin=i;lin<f;lin++){
       subl_int lin_gcd=0, lin_max=0;
       for (col=i;col<v;col++) if(x[lin][col]){
-	if (!lin_gcd) lin_gcd=abs(x[lin][col]);
+	if (!lin_gcd) lin_gcd=SI_abs(x[lin][col]);
 	else lin_gcd=NNgcd(lin_gcd,x[lin][col]);
-	if (abs(x[lin][col])>lin_max) lin_max=abs(x[lin][col]);}
+	if (SI_abs(x[lin][col])>lin_max) lin_max=SI_abs(x[lin][col]);}
       if (lin_max) if ((!min_lin_gcd)||(lin_gcd<min_lin_gcd)||
 		       ((lin_gcd==min_lin_gcd)&&(lin_max<min_lin_max))){
 	chosen_lin=lin;
@@ -1067,24 +1069,24 @@ void MakePolyOnSublat(NF_List *_L, subl_int x[VERT_Nmax][VERT_Nmax],
 
     min_entry=min_lin_max+1;
     for (col=i;col<v;col++) 
-      if(x[chosen_lin][col]) if(abs(x[chosen_lin][col])<=min_entry){
+      if(x[chosen_lin][col]) if(SI_abs(x[chosen_lin][col])<=min_entry){
 	subl_int col_max=0;
-	for (lin=i;lin<f;lin++) if (abs(x[lin][col])>col_max) 
-	  col_max=abs(x[lin][col]);
+	for (lin=i;lin<f;lin++) if (SI_abs(x[lin][col])>col_max) 
+	  col_max=SI_abs(x[lin][col]);
 	if (!col_max){printf("col_max==0!!!"); exit(0);}
-	if ((chosen_col==-1)||(abs(x[chosen_lin][col])<min_entry)||
-	    ((abs(x[chosen_lin][col])==min_entry)&&(col_max<min_col_max))){
+	if ((chosen_col==-1)||(SI_abs(x[chosen_lin][col])<min_entry)||
+	    ((SI_abs(x[chosen_lin][col])==min_entry)&&(col_max<min_col_max))){
 	  chosen_col=col;
 	  min_col_max=col_max;}}
     
     lin_col_swap(i, chosen_lin, chosen_col, v, f, x, u);
 
     /* put gcd of remaining matrix elements at x[i][i] */
-    while(abs(x[i][i])>rem_gcd){
+    while(SI_abs(x[i][i])>rem_gcd){
       for (col=i+1;col<v;col++) if ((x[i][col]%x[i][i])) 
 	Col_Recomb(i,col,v,f,x,u);
       if (Line_Recomb(i,i+1,v,f,x)) continue;
-      if (abs(x[i][i])<=rem_gcd) break;
+      if (SI_abs(x[i][i])<=rem_gcd) break;
       for (col=i+1;col<v;col++){
 	for(j=i+1;(j<f)&&(!(x[j][col]%x[i][i]));j++);
 	if (j<f){
@@ -1104,7 +1106,7 @@ void MakePolyOnSublat(NF_List *_L, subl_int x[VERT_Nmax][VERT_Nmax],
     for (k=i+1;k<v;k++) if (x[i][k]){
       printf("error in MakePolyOnSublat!!!\n"); exit(0);}}
 
-  for (j=0;j<i;j++) order*=(diag[j]=abs(x[j][j]));
+  for (j=0;j<i;j++) order*=(diag[j]=SI_abs(x[j][j]));
   if (order>*max_order) *max_order=order;
   if (i>POLY_Dmax) {printf("diag has %d entries!!!\n", i); exit(0);}
   if (order>1) Make_All_Sublat(_L, i, v, diag, u, mFlag, _P);

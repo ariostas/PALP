@@ -1481,8 +1481,8 @@ void AnalyseGorensteinCone(CWS *_CW,  PolyPointList *_P, VertexNumList *_V,
     /* Print_Matrix(VPM_D, _E_D->ne, _V_D->nv, "VPM_D"); */
     Complete_Poly(VPM_D, _E_D, _V_D->nv, _P_D);
     /* Print_PPL(_P_D, "_P_D after Complete_Poly"); */
-    assert(_E_D->ne = _V->nv);
-    assert(_E->ne = _V_D->nv);
+    assert(_E_D->ne == _V->nv);
+    assert(_E->ne == _V_D->nv);
     /* Compute _new_E_D->ne by comparing VPM and VPM_D:
        if (VPM[j][i] == VPM_D[k][j]) for all j then _new_E_D->e[i] = _E_D[k] */
     _new_E_D->ne = _E_D->ne;

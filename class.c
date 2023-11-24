@@ -310,11 +310,13 @@ int  main (int narg, char* fn[])
   else if(mFlag=='r')     while(Read_CWS_PP(&W,_P)) Max_check(&W,_P);
   else if(mFlag=='v')     while(Read_CWS_PP(&W,_P)) DPvircheck(&W,_P);
   else if(mFlag=='l')     while(Read_CWS_PP(&W,_P)) DPircheck(&W,_P);
+#if (POLY_Dmax < 6)
   else if(HFlag=='c')     DB_to_Hodge(dbin, dbout, vf, vt,_P);
   else if(HFlag=='s')     Sort_Hodge(dbin, dbout);
   else if(HFlag=='f')     Test_Hodge_file(polyi,_P);
   else if(HFlag=='t')     Test_Hodge_db(dbin);
   else if(HFlag=='e')     Extract_from_Hodge_db(dbin,x_string,_P);
+#endif
   else if(*dbin&&!*polyo) Add_Polya_2_DBi(dbin,polya,dbout);
   else if(*dbout)         Polyi_2_DBo(polyi,dbout);
   else if(*polya)         Add_Polya_2_Polyi(polyi,polya,polyo);

@@ -270,14 +270,15 @@ int Make_triCD2F(triang *T,Inci64 *cd2I){int i,j,cd2n=0;
 
 int Check_Mori(PolyPointList *P,int p,triang *T){	// strongly convex(?)
   int nI=T->n; Inci64 *I=T->I, cd2F[CD2F_Nmax];
-  int i,j,r=0,d=P->n,ngen=0, ng0,nv,np; Long Z[POLY_Dmax+1]; VertexNumList V; 
+  int i,j,r=0,d=P->n,ngen=0, /*ng0,*/nv,np; Long Z[POLY_Dmax+1];
+  VertexNumList V; 
 			// int e0=0,nm=0,m[VERT_Nmax];; Inci64 IE[VERT_Nmax];
   PolyPointList *UT = (PolyPointList *) malloc(sizeof(PolyPointList));
   Matrix R,VT,G; EqList *E = (EqList*)malloc(sizeof(EqList)); 
 
   assert(E!=NULL); assert(UT!=NULL); 
   for(i=1;i<nI;i++)for(j=0;j<i;j++)ngen+=(Inci64_abs((I[i])&(I[j]))==d-1); 
-  Init_Matrix(&VT,d,d+1);Init_Matrix(&R,ngen,p);Init_Matrix(&G,p,p); ng0=ngen;
+  Init_Matrix(&VT,d,d+1);Init_Matrix(&R,ngen,p);Init_Matrix(&G,p,p);//ng0=ngen;
 assert(ngen==Make_triCD2F(T,cd2F));
   for(i=1;i<nI;i++)for(j=0;j<i;j++)if(Inci64_abs(Inci64_AND(I[i],I[j]))==d-1){
     int a,b; Inci64 Ia=I[i]|I[j]; Inci64_2_VNL(Ia,&V,p); assert(V.nv==d+1);
@@ -317,14 +318,14 @@ assert(Inci64_abs(Ia)==2); assert(b<d);
 
 
 void Print_Mori(PolyPointList *P,int p,int nI, Inci64 *I){
-  int i,j,r=0,d=P->n,ngen=0, ng0,e0=0,nm=0,nv,np; 
+  int i,j,r=0,d=P->n,ngen=0, /* ng0,*/ e0=0,nm=0,nv,np; 
   int m[VERT_Nmax]; Long Z[POLY_Dmax+1]; VertexNumList V; Inci64 IE[VERT_Nmax];
   PolyPointList *UT = (PolyPointList *) malloc(sizeof(PolyPointList));
   Matrix R,VT,G; EqList *E = (EqList*)malloc(sizeof(EqList)); 
 
   assert(E!=NULL); assert(UT!=NULL); 
   for(i=1;i<nI;i++)for(j=0;j<i;j++)ngen+=(Inci64_abs((I[i])&(I[j]))==d-1); 
-  Init_Matrix(&VT,d,d+1);Init_Matrix(&R,ngen,p);Init_Matrix(&G,p,p); ng0=ngen;
+  Init_Matrix(&VT,d,d+1);Init_Matrix(&R,ngen,p);Init_Matrix(&G,p,p);//ng0=ngen;
   for(i=1;i<nI;i++)for(j=0;j<i;j++)if(Inci64_abs(Inci64_AND(I[i],I[j]))==d-1){
     int a,b; Inci64 Ia=I[i]|I[j]; Inci64_2_VNL(Ia,&V,p); assert(V.nv==d+1);
     for(a=0;a<=d;a++) for(b=0;b<d;b++) VT.x[b][a]=P->x[V.v[a]][b]; 
@@ -567,7 +568,7 @@ int InterSectE(Long *X,Long *Y,Long *U,Long *V){
     if(xyu*uvx<0) return 1; else return -1;}
 
 void MakeVecPrim(Long *X){
-  Long g=1;if(X[0]*X[1])g=Fgcd(X[0],X[1]);
+  Long g=1; if(X[0] && X[1]) g=Fgcd(X[0],X[1]);
   if(X[2]) g=Fgcd(g,X[2]);
   if(g<0) g=-g;
   if(g>1) {X[0]/=g;X[1]/=g; X[2]/=g;}}
@@ -1034,7 +1035,7 @@ int Compatible_Tri(Inci64 CA,Inci64 CB,int a,Inci64 *A,int b,Inci64 *B,int p){
       int sum=0, j;
       for(j=0;j<ib;j++) if(IA[i]==IB[j]) sum++;
       if(sum!=1) return 0;} 
-  p=0;
+  // p=0;
   return 1;}
 
 
@@ -1253,7 +1254,7 @@ void NewtonMonomial(Long *X,int d){int num=0,den=0,i,t=NewtonMonomCOORD==1;
  */
 void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E, 
 			MORI_Flags * _Flag){
-  int i=V->nv,j, cp=_P->np-1,t=E->ne,d=_P->n, Dh0[VERT_Nmax], Dh2[VERT_Nmax]; 
+  int i=V->nv,j,cp=_P->np-1,t=E->ne,d=_P->n,Dh0[VERT_Nmax]/*,Dh2[VERT_Nmax]*/; 
   Inci64 I[VERT_Nmax], T[FACE_Nmax]; Long Wsum[VERT_Nmax];
   FibW *F = (FibW *) malloc( sizeof(FibW) );
   assert(F!=NULL);
@@ -1427,8 +1428,8 @@ void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
     VNL_to_DEL(_P, V, DE); 
     assert(Transpose_PM(PM,DPM,V->nv,E->ne));
     Complete_Poly(DPM,DE,E->ne,DP);
-    for(i=0;i<cp;i++)
-      Dh2[i]=SectionCount(_P,i,DP)-1;
+    //for(i=0;i<cp;i++)
+    //  Dh2[i]=SectionCount(_P,i,DP)-1;
     free(DP);
     free(DE);	//for(i=0;i<cp;i++)printf("%d ",Dh2[i]);puts("=h02");
     Subdivide(_P,V->nv,I,cp,T,&t, _Flag ,F);
@@ -1558,14 +1559,14 @@ Inci64 Inci64_revert(Inci64 X, int n) {
 }
 
 void Print_Mori_Old(PolyPointList *P,int nI, Inci64 *I){
-  int i,j,k,r=0,d=P->n,p=P->np, ngen=0, pli[POLY_Dmax+1],ng0,e0=0,nm=0,nv,np;
+  int i,j,k,r=0,d=P->n,p=P->np,ngen=0,pli[POLY_Dmax+1],/*ng0,*/e0=0,nm=0,nv,np;
   int m[VERT_Nmax]; Long Z[POLY_Dmax+1]; VertexNumList V; Inci64 IE[VERT_Nmax];
   PolyPointList *UT = (PolyPointList *) malloc(sizeof(PolyPointList));
   Matrix R,VT,G; EqList *E = (EqList*)malloc(sizeof(EqList));
   assert(E!=NULL); assert(UT!=NULL);
   for(i=1;i<nI;i++) for(j=0;j<i;j++)
 		      ngen+=(Inci64_abs(Inci64_AND(I[i],I[j]))==d);
-  Init_Matrix(&VT,d,d+1);Init_Matrix(&R,ngen,p);Init_Matrix(&G,p,p); ng0=ngen;
+  Init_Matrix(&VT,d,d+1);Init_Matrix(&R,ngen,p);Init_Matrix(&G,p,p); //ng0=ngen;
   for(i=1;i<nI;i++) for(j=0;j<i;j++) if(Inci64_abs(Inci64_AND(I[i],I[j]))==d) {
     int a,b,x; INCI_2_VNL(I[j],&V,p); assert(V.nv==d+1);
     for(k=0;k<=d;k++) pli[k]=V.v[k];
@@ -1648,7 +1649,7 @@ long long Compute_Abi(PolyPointList *P){
 }
 
 void ComputeStanleyReisner(PolyPointList *P,int nI,Inci64 *I, int *NrInz, Inci64 *SRG, long long Abi){
-  Inci64 *IV, *A, *B, *G[POLY_Dmax], *M, *N;
+  Inci64 *IV, *A, *B, /* *G[POLY_Dmax],*/ *M, *N;
   int i=1,j=P->np/2, m,n, nG[POLY_Dmax+1], g=0,d,v=P->np-1; if(j>P->n)j=P->n+1;
   //bico=P->np; while(i<j) {bico*=(P->np-i); bico/=++i;} 
   assert(P->np<VERT_Nmax);
@@ -1656,11 +1657,11 @@ void ComputeStanleyReisner(PolyPointList *P,int nI,Inci64 *I, int *NrInz, Inci64
   IV=(Inci64 *) malloc( v*sizeof(Inci64) );// SRG = (Inci64 *) malloc( Abi ),
   assert(SRG!=NULL); assert(IV!=NULL); assert(A!=NULL); assert(B!=NULL);
   IV[0]=Inci64_1(); for(i=1;i<v;i++) IV[i]=Inci64_PN(IV[i-1],1); M=A; m=0; N=B;
-  G[2]=&SRG[g]; nG[2]=0;
+  /* G[2]=&SRG[g]; */ nG[2]=0;
   for(i=1;i<v;i++)for(j=0;j<i;j++) M[m++]=Inci64_OR(IV[i],IV[j]);
   for(i=0;i<m;i++){for(j=0;j<nI;j++) if(Inci64_LE(M[i],I[j]))break;
     if(j==nI) {SRG[g++]=M[i];nG[2]++;}}
-  for(d=3;d<=P->n+1;d++){n=0; nG[d]=0; G[d]=&SRG[g];
+  for(d=3;d<=P->n+1;d++){n=0; nG[d]=0; // G[d]=&SRG[g];
     for(i=0;i<m;i++){int l=0;
       while(!Inci64_LE(IV[l],M[i])) N[n++]=Inci64_OR(IV[l++],M[i]);}
     for(i=0;i<n;i++){for(j=0;j<nI;j++) if(Inci64_LE(N[i],I[j]))break;

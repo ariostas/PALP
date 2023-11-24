@@ -642,7 +642,7 @@ void Fast_c9_VaHo(Weight *W,VaHo *V)/* -->> V.D<=3 <<--  via index and trace */
      wo[0] = woG = (int *) malloc(WM*3*sizeof(int)); 
      assert(woG!=NULL); wo[1]=woS=&woG[WM]; wo[2]=woA=&woS[WM];
      for(i=0;i<=N;i++) mask[i]=1<<i;
-     for(i=0;i<=WM;i++) woG[i]=woS[i]=woA[i]=0;
+     for(i=0;i<WM;i++) woG[i]=woS[i]=woA[i]=0;
      for(k=0;k<ns;k++) {kgV *= W->m[k]/Fgcd(kgV,W->m[k]); mo*=W->m[k];}
      for(k=0;k<ns;k++) omega[k]=kgV/W->m[k];
      R=kgV/W->d;
@@ -684,7 +684,7 @@ int  WIndex_HTrace(Weight *W, int *WI, int *T)/* T=sum(Hij), return over=H00 */
      wo[0] = woG = (int *) malloc(WM*3*sizeof(int)); 
      assert(woG!=NULL); wo[1]=woS=&woG[WM]; wo[2]=woA=&woS[WM];
      for(i=0;i<=N;i++) mask[i]=1<<i;
-     for(i=0;i<=WM;i++) woG[i]=woS[i]=woA[i]=0;
+     for(i=0;i<WM;i++) woG[i]=woS[i]=woA[i]=0;
      for(k=0;k<ns;k++) {kgV *= W->m[k]/Fgcd(kgV,W->m[k]); mo*=W->m[k];}
      for(k=0;k<ns;k++) omega[k]=kgV/W->m[k];
      R=kgV/W->d;
