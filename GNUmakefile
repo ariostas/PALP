@@ -38,22 +38,22 @@ clean:	;	rm -f *.o
 cleanall: ;	rm -f *.o *.x palp_* core
 
 
-poly.x: poly.o $(OBJECTS) LG.o Global.h LG.h
+poly.x: poly.o $(OBJECTS) LG.o
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ poly.o $(OBJECTS) LG.o
 
-class.x: class.o $(OBJECTS) $(CLASS_OBJ) Global.h Subpoly.h
+class.x: class.o $(OBJECTS) $(CLASS_OBJ)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ \
                 class.o $(OBJECTS) $(CLASS_OBJ)
 
-cws.x: cws.o $(OBJECTS) LG.o Global.h LG.h
+cws.x: cws.o $(OBJECTS) LG.o
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ \
                 cws.o $(OBJECTS) LG.o
 
-nef.x: nef.o $(OBJECTS) $(NEF_OBJ) Global.h
+nef.x: nef.o $(OBJECTS) $(NEF_OBJ)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ \
                 nef.o $(OBJECTS) $(NEF_OBJ)
 
-mori.x: mori.o $(OBJECTS) $(MORI_OBJ) LG.o Mori.h
+mori.x: mori.o $(OBJECTS) $(MORI_OBJ) LG.o
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ \
                 mori.o $(OBJECTS) $(MORI_OBJ) LG.o
 
