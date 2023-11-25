@@ -39,23 +39,19 @@ cleanall: ;	rm -f *.o *.x palp_* core
 
 
 poly.x: poly.o $(OBJECTS) LG.o
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ poly.o $(OBJECTS) LG.o
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ $^
 
 class.x: class.o $(OBJECTS) $(CLASS_OBJ)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ \
-                class.o $(OBJECTS) $(CLASS_OBJ)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ $^
 
 cws.x: cws.o $(OBJECTS) LG.o
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ \
-                cws.o $(OBJECTS) LG.o
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ $^
 
 nef.x: nef.o $(OBJECTS) $(NEF_OBJ)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ \
-                nef.o $(OBJECTS) $(NEF_OBJ)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ $^
 
 mori.x: mori.o $(OBJECTS) $(MORI_OBJ) LG.o
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ \
-                mori.o $(OBJECTS) $(MORI_OBJ) LG.o
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ $^
 
 
 
