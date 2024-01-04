@@ -1,0 +1,5 @@
+# All PALP executables have an ".x" suffix, making it easy to
+# glob them here. We also ignore the object (*.o) files that
+# are created as intermediate build products.
+*.x
+*.o
