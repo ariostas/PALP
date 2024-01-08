@@ -2,19 +2,6 @@
 
 #   main programs:	 class.c  cws.c  poly.c  nef.c  mori.c
 
-SOURCES= Coord.c Rat.c Vertex.c Polynf.c
-OBJECTS= $(SOURCES:.c=.o)
-
-CLASS_SRC= Subpoly.c Subadd.c Subdb.c
-CLASS_OBJ= $(CLASS_SRC:.c=.o)
-
-NEF_SRC= E_Poly.c Nefpart.c LG.c
-NEF_OBJ= $(NEF_SRC:.c=.o)
-
-MORI_SRC= MoriCone.c SingularInput.c
-MORI_OBJ= $(MORI_SRC:.c=.o)
-
-
 CC ?= gcc
 
 CPPFLAGS += -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
@@ -28,53 +15,107 @@ CFLAGS ?= -O3 -g -W -Wall
 #             command
 #             ...
 
-all:	poly class cws nef mori
+# The list of programs to build, without the ".x" extension. Having
+# these in a variable makes it easy to loop through them. Likewise,
+# the list of dimensions (POLY_Dmax) that we want to build executables
+# for.
+PROGRAMS = poly class cws nef mori
+DIMENSIONS = 4 5 6 11
 
+# The "all" target builds only the 6d-optimized versions that have
+# historically been built by running "make".
+.PHONY: all
+all: $(foreach p,$(PROGRAMS),$(p).x)
+
+# The "all-dims" target, however, builds each PROGRAM, once, optimized
+# for each dimension listed in DIMENSIONS. Here we have "all-dims"
+# depend only on the traditional foo.x names, but the template below
+# will add foo-4d.x, foo-5d.x, etc. to the list of prerequisites.
+.PHONY: all-dims
+all-dims: all
+
+
+.PHONY: clean
 clean:	;	rm -f *.o
 
+.PHONY: cleanall
 cleanall: ;	rm -f *.o *.x palp_* core
 
 
-poly:	poly.o $(OBJECTS) LG.o Global.h LG.h
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o poly.x poly.o $(OBJECTS) LG.o
+# Build foo.x by copying foo-6d.x to foo.x. This wastes a little bit
+# of space, but avoids any obscure problems that might arise from
+# using links instead
+%.x: %-6d.x
+	cp $< $@
 
-class:	class.o $(OBJECTS) $(CLASS_OBJ) Global.h Subpoly.h
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o class.x \
-                class.o $(OBJECTS) $(CLASS_OBJ)
+define PROG_DIM_template =
+#
+# Define separate build rules for every combination of PROGRAMS and
+# DIMENSIONS. This really is necessary: we can't reuse an object file
+# that was compiled with (say) POLY_Dmax=4 to link the executable
+# foo-11d.x, because then foo-11d.x will just wind up with the code
+# for dimension <= 4. And that's the best case: mixing and matching
+# POLY_Dmax across multiple files could easily cause a crash.
+#
+# Arguments:
+#
+#   $(1) - program name, e.g. "poly" or "mori"
+#   $(2) - the current value of POLY_Dmax, e.g. "4" or "11"
+#
 
-cws:    cws.o $(OBJECTS) LG.o Global.h LG.h
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o cws.x \
-                cws.o $(OBJECTS) LG.o
+# A list of common objects needed by all executables of this dimension
+OBJECTS_$(2)    = Coord-$(2)d.o Rat-$(2)d.o Vertex-$(2)d.o Polynf-$(2)d.o
 
-nef:    nef.o $(OBJECTS) $(NEF_OBJ) Global.h 
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o nef.x \
-                nef.o $(OBJECTS) $(NEF_OBJ)
+# List the additional objects needed by the individual programs of
+# this dimension
+poly_OBJ_$(2)   = LG-$(2)d.o
+class_OBJ_$(2)  = Subpoly-$(2)d.o Subadd-$(2)d.o Subdb-$(2)d.o
+cws_OBJ_$(2)    = LG-$(2)d.o
+nef_OBJ_$(2)    = E_Poly-$(2)d.o Nefpart-$(2)d.o LG-$(2)d.o
+mori_OBJ_$(2)   = MoriCone-$(2)d.o SingularInput-$(2)d.o LG-$(2)d.o
 
-mori:   mori.o  $(OBJECTS) $(MORI_OBJ) LG.o Mori.h 
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o mori.x \
-                mori.o $(OBJECTS) $(MORI_OBJ) LG.o
+# Build the object foo-Nd.o from foo.c. The COMPILE.c macro is built
+# in to GNU Make.
+%-$(2)d.o: %.c
+	$(COMPILE.c) -DPOLY_Dmax=$(2) -o $$@ $$<
 
+# Link the program foo-Nd.x from foo-Nd.o, OBJECTS_N, and foo_OBJ_N.
+# The LINK.c macro is built in to GNU Make.
+$(1)-$(2)d.x: $(1)-$(2)d.o $$(OBJECTS_$(2)) $$($(1)_OBJ_$(2))
+	$(LINK.c) -o $$@ $$^
 
+# Add foo-Nd.x to the "all-dims" target
+all-dims: $(1)-$(2)d.x
 
-#			     D E P E N D E N C I E S
+# Specify some additional dependencies (beyond the corresponding *.c file)
+# for our *.o files.
+Coord-$(2)d.o:         Rat.h
+Polynf-$(2)d.o:        Rat.h
+Rat-$(2)d.o:           Rat.h
+Subpoly-$(2)d.o:       Rat.h Subpoly.h
+Subadd-$(2)d.o:        Subpoly.h
+Vertex-$(2)d.o:        Rat.h
+Subdb-$(2)d.o:         Subpoly.h
+LG-$(2)d.o:            Rat.h LG.h
 
-Coord.o:        Global.h Rat.h 
-Polynf.o:		Global.h Rat.h
-Rat.o:          Global.h Rat.h 
-Subpoly.o:      Global.h Rat.h Subpoly.h  
-Subadd.o:		Global.h Subpoly.h
-Vertex.o:       Global.h Rat.h  
-Subdb.o:		Global.h Subpoly.h
-LG.o:           Global.h Rat.h LG.h
+E_Poly-$(2)d.o:        Nef.h Rat.h
+Nefpart-$(2)d.o:       Nef.h
 
-E_Poly.o:       Global.h Nef.h Rat.h
-Nefpart.o:		Global.h Nef.h
+MoriCone-$(2)d.o:      Rat.h Mori.h
+SingularInput-$(2)d.o: Mori.h
 
-MoriCone.o:      Global.h Rat.h Mori.h
-SingularInput.o: Global.h Mori.h
+poly-$(2)d.o:          LG.h
+class-$(2)d.o:         Subpoly.h
+cws-$(2)d.o:           LG.h Rat.h
+nef-$(2)d.o:           Nef.h LG.h
+mori-$(2)d.o:          LG.h Mori.h
+endef
 
-poly.o:         Global.h LG.h
-class.o:		Global.h Subpoly.h
-cws.o:			Global.h LG.h Rat.h
-nef.o:          Global.h Nef.h LG.h
-mori.o:     	Global.h LG.h Mori.h
+# All object files should be rebuilt if Global.h changes
+%.o: Global.h
+
+# Call the PROG_DIM_template once for each PROGRAM "p" and
+# DIMENSION "d".
+$(foreach p,$(PROGRAMS),$(foreach d,$(DIMENSIONS),\
+  $(eval $(call PROG_DIM_template,$(p),$(d)))\
+))
