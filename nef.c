@@ -514,6 +514,11 @@ int Read_WPCICY(Weight * _W, int *_D)
 	if (feof(inFILE))
 	    return 0;		/* read to EOL */
 
+    if (_W->N > POLY_Dmax) {
+      printf("Please increase POLY_Dmax ");
+      printf("(POLY_Dmax >= number of weights is required)\n");
+      exit(0);}
+
     assert((_D[0] + _D[1]) == _W->d);
 
     if (_W->N < 2) {
