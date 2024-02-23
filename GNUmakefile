@@ -119,3 +119,36 @@ endef
 $(foreach p,$(PROGRAMS),$(foreach d,$(DIMENSIONS),\
   $(eval $(call PROG_DIM_template,$(p),$(d)))\
 ))
+
+# For lack of anything less silly, define a newline this way.
+# We need it to run multiple commands in a $(foreach) loop.
+# The $(blank) is apparently required to keep it from eating
+# the newline.
+blank :=
+define newline
+
+$(blank)
+endef
+
+# Testing
+# #######
+#
+# Each test script should take the dimension DIM from the environment
+# with default 6. Optionally, the LONG variable can be set to a
+# non-null value to enable the tests that take a long time. Some
+# documentation on this test "protocol" is contained in tests/README.
+#
+TESTS = $(wildcard tests/*.sh)
+
+# The test suite depends on all of the dimension-optimized programs.
+# The main "make check" routine runs each of the tests/*.sh scripts
+# with each applicable value of DIM.
+.PHONY: check
+check: $(foreach p,$(PROGRAMS),$(foreach d,$(DIMENSIONS),$(p)-$(d)d.x))
+	$(foreach t,$(TESTS),$(foreach d,$(DIMENSIONS),\
+	$(newline)@DIM=$(d) $(t)\
+	))
+
+.PHONY: checklong
+checklong:
+	LONG=1 $(MAKE) check
