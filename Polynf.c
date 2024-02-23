@@ -1785,7 +1785,7 @@ void Print_Fibrations(PolyPointList *P,FibW *F)
 	fprintf(outFILE,"m:%d %d n:%d %d\n",F->P->np,V.nv,N,E.ne);
      }
 }
-void IP_Simplices_Docu()
+void IP_Simplices_Docu(void)
 {    puts("Allowed fibration flags: 1 2 3 11n 22n 33n 12n 23n with n=[ 123]");
      printf("1,2,3: only fibrations spanned by IP simplices with codimension");
      puts(" <= 1,2,3\n11,22,33: all fibrations with codimension 1,2,3");

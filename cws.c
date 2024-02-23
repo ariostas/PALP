@@ -75,7 +75,7 @@ void IP_Poly_Data(int narg, char* fn[]);
 void Make_CWS_Points(CWS *, PolyPointList *);
 void Npoly2cws(int narg, char* fn[]);
 void RgcWeights(int narg, char* fn[]);
-void AddHalf();
+void AddHalf(void);
 void PrintCWSextUsage(char *c)
 {    printf( "This is `%s': -x gives undocumented extensions:\n",c);
        	puts("              -ip    printf PolyPointList");
@@ -402,9 +402,9 @@ void RgcWeights(int narg, char* fn[])
 	    X->winum,  X->wnum,  X->candnum);
 }
 
-int IsNextDigit();
+int IsNextDigit(void);
 
-void AddHalf()
+void AddHalf(void)
 {
   int IN[AMBI_Dmax*(AMBI_Dmax+1)]; 
   int i, j, n = 0;
@@ -1566,7 +1566,7 @@ void MakeSelections(FILE *INFILE, FILE *AUXFILE, int u)
   rewind(AUXFILE); rewind(INFILE);
 }
 
-void PrintCWSTypes()
+void PrintCWSTypes(void)
 {
   const char B[]="         ";
   printf("\nThe following types are available:\n\n");

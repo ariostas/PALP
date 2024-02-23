@@ -24,7 +24,7 @@
 
 FILE *inFILE, *outFILE;
 
-void PrintExtOptions(){puts("Extended/experimental options:");
+void PrintExtOptions(void){puts("Extended/experimental options:");
      puts("           -d1 -d2 [-po]      combined mirror info (projected"); 
      exit(0);}
 void LocalPrintUsage(char *c, char hc){

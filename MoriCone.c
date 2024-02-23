@@ -256,7 +256,7 @@ void Print_Inci64_list(int n,Inci64 *I,int p){
 
 int Inci64_abs(Inci64 X){int abs=X%2; while(X/=2) abs+=X%2; return abs;}
 
-void IDerr(){puts("\n       ********       INPUT DATA ERROR    	  ********");}
+void IDerr(void){puts("\n       ********       INPUT DATA ERROR    	  ********");}
 
 int Make_triCD2F(triang *T,Inci64 *cd2I){int i,j,cd2n=0;
   for(i=1;i<T->n;i++)for(j=0;j<i;j++){int k; Inci64 S=T->I[i]&T->I[j];
@@ -1465,18 +1465,18 @@ void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
 
 
 
-void IFerr(){puts(
+void IFerr(void){puts(
   "\n       ************      INPUT FORMAT ERROR   	  ************");}
 
 void FE(char *c){puts("Input format error in ");puts(c);exit(0);}
 
 /*needed from Read_Tri*/
-void Read_EOL(){
+void Read_EOL(void){
 	char c;
 	while('\n'!=(c=fgetc(inFILE)))	if(feof(inFILE))FE("EOF");
 }
 
-int  ReadInt()
+int  ReadInt(void)
 {    int n; char c=fgetc(inFILE); if(!IsDigit(c)&&(c!='-')) FE("ReadInt");
      ungetc(c,inFILE); fscanf(inFILE,"%d",&n);
      while(' '==(c=fgetc(inFILE)));
