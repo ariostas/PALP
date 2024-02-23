@@ -1,0 +1,38 @@
+This directory contains a collection of test scripts that are executed
+by "make check" and/or "make checklong". The basic setup and execution
+of an individual tests looks like,
+
+  COMMAND="the command to run"
+  DESCRIPTION="a description of the test"
+  EXPECTED="the expected output from $COMMAND"
+  run_test
+
+The run_test() function will then run the given $COMMAND, and report
+the result; that is, whether or not the actual output matches the
+$EXPECTED output. There are a few more variables you can use: the
+run_test() function is defined and documented in lib/run-test.sh.
+
+Variables
+=========
+
+A few environment variables are passed from the GNUmakefile to the
+test scripts:
+
+ * DIM: the value of POLY_Dmax to use. The "all-dims" target produces
+   multiple executables, each compiled with a different value for
+   POLY_Dmax. For example, poly-4d.x, poly-5d.x, ..., poly-11d.x. The
+   value of $DIM tells the test script which of those executables to
+   test. The GNUmakefile loops through all possible values of DIM, to
+   ensure that all executables get tested. As a result, the test
+   scripts themselves do not need to repeat any tests.
+
+ * LONG: if set to a non-null value, indicates that the script
+   is allowed to run tests that take a long time to run. The
+   "make checklong" command sets this automatically; a plain
+   "make check" does not.
+
+Return value
+============
+
+Each script succeeds (exits with code zero) if all of its tests pass,
+and fails with a non-zero code otherwise.
