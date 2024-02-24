@@ -216,12 +216,6 @@ void OLD_LinRelLatticeBasis(int SF,PolyPointList *P,int v,char *D,char *B){
 /* new version:	number Vol=1; poly norm=Vol*reduce(d1*d2*d3*d4*d5,chow);
  *		reduce(nef*d1*d1*d1,chow)/norm;  // D=d divisor, B=h basis
  */
-void CatFile(char *fn){char CAT[30+L_tmpnam];strcpy(CAT,"cat ");
-  strcat(CAT,fn);printf("======= FILE content of %s:\n",fn); fflush(0);
-  assert(0==system(CAT));
-  printf("====== End of FILE content of %s\n\n",fn); fflush(0);}
-
-
 
 
 /*   ==============	    M O R I   C O N E		================   */

@@ -33,6 +33,12 @@
 
 /*=========================================================*/
 
+#if (TEST_PRINT_SINGULAR_IO)
+void CatFile(char *fn){char CAT[30+L_tmpnam];strcpy(CAT,"cat ");
+  strcat(CAT,fn);printf("======= FILE content of %s:\n",fn); fflush(0);
+  assert(0==system(CAT));
+  printf("====== End of FILE content of %s\n\n",fn); fflush(0);}
+#endif
 
 int Read_HyperSurf(int *he, int divclassnr, int maxline, char filename[20], MORI_Flags *_Flag){
 
