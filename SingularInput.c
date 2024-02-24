@@ -12,6 +12,9 @@
 /* ======================================================== */
 /* =========            H E A D E R s             ========= */
 
+#include <fcntl.h>  /* open  */
+#include <unistd.h> /* close */
+
 #include "Global.h"
 #include "Mori.h"
 
@@ -79,55 +82,55 @@ void HyperSurfSingular(PolyPointList *P,triang *T, triang *SR ,MORI_Flags *_Flag
   int CODIM=1;
   int DIM=TORDIM-CODIM;
 
-  FILE *SF;
+  int SF;
   char SFname[L_tmpnam], SingularCall[50+L_tmpnam], *D=T_DIV,*B=DIVclassBase;
 
   assert(NULL!=tmpnam(SFname));
-  assert(NULL!=(SF=fopen(SFname,"w")));
+  assert(-1!=(SF=open(SFname, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR)));
 
-  fprintf(SF,"LIB \"general.lib\";\n");
-  fprintf(SF,"option(noredefine);\n");
-  fprintf(SF,"ring r=0,(t,%s%d",D,N+1);	// ring r=0,(t,D1,...,Dp,B1,...,Bp-d),ds;
+  dprintf(SF,"LIB \"general.lib\";\n");
+  dprintf(SF,"option(noredefine);\n");
+  dprintf(SF,"ring r=0,(t,%s%d",D,N+1);	// ring r=0,(t,D1,...,Dp,B1,...,Bp-d),ds;
   for(i=N+2;i<=p;i++)
-	  fprintf(SF,",%s%d",D,i);
+	  dprintf(SF,",%s%d",D,i);
   for(i=1;i<=p-d;i++)
-	  fprintf(SF,",%s%d",B,i);
-  fprintf(SF,"),(ds,dp(%d));\n",2*p-d);
+	  dprintf(SF,",%s%d",B,i);
+  dprintf(SF,"),(ds,dp(%d));\n",2*p-d);
 
   /*LINEAR EQUIVALENCES*/
-  fprintf(SF,"ideal lin=");
+  dprintf(SF,"ideal lin=");
   for(r=0;r<d;r++){
-    if(r)fprintf(SF,",");
-    fprintf(SF,"0");
+    if(r)dprintf(SF,",");
+    dprintf(SF,"0");
     for(j=0;j<p;j++){
     	int X=P->x[j][r];
     	if((X>0))
-    		fprintf(SF,"+");
+    		dprintf(SF,"+");
     	if(X)
-    		fprintf(SF,"%d*%s%d",X,D,j+1);
+    		dprintf(SF,"%d*%s%d",X,D,j+1);
     }
   }
-  fprintf(SF,";");
+  dprintf(SF,";");
   DivClassBasis(SF,P,p,D,B);
 
   /* STANLEY REISNER */
-  fprintf(SF,"ideal sr=");
+  dprintf(SF,"ideal sr=");
   for(r=0;r<SR->n;r++){
 	  int f=1;
 	  if(r)
-		  fprintf(SF,",");
+		  dprintf(SF,",");
 	  for(j=0;j<p;j++)
 		  if(getN(j,SR->I[r])){
 			  if(f)
 				  f=0;
 			  else
-				  fprintf(SF,"*");
-			  fprintf(SF,"%s%d",D,j+1);
+				  dprintf(SF,"*");
+			  dprintf(SF,"%s%d",D,j+1);
 		  }
   }
 
   /* CHOW RING */
-  fprintf(SF,";\nideal chow=std(lin+sr+DCbase);\n");
+  dprintf(SF,";\nideal chow=std(lin+sr+DCbase);\n");
 
     /*reads input for the hyper surface
      * creates HEInput.txt
@@ -152,17 +155,17 @@ if(_Flag->Read_HyperSurfCounter==0){
                  printf("Warning: %d entries for the hypersurface class were expected\n"
                  "         (i.e. as many entries as toric divisor classes) \n",divclassnr );
 
-fprintf(SF,"\"Hypersurface class: ");
+dprintf(SF,"\"Hypersurface class: ");
 	  for(i=0; i<divclassnr; i++)
 		  if(he[i]!=0)
-			  fprintf(SF,"%d*d%d ",he[i],i+1);
-	  fprintf(SF,"\";\n");
+			  dprintf(SF,"%d*d%d ",he[i],i+1);
+	  dprintf(SF,"\";\n");
 }
-	  fprintf(SF,"poly HySurf=(0");
+	  dprintf(SF,"poly HySurf=(0");
 	  for(i=0;i<divclassnr;i++)		 // Hypersurface equation
 		  if(he[i]!=0)
-			  fprintf(SF,"+%d*d%d",he[i],i+1);
-	  fprintf(SF,"); \n");
+			  dprintf(SF,"+%d*d%d",he[i],i+1);
+	  dprintf(SF,"); \n");
 
 	  int dim = F->nw;
 	  int DegreeVec[dim];
@@ -191,13 +194,13 @@ if(_Flag->Read_HyperSurfCounter==0){
   }
 
   else {
-	  fprintf(SF,"poly HySurf=(%s%d",D,N+1);
+	  dprintf(SF,"poly HySurf=(%s%d",D,N+1);
 	  for(i=N+1;i<p;i++)		 // CALABI-YAU
-		  fprintf(SF,"+%s%d",D,i+1);
-	  fprintf(SF,");\n");
+		  dprintf(SF,"+%s%d",D,i+1);
+	  dprintf(SF,");\n");
   }
 
-  fprintf(SF,"number vol=");{
+  dprintf(SF,"number vol=");{
 	  int NN=NORM_SIMP_NUM;          // NORMALIZATION
 	  Long *X[POLY_Dmax], Vijkl;
 	  int x[POLY_Dmax], n=0; i=j=0;
@@ -211,236 +214,236 @@ if(_Flag->Read_HyperSurfCounter==0){
 	  }
     assert(n==P->n);
     Vijkl=SimplexVolume(X,P->n);
-    fprintf(SF,"%ld;\n",Vijkl);
-    fprintf(SF,"poly norm=vol*reduce(%s%d",D,x[0]+1);
-	for(j=1;j<TORDIM;j++) fprintf(SF,"*%s%d",D,x[j]+1);
-	fprintf(SF,",chow);\n");
+    dprintf(SF,"%ld;\n",Vijkl);
+    dprintf(SF,"poly norm=vol*reduce(%s%d",D,x[0]+1);
+	for(j=1;j<TORDIM;j++) dprintf(SF,"*%s%d",D,x[j]+1);
+	dprintf(SF,",chow);\n");
   }
 
   if(_Flag->i || _Flag->c){
-  fprintf(SF,"\"SINGULAR -> divisor classes (integral basis %s1",B);
+  dprintf(SF,"\"SINGULAR -> divisor classes (integral basis %s1",B);
   if(p-d>1)
-	  fprintf(SF," ... %s%d",B,p-d);
-  fprintf(SF,"):\";\n");
-  fprintf(SF,"string LR=string(%s1)+\"=\"+string(reduce(%s1,chow));\n",D,D);
+	  dprintf(SF," ... %s%d",B,p-d);
+  dprintf(SF,"):\";\n");
+  dprintf(SF,"string LR=string(%s1)+\"=\"+string(reduce(%s1,chow));\n",D,D);
   for(j=2;j<=p;j++){
-	  fprintf(SF,"LR=LR+\", \"+string(%s%d)+\"=\"+",D,j);
-	  fprintf(SF,"string(reduce(%s%d,chow));\n ",D,j);
+	  dprintf(SF,"LR=LR+\", \"+string(%s%d)+\"=\"+",D,j);
+	  dprintf(SF,"string(reduce(%s%d,chow));\n ",D,j);
   }
-  fprintf(SF,"LR;\n");
+  dprintf(SF,"LR;\n");
   }
 
-	fprintf(SF, "list dli=d1");
+	dprintf(SF, "list dli=d1");
 	for(j=2;j<=p;j++)
-		fprintf(SF,",d%d",j);
-	fprintf(SF,";\n");
-	fprintf(SF, "list Jli=J1");
+		dprintf(SF,",d%d",j);
+	dprintf(SF,";\n");
+	dprintf(SF, "list Jli=J1");
 	for(j=2;j<=p-d;j++)
-		fprintf(SF,",J%d",j);
-	fprintf(SF,";\n");
+		dprintf(SF,",J%d",j);
+	dprintf(SF,";\n");
 	
-  fprintf(SF,"int i,j,k;\n");
+  dprintf(SF,"int i,j,k;\n");
 
   /*linear basis ideal*/
-  fprintf(SF,"ideal lb=std(lin+DCbase);\n");
+  dprintf(SF,"ideal lb=std(lin+DCbase);\n");
 
 	/* Test for nonintersecting divisors */
-	fprintf(SF,"ideal hypideal = quotient(chow,HySurf);\n");
+	dprintf(SF,"ideal hypideal = quotient(chow,HySurf);\n");
 	if(_Flag->t || _Flag->d){
-		fprintf(SF,"list nonintersectingd = list();\n");
-		fprintf(SF,"for(i=1;i<=%d;i++){\n",p);
-		fprintf(SF,"  if(reduce(dli[i],std(hypideal))==0){\n");
-		fprintf(SF,"    nonintersectingd=nonintersectingd+list(dli[i]);\n");
-	    fprintf(SF,"  }\n");
-		fprintf(SF,"}\n");
-		fprintf(SF,"if(size(nonintersectingd)>0){\n");
-		fprintf(SF,"  \"SINGULAR -> nonintersecting divisor classes : \";\n");
-		fprintf(SF,"  string nd=string(nonintersectingd[1]);\n");
-		fprintf(SF,"  for(i=2;i<=size(nonintersectingd);i++){\n");
-		fprintf(SF,"    nd=nd+\", \"+string(nonintersectingd[i]);\n");
-		fprintf(SF,"  }\n");
-		fprintf(SF,"nd;}\n");
+		dprintf(SF,"list nonintersectingd = list();\n");
+		dprintf(SF,"for(i=1;i<=%d;i++){\n",p);
+		dprintf(SF,"  if(reduce(dli[i],std(hypideal))==0){\n");
+		dprintf(SF,"    nonintersectingd=nonintersectingd+list(dli[i]);\n");
+	    dprintf(SF,"  }\n");
+		dprintf(SF,"}\n");
+		dprintf(SF,"if(size(nonintersectingd)>0){\n");
+		dprintf(SF,"  \"SINGULAR -> nonintersecting divisor classes : \";\n");
+		dprintf(SF,"  string nd=string(nonintersectingd[1]);\n");
+		dprintf(SF,"  for(i=2;i<=size(nonintersectingd);i++){\n");
+		dprintf(SF,"    nd=nd+\", \"+string(nonintersectingd[i]);\n");
+		dprintf(SF,"  }\n");
+		dprintf(SF,"nd;}\n");
 	}
 	if(_Flag->i || _Flag->c){
-		fprintf(SF,"list nonintersectingJ = list();\n");
-		fprintf(SF,"for(i=1;i<=%d;i++){\n",p-d);
-		fprintf(SF,"if(reduce(Jli[i],std(hypideal))==0){nonintersectingJ=nonintersectingJ+list(Jli[i]);}\n");
-		fprintf(SF,"}\n");
-		fprintf(SF,"if(size(nonintersectingJ)>0){\n");
-		fprintf(SF,"  \"SINGULAR -> nonintersecting divisor classes (integral basis): \";\n");
-		fprintf(SF,"  string nJ=string(nonintersectingJ[1]);\n");
-		fprintf(SF,"  for(i=2;i<=size(nonintersectingJ);i++){\n");
-		fprintf(SF,"    nJ=nJ+\", \"+string(nonintersectingJ[i]);\n");
-		fprintf(SF,"  }\n");
-		fprintf(SF,"nJ;}\n");
+		dprintf(SF,"list nonintersectingJ = list();\n");
+		dprintf(SF,"for(i=1;i<=%d;i++){\n",p-d);
+		dprintf(SF,"if(reduce(Jli[i],std(hypideal))==0){nonintersectingJ=nonintersectingJ+list(Jli[i]);}\n");
+		dprintf(SF,"}\n");
+		dprintf(SF,"if(size(nonintersectingJ)>0){\n");
+		dprintf(SF,"  \"SINGULAR -> nonintersecting divisor classes (integral basis): \";\n");
+		dprintf(SF,"  string nJ=string(nonintersectingJ[1]);\n");
+		dprintf(SF,"  for(i=2;i<=size(nonintersectingJ);i++){\n");
+		dprintf(SF,"    nJ=nJ+\", \"+string(nonintersectingJ[i]);\n");
+		dprintf(SF,"  }\n");
+		dprintf(SF,"nJ;}\n");
 	}
 
 	
 /* Singular procedure to compute the Todd class of a vector bundle given by its Chern character */		
-	fprintf(SF,"proc Todd(poly ch, int Dim) {\n");
-	fprintf(SF,"  poly ToddD = 1;\n");
-	fprintf(SF,"  for(i=2;i<=Dim+1;i++){ToddD=ToddD+(-dli[1]*t)^(i-1)/factorial(i);}\n");
-	fprintf(SF,"  ToddD = jet(1,ToddD,2*Dim);\n");
-	fprintf(SF,"  matrix c=coeffs(ToddD,t);\n");
-	fprintf(SF,"  matrix p[Dim][1] = c[2..Dim+1,1];\n");
-	fprintf(SF,"  for(i=1;i<=Dim;i++){\n");
-	fprintf(SF,"    p[i,1]=-i*p[i,1];\n");
-	fprintf(SF,"    for(j=1;j<=i-1;j++){\n");
-	fprintf(SF,"      p[i,1]=p[i,1]-p[j,1]*c[i-j+1,1];\n");
-	fprintf(SF,"    };\n");
-	fprintf(SF,"  };\n");
-	fprintf(SF,"  poly tmp=0;\n");
-	fprintf(SF,"  for(i=1;i<=Dim;i++){\n");
-	fprintf(SF,"    tmp = tmp+p[i,1]/factorial(i)*(-t)^i;\n");
-	fprintf(SF,"  };\n");
-	fprintf(SF,"  matrix ctmp=coeffs(tmp,dli[1]);\n");
-	fprintf(SF,"  matrix cch=coeffs(ch,t);\n");
-	fprintf(SF,"  int m=nrows(ctmp);\n");
-	fprintf(SF,"  if(nrows(cch) < m){m=nrows(cch)};\n");
-	fprintf(SF,"  tmp=0;\n");
-	fprintf(SF,"  for(i=0;i<=m-1;i++){\n");
-	fprintf(SF,"    tmp=tmp+ctmp[i+1,1]*cch[i+1,1]*factorial(i);\n");
-	fprintf(SF,"  }\n");
-	fprintf(SF,"  p=coeffs(tmp,t);\n");
-	fprintf(SF,"  for(i=1;i<=nrows(p)-1;i++){\n");
-	fprintf(SF,"    p[i+1,1]=p[i+1,1]*(-1)^(i)*factorial(i);\n");
-	fprintf(SF,"  }\n");
-	fprintf(SF,"  c[1,1]=1;\n");
-	fprintf(SF,"  for(i=1;i<=Dim;i++){\n");
-	fprintf(SF,"    c[i+1,1]=0;\n");
-	fprintf(SF,"    m=i;\n");
-	fprintf(SF,"    if(nrows(p) < i+1){m=nrows(p)-1};\n");
-	fprintf(SF,"    for(j=1;j<=m;j++){\n");
-	fprintf(SF,"      c[i+1,1]=c[i+1,1]-p[j+1,1]*c[i+1-j,1];\n");
-	fprintf(SF,"    };\n");
-	fprintf(SF,"    c[i+1,1]=c[i+1,1]/(i);\n");
-	fprintf(SF,"  };\n");
-	fprintf(SF,"  tmp=0;\n");
-	fprintf(SF,"  for(i=0;i<=Dim;i++){\n");
-	fprintf(SF,"    tmp=tmp+c[i+1,1]*t^i;\n");
-	fprintf(SF,"  }\n");	  
-	fprintf(SF,"  return(tmp);\n");
-	fprintf(SF,"};\n");
+	dprintf(SF,"proc Todd(poly ch, int Dim) {\n");
+	dprintf(SF,"  poly ToddD = 1;\n");
+	dprintf(SF,"  for(i=2;i<=Dim+1;i++){ToddD=ToddD+(-dli[1]*t)^(i-1)/factorial(i);}\n");
+	dprintf(SF,"  ToddD = jet(1,ToddD,2*Dim);\n");
+	dprintf(SF,"  matrix c=coeffs(ToddD,t);\n");
+	dprintf(SF,"  matrix p[Dim][1] = c[2..Dim+1,1];\n");
+	dprintf(SF,"  for(i=1;i<=Dim;i++){\n");
+	dprintf(SF,"    p[i,1]=-i*p[i,1];\n");
+	dprintf(SF,"    for(j=1;j<=i-1;j++){\n");
+	dprintf(SF,"      p[i,1]=p[i,1]-p[j,1]*c[i-j+1,1];\n");
+	dprintf(SF,"    };\n");
+	dprintf(SF,"  };\n");
+	dprintf(SF,"  poly tmp=0;\n");
+	dprintf(SF,"  for(i=1;i<=Dim;i++){\n");
+	dprintf(SF,"    tmp = tmp+p[i,1]/factorial(i)*(-t)^i;\n");
+	dprintf(SF,"  };\n");
+	dprintf(SF,"  matrix ctmp=coeffs(tmp,dli[1]);\n");
+	dprintf(SF,"  matrix cch=coeffs(ch,t);\n");
+	dprintf(SF,"  int m=nrows(ctmp);\n");
+	dprintf(SF,"  if(nrows(cch) < m){m=nrows(cch)};\n");
+	dprintf(SF,"  tmp=0;\n");
+	dprintf(SF,"  for(i=0;i<=m-1;i++){\n");
+	dprintf(SF,"    tmp=tmp+ctmp[i+1,1]*cch[i+1,1]*factorial(i);\n");
+	dprintf(SF,"  }\n");
+	dprintf(SF,"  p=coeffs(tmp,t);\n");
+	dprintf(SF,"  for(i=1;i<=nrows(p)-1;i++){\n");
+	dprintf(SF,"    p[i+1,1]=p[i+1,1]*(-1)^(i)*factorial(i);\n");
+	dprintf(SF,"  }\n");
+	dprintf(SF,"  c[1,1]=1;\n");
+	dprintf(SF,"  for(i=1;i<=Dim;i++){\n");
+	dprintf(SF,"    c[i+1,1]=0;\n");
+	dprintf(SF,"    m=i;\n");
+	dprintf(SF,"    if(nrows(p) < i+1){m=nrows(p)-1};\n");
+	dprintf(SF,"    for(j=1;j<=m;j++){\n");
+	dprintf(SF,"      c[i+1,1]=c[i+1,1]-p[j+1,1]*c[i+1-j,1];\n");
+	dprintf(SF,"    };\n");
+	dprintf(SF,"    c[i+1,1]=c[i+1,1]/(i);\n");
+	dprintf(SF,"  };\n");
+	dprintf(SF,"  tmp=0;\n");
+	dprintf(SF,"  for(i=0;i<=Dim;i++){\n");
+	dprintf(SF,"    tmp=tmp+c[i+1,1]*t^i;\n");
+	dprintf(SF,"  }\n");	  
+	dprintf(SF,"  return(tmp);\n");
+	dprintf(SF,"};\n");
 		
 
 /*####### Chern classes of CY/H ################*/
-	  fprintf(SF,"poly ChernUp=1;\n");
-	  fprintf(SF,"for(i=1;i<=%d;i++){ChernUp=ChernUp*(1+dli[i]);}\n",p);
-  	  fprintf(SF,"poly ChernBottomHypersurface=1;\n");
-	  fprintf(SF,"for(i=1;i<=%d;i++){ChernBottomHypersurface=ChernBottomHypersurface+(-1)^i*HySurf^i;}\n",DIM);
-	  fprintf(SF,"poly ChernHySurf=ChernUp*ChernBottomHypersurface;\n");
-	  for (j=0;j<DIM; j++) fprintf(SF,"poly c%dHySurf=jet(ChernHySurf,%d)-jet(ChernHySurf,%d);\n",j+1,j+1,j);
+	  dprintf(SF,"poly ChernUp=1;\n");
+	  dprintf(SF,"for(i=1;i<=%d;i++){ChernUp=ChernUp*(1+dli[i]);}\n",p);
+  	  dprintf(SF,"poly ChernBottomHypersurface=1;\n");
+	  dprintf(SF,"for(i=1;i<=%d;i++){ChernBottomHypersurface=ChernBottomHypersurface+(-1)^i*HySurf^i;}\n",DIM);
+	  dprintf(SF,"poly ChernHySurf=ChernUp*ChernBottomHypersurface;\n");
+	  for (j=0;j<DIM; j++) dprintf(SF,"poly c%dHySurf=jet(ChernHySurf,%d)-jet(ChernHySurf,%d);\n",j+1,j+1,j);
 
 	
 	  // PRINT HODGE and EULER
 	  if(_Flag->b){
-		  if(_Flag->H !=1){fprintf(SF,"\"SINGULAR  -> Arithmetic genera and Euler number of the CY:\";\n");}
-		  else if (_Flag->H ==1){fprintf(SF,"\"SINGULAR  -> Arithmetic genera and Euler number of H:\";\n");}
+		  if(_Flag->H !=1){dprintf(SF,"\"SINGULAR  -> Arithmetic genera and Euler number of the CY:\";\n");}
+		  else if (_Flag->H ==1){dprintf(SF,"\"SINGULAR  -> Arithmetic genera and Euler number of H:\";\n");}
 		  /* Chern character and the Todd class of the tangent bundle */
-		  fprintf(SF,"matrix ch[%d][1] = 1",DIM+1);
+		  dprintf(SF,"matrix ch[%d][1] = 1",DIM+1);
 		  for(i=2;i<=DIM+1;i++){
-			  fprintf(SF,",c%dHySurf",i-1);
+			  dprintf(SF,",c%dHySurf",i-1);
 		  };
-		  fprintf(SF,";\n");
-		  fprintf(SF,"matrix pp[%d][1] = -ch[2,1]",DIM);
+		  dprintf(SF,";\n");
+		  dprintf(SF,"matrix pp[%d][1] = -ch[2,1]",DIM);
 		  for(i=2;i<=DIM;i++){
-			  fprintf(SF,",-%d*ch[%d,1]",i,i+1);
+			  dprintf(SF,",-%d*ch[%d,1]",i,i+1);
 		  };
-		  fprintf(SF,";\n");
-		  fprintf(SF,"for(i=1;i<=%d;i++){\n",DIM);
-		  fprintf(SF,"  for(j=1;j<=i-1;j++){\n");
-		  fprintf(SF,"    pp[i,1]=pp[i,1]-pp[j,1]*ch[i-j+1,1];\n");
-		  fprintf(SF,"  };\n");
-		  fprintf(SF,"};\n");
-		  fprintf(SF,"poly tmp=%d;\n",DIM);
-		  fprintf(SF,"for(i=1;i<=%d;i++){\n",DIM);
-		  fprintf(SF,"  tmp = tmp+pp[i,1]/factorial(i)*(-t)^i;\n");
-		  fprintf(SF,"};\n");
-		  fprintf(SF,"poly ToddHySurf=subst(Todd(tmp,%d),t,1);\n",DIM);
-		  fprintf(SF,"tmp=%d;\n",DIM);
-		  fprintf(SF,"for(i=1;i<=%d;i++){\n",DIM);
-		  fprintf(SF,"  tmp = tmp+pp[i,1]/factorial(i)*(t)^i;\n");
-		  fprintf(SF,"};\n");
-		  fprintf(SF,"tmp=subst(tmp,t,1);\n");
+		  dprintf(SF,";\n");
+		  dprintf(SF,"for(i=1;i<=%d;i++){\n",DIM);
+		  dprintf(SF,"  for(j=1;j<=i-1;j++){\n");
+		  dprintf(SF,"    pp[i,1]=pp[i,1]-pp[j,1]*ch[i-j+1,1];\n");
+		  dprintf(SF,"  };\n");
+		  dprintf(SF,"};\n");
+		  dprintf(SF,"poly tmp=%d;\n",DIM);
+		  dprintf(SF,"for(i=1;i<=%d;i++){\n",DIM);
+		  dprintf(SF,"  tmp = tmp+pp[i,1]/factorial(i)*(-t)^i;\n");
+		  dprintf(SF,"};\n");
+		  dprintf(SF,"poly ToddHySurf=subst(Todd(tmp,%d),t,1);\n",DIM);
+		  dprintf(SF,"tmp=%d;\n",DIM);
+		  dprintf(SF,"for(i=1;i<=%d;i++){\n",DIM);
+		  dprintf(SF,"  tmp = tmp+pp[i,1]/factorial(i)*(t)^i;\n");
+		  dprintf(SF,"};\n");
+		  dprintf(SF,"tmp=subst(tmp,t,1);\n");
 		  
 		  
-		  fprintf(SF,"\"chi_0: \",");
-		  fprintf(SF,"reduce(ToddHySurf*HySurf,chow)/norm,");
-		  fprintf(SF,"\",\", ""\"chi_1:\",");
-		  fprintf(SF,"reduce(tmp*ToddHySurf*HySurf,chow)/norm,");
-		  fprintf(SF,"\" [\",");
-		  fprintf(SF,"reduce(c%dHySurf*HySurf,chow)/norm,",DIM);
-		  fprintf(SF,"\"]\";\n");	  
+		  dprintf(SF,"\"chi_0: \",");
+		  dprintf(SF,"reduce(ToddHySurf*HySurf,chow)/norm,");
+		  dprintf(SF,"\",\", ""\"chi_1:\",");
+		  dprintf(SF,"reduce(tmp*ToddHySurf*HySurf,chow)/norm,");
+		  dprintf(SF,"\" [\",");
+		  dprintf(SF,"reduce(c%dHySurf*HySurf,chow)/norm,",DIM);
+		  dprintf(SF,"\"]\";\n");	  
 	}
 
 /*#############################################*/
 
 /*####### Intersection Polynomial #############*/
   if(_Flag->i){	
-	  fprintf(SF,"\"SINGULAR -> intersection polynomial:\";\n");
-	  fprintf(SF,"poly f=1-t*(reduce(%s%d,std(hypideal))",B,1);
+	  dprintf(SF,"\"SINGULAR -> intersection polynomial:\";\n");
+	  dprintf(SF,"poly f=1-t*(reduce(%s%d,std(hypideal))",B,1);
 	  for (j=2; j<=p-d; j++) {
-		  fprintf(SF,"+reduce(%s%d,std(hypideal))",B,j);
+		  dprintf(SF,"+reduce(%s%d,std(hypideal))",B,j);
 	  }
-	  fprintf(SF,");\n");
-	  fprintf(SF,"poly m=jet(1,f,%d)-jet(1,f,%d);\n",2*DIM,2*DIM-2);
-	  fprintf(SF,"matrix M=coef(m,%s%d",B,1);
+	  dprintf(SF,");\n");
+	  dprintf(SF,"poly m=jet(1,f,%d)-jet(1,f,%d);\n",2*DIM,2*DIM-2);
+	  dprintf(SF,"matrix M=coef(m,%s%d",B,1);
 	  for (j=2; j<=p-d; j++) {
-		  fprintf(SF,"*%s%d",B,j);
+		  dprintf(SF,"*%s%d",B,j);
 	  }
-	  fprintf(SF,");\n");
-	  fprintf(SF,"for(i=1;i<=ncols(M);i++){\n");
-	  fprintf(SF,"  M[2,i]=reduce(M[1,i]*HySurf,chow)/norm;\n");
-	  fprintf(SF,"}\n");
-	  fprintf(SF,"poly p=M[2,1]*M[1,1];\n");
-	  fprintf(SF,"for(i=2;i<=ncols(M);i++){\n");
-	  fprintf(SF,"  p=p+M[2,i]*M[1,i];\n");
-	  fprintf(SF,"}\n");
-	  fprintf(SF,"p;\n");
+	  dprintf(SF,");\n");
+	  dprintf(SF,"for(i=1;i<=ncols(M);i++){\n");
+	  dprintf(SF,"  M[2,i]=reduce(M[1,i]*HySurf,chow)/norm;\n");
+	  dprintf(SF,"}\n");
+	  dprintf(SF,"poly p=M[2,1]*M[1,1];\n");
+	  dprintf(SF,"for(i=2;i<=ncols(M);i++){\n");
+	  dprintf(SF,"  p=p+M[2,i]*M[1,i];\n");
+	  dprintf(SF,"}\n");
+	  dprintf(SF,"p;\n");
   }
 	
 
   //PRINT Chern classes of CY/H
   if(_Flag->H !=1 && _Flag->c){
-	  fprintf(SF,"\"SINGULAR  -> Chern classes of the CY-hypersurface:\";\n");
+	  dprintf(SF,"\"SINGULAR  -> Chern classes of the CY-hypersurface:\";\n");
 	  for(i=1;i<=DIM-1;i++){
-		  fprintf(SF,"\"c%d(CY)= \",reduce(c%dHySurf,chow);\n",i,i);
+		  dprintf(SF,"\"c%d(CY)= \",reduce(c%dHySurf,chow);\n",i,i);
 	  }
-	  fprintf(SF,"\"c%d(CY)= \",reduce(c%dHySurf*HySurf,chow)/norm,\"*[pt]\";\n",DIM,DIM);
+	  dprintf(SF,"\"c%d(CY)= \",reduce(c%dHySurf*HySurf,chow)/norm,\"*[pt]\";\n",DIM,DIM);
   }
   if(_Flag->H==1 && _Flag->c){
-	  fprintf(SF,"\"SINGULAR  -> Chern classes of the hypersurface H:\";\n");
+	  dprintf(SF,"\"SINGULAR  -> Chern classes of the hypersurface H:\";\n");
 	  for(i=1;i<=DIM-1;i++){
-		  fprintf(SF,"\"c%d(H)= \",reduce(c%dHySurf,chow);\n",i,i);
+		  dprintf(SF,"\"c%d(H)= \",reduce(c%dHySurf,chow);\n",i,i);
 	  }
-	  fprintf(SF,"\"c%d(H)= \",reduce(c%dHySurf*HySurf,chow)/norm,\"*[pt]\";\n",DIM,DIM);
+	  dprintf(SF,"\"c%d(H)= \",reduce(c%dHySurf*HySurf,chow)/norm,\"*[pt]\";\n",DIM,DIM);
   }
 
 	
 /*####### triple intersection numbers #########*/
   if(_Flag->t){
-	  fprintf(SF,"\"SINGULAR -> triple intersection numbers:\";\n");
-	  fprintf(SF,"poly f=1;\n");
-	  fprintf(SF,"for(i=1;i<=%d;i++){\n",p);
-	  fprintf(SF,"  k=1;\n");
-	  fprintf(SF,"  for(j=1;j<=size(nonintersectingd);j++){\n");
-	  fprintf(SF,"    if(dli[i]==nonintersectingd[j]){k=0;}\n");
-	  fprintf(SF,"  }\n");     
-	  fprintf(SF,"  f=f-t*k*dli[i];\n");
-	  fprintf(SF,"}\n");
-	  fprintf(SF,"poly m=jet(1,f,%d)-jet(1,f,%d);\n",2*DIM,2*DIM-2);
-	  fprintf(SF,"matrix M=coef(m,dli[%d]",1);
+	  dprintf(SF,"\"SINGULAR -> triple intersection numbers:\";\n");
+	  dprintf(SF,"poly f=1;\n");
+	  dprintf(SF,"for(i=1;i<=%d;i++){\n",p);
+	  dprintf(SF,"  k=1;\n");
+	  dprintf(SF,"  for(j=1;j<=size(nonintersectingd);j++){\n");
+	  dprintf(SF,"    if(dli[i]==nonintersectingd[j]){k=0;}\n");
+	  dprintf(SF,"  }\n");     
+	  dprintf(SF,"  f=f-t*k*dli[i];\n");
+	  dprintf(SF,"}\n");
+	  dprintf(SF,"poly m=jet(1,f,%d)-jet(1,f,%d);\n",2*DIM,2*DIM-2);
+	  dprintf(SF,"matrix M=coef(m,dli[%d]",1);
 	  for (j=2; j<=p; j++) {
-		  fprintf(SF,"*dli[%d]",j);
+		  dprintf(SF,"*dli[%d]",j);
 	  }
-	  fprintf(SF,");\n");
-	  fprintf(SF,"for(i=1;i<=ncols(M);i++){\n");
-	  fprintf(SF,"  M[2,i]=reduce(M[1,i]*HySurf,chow)/norm;\n");
-	  fprintf(SF,"}\n");
-	  fprintf(SF,"string colon=\",\";\n");
-	  fprintf(SF,"string arrow=\"->\";\n");
-	  fprintf(SF,"for(i=1;i<=ncols(M);i++){\n");
-	  fprintf(SF,"  string(M[1,i],arrow,M[2,i],colon);}\n");
+	  dprintf(SF,");\n");
+	  dprintf(SF,"for(i=1;i<=ncols(M);i++){\n");
+	  dprintf(SF,"  M[2,i]=reduce(M[1,i]*HySurf,chow)/norm;\n");
+	  dprintf(SF,"}\n");
+	  dprintf(SF,"string colon=\",\";\n");
+	  dprintf(SF,"string arrow=\"->\";\n");
+	  dprintf(SF,"for(i=1;i<=ncols(M);i++){\n");
+	  dprintf(SF,"  string(M[1,i],arrow,M[2,i],colon);}\n");
   }
 	
 
@@ -448,67 +451,67 @@ if(_Flag->Read_HyperSurfCounter==0){
 	
 /*####### Top. quant'ies of the divisors '#######*/
   if(_Flag->d && DIM>1){
-	fprintf(SF,"\"SINGULAR -> topological quantities of the toric divisors:\";\n");
+	dprintf(SF,"\"SINGULAR -> topological quantities of the toric divisors:\";\n");
 	for(i=1; i<=p; i++){
-		fprintf(SF,"k=1;\n");
-		fprintf(SF,"for(j=1;j<=size(nonintersectingd);j++){\n");
-		fprintf(SF,"    if(dli[%d]==nonintersectingd[j]){k=0;}\n",i);
-		fprintf(SF,"}\n");     
-		fprintf(SF,"if(k==1){\n");
-		fprintf(SF,"poly ChernBottomD%d=1;\n",i);
-		fprintf(SF,"for(i=1;i<=%d;i++){ChernBottomD%d=ChernBottomD%d+(-1)^i*(dli[%d])^i;}\n",DIM-1,i,i,i);
-		fprintf(SF,"poly ChernD%d=ChernUp*ChernBottomD%d*ChernBottomHypersurface;\n",i,i);
+		dprintf(SF,"k=1;\n");
+		dprintf(SF,"for(j=1;j<=size(nonintersectingd);j++){\n");
+		dprintf(SF,"    if(dli[%d]==nonintersectingd[j]){k=0;}\n",i);
+		dprintf(SF,"}\n");     
+		dprintf(SF,"if(k==1){\n");
+		dprintf(SF,"poly ChernBottomD%d=1;\n",i);
+		dprintf(SF,"for(i=1;i<=%d;i++){ChernBottomD%d=ChernBottomD%d+(-1)^i*(dli[%d])^i;}\n",DIM-1,i,i,i);
+		dprintf(SF,"poly ChernD%d=ChernUp*ChernBottomD%d*ChernBottomHypersurface;\n",i,i);
 		/*Chern classes of divisors*/
-		for (j=0;j<DIM-1; j++) fprintf(SF,"poly c%dD%d=jet(ChernD%d,%d)-jet(ChernD%d,%d);\n",j+1,i,i,j+1,i,j);
-		fprintf(SF,"matrix ch[%d][1] = 1",DIM);
+		for (j=0;j<DIM-1; j++) dprintf(SF,"poly c%dD%d=jet(ChernD%d,%d)-jet(ChernD%d,%d);\n",j+1,i,i,j+1,i,j);
+		dprintf(SF,"matrix ch[%d][1] = 1",DIM);
 		for(j=2;j<=DIM;j++){
-			fprintf(SF,",c%dD%d",j-1,i);
+			dprintf(SF,",c%dD%d",j-1,i);
 		};
-		fprintf(SF,";\n");
-		fprintf(SF,"matrix pp[%d][1] = -ch[2,1]",DIM-1);
+		dprintf(SF,";\n");
+		dprintf(SF,"matrix pp[%d][1] = -ch[2,1]",DIM-1);
 		for(j=2;j<=DIM-1;j++){
-			fprintf(SF,",-%d*ch[%d,1]",j,j+1);
+			dprintf(SF,",-%d*ch[%d,1]",j,j+1);
 		};
-		fprintf(SF,";\n");
-		fprintf(SF,"for(i=1;i<=%d;i++){\n",DIM-1);
-		fprintf(SF,"  for(j=1;j<=i-1;j++){\n");
-		fprintf(SF,"    pp[i,1]=pp[i,1]-pp[j,1]*ch[i-j+1,1];\n");
-		fprintf(SF,"  };\n");
-		fprintf(SF,"};\n");
-		fprintf(SF,"poly tmp=%d;\n",DIM-1);
-		fprintf(SF,"for(i=1;i<=%d;i++){\n",DIM-1);
-		fprintf(SF,"  tmp = tmp+pp[i,1]/factorial(i)*(-t)^i;\n");
-		fprintf(SF,"};\n");
-		fprintf(SF,"poly ToddD%d=subst(Todd(tmp,%d),t,1);\n",i,DIM-1);
+		dprintf(SF,";\n");
+		dprintf(SF,"for(i=1;i<=%d;i++){\n",DIM-1);
+		dprintf(SF,"  for(j=1;j<=i-1;j++){\n");
+		dprintf(SF,"    pp[i,1]=pp[i,1]-pp[j,1]*ch[i-j+1,1];\n");
+		dprintf(SF,"  };\n");
+		dprintf(SF,"};\n");
+		dprintf(SF,"poly tmp=%d;\n",DIM-1);
+		dprintf(SF,"for(i=1;i<=%d;i++){\n",DIM-1);
+		dprintf(SF,"  tmp = tmp+pp[i,1]/factorial(i)*(-t)^i;\n");
+		dprintf(SF,"};\n");
+		dprintf(SF,"poly ToddD%d=subst(Todd(tmp,%d),t,1);\n",i,DIM-1);
 		  
 		/*Euler chrachteristics and arithmetic genera*/
-		fprintf(SF,"poly EulerD%d=reduce(dli[%d]*c%dD%d*HySurf,chow)/norm;\n",i,i,DIM-1,i);
-		fprintf(SF,"poly EulerHD%d=reduce(ToddD%d*dli[%d]*HySurf,chow)/norm;\n",i,i,i);
-		fprintf(SF,"};\n");
+		dprintf(SF,"poly EulerD%d=reduce(dli[%d]*c%dD%d*HySurf,chow)/norm;\n",i,i,DIM-1,i);
+		dprintf(SF,"poly EulerHD%d=reduce(ToddD%d*dli[%d]*HySurf,chow)/norm;\n",i,i,i);
+		dprintf(SF,"};\n");
 	}
-	fprintf(SF,"string EulerD;");
-	fprintf(SF,"string EulerHD;");
-    fprintf(SF,"list c1D; list eulerHD; list eulerD;");
+	dprintf(SF,"string EulerD;");
+	dprintf(SF,"string EulerHD;");
+    dprintf(SF,"list c1D; list eulerHD; list eulerD;");
 	for(i=1;i<=p;i++){
-		fprintf(SF,"if(defined(EulerD%d)){\n",i);
-  		fprintf(SF,"  EulerD=EulerD+string(EulerD%d)+\" \";",i);
-		fprintf(SF,"  EulerHD=EulerHD+string(EulerHD%d)+\" \";",i);
-		fprintf(SF,"  c1D[%d]=c1D%d;",i,i);
-		fprintf(SF,"  eulerHD[%d]=EulerHD%d;",i,i);
-		fprintf(SF,"  eulerD[%d]=EulerD%d;",i,i);
-        fprintf(SF,"};\n");		
+		dprintf(SF,"if(defined(EulerD%d)){\n",i);
+  		dprintf(SF,"  EulerD=EulerD+string(EulerD%d)+\" \";",i);
+		dprintf(SF,"  EulerHD=EulerHD+string(EulerHD%d)+\" \";",i);
+		dprintf(SF,"  c1D[%d]=c1D%d;",i,i);
+		dprintf(SF,"  eulerHD[%d]=EulerHD%d;",i,i);
+		dprintf(SF,"  eulerD[%d]=EulerD%d;",i,i);
+        dprintf(SF,"};\n");		
 	}
-	fprintf(SF,"\"Euler characteristics:\", EulerD;\n ");
-	fprintf(SF,"\"Arithmetic genera:\", EulerHD;\n");
+	dprintf(SF,"\"Euler characteristics:\", EulerD;\n ");
+	dprintf(SF,"\"Arithmetic genera:\", EulerHD;\n");
 /*#############################################*/
 
 /*####### dP conditions #######################*/
 	  if(DIM == 3){
-		  fprintf(SF,"kill k;\n");
-		  fprintf(SF,"if(defined(f)){kill f;}\n");
-		  fprintf(SF,"if(defined(p)){kill p;}\n");
-		  fprintf(SF,"list dP; list N; int l=0; int p=0; int t=0; int s=0; int k=0; int u=0; int v=0;");
-			fprintf(SF,""
+		  dprintf(SF,"kill k;\n");
+		  dprintf(SF,"if(defined(f)){kill f;}\n");
+		  dprintf(SF,"if(defined(p)){kill p;}\n");
+		  dprintf(SF,"list dP; list N; int l=0; int p=0; int t=0; int s=0; int k=0; int u=0; int v=0;");
+			dprintf(SF,""
 					"for(i=1;i<=size(dli);i++){"
 					"if(reduce(dli[i],std(hypideal))!=0){"
 					"if(eulerHD[i]==1 && eulerD[i]>=3 && eulerD[i]<=11 && reduce(c1D[i]^2*dli[i]*HySurf,chow)/norm >=1 && reduce(c1D[i]^2*dli[i]*HySurf,chow)/norm <= 9){"
@@ -536,15 +539,16 @@ if(_Flag->Read_HyperSurfCounter==0){
 	 			  "t=0;"	/* index for no repetitions of div. classes */
 	 			  "}	");
 
-			fprintf(SF,"string DelPezzo;for(i=1;i<=size(dP);i++){DelPezzo=DelPezzo+string(dP[i])+\"(\"+string(N[i])+\")\"+\" \";};");
-			fprintf(SF,"list nonintDP; int g=0; int f=0; if(size(dP)>0){if(size(dP)>1){for(i=1;i<=size(dP);i++){for(j=1;j<=size(dP);j++){if(dP[j]!=dP[i]){for(k=1;k<=size(dli);k++){if(reduce(dP[i]*dP[j]*dli[k]*HySurf,chow)/norm!=0){g++;} ;};};}; if(g==0){f++; nonintDP[f]=dP[i];}; g=0;};} else {nonintDP[1]=dP[1];};};");
-			fprintf(SF,"string niDP;for(i=1;i<=size(nonintDP);i++){niDP=niDP+string(nonintDP[i])+\" \";};");
-			fprintf(SF, "\"dPs:\",size(dP),\";\",DelPezzo,\"nonint:\",size(nonintDP),\";\",niDP;");
+			dprintf(SF,"string DelPezzo;for(i=1;i<=size(dP);i++){DelPezzo=DelPezzo+string(dP[i])+\"(\"+string(N[i])+\")\"+\" \";};");
+			dprintf(SF,"list nonintDP; int g=0; int f=0; if(size(dP)>0){if(size(dP)>1){for(i=1;i<=size(dP);i++){for(j=1;j<=size(dP);j++){if(dP[j]!=dP[i]){for(k=1;k<=size(dli);k++){if(reduce(dP[i]*dP[j]*dli[k]*HySurf,chow)/norm!=0){g++;} ;};};}; if(g==0){f++; nonintDP[f]=dP[i];}; g=0;};} else {nonintDP[1]=dP[1];};};");
+			dprintf(SF,"string niDP;for(i=1;i<=size(nonintDP);i++){niDP=niDP+string(nonintDP[i])+\" \";};");
+			dprintf(SF, "\"dPs:\",size(dP),\";\",DelPezzo,\"nonint:\",size(nonintDP),\";\",niDP;");
 	  }
 /*#############################################*/
 }
 
-  fprintf(SF,"quit;\n"); fflush(0); fclose(SF);
+  dprintf(SF,"quit;\n");
+  close(SF);
 
 #if (TEST_PRINT_SINGULAR_IO)
 				CatFile(SFname);
