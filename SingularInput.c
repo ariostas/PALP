@@ -12,7 +12,6 @@
 /* ======================================================== */
 /* =========            H E A D E R s             ========= */
 
-#include <fcntl.h>  /* open  */
 #include <unistd.h> /* close */
 
 #include "Global.h"
@@ -34,10 +33,17 @@
 /*=========================================================*/
 
 #if (TEST_PRINT_SINGULAR_IO)
-void CatFile(char *fn){char CAT[30+L_tmpnam];strcpy(CAT,"cat ");
-  strcat(CAT,fn);printf("======= FILE content of %s:\n",fn); fflush(0);
+void CatFile(char *fn){
+  char* CAT = (char*)malloc(30 + strlen(fn));
+  strcpy(CAT,"cat ");
+  strcat(CAT,fn);
+  printf("======= FILE content of %s:\n",fn);
+  fflush(0);
   assert(0==system(CAT));
-  printf("====== End of FILE content of %s\n\n",fn); fflush(0);}
+  printf("====== End of FILE content of %s\n\n",fn);
+  fflush(0);
+  free(CAT);
+}
 #endif
 
 int Read_HyperSurf(int *he, int divclassnr, int maxline, char filename[20], MORI_Flags *_Flag){
@@ -88,11 +94,12 @@ void HyperSurfSingular(PolyPointList *P,triang *T, triang *SR ,MORI_Flags *_Flag
   int CODIM=1;
   int DIM=TORDIM-CODIM;
 
-  int SF;
-  char SFname[L_tmpnam], SingularCall[50+L_tmpnam], *D=T_DIV,*B=DIVclassBase;
+  char SFname[] = "/tmp/SFnameXXXXXX";
+  char SingularCall[50 + 18]; /* 50 + strlen(SFname) */
+  char *D=T_DIV,*B=DIVclassBase;
 
-  assert(NULL!=tmpnam(SFname));
-  assert(-1!=(SF=open(SFname, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR)));
+  int SF = mkstemp(SFname);
+  assert(-1 != SF);
 
   dprintf(SF,"LIB \"general.lib\";\n");
   dprintf(SF,"option(noredefine);\n");
@@ -561,7 +568,6 @@ if(_Flag->Read_HyperSurfCounter==0){
 #endif
 
   strcpy(SingularCall,"Singular -q < "); strcat(SingularCall,SFname);
-  assert(strlen(SingularCall)<50+L_tmpnam);
   if( system(SingularCall) ) {puts("Check Singular installation");exit(1);}
   remove(SFname);
 }
