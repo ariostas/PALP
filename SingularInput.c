@@ -93,13 +93,27 @@ void HyperSurfSingular(PolyPointList *P,triang *T, triang *SR ,MORI_Flags *_Flag
   int TORDIM=P->n;
   int CODIM=1;
   int DIM=TORDIM-CODIM;
-
-  char SFname[] = "/tmp/SFnameXXXXXX";
-  char SingularCall[50 + 18]; /* 50 + strlen(SFname) */
   char *D=T_DIV,*B=DIVclassBase;
+
+  /* Put temporary files in $TMPDIR if it is set */
+  char* tmpdir = getenv("TMPDIR");
+  if (tmpdir == NULL) {
+    tmpdir = "/tmp";
+  }
+
+  /* Add one to ensure room for the null byte at the end */
+  size_t template_size = strlen(tmpdir) + strlen("/SFnameXXXXXX") + 1;
+  char* SFname = (char*)malloc(template_size);
+  snprintf(SFname, template_size, "%s/SFnameXXXXXX", tmpdir);
 
   int SF = mkstemp(SFname);
   assert(-1 != SF);
+
+  /* Construct the singular command. In this case, template_size is
+     already padded by 1 byte (see above). */
+  size_t singular_cmd_size = strlen("Singular -q < ") + template_size;
+  char* SingularCall = (char*)malloc(singular_cmd_size);
+  snprintf(SingularCall, singular_cmd_size, "Singular -q < %s", SFname);
 
   dprintf(SF,"LIB \"general.lib\";\n");
   dprintf(SF,"option(noredefine);\n");
@@ -567,9 +581,10 @@ if(_Flag->Read_HyperSurfCounter==0){
 				CatFile(SFname);
 #endif
 
-  strcpy(SingularCall,"Singular -q < "); strcat(SingularCall,SFname);
   if( system(SingularCall) ) {puts("Check Singular installation");exit(1);}
   remove(SFname);
+  free(SFname);
+  free(SingularCall);
 }
 
 
