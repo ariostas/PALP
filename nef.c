@@ -482,9 +482,10 @@ int Read_WPCICY(Weight * _W, int *_D)
      /* read "d" and "w_i" till sum=d or non-digit */
 {
     char c;
-    int long nl, sum;
+    int long nl, sum, FilterFlag = (inFILE == NULL);
     if (inFILE == stdin)
 	printf("type degrees and weights [d  w1 w2 ... wk d=d_1 d_2]: ");
+    else if (FilterFlag) inFILE = stdin;
     c = fgetc(inFILE);
     if (!IsDigit(c))
 	return 0;
@@ -525,6 +526,7 @@ int Read_WPCICY(Weight * _W, int *_D)
 	puts("I need at least 2 weights!");
 	exit(0);
     }
+    if (FilterFlag) inFILE = NULL;
     return 1;
 }
 
