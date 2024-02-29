@@ -34,12 +34,7 @@ run_test
 
 # Pages 48-49
 # The "sed" command strips the unpredictable timing information
-#
-# This example segfaults if we try to pipe the input in using -f:
-#
-#   https://gitlab.com/stringstuwien/PALP/-/issues/3
-#
-COMMAND="./nef-${DIM}d.x -Lv -m tests/input/6.4.19-nef-m.txt | sed 's/ *[0-9]*sec.*//g'"
+COMMAND="echo '14 1 1 1 1 4 6 d=2 12' | ./nef-${DIM}d.x -f -Lv -m | sed 's/ *[0-9]*sec.*//g'"
 DESCRIPTION="nef-${DIM}d.x -Lv m example on pages 48-49"
 EXPECTED=$(cat<<-EOF
 14 1 1 1 1 4 6 d=2 12 M:1270 12 N:11 7  codim=2 #part=2
