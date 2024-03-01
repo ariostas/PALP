@@ -141,7 +141,7 @@ int Choose(int n, int k, int *C){int x;
  */
 /*---QUICK-FIX----------------------------------------------------------------*/
 
-void DivClassBasis(FILE *SF,PolyPointList *P,int v,char *D,char *B){
+void DivClassBasis(int SF,PolyPointList *P,int v,char *D,char *B){
   Long cdiv=0, sv, nok, *X[POLY_Dmax]; int d=P->n, C[VERT_Nmax];
   nok=Init_Choose(v,d,C);
   do { int c, CC[VERT_Nmax];
@@ -150,11 +150,11 @@ void DivClassBasis(FILE *SF,PolyPointList *P,int v,char *D,char *B){
     else for(c=0;c<d;c++) CC[c]=v-1-C[c];	/* eliminate D_max first */
     for(c=0;c<d;c++) X[c]=P->x[CC[c]];
     sv=SimplexVolume(X,P->n); cdiv=NNgcd(cdiv,sv);
-    if(sv==1){int x=0; fprintf(SF,"\nideal DCbase=");
+    if(sv==1){int x=0; dprintf(SF,"\nideal DCbase=");
       Inci64 I=makeN(CC[0]); for(c=1;c<d;c++) I+=makeN(CC[c]);
-      for(c=0;c<v;c++) if(!getN(c,I)) {if(x) fprintf(SF,","); /* complement */ 
-	fprintf(SF,"%s%d-%s%d",B,++x,D,c+1);} 
-      assert(x==v-d); fprintf(SF,";\n"); return; }
+      for(c=0;c<v;c++) if(!getN(c,I)) {if(x) dprintf(SF,","); /* complement */ 
+	dprintf(SF,"%s%d-%s%d",B,++x,D,c+1);} 
+      assert(x==v-d); dprintf(SF,";\n"); return; }
     nok--;} while(Choose(v,d,C)); assert(nok==0);
 
   if(cdiv>1){
@@ -166,17 +166,17 @@ void DivClassBasis(FILE *SF,PolyPointList *P,int v,char *D,char *B){
       else for(c=0;c<d;c++) CC[c]=v-1-C[c];	/* eliminate D_max first */
       for(c=0;c<d;c++) X[c]=P->x[CC[c]];
       sv=SimplexVolume(X,P->n);
-      if(sv==cdiv){int x=0; fprintf(SF,"\nideal DCbase=");
+      if(sv==cdiv){int x=0; dprintf(SF,"\nideal DCbase=");
       	Inci64 I=makeN(CC[0]); for(c=1;c<d;c++) I+=makeN(CC[c]);
-        for(c=0;c<v;c++) if(!getN(c,I)) {if(x)fprintf(SF,",");
-	  fprintf(SF,"%s%d-%s%d",B,++x,D,c+1);} 
-        assert(x==v-d); fprintf(SF,";\n"); return; }
+        for(c=0;c<v;c++) if(!getN(c,I)) {if(x)dprintf(SF,",");
+	  dprintf(SF,"%s%d-%s%d",B,++x,D,c+1);} 
+        assert(x==v-d); dprintf(SF,";\n"); return; }
       nok--;} while(Choose(v,d,C));}
 
   puts("IMPROVE CODE: no Vol=1 simplex in DivClassBasis()");exit(0);}
 
 
-void OLD_LinRelLatticeBasis(FILE *SF,PolyPointList *P,int v,char *D,char *B){
+void OLD_LinRelLatticeBasis(int SF,PolyPointList *P,int v,char *D,char *B){
   int i,j,k,l; Long cdiv=0; if(v>8) {DivClassBasis(SF,P,v,D,B);return;}
   if(P->n != 4) {DivClassBasis(SF,P,v,D,B);return;}
 
@@ -188,22 +188,22 @@ void OLD_LinRelLatticeBasis(FILE *SF,PolyPointList *P,int v,char *D,char *B){
  
 //printf("SimpVol[%d%d%d%d]=%ld\n",i,j,k,l,SimplexVolume(X,P->n));
     sv=SimplexVolume(X,P->n); cdiv=NNgcd(cdiv,sv);
-    if(sv==1) {x=0; fprintf(SF,"\nideal DCbase=");
+    if(sv==1) {x=0; dprintf(SF,"\nideal DCbase=");
       for(y=0;y<v;y++) if(!getN(y,I)) {		      /* integral basis B[] */
-        if(x) fprintf(SF,",");
-	fprintf(SF,"%s%d-%s%d",B,++x,D,y+1);} 
-      assert(x==v-4); fprintf(SF,";\n"); return;}}
+        if(x) dprintf(SF,",");
+	dprintf(SF,"%s%d-%s%d",B,++x,D,y+1);} 
+      assert(x==v-4); dprintf(SF,";\n"); return;}}
 
   if(cdiv>1){printf("Fundamental group = Z%d\n",(int)cdiv);fflush(0);
    for(l=3;l<v;l++)for(k=2;k<l;k++)for(j=1;j<k;j++)for(i=0;i<j;i++){Long *X[4];
     Inci64 I=makeN(i)+makeN(j)+makeN(k)+makeN(l); int x=0,y; Long sv;
     for(y=0;y<v;y++) if(getN(y,I)) X[x++]=P->x[y]; assert(x==4); 
     sv=SimplexVolume(X,P->n); 
-    if(sv==cdiv) {x=0; fprintf(SF,"\nideal DCbase=");
+    if(sv==cdiv) {x=0; dprintf(SF,"\nideal DCbase=");
       for(y=0;y<v;y++) if(!getN(y,I)) {		      /* integral basis B[] */
-        if(x)fprintf(SF,",");
-	fprintf(SF,"%s%d-%s%d",B,++x,D,y+1);} /* OFFSET */
-      assert(x==v-4); fprintf(SF,";\n"); return;}}
+        if(x)dprintf(SF,",");
+	dprintf(SF,"%s%d-%s%d",B,++x,D,y+1);} /* OFFSET */
+      assert(x==v-4); dprintf(SF,";\n"); return;}}
    }
   puts("IMPROVE CODE: no Vol=1 simplex in LinRelLatticeBasis!!!");exit(0);
   }
@@ -216,12 +216,6 @@ void OLD_LinRelLatticeBasis(FILE *SF,PolyPointList *P,int v,char *D,char *B){
 /* new version:	number Vol=1; poly norm=Vol*reduce(d1*d2*d3*d4*d5,chow);
  *		reduce(nef*d1*d1*d1,chow)/norm;  // D=d divisor, B=h basis
  */
-void CatFile(char *fn){char CAT[30+L_tmpnam];strcpy(CAT,"cat ");
-  strcat(CAT,fn);printf("======= FILE content of %s:\n",fn); fflush(0);
-  assert(0==system(CAT));
-  printf("====== End of FILE content of %s\n\n",fn); fflush(0);}
-
-
 
 
 /*   ==============	    M O R I   C O N E		================   */
