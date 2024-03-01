@@ -41,12 +41,7 @@ int   LrC(LRat a, LRat b);      /* Compare = [1 / 0 / -1] if a [gt/eq/lt] b */
 void  LRpr(LRat c);		/*  write  "c.N/c.D"  to outFN */
 
 /*   Map Permutations: Do "ArgFun" for all permutations pi of *d elements */
-#ifdef	__cplusplus
 #define ARG_FUN		void (*ArgFun)(int *d,int *pi,int *pinv,void *info)
-#else
-#define	ARG_FUN 	void ( ArgFun() ) 
-#endif
-
 void  Map_Permut(int *d,int *pi,int *pinv,ARG_FUN,void *AuxPtr);
 
 Long  W_to_GLZ(Long *W, int *d, Long **GLZ);	/* "triangluar" form of GLZ */

@@ -13,7 +13,7 @@ void CWS_to_PermCWS(CWS *Cin, CWS *C, int *pi);
 
 /*  ==========  	  I/O functions:                	==========  */
 
-int  IsNextDigit(){    
+int  IsNextDigit(void){
   char c; c=fgetc(inFILE); ungetc(c,inFILE);
   if(c=='0') return -1;
   if((c<'0') || ('9'<c)) return 0; else return 1;
