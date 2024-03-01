@@ -1,0 +1,4 @@
+3 2 This text is ignored by PALP
+2 0
+0 2
+0 0
