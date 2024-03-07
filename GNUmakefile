@@ -91,30 +91,27 @@ all-dims: $(1)-$(2)d.x
 
 # Specify some additional dependencies (beyond the corresponding *.c file)
 # for our *.o files.
-Coord-$(2)d.o:         Rat.h
-Polynf-$(2)d.o:        Rat.h
-Rat-$(2)d.o:           Rat.h
-Subpoly-$(2)d.o:       Rat.h Subpoly.h
-Subadd-$(2)d.o:        Subpoly.h
-Vertex-$(2)d.o:        Rat.h
-Subdb-$(2)d.o:         Subpoly.h
-LG-$(2)d.o:            Rat.h LG.h
+Coord-$(2)d.o:         Rat.h Global.h
+Polynf-$(2)d.o:        Rat.h Global.h
+Rat-$(2)d.o:           Rat.h Global.h
+Subpoly-$(2)d.o:       Rat.h Subpoly.h Global.h
+Subadd-$(2)d.o:        Subpoly.h Global.h
+Vertex-$(2)d.o:        Rat.h Global.h
+Subdb-$(2)d.o:         Subpoly.h Global.h
+LG-$(2)d.o:            Rat.h LG.h Global.h
 
-E_Poly-$(2)d.o:        Nef.h Rat.h
-Nefpart-$(2)d.o:       Nef.h
+E_Poly-$(2)d.o:        Nef.h Rat.h Global.h
+Nefpart-$(2)d.o:       Nef.h Global.h
 
-MoriCone-$(2)d.o:      Rat.h Mori.h
-SingularInput-$(2)d.o: Mori.h
+MoriCone-$(2)d.o:      Rat.h Mori.h Global.h
+SingularInput-$(2)d.o: Mori.h Global.h
 
-poly-$(2)d.o:          LG.h
-class-$(2)d.o:         Subpoly.h
-cws-$(2)d.o:           LG.h Rat.h
-nef-$(2)d.o:           Nef.h LG.h
-mori-$(2)d.o:          LG.h Mori.h
+poly-$(2)d.o:          LG.h Global.h
+class-$(2)d.o:         Subpoly.h Global.h
+cws-$(2)d.o:           LG.h Rat.h Global.h
+nef-$(2)d.o:           Nef.h LG.h Global.h
+mori-$(2)d.o:          LG.h Mori.h Global.h
 endef
-
-# All object files should be rebuilt if Global.h changes
-%.o: Global.h
 
 # Call the PROG_DIM_template once for each PROGRAM "p" and
 # DIMENSION "d".
