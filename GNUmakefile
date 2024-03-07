@@ -41,13 +41,6 @@ clean:	;	rm -f *.o
 .PHONY: cleanall
 cleanall: ;	rm -f *.o *.x palp_* core
 
-
-# Build foo.x by copying foo-6d.x to foo.x. This wastes a little bit
-# of space, but avoids any obscure problems that might arise from
-# using links instead
-%.x: %-6d.x
-	cp $< $@
-
 define PROG_DIM_template =
 #
 # Define separate build rules for every combination of PROGRAMS and
@@ -75,9 +68,18 @@ nef_OBJ_$(2)    = E_Poly-$(2)d.o Nefpart-$(2)d.o LG-$(2)d.o
 mori_OBJ_$(2)   = MoriCone-$(2)d.o SingularInput-$(2)d.o LG-$(2)d.o
 
 # Build the object foo-Nd.o from foo.c. The COMPILE.c macro is built
-# in to GNU Make.
+# in to GNU Make. There's a special case for an empty DIMENSION as an
+# indicator that we should not override the value of POLY_Dmax in
+# Global.h. This is used to build the foo.x programs using the value
+# in Global.h, since editing Global.h has long been documented as the
+# way to change POLY_Dmax in foo.x.
+ifeq ($(2),)
+%-$(2)d.o: %.c
+	$(COMPILE.c) -o $$@ $$<
+else
 %-$(2)d.o: %.c
 	$(COMPILE.c) -DPOLY_Dmax=$(2) -o $$@ $$<
+endif
 
 # Link the program foo-Nd.x from foo-Nd.o, OBJECTS_N, and foo_OBJ_N.
 # The LINK.c macro is built in to GNU Make.
@@ -119,6 +121,25 @@ endef
 $(foreach p,$(PROGRAMS),$(foreach d,$(DIMENSIONS),\
   $(eval $(call PROG_DIM_template,$(p),$(d)))\
 ))
+
+# Typically (i.e. by default) foo.x will be identical to foo-6d.x,
+# since Global.h defines POLY_Dmax=6. However, the procedure to change
+# POLY_Dmax has long been documented as "edit Global.h and re-run
+# make." If we simply copy foo-6d.x to foo.x, then changes to Global.h
+# will have no effect on the resulting executables. Instead, we build
+# a separate copy of each program with DIMENSION set to the empty
+# string. This alerts the build rule to omit the -DPOLY_Dmax line that
+# overrides the value in Global.h. The resulting foo-d.x executables
+# can then be copied to foo.x so that the documented procedure still
+# works. The special INTERMEDIATE rule avoids rebuilding foo-d.x after
+# we've moved it to foo.x.
+$(foreach p,$(PROGRAMS),\
+  $(eval $(call PROG_DIM_template,$(p),))\
+)
+.INTERMEDIATE: $(foreach p,$(PROGRAMS),$(p)-d.x)
+%.x: %-d.x
+	mv $< $@
+
 
 # For lack of anything less silly, define a newline this way.
 # We need it to run multiple commands in a $(foreach) loop.
