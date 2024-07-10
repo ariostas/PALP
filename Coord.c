@@ -355,7 +355,10 @@ void Print_CWH(CWS *_W, BaHo *_BH){
       for(i=2;i<_BH->n-1;i++) fprintf(outFILE,",%d",_BH->h1[i]);
       if(_BH->n==4) fprintf(outFILE," [%d]",2*(_BH->h1[1]-_BH->h1[2])); 
       if(_BH->n==5) 
-	fprintf(outFILE," [%d]",48+6*(_BH->h1[1]-_BH->h1[2]+_BH->h1[3]));}}
+	fprintf(outFILE," [%d]",48+6*(_BH->h1[1]-_BH->h1[2]+_BH->h1[3]));
+      if(_BH->n==6)
+	fprintf(outFILE," [%d]",
+		24*(_BH->h1[1]-_BH->h1[2]+_BH->h1[3]-_BH->h1[4]));}}
   else if(_BH->mp)
     fprintf(outFILE,"M:%d %d F:%d",_BH->mp,_BH->mv,_BH->nv);
   else fprintf(outFILE,"V:%d F:%d",_BH->mv,_BH->nv);
