@@ -205,17 +205,20 @@ int  Read_Weight(Weight *_W)     /* read "d w_i" [ or "w_i d" if last=max ] */
      if(FilterFlag) inFILE=NULL;
      return 1;
 }
+#define   StandardOutput   1
 void Write_WH(Weight *_W, BaHo *_BH, VaHo *_VH, int rc, int tc,
 	      PolyPointList *_P, VertexNumList *_V, EqList *_E){
   int i, j;
-#if	WZinput
+#if     StandardOutput
   fprintf(outFILE,"%d ",(int)_W->d);
   for(i=0;i<_W->N;i++) fprintf(outFILE,"%d ",(int)_W->w[i]);
-  for(i=0;i<_W->M;i++){fprintf(outFILE,"/Z%d: ",(int)_W->m[i]);
-    for(j=0;j<_W->N;j++)fprintf(outFILE,"%d ",(int)_W->z[i][j]);}
 #else  
   for(i=0;i<_W->N;i++) fprintf(outFILE,"%d ",(int)_W->w[i]); 
   fprintf(outFILE,"%d=d ",(int)_W->d);
+#endif
+#if	WZinput
+  for(i=0;i<_W->M;i++){fprintf(outFILE,"/Z%d: ",(int)_W->m[i]);
+    for(j=0;j<_W->N;j++)fprintf(outFILE,"%d ",(int)_W->z[i][j]);}
 #endif
   fprintf(outFILE,"M:%d %d ",_P->np,_V->nv);  /* PolyData */
   if(rc) fprintf(outFILE,"N:%d %d ",_BH->np,_E->ne); 
@@ -235,31 +238,35 @@ void Write_WH(Weight *_W, BaHo *_BH, VaHo *_VH, int rc, int tc,
       fputs("\n",outFILE);     }
     return ;
   }
-  if((!tc)&&(!rc)){fprintf(outFILE,"non-transversal\n");return;}
+  if((!tc)&&(!rc)){fprintf(outFILE,"not transverse\n");return;}
   if(_P->n>2){
-    if(tc&&rc) for(i=1;i<_P->n-1;i++) if(_VH->h[1][i]!=_BH->h1[i]) 
+    if(tc&&rc&&_BH->np) for(i=1;i<_P->n-1;i++) if(_VH->h[1][i]!=_BH->h1[i])
       { puts("Vafa!=Batyrev"); for(i=1;i<_P->n-1;i++) printf(
-	"V[1,%d]=%d  B[1,%d]=%d\n",i,_VH->h[1][i],i,_BH->h1[i]);exit(0);}
-    if(tc)      {	
-      fprintf(outFILE,"V:%d",_VH->h[1][1]); 
-      for(i=2;i<_P->n-1;i++) fprintf(outFILE,",%d",_VH->h[1][i]);  
+	"V[1,%d]=%ld  B[1,%d]=%d\n",i,(long) _VH->h[1][i],i,_BH->h1[i]);exit(0);}
+    if(tc)      {
+      Pint chi = (_P->n % 2 ? 4 :0);
+      fprintf(outFILE,"V:%ld",(long) _VH->h[1][1]);
+      for(i=2;i<_P->n-1;i++) fprintf(outFILE,",%ld",(long) _VH->h[1][i]);
       if(_P->n > 5){
 	for (j=2; 2*j <= _P->n-1; j++){
-	  fprintf(outFILE,";%d",_VH->h[j][j]);
-	  for(i=j+1;i<_P->n-j;i++) fprintf(outFILE,",%d",_VH->h[j][i]);}}
+	  fprintf(outFILE,";%ld",(long) _VH->h[j][j]);
+	  for(i=j+1;i<_P->n-j;i++) fprintf(outFILE,",%ld",(long) _VH->h[j][i]);}}
+      for (i=1;i<_P->n-1;i++) for (j=1;j<_P->n-1;j++){
+	  chi += ((i+j)%2 ? -_VH->h[j][i] : _VH->h[j][i]);}
+      fprintf(outFILE," [%ld]\n",(long) chi);
     }
-    else if(rc)     {	
+    else {
+      assert(rc);
       fprintf(outFILE,"H:%d",_BH->h1[1]); 
-      for(i=2;i<_P->n-1;i++) fprintf(outFILE,",%d",_BH->h1[i]);     }
-    if(6<_P->n) fprintf(outFILE," [???]\n"); 
-    else if(tc||rc) /* Euler number */ {	
-      int chi=0, *ho=_BH->h1; if(tc) ho=_VH->h[1];
-      if(_P->n==3) chi=4+ho[1];
-      if(_P->n==4) chi=2*(ho[1]-ho[2]);
-      if(_P->n==5) chi=48+6*(ho[1]-ho[2]+ho[3]);
-      if(_P->n==6) chi=24*(ho[1]-ho[2]+ho[3]-ho[4]);
-      fprintf(outFILE," [%d]\n",chi);     }	
-    else fprintf(outFILE,"\n");} 
+      for(i=2;i<_P->n-1;i++) fprintf(outFILE,",%d",_BH->h1[i]);
+      if(6<_P->n) fprintf(outFILE," [???]\n");
+      else /* Euler number */ {
+	int chi=0, *ho=_BH->h1; // if(tc) ho=_VH->h[1];
+	if(_P->n==3) chi=4+ho[1];
+	if(_P->n==4) chi=2*(ho[1]-ho[2]);
+	if(_P->n==5) chi=48+6*(ho[1]-ho[2]+ho[3]);
+	if(_P->n==6) chi=24*(ho[1]-ho[2]+ho[3]-ho[4]);
+	fprintf(outFILE," [%d]\n",chi);     }}}
   else fprintf(outFILE,"\n");
 }
 
@@ -329,7 +336,8 @@ void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP)
 int Read_W_PP(Weight *W, PolyPointList *P){ W->P=P; return Read_WZ_PP(W); }
 #else
 int Read_W_PP(Weight *_W, PolyPointList *_PP){
-    if (!Read_Weight(_W)) return 0; Make_Poly_Points(_W,_PP); return 1;
+    if (!Read_Weight(_W)) return 0;
+    Make_Poly_Points(_W,_PP); return 1;
 }
 #endif
 
@@ -497,7 +505,8 @@ void PolyCopy(PoCoLi *X,PoCoLi *Y)
 	Y->e[Y->n]=X->e[Y->n]; Y->c[Y->n]=X->c[Y->n];}
 }
 int  BottomUpQuot(PoCoLi *N,PoCoLi *D,PoCoLi *Q,PoCoLi *R)	/* Q*D = N-R */
-{    int i, c, Npos, e, E, dD, dN;  Q->n=R->n=0;	      /* return R==0 */
+{    int i, /* c, */ Npos, e, E, dD, dN;  Q->n=R->n=0;	      /* return R==0 */
+     Pint c;
      assert(D->n>0); if(N->n==0) return 1; assert(N->n>0);  /* assume D != 0 */
      dD=D->e[D->n-1]-D->e[0]; dN=N->e[N->n-1]-N->e[0];  
      e=N->e[0]-D->e[0]; if((e<0)||(dD>dN)) { PolyCopy(N,R); return 0; }
@@ -576,7 +585,7 @@ void PoincarePoly(int N, int *w, int d, PoCoLi *P, PoCoLi *Z,PoCoLi *R)
 
 void Print_VaHo(VaHo *V)
 {    int i,j,D=V->D; for(i=0;i<=D;i++){fprintf(outFILE,"H%d*: ",i);
-	for(j=0;j<=D;j++) fprintf(outFILE,"%d ",V->h[i][j]);}    
+	for(j=0;j<=D;j++) fprintf(outFILE,"%ld ",(long) V->h[i][j]);}
 } 
 int  DoHodgeTest(VaHo *V)/*[holo] Poincare duality, Hodge duality, sum rule */
 {    int i,j,D=V->D,X;for(i=D/2;i<=D;i++){if(V->h[i][0]!=V->h[D-i][0])return 0;
@@ -953,7 +962,7 @@ void Calc_VaHo(Weight *W,VaHo *V) {
      AllocPoCoLi(P); AllocPoCoLi(Z); AllocPoCoLi(R);  
      PoincarePoly(N,w,d,P,Z,R);		
      assert(D*d==P->e[P->n-1]);
-     {  int n=P->n, cM=0; long long sum=0,num=1,den=1; /* check sum = P(0) */
+     {  int n=P->n; Pint cM=0; long long sum=0,num=1,den=1; /*check sum = P(0)*/
 	for(i=0;i<n;i++) {
 	  Pint co=P->c[i]; assert(co>0); if(co>cM) cM=co;
 	  sum+=co; }
@@ -965,7 +974,7 @@ void Calc_VaHo(Weight *W,VaHo *V) {
 #endif
 	if(den==1) assert(num==sum);
 	else { printf("sum=%lld  test=%lld/%lld \n",sum,num,den);}
-	}
+     }
      for(i=0;i<=D;i++) for(j=0;j<=D;j++) V->h[i][j] = 0;
      for(i=0;i<P->n;i++)if(P->e[i] % d==0) {j=P->e[i]/d; V->h[D-j][j]=P->c[i];}
 #ifdef	TEST_PP
