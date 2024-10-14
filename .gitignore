@@ -3,3 +3,11 @@
 # are created as intermediate build products.
 *.x
 *.o
+
+# CMake files
+build
+install
+*.cmake
+CMakeCache.txt
+CMakeFiles
+
