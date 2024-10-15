@@ -12,7 +12,7 @@ cmake -S . -B build -D CMAKE_BUILD_TYPE=Release
 Optionally, the install location and maximum polytope dimension can be specified with
 ```bash
 -D CMAKE_INSTALL_PREFIX=[your custom path]
--D POLY_Dmax=[your custom dimension, defaults to 4]
+-D POLY_Dmax=[your custom dimension, defaults to 6]
 ```
 
 Then, build the package with

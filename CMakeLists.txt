@@ -9,12 +9,17 @@ project(PALP
     C
 )
 
-set(POLY_Dmax 4 CACHE STRING "Maximum polytope dimension")
+set(POLY_Dmax 6 CACHE STRING "Maximum polytope dimension")
+
+# Compiling with -DNDEBUG on macOS breaks the code
+if(CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
+  string(REPLACE "-DNDEBUG" "" CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
+endif()
 
 set(SOURCES Coord.c Rat.c Vertex.c Polynf.c)
 set(CLASS_SRC Subpoly.c Subadd.c Subdb.c)
 set(NEF_SRC E_Poly.c Nefpart.c LG.c)
-set(MORI_SRC Moricone.c SingularInput.c LG.c)
+set(MORI_SRC MoriCone.c SingularInput.c LG.c)
 
 add_library(objects STATIC ${SOURCES})
 target_compile_definitions(objects PUBLIC POLY_Dmax=${POLY_Dmax})
