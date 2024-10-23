@@ -16,6 +16,8 @@ if(CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
   string(REPLACE "-DNDEBUG" "" CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
 endif()
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 set(SOURCES Coord.c Rat.c Vertex.c Polynf.c)
 set(CLASS_SRC Subpoly.c Subadd.c Subdb.c)
 set(NEF_SRC E_Poly.c Nefpart.c LG.c)
