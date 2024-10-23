@@ -11,10 +11,8 @@ project(PALP
 
 set(POLY_Dmax 6 CACHE STRING "Maximum polytope dimension")
 
-# Compiling with -DNDEBUG on macOS breaks the code
-if(CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
-  string(REPLACE "-DNDEBUG" "" CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
-endif()
+# Compiling with -DNDEBUG breaks the code
+string(REPLACE "-DNDEBUG" "" CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
