@@ -4,7 +4,7 @@ This is a fork of the [PALP GitLab repository](https://gitlab.com/stringstuwien/
 
 ## Building and installing
 
-PALP can now be built using CMAKE. First, generate the build configuration with
+PALP can now be built using CMake. First, generate the build configuration with
 ```bash
 cmake -S . -B build -D CMAKE_BUILD_TYPE=Release
 ```
@@ -28,3 +28,7 @@ cmake --build build --target install
 ## Usage
 
 Please consult the [PALP online documentation](http://palp.itp.tuwien.ac.at/wiki/index.php/PALP_online_documentation) for detailed instructions.
+
+## License
+
+PALP was originally written by Maximilian Kreuzer and Harald Skarke, and is distributed under the GPLv3 license.
