@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14...3.30)
+cmake_minimum_required(VERSION 3.14...4.1)
 
 project(PALP
   VERSION
@@ -23,31 +23,38 @@ set(MORI_SRC MoriCone.c SingularInput.c LG.c)
 
 add_library(objects STATIC ${SOURCES})
 target_compile_definitions(objects PUBLIC POLY_Dmax=${POLY_Dmax})
+target_include_directories(objects PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
 add_library(class_objects STATIC ${CLASS_SRC})
 target_compile_definitions(class_objects PUBLIC POLY_Dmax=${POLY_Dmax})
+target_include_directories(class_objects PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
 add_library(nef_objects STATIC ${NEF_SRC})
 target_compile_definitions(nef_objects PUBLIC POLY_Dmax=${POLY_Dmax})
+target_include_directories(nef_objects PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
 add_library(mori_objects STATIC ${MORI_SRC})
 target_compile_definitions(mori_objects PUBLIC POLY_Dmax=${POLY_Dmax})
+target_include_directories(mori_objects PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-include_directories(${CMAKE_SOURCE_DIR})
+if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+    add_executable(poly.x poly.c LG.c)
+    target_link_libraries(poly.x PRIVATE objects)
+    target_compile_definitions(poly.x PRIVATE POLY_Dmax=${POLY_Dmax})
 
-add_executable(poly.x poly.c LG.c)
-target_link_libraries(poly.x PRIVATE objects)
-target_compile_definitions(poly.x PRIVATE POLY_Dmax=${POLY_Dmax})
+    add_executable(class.x class.c)
+    target_link_libraries(class.x PRIVATE objects class_objects)
+    target_compile_definitions(class.x PRIVATE POLY_Dmax=${POLY_Dmax})
 
-add_executable(class.x class.c)
-target_link_libraries(class.x PRIVATE objects class_objects)
-target_compile_definitions(class.x PRIVATE POLY_Dmax=${POLY_Dmax})
+    add_executable(cws.x cws.c LG.c)
+    target_link_libraries(cws.x PRIVATE objects)
+    target_compile_definitions(cws.x PRIVATE POLY_Dmax=${POLY_Dmax})
 
-add_executable(cws.x cws.c LG.c)
-target_link_libraries(cws.x PRIVATE objects)
-target_compile_definitions(cws.x PRIVATE POLY_Dmax=${POLY_Dmax})
+    add_executable(nef.x nef.c)
+    target_link_libraries(nef.x PRIVATE objects nef_objects)
+    target_compile_definitions(nef.x PRIVATE POLY_Dmax=${POLY_Dmax})
 
-add_executable(nef.x nef.c)
-target_link_libraries(nef.x PRIVATE objects nef_objects)
-target_compile_definitions(nef.x PRIVATE POLY_Dmax=${POLY_Dmax})
-
-add_executable(mori.x mori.c)
-target_link_libraries(mori.x PRIVATE objects mori_objects)
-target_compile_definitions(mori.x PRIVATE POLY_Dmax=${POLY_Dmax})
+    add_executable(mori.x mori.c)
+    target_link_libraries(mori.x PRIVATE objects mori_objects)
+    target_compile_definitions(mori.x PRIVATE POLY_Dmax=${POLY_Dmax})
+endif()
