@@ -5,7 +5,12 @@
 #define  min(a,b)  	(((a)<(b)) ? (a) : (b))
 #define  max(a,b)  	(((a)>(b)) ? (a) : (b))
 
-#define	 Pint		int	   /* type of coefficients in PolyCoeffList */
+#if (POLY_Dmax < 7)
+#define	 Pint           int
+#else
+#define	 Pint           long
+#endif                             /* type of coefficients in PolyCoeffList */
+
 typedef struct {int n; int *e; Pint *c; int A;}		  PoCoLi;  /* e=exp */
 
 void AllocPoCoLi(PoCoLi *P);		      /* allocate e[P.A] and c[P.A] */
@@ -27,7 +32,7 @@ typedef struct {int d, N, z[POLY_Dmax][W_Nmax], m[POLY_Dmax], M, r, R;/* Ref */
 		PolyPointList *P;} /* Eq: Ei.c=Ai Ei.a[]=Bi[]} */
 		/* 0<=A+B*x  r=sum(w)/d  rI=IP(r*P)  n=(r,rI) */	Weight;
 
-typedef struct {int D,E,sts; int h[POLY_Dmax][POLY_Dmax];}		VaHo;
+typedef struct {int D,E,sts; Pint h[POLY_Dmax][POLY_Dmax];}		VaHo;
 
 int Read_W_PP(Weight *, PolyPointList *);
 int Trans_Check(Weight);

@@ -263,7 +263,12 @@ void Eval_Poly_NF(int *d,int *v,int *f, Long VM[POLY_Dmax][VERT_Nmax],
 		Long VPM[VERT_Nmax][VERT_Nmax],			      /* in */
 		Long pNF[POLY_Dmax][VERT_Nmax],int t)		     /* out */
 {    PERM *CL=(PERM *) malloc((SYM_Nmax+1) * sizeof(PERM)); 
-     Long VPM_NF[VERT_Nmax][VERT_Nmax]; int ns; assert(CL!=NULL);
+#if (VERT_Nmax < 129)
+     Long VPM_NF[VERT_Nmax][VERT_Nmax];
+#else
+     Long (*VPM_NF)[VERT_Nmax] = malloc(sizeof(Long[VERT_Nmax][VERT_Nmax]));
+#endif
+     int ns; assert(CL!=NULL);
      Make_VPM_NF(v,f,VPM,CL,&ns,VPM_NF);	if(t)Print_vNF(v,f,VPM,VPM_NF);
      New_pNF_Order(v,f,CL,&ns,VPM_NF);
      Aux_pNF_from_vNF(CL,&ns,v,d,VM,pNF,&t);	free(CL);
@@ -486,7 +491,12 @@ void Aux_pNF_from_vNF(PERM *CL,int *ns,int *v,int *d,
 int  Make_Poly_NF(PolyPointList *_P, VertexNumList *_V, EqList *_F,
 		Long pNF[POLY_Dmax][VERT_Nmax])		  /* 1 if reflexive */
 {    int d, v, f;
-     Long VM[POLY_Dmax][VERT_Nmax], VPM[VERT_Nmax][VERT_Nmax];
+  Long VM[POLY_Dmax][VERT_Nmax];
+#if (VERT_Nmax < 129)
+  Long VPM[VERT_Nmax][VERT_Nmax];
+#else
+  Long (*VPM)[VERT_Nmax] = malloc(sizeof(Long[VERT_Nmax][VERT_Nmax]));
+#endif
      int ref=Init_rVM_VPM(_P,_V,_F,&d,&v,&f,VM,VPM);
      Eval_Poly_NF(&d,&v,&f,VM,VPM,pNF,0); return ref;
 }
@@ -498,11 +508,13 @@ void Poly_Sym(PolyPointList *_P, VertexNumList *_V, EqList *_F, int *sym_num,
 }
 int  PermChar(int n)
 {    if(n<10) return '0'+n; else if(n<36) return 'a'+n-10; else
-     if(n<62) return 'A'+n-36; else
+     if(n<63) return 'A'+n-36; else
      {puts("Printing permutations only for #Vert<=62 !!");exit(0);} return 0;
 }
 void Print_Perm(int *p,int v,const char *s)
-{    int i; for(i=0;i<v;i++) fprintf(outFILE,"%c",PermChar(p[i]));
+{    int i;
+     if (v<63) for(i=0;i<v;i++) fprintf(outFILE,"%c",PermChar(p[i]));
+     else for(i=0;i<v;i++) fprintf(outFILE,"%d ",p[i]);
      /*puts("");for(i=48;i<128;i++)printf("%c",i);*/ fprintf(outFILE,"%s",s);
 }
 int  Perm_String(int *p,int v,char *s)
@@ -513,8 +525,14 @@ int  Make_Poly_Sym_NF(PolyPointList *_P, VertexNumList *_V, EqList *_F,
 		      Long NF[POLY_Dmax][VERT_Nmax], int traced, int S, int N)
 {    int i, j, ns, t=-1, *d=&_P->n, *v=&_V->nv, *f=&_F->ne, *C; 
      PERM *CL = (PERM *) malloc ( sizeof(PERM) *(SYM_Nmax+1));
-     Long VM[POLY_Dmax][VERT_Nmax], VPM[VERT_Nmax][VERT_Nmax];
+     Long VM[POLY_Dmax][VERT_Nmax];
+#if (VERT_Nmax < 129)
+     Long VPM[VERT_Nmax][VERT_Nmax];
      Long VPM_NF[VERT_Nmax][VERT_Nmax];
+#else
+     Long (*VPM)[VERT_Nmax] = malloc(sizeof(Long[VERT_Nmax][VERT_Nmax]));
+     Long (*VPM_NF)[VERT_Nmax] = malloc(sizeof(Long[VERT_Nmax][VERT_Nmax]));
+#endif
 
      Init_rVM_VPM(_P,_V,_F,d,v,f,VM,VPM);
      if (traced) Eval_Poly_NF(&_P->n,&_V->nv,&_F->ne,VM,VPM,NF,1);
@@ -558,10 +576,20 @@ void Aux_NF_Coord(PolyPointList *_P, Long VM[POLY_Dmax][VERT_Nmax], int *C,
 
 void NF_Coordinates(PolyPointList *_P, VertexNumList *_V, EqList *_F)
 					     /* needs converted EqList !! */
-{    PERM *CL; Long VM[POLY_Dmax][VERT_Nmax], VPM[VERT_Nmax][VERT_Nmax];
+{    PERM *CL; Long VM[POLY_Dmax][VERT_Nmax];
+#if (VERT_Nmax < 129)
+     Long VPM[VERT_Nmax][VERT_Nmax];
+#else
+     Long (*VPM)[VERT_Nmax] = malloc(sizeof(Long[VERT_Nmax][VERT_Nmax]));
+#endif
      int ns; CL=(PERM*) malloc((SYM_Nmax+1)*sizeof(PERM)); assert(CL!=NULL);
      Init_rVM_VPM(_P,_V,_F,&_P->n,&_V->nv,&_F->ne,VM,VPM);	/* make VPM */
-     {	Long VPM_NF[VERT_Nmax][VERT_Nmax]; 
+     {
+#if (VERT_Nmax < 129)
+       Long VPM_NF[VERT_Nmax][VERT_Nmax];
+#else
+       Long (*VPM_NF)[VERT_Nmax] = malloc(sizeof(Long[VERT_Nmax][VERT_Nmax]));
+#endif
 	Make_VPM_NF(&_V->nv,&_F->ne,VPM,CL,&ns,VPM_NF);		/* get PERM */
      	New_pNF_Order(&_V->nv,&_F->ne,CL,&ns,VPM_NF);	    /* improve PERM */
      }
