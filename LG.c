@@ -13,11 +13,11 @@
 #define NO_COORD_IMPROVEMENT		/* switch off weight permutation */
 #undef	W_PERM_CODE
 int  Is_Gen_CY(int index, PolyPointList *P)
-{    int i; Long *IP=P->x[P->np]; VertexNumList V;     /* IP = IP(index * P) */
+{    int i,j; Long *IP=P->x[P->np]; VertexNumList V;     /* IP = IP(index * P) */
      EqList *E = (EqList *) malloc(sizeof(EqList)); assert(E!=NULL);
      Find_Equations(P,&V,E); for(i=0;i<E->ne;i++) E->e[i].c *= index;
      for(i=0;i<E->ne;i++) if(1!=Eval_Eq_on_V(&E->e[i],IP,P->n)) break;
-     free(E); return i==E->ne;
+     j=E->ne; free(E); return i==j;
 }
 void WZerror(char *c)
 {    printf("Format error %s in Read_WZeight\n",c);exit(0);
