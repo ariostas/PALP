@@ -14,10 +14,15 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
      - `make check`: passed after installing `Singular` 4.4.1 into the active `vibe` environment.
      - `make checklong`: not run yet.
 
-2. Make tests easier to run in CI.
+2. [x] Make tests easier to run in CI.
    - Add CMake/CTest entries that call the existing `tests/*.sh` scripts.
    - Keep `GNUmakefile check` working.
    - Verification: `ctest` and `make check` run the same test scripts.
+   - Completed CTest integration:
+     - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+     - `cmake --build build -j2`: passed; CMake now builds `poly/class/cws/nef/mori-{4,5,6,11}d.x` test executables with matching `POLY_Dmax`.
+     - `ctest --test-dir build --output-on-failure`: passed, 196/196 tests.
+     - `make check`: passed, preserving the GNUmakefile test path.
 
 3. Add sanitizer build modes.
    - Add CMake presets or documented commands for AddressSanitizer and UndefinedBehaviorSanitizer.
