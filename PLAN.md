@@ -4,10 +4,15 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
 
 ## Phase 0: Preserve Current Behavior
 
-1. Establish a clean baseline.
+1. [x] Establish a clean baseline.
    - Run `make cleanall && make -jN`.
    - Run `make check`; run `make checklong` separately when time permits.
    - Capture compiler version, flags, and test output.
+   - Completed baseline:
+     - `cc --version`: GCC 13.3.0.
+     - `make -j2`: passed; default executables were already up to date on the final baseline run.
+     - `make check`: passed after installing `Singular` 4.4.1 into the active `vibe` environment.
+     - `make checklong`: not run yet.
 
 2. Make tests easier to run in CI.
    - Add CMake/CTest entries that call the existing `tests/*.sh` scripts.
