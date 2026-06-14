@@ -93,6 +93,20 @@ This file records issues found during an initial code-reading and build-warning 
 - Risk: This makes library bindings, nested calls, tests, and future C++ wrappers fragile. It also makes error handling via `exit()` harder to replace incrementally.
 - Suggested check: Introduce an execution/context object that owns input, output, options, and diagnostics, then migrate one CLI at a time.
 
+## 14. AddressSanitizer build changes `nef -v` point statistics output
+
+- Location: `nef.c:305-311`, exposed by `tests/6.4.18-nef-v.sh`
+- Evidence: `ctest --preset asan` passed 193/196 tests but failed `6.4.18-nef-v.sh` for dimensions 5, 6, and 11. The expected point-statistics lines are `35# 1` and `100# 1`; the ASan build instead prints every index from `0` through `511` with values around `-1094795586`, except the two expected bins are offset by one. The same tests pass in the release and UBSan presets.
+- Risk: This looks like an initialization or lifetime bug in the `Pstat` path that only becomes visible under ASan-instrumented stack/heap layout. It may make the `nef -v` summary depend on compiler instrumentation even when no sanitizer trap is emitted.
+- Suggested check: Audit `Pstat` allocation and initialization before `Print_Pstat()`, add a targeted test for `nef -v` point counts under ASan, and check whether `Pstat::P` is fully zeroed before `Print_VP()` increments bins.
+
+## 15. `MakeMobius()` stores `int **` into under-aligned `int` storage
+
+- Location: `LG.c:753-755`
+- Evidence: `ctest --preset ubsan` passed 193/196 tests but failed `3.2.11-poly-l.sh` for dimensions 5, 6, and 11. UBSan reports `runtime error: store to misaligned address ... for type 'int *', which requires 8 byte alignment` at `LG.c:754` in `MakeMobius()`, called from `LGO_VaHo()` and then `poly.c:212`. The failing command is the `/Z3` `poly -fl` example from the PALP manual.
+- Risk: `MakeMobius()` allocates one raw block sized as `int` data plus `int *` data, then casts the middle of the `int` array to `int **`. On 64-bit systems this can place pointer slots at only 4-byte alignment. That is undefined behavior and can break under stricter architectures, sanitizers, or C++ allocators.
+- Suggested check: Split the allocation into separately aligned `int *d` and `int **mt` allocations, or allocate a struct/byte buffer with explicit alignment. Preserve the existing triangular indexing and rerun `ctest --preset ubsan`.
+
 ## Build observations from this pass
 
 - `make -j2` completed and produced the default `.x` executables.

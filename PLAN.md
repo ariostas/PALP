@@ -24,10 +24,17 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
      - `ctest --test-dir build --output-on-failure`: passed, 196/196 tests.
      - `make check`: passed, preserving the GNUmakefile test path.
 
-3. Add sanitizer build modes.
+3. [x] Add sanitizer build modes.
    - Add CMake presets or documented commands for AddressSanitizer and UndefinedBehaviorSanitizer.
    - Do not change production flags yet.
    - Verification: default build still matches baseline; sanitizer failures are filed in `ISSUES.md`.
+   - Completed sanitizer presets:
+     - Added `release`, `asan`, and `ubsan` CMake configure/build/test presets.
+     - `cmake --preset release`, `cmake --build --preset release`, and `ctest --preset release`: passed, 196/196 tests.
+     - `cmake --preset asan` and `cmake --build --preset asan`: passed.
+     - `ctest --preset asan`: failed 3/196 tests, all `6.4.18-nef-v.sh` for 5d/6d/11d; filed as `ISSUES.md` item 14.
+     - `cmake --preset ubsan` and `cmake --build --preset ubsan`: passed.
+     - `ctest --preset ubsan`: failed 3/196 tests, all `3.2.11-poly-l.sh` for 5d/6d/11d due to `LG.c:754` misaligned pointer stores; filed as `ISSUES.md` item 15.
 
 ## Phase 1: Make C Safer Before C++
 
