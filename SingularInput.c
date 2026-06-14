@@ -46,7 +46,7 @@ void CatFile(char *fn){
 }
 #endif
 
-int Read_HyperSurf(int *he, int divclassnr, int maxline, char filename[20], MORI_Flags *_Flag){
+int Read_HyperSurf(int *he, int divclassnr, int maxline, const char *filename, MORI_Flags *_Flag){
 
     FILE *stream;
     
@@ -594,4 +594,3 @@ if(_Flag->Read_HyperSurfCounter==0){
   free(SFname);
   free(SingularCall);
 }
-

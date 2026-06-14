@@ -245,7 +245,7 @@ int main (int narg, char* fn[]){
 	Make_Facet(_P, &V, E, j, VM, &cc);
 	Print_Matrix(VM,_P->n-1,cc,"");}  }
     if(A) {
-      Long ANF[POLY_Dmax][VERT_Nmax];
+      AffineNormalForm ANF;
       Make_ANF(_P,&V,E,ANF); 
       Print_Matrix(ANF, _P->n, V.nv,"Affine normal form");}
     fflush(outFILE);     }

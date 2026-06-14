@@ -267,7 +267,7 @@ int main(int narg, char *fn[])
       if (F.G) AnalyseGorensteinCone(&CW,_P,_V,_E,&codim,&F);
       else if (Ref_Check(_P, _V, _E)){
 	int nv=_V->nv, ne=_E->ne;
-	Long PM[EQUA_Nmax][VERT_Nmax];
+	PairMat PM;
      
 	Make_VEPM(_P,_V,_E, PM);
 	Complete_Poly(PM,_E,_V->nv,_P);

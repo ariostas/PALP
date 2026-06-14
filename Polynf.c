@@ -854,7 +854,7 @@ Long Simp_Vol_Barycent(PolyPointList *A,Long VM[][VERT_Nmax],Long *B,Long *N)
      assert(A->np==A->n+1); Aux_Make_Poly_NF(VM,&A->n,&A->n);
      I=1; for(i=0;i<A->n;i++) I*=VM[i][i]; assert(I>0); return I;
 }
-Long SimplexVolume(Long *V[POLY_Dmax+1],int d)
+Long SimplexVolume(Long **V,int d)
 {    Long I=1, VM[POLY_Dmax][VERT_Nmax]; int i,p; 
      for(i=0;i<d;i++)for(p=0;p<d;p++) VM[i][p]=V[p][i];
      Aux_Make_Poly_NF(VM,&d,&d); 
@@ -1264,10 +1264,11 @@ void Einstein_Metric(CWS *CW,PolyPointList *P,VertexNumList *V,EqList *E)
 {    int i,j,tot=0,reg=0,sym=0,ksum=0,sum=0,bary=0,ssroot=0,nofip=0,NR=NON_REF;
      PolyPointList *A = (PolyPointList *) malloc(sizeof(PolyPointList));
      Long S, **root=(Long**)malloc(POINT_Nmax*sizeof(Long**)), *d=NULL,
-	PM[VERT_Nmax][VERT_Nmax]; assert(A!=NULL); assert(root!=NULL);
+	(*PM)[VERT_Nmax] = malloc(sizeof(PairMat));
+     assert(A!=NULL); assert(root!=NULL); assert(PM!=NULL);
      while(Read_CWS_PP(CW,P))/* nis=noinvss s=sum ks=ksum bcz=bary0 ssr(oot) */
      {	Long C[POLY_Dmax], N; int nis,r=0,s,ks,bcz,ssr, R=KP_VALUE; char c[90];
-	Long kPM[VERT_Nmax][VERT_Nmax]; 
+	PairMat kPM;
 #if(NON_REF)
      	Long D[EQUA_Nmax]; d=D;
 #endif
@@ -1363,7 +1364,7 @@ void Einstein_Metric(CWS *CW,PolyPointList *P,VertexNumList *V,EqList *E)
 */
      }fprintf(outFILE,"#poly=%d ",tot);if(reg)fprintf(outFILE,"(%dfano) ",reg);
      fprintf(outFILE,"#symm=%d #kPsum=%d #Psum=%d bary=%d ssroot=%d (%d)\n",
-	sym,ksum,sum,bary,ssroot,ssroot-nofip); free(A);free(root);exit(0);
+	sym,ksum,sum,bary,ssroot,ssroot-nofip); free(PM);free(A);free(root);exit(0);
 }
 
 void Check_New_Fiber(Long PM[][POLY_Dmax], /*int *p,*/ int *d, /*int *nw,*/
@@ -1472,10 +1473,10 @@ void Reflexive_Fibrations(PolyPointList *P, int nv, ek3fli *F,int fdim)
      }
 }
 void AuxDPolyData(PolyPointList *P,PolyPointList *A,int*v,int*n,int*f)
-{    Long X[VERT_Nmax][VERT_Nmax]; EqList E; VertexNumList V;
+{    PairMat PM; EqList E; VertexNumList V;
      assert(Ref_Check(P,&V,&E)); *v=V.nv; EL_to_PPL(&E,A,&P->n); 
-     assert(Ref_Check(A,&V,&E)); *f=V.nv; Make_VEPM(A,&V,&E,X); 
-     Complete_Poly(X,&E,V.nv,A); *n=A->np;
+     assert(Ref_Check(A,&V,&E)); *f=V.nv; Make_VEPM(A,&V,&E,PM);
+     Complete_Poly(PM,&E,V.nv,A); *n=A->np;
 }
 void Test_EK3_Fibration(PolyPointList *P,int edim,
 	GL_Long G[POLY_Dmax][POLY_Dmax])
@@ -1707,6 +1708,7 @@ void Print_Fiber_PolyData(PolyPointList *P,VertexNumList *V,Long *W,int w,
      if(CD||((cd>0)&&(cd<3)&&((P->n)-cd>1)))
      {	int i, s=0, p, D=P->n, d=P->n-cd, fib, ref;
 	Long X[VERT_Nmax][VERT_Nmax];
+	PairMat PM;
 	GL_Long G[POLY_Dmax][POLY_Dmax],Ginv[POLY_Dmax][POLY_Dmax];
 	EqList e; VertexNumList v; PolyPointList *F
 	    = (PolyPointList *) malloc(sizeof(PolyPointList));assert(F!=NULL);
@@ -1726,11 +1728,11 @@ void Print_Fiber_PolyData(PolyPointList *P,VertexNumList *V,Long *W,int w,
 	    for(s=0;s<D;s++) x+=G[i][s]*P->x[V->v[p]][s];
 	    F->x[p][i]=x;}
 	F->np=P->np; F->n=D; assert(Ref_Check(F,&v,&e));
-	Aux_Make_Dual_Poly(F,&v,&e); Make_VEPM(F,&v,&e,X); 
-	Complete_Poly(X,&e,v.nv,F); F->n=d; Remove_Identical_Points(F);
+	Aux_Make_Dual_Poly(F,&v,&e); Make_VEPM(F,&v,&e,PM);
+	Complete_Poly(PM,&e,v.nv,F); F->n=d; Remove_Identical_Points(F);
 	fib=Ref_Check(F,&v,&e); Mmp=F->np;Mmv=v.nv;Mnv=e.ne; 
-	if(fib){Aux_Make_Dual_Poly(F,&v,&e); Make_VEPM(F,&v,&e,X); 
-	      Complete_Poly(X,&e,v.nv,F); Mnp=F->np;} else Mnp=0;
+	if(fib){Aux_Make_Dual_Poly(F,&v,&e); Make_VEPM(F,&v,&e,PM);
+	      Complete_Poly(PM,&e,v.nv,F); Mnp=F->np;} else Mnp=0;
 	
 	if(fib&&CD) {if(f==0){f=1;Aux_IPS_Print_Poly(P,V,w,nw,VS,CD);}
 	    Aux_IPS_Print_W(W,w,cd); fprintf(outFILE,
@@ -1748,7 +1750,7 @@ void Print_Fiber_PolyData(PolyPointList *P,VertexNumList *V,Long *W,int w,
 	puts("\nFiber:");Print_PPL(F,"Fiber");
 #endif
 	if(ref) 
-	{   Long PM[VERT_Nmax][VERT_Nmax]; Aux_Make_Dual_Poly(F,&v,&e);
+	{   Aux_Make_Dual_Poly(F,&v,&e);
 	    Make_VEPM(F,&v,&e,PM); Complete_Poly(PM,&e,v.nv,F); Nmp=F->np;
 	    if(fib)fprintf(outFILE," fiber m:%d %d n:%d %d",Mmp,Mmv,Mnp,Mnv);
 	    else fprintf(outFILE," m:%d %d f:%d // m:%d %d n:%d %d",
@@ -1808,8 +1810,8 @@ void Print_Fibrations(PolyPointList *P,FibW *F)
 	  fprintf(outFILE,"%s%c", (P->np>20) ? "  " : "    ",C[i]); 
 	N=F->P->np+1; fprintf(outFILE,"  cd=%d  ",*d-r);
 	EL_to_PPL(&E,F->P,&r); assert(Ref_Check(F->P,&V,&E)); 
-	{   Long X[VERT_Nmax][VERT_Nmax]; Make_VEPM(F->P,&V,&E,X);
-	    Complete_Poly(X,&E,V.nv,F->P);}
+	{   PairMat PM; Make_VEPM(F->P,&V,&E,PM);
+	    Complete_Poly(PM,&E,V.nv,F->P);}
 	fprintf(outFILE,"m:%d %d n:%d %d\n",F->P->np,V.nv,N,E.ne);
      }
 }
@@ -2497,7 +2499,7 @@ void Reduce_ANF_Form(Long VM[][VERT_Nmax], int d, int v)
 }
 
 void Make_ANF(PolyPointList *P,VertexNumList *V,       /* affine normal form */
-	      EqList *E, Long VM[POLY_Dmax][VERT_Nmax])
+	      EqList *E, AffineNormalForm VM)
 {    int i,j, d=P->n, v=V->nv, e=E->ne, p=P->np; assert(V->nv<VERT_Nmax); 
      assert(P->n<POLY_Dmax); assert(P->np<POINT_Nmax);
      

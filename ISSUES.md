@@ -31,6 +31,7 @@ This file records issues found during an initial code-reading and build-warning 
 - Evidence: `PairMat` is `Long[EQUA_Nmax][VERT_Nmax]`. For `POLY_Dmax > 4`, `EQUA_Nmax` defaults to 1280, but several call sites allocate `Long X[VERT_Nmax][VERT_Nmax]` and pass it to `Make_VEPM()`. GCC warns that `Make_VEPM` may access 655360 bytes in a 32768-byte region.
 - Risk: If an `EqList` at one of these call sites can have more than `VERT_Nmax` equations, `Make_VEPM()` can write past the local matrix. This is especially relevant outside the fully classified 4D reflexive case.
 - Suggested check: For each call site, prove and assert `E.ne <= VERT_Nmax`, or allocate a true `PairMat`. Then encode the matrix shape in a wrapper type.
+- Status: Fixed for the known `Make_VEPM()` call sites in Phase 1 item 6 by using `PairMat` and by making the `Complete_Poly()` prototype match its implementation. Related `Make_ANF()`, `Read_HyperSurf()`, and `SimplexVolume()` shape warnings were also normalized.
 
 ## 5. Reflexive fibration recursion appears to overrun fixed arrays
 
@@ -110,6 +111,13 @@ This file records issues found during an initial code-reading and build-warning 
 - Evidence: `ctest --preset ubsan` passed 193/196 tests but failed `3.2.11-poly-l.sh` for dimensions 5, 6, and 11. UBSan reports `runtime error: store to misaligned address ... for type 'int *', which requires 8 byte alignment` at `LG.c:754` in `MakeMobius()`, called from `LGO_VaHo()` and then `poly.c:212`. The failing command is the `/Z3` `poly -fl` example from the PALP manual.
 - Risk: `MakeMobius()` allocates one raw block sized as `int` data plus `int *` data, then casts the middle of the `int` array to `int **`. On 64-bit systems this can place pointer slots at only 4-byte alignment. That is undefined behavior and can break under stricter architectures, sanitizers, or C++ allocators.
 - Suggested check: Split the allocation into separately aligned `int *d` and `int **mt` allocations, or allocate a struct/byte buffer with explicit alignment. Preserve the existing triangular indexing and rerun `ctest --preset ubsan`.
+
+## 16. `poly -A` asserts when `POLY_Dmax` equals the input dimension
+
+- Location: `Polynf.c:2503-2504`, reached from `poly.c:247-250`
+- Evidence: `echo '5 1 1 1 1 1' | ./poly-4d.x -fA` aborts with `Make_ANF: Assertion 'P->n<POLY_Dmax' failed`. The same smoke test succeeds for `poly-5d.x`, `poly-6d.x`, and `poly-11d.x`.
+- Risk: The affine normal form path temporarily adds one coordinate row, so it needs `POLY_Dmax > P->n`. As written, this is a user-facing capacity condition enforced only by `assert()`, producing an abort instead of a clear diagnostic.
+- Suggested check: Replace the assertion with an explicit `POLY_Dmax` capacity check, add an invalid-input regression for `poly-4d.x -A`, and verify `poly -fA` output remains unchanged for dimensions with enough headroom.
 
 ## Build observations from this pass
 

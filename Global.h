@@ -152,6 +152,12 @@ The matrix whose entries are the pairings av+c between the vertices v and
 the equations (a,c).
 */
 
+typedef Long AffineNormalForm[POLY_Dmax][VERT_Nmax];
+/*
+The affine normal form matrix has one row per polytope dimension and one
+column per vertex.
+*/
+
 typedef struct {int mp, mv, np, nv, n, pic, cor, h22, h1[POLY_Dmax-1];}
                                                                      BaHo;
 /*
@@ -322,7 +328,7 @@ with minimal entries above the diagonal.
 */
 
 void Make_ANF(PolyPointList *P, VertexNumList *V, EqList*E, 
-	      Long ANF[][VERT_Nmax]);
+	      AffineNormalForm ANF);
 /*
 Given *P, *V and *E, the affine normal form ANF (i.e., a normal form
 that also works for non-reflexive polytopes), is computed.
@@ -480,7 +486,7 @@ Given P, VNL and EL for a reflexive polytope, the complete list *DP
 of lattice points of the dual polytope is determined.
 */
 
-void Complete_Poly(Long VPM[][VERT_Nmax],EqList *E,int nv,PolyPointList *P);
+void Complete_Poly(PairMat VPM,EqList *E,int nv,PolyPointList *P);
 /*
 Given the vertex pairing matrix VPM, the EqList *E and the number nv of
 vertices, the complete list of lattice points *P is determined.

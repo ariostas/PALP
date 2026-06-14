@@ -133,7 +133,7 @@ typedef struct {
 
 
 void Make_ANF(PolyPointList *P,VertexNumList *V,       /* affine normal form */
-	      EqList *E, Long ANF[POLY_Dmax][VERT_Nmax]);
+	      EqList *E, AffineNormalForm ANF);
 void Gen_Ascii_to_Binary(CWS *W, PolyPointList *P, 
 		     char *dbin, char *polyi, char *polyo);
 void Gen_Bin_2_ascii(char *pi,char *dbi,int max,int vf,int vt,PolyPointList *);
@@ -219,4 +219,3 @@ void AuxPut_hNF(FILE *F,int *v,int *nu,unsigned char *Huc,FInfoList *Io,
 
 #define min(a,b)	(((a) < (b)) ? (a) : (b))
 #define max(a,b)	(((a) > (b)) ? (a) : (b))
-

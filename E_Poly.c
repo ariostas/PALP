@@ -335,9 +335,9 @@ void PRINT_Fibrations(VertexNumList *_V, PolyPointList *_P, Flags *_F
     EL_to_PPL(_E_AUX, _P_AUX, &dim[n]);
     assert(Ref_Check(_P_AUX, _V_AUX, _E_AUX));
     {
-      Long X[VERT_Nmax][VERT_Nmax]; 
-      Make_VEPM(_P_AUX, _V_AUX, _E_AUX, X);
-      Complete_Poly(X, _E_AUX, _V_AUX->nv, _P_AUX);
+      PairMat PM;
+      Make_VEPM(_P_AUX, _V_AUX, _E_AUX, PM);
+      Complete_Poly(PM, _E_AUX, _V_AUX->nv, _P_AUX);
       /*Dim_Fib_CI(dim, n, _PTL, C);*/
       fprintf(outFILE,"  cd=%d  m:%3d %2d n:%2d %d\n",(_P->n - dim[n]), 
 	      _P_AUX->np, _V_AUX->nv, np, nv);
@@ -1541,4 +1541,3 @@ void AnalyseGorensteinCone(CWS *_CW,  PolyPointList *_P, VertexNumList *_V,
       Print_VL(_P, _V, "Vertices of input polytope:");}
   free(_P_D); free(_E_D); free(_V_D); free(_new_E_D);
 }
-

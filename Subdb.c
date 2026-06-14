@@ -1024,7 +1024,7 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto,
 
   DataBase DB;
   VertexNumList V;
-  Long VPM[EQUA_Nmax][VERT_Nmax];
+  PairMat VPM;
   static EqList E;
   time_t Tstart;
   char *dbname = (char *) malloc(1+strlen(dbin)+File_Ext_NCmax), *fx;
@@ -1710,7 +1710,7 @@ void PH_Sublat_Polys(char *dbin, int omitFIP, PolyPointList *_P, char sF)
      if(('1'<sF)&&(sF<='9')) I=sF-'0';
      B=(omitFIP==2);	/* 'q' for index >I */
      while(Read_H_poly_from_DB_or_inFILE(DB,_P))
-     {	Long D[POLY_Dmax],G[POLY_Dmax][POLY_Dmax],PM[VERT_Nmax][VERT_Nmax];
+     {	Long D[POLY_Dmax],G[POLY_Dmax][POLY_Dmax]; PairMat PM;
  	int index, N=0; /* if(!Ref_Check(_P,&V,&E)) Print_PPL(_P,""); */
 	if(B)assert(_P->n==4);/* b:Brower group only for CY hypersurface d=4 */
 	assert(Ref_Check(_P,&V,&E));  
@@ -1912,4 +1912,3 @@ void Gen_Bin_2_ascii(char *pi,char *dbi,int max,int vf,int vt,PolyPointList *P)
      else if(*dbi) Bin_2_ANF_DBsl(dbi, max, vf, vt, P);
      else puts("With -B[2A] you have to specify input via -pi or -di"); 
 }
-

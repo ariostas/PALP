@@ -68,10 +68,20 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
      - Focused tests: `tests/2.2-error-handling.sh`, `tests/2.1-polytope-input.sh`, `tests/3.2.11-poly-l.sh`, `tests/4.2.1-cws-w.sh`, `tests/4.2.6-cws-N.sh`, and `tests/6.3-nef-output.sh` passed for `DIM=4,5,6,11`.
      - `make check`: passed.
 
-6. Normalize matrix and array shape contracts.
+6. [x] Normalize matrix and array shape contracts.
    - Introduce named C typedefs or small wrapper structs for `PairMat`, normal-form matrices, and incidence arrays.
    - Eliminate call sites that pass smaller arrays to larger formal types.
    - Verification: compiler warnings for `-Warray-parameter` and `-Wstringop-overflow` decrease.
+   - Completed shape contract cleanup:
+     - Made `Complete_Poly()` use the existing `PairMat` typedef in the public prototype.
+     - Converted undersized `VERT_Nmax x VERT_Nmax` pairing buffers in `E_Poly.c`, `Polynf.c`, and `Subdb.c` to `PairMat`.
+     - Added `AffineNormalForm` for `POLY_Dmax x VERT_Nmax` normal-form matrices and made `Make_ANF()` declarations agree.
+     - Changed `Read_HyperSurf()` filename input to `const char *` and `SimplexVolume()` vertex-list input to `Long **`.
+     - `cc --version`: GCC 13.3.0.
+     - `make -j2`: passed.
+     - `make all-dims -j2`: passed; targeted grep found no remaining `Make_VEPM`, `Make_ANF`, `Read_HyperSurf`, `SimplexVolume`, `-Warray-parameter`, or `-Wstringop-overflow` warnings.
+     - Focused tests: `poly -fA` passed for `DIM=5,6,11`; `DIM=4` exposed `ISSUES.md` item 16. `tests/6.4.4-nef-H.sh`, `tests/7.2.3-mori-g.sh`, and `tests/7.2.8-mori-b.sh` passed for `DIM=4,5,6,11` except the existing long-test skip for `nef-11d.x -H`.
+     - `make check`: passed.
 
 7. Remove stale build paths.
    - Either delete/update `Makefile` or make it delegate to `GNUmakefile`.

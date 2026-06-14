@@ -143,5 +143,4 @@ between 1 and codim are computed. It is assumed that p<=VERT_Nmax and that W
 can hold at least Wmax sets of coefficients.
 */
 
-Long SimplexVolume(Long *V[POLY_Dmax+1],int d);
-
+Long SimplexVolume(Long **V,int d);
