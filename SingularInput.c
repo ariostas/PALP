@@ -61,7 +61,11 @@ int Read_HyperSurf(int *he, int divclassnr, int maxline, char filename[20], MORI
             		exit(1);
         	}     
  
-		fgets(string, sizeof string, stdin);
+		if(fgets(string, sizeof string, stdin) == NULL) {
+			printf("Error: cannot read hypersurface input!\n");
+			fclose(stream);
+			exit(1);
+		}
 		fprintf(stream, "%s\n", string);
 	}
 	
@@ -70,7 +74,11 @@ int Read_HyperSurf(int *he, int divclassnr, int maxline, char filename[20], MORI
 			printf("Error: cannot read file!\n");
 			exit(1);	
 		}
-		fgets(string, maxline ,stream);
+		if(fgets(string, maxline ,stream) == NULL) {
+			printf("Error: cannot read hypersurface input!\n");
+			fclose(stream);
+			exit(1);
+		}
 	}	
 
         i=0;
@@ -586,6 +594,4 @@ if(_Flag->Read_HyperSurfCounter==0){
   free(SFname);
   free(SingularCall);
 }
-
-
 

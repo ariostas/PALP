@@ -38,11 +38,19 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
 
 ## Phase 1: Make C Safer Before C++
 
-4. Replace known undefined behavior without changing interfaces.
+4. [x] Replace known undefined behavior without changing interfaces.
    - Fix the `LG.c` use-after-free.
    - Fix 64-bit incidence shifts.
    - Fix unchecked `fgets()` in `SingularInput.c`.
    - Verification: targeted regression tests plus full `make check`.
+   - Completed UB cleanup:
+     - Fixed `LG.c` `Is_Gen_CY()` by saving `E->ne` before `free(E)`.
+     - Fixed `MoriCone.c` incidence masks by shifting an `Inci64` value instead of signed `int`.
+     - Fixed `SingularInput.c` `Read_HyperSurf()` by checking `fgets()` before parsing.
+     - `make -j2`: passed.
+     - `make all-dims -j2`: passed.
+     - Focused tests: `tests/3.2.11-poly-l.sh` and `tests/7.2.8-mori-b.sh` passed for `DIM=4,5,6,11`.
+     - `make check`: passed.
 
 5. Convert assertion-only user checks into explicit runtime checks.
    - Start with parsers and fixed-size array boundaries.

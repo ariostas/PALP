@@ -8,6 +8,7 @@ This file records issues found during an initial code-reading and build-warning 
 - Evidence: `Is_Gen_CY()` allocates `E`, uses `E->ne`, calls `free(E)`, and then returns `i==E->ne`.
 - Risk: This is a real use-after-free. It may usually work because the freed block is not overwritten immediately, but the result is undefined behavior and could change under C++, sanitizers, different allocators, or small refactors.
 - Suggested check: Save `E->ne` before `free(E)`, add a test covering `Is_Gen_CY()`, and run under AddressSanitizer.
+- Status: Fixed in Phase 1 item 4 by saving `E->ne` before `free(E)`; verified with focused `poly -l` tests and `make check`.
 
 ## 2. Incidence bit operations use 32-bit shifts in a 64-bit type
 
@@ -15,6 +16,7 @@ This file records issues found during an initial code-reading and build-warning 
 - Evidence: `makeN()` correctly uses `((Inci64) 1) << N`, but `putN()`, `setN()`, and the origin-entry clearing code use `1 << N`.
 - Risk: For `N >= 32`, shifting a signed `int` is undefined or truncating before assignment to `Inci64`. `VERT_Nmax` is 64, and Mori triangulation code explicitly handles `p <= 64`, so this can corrupt incidences for larger vertex counts.
 - Suggested check: Change all incidence shifts to `(Inci64)1 << N`, add tests for bit positions 31, 32, and 63, and audit all `1 <<` expressions touching `Inci64`.
+- Status: Fixed in Phase 1 item 4 by casting incidence masks to `Inci64` before shifting; verified with focused Mori tests and `make check`.
 
 ## 3. Runtime correctness depends on assertions being enabled
 
@@ -71,6 +73,7 @@ This file records issues found during an initial code-reading and build-warning 
 - Evidence: `fgets()` return values are not checked before `strtok(string, ...)`.
 - Risk: Empty stdin or an unreadable cached file can leave `string` uninitialized and parse arbitrary stack bytes.
 - Suggested check: Check `fgets()` and fail with a clear diagnostic if no line was read.
+- Status: Fixed in Phase 1 item 4 by checking `fgets()` in both input paths before calling `strtok()`; verified through the full `make check` suite.
 
 ## 11. `cws.c` weight generation triggers array-bound warnings
 

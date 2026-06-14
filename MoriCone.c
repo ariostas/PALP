@@ -96,8 +96,8 @@ int  Multiloop(int *N,int *I,int *j,int *J);
 
 //	I N C I D E N C E S
 Inci64 makeN(int N){return ((Inci64) 1)<<N;}
-void putN(int N,Inci64 *I){*I |= 1<<N;}			/* make INCIDENCE */
-void setN(int N,Inci64 *I){*I |= 1<<N;}			/* make INCIDENCE */
+void putN(int N,Inci64 *I){*I |= ((Inci64) 1)<<N;}	/* make INCIDENCE */
+void setN(int N,Inci64 *I){*I |= ((Inci64) 1)<<N;}	/* make INCIDENCE */
 int  getN(int N,Inci64 I){return (I>>N)%2;}		/* read INCIDENCE */
 void prnI(int N,Inci64 I){int i; for(i=0;i<N;i++) printf("%d",getN(i,I));}
 void fprI(int N,Inci64 I){int i; 
@@ -1733,7 +1733,7 @@ void TriList_to_MoriList(PolyPointList * _P, FibW *F, MORI_Flags * _Flag){
       
       for(i=0; i<T.n;i++){
 	if( (T.I[i]>>(T.v-1)) ^ 0){
-	  T.I[i]	&= ~(1 << (T.v-1));
+	  T.I[i]	&= ~(((Inci64) 1) << (T.v-1));
 	}	
       }
       
