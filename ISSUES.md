@@ -45,6 +45,7 @@ This file records issues found during an initial code-reading and build-warning 
 - Evidence: Input numbers are collected into fixed arrays and then mapped into fixed-size `CWS`/`Weight` fields. Several important capacity checks are assertions, and some dimensions are checked only after partially filling arrays.
 - Risk: Malformed or unusually large CWS input can trigger assertion aborts in normal builds and memory corruption if assertions are disabled. Failed `fscanf()` calls can also leave local integers uninitialized.
 - Suggested check: Replace the scanf loops with a checked tokenizer that validates token count, conversion success, sign, and destination capacity before writing into fixed arrays.
+- Status: Fixed for the listed parser paths in Phase 1 item 5 by adding checked integer reads, explicit weight/count diagnostics, `/Z` capacity checks, and invalid-input regressions. A broader tokenizer abstraction can still be introduced later during parser modernization.
 
 ## 7. Rational arithmetic assumes nonzero denominators and can divide by zero
 

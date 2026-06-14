@@ -19,6 +19,17 @@ int  IsNextDigit(void){
   if((c<'0') || ('9'<c)) return 0; else return 1;
 }
 
+static void InputError(const char *message)
+{
+  puts(message);
+  exit(0);
+}
+
+static void ReadInputInt(int *value)
+{
+  if(fscanf(inFILE,"%d",value)!=1) InputError("Error in INPUT: missing integer!");
+}
+
 void Print_PPL(PolyPointList *_P, const char *comment){
   int i,j;
   if(_P->np>20){
@@ -90,9 +101,10 @@ int  Read_CWS_Zinfo(FILE *inFILE,CWS *CW)		      /* return !EOF */
 	{int I; for(I=0;I<n;I++)printf("%c",c[I]);puts("");} */
      while(i<n)
      {	int j, k, s; if((c[i]!='/')||(c[i+1]!='Z')) return 1;
-        i+=2; assert(*nz<POLY_Dmax);
+        i+=2; if(*nz>=POLY_Dmax) {puts("Increase POLY_Dmax"); exit(0);}
         if((j=auxString2Int(&c[i],&CW->m[*nz])))
-	{   if(c[i+j]!=':') CWSZerror(":"); else {i+=j+1; while(c[i]==b)i++;}
+	{   if(CW->m[*nz]<=0) CWSZerror("Order not positive");
+	    if(c[i+j]!=':') CWSZerror(":"); else {i+=j+1; while(c[i]==b)i++;}
 	    for(k=0;k<CW->N;k++)
 	    {	if((j=auxString2Int(&c[i],&CW->z[*nz][k]))) 
 			{if((j)) i+=j; else CWSZerror("missing");} /* ????? */
@@ -140,7 +152,7 @@ int  ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index)
      { char c;
        while(' '==(c=fgetc(inFILE )));
        ungetc(c,inFILE);    /* read blanks */
-       if(IsNextDigit()) fscanf(inFILE,"%d",&IN[i]); else break;
+       if(IsNextDigit()) ReadInputInt(&IN[i]); else break;
      }
      if(i==0) { if(!InputOK){puts("-h gives you help\n"); exit(0);}
 	else return 0; } InputOK++;
@@ -162,21 +174,25 @@ int  ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index)
 	/* allow all numbers in one string (distributed over lines) or
 	 * matrix blocks with trailing comments	*/
 	if(tr) for(i=0;i<IN[0];i++) for(j=0;j<IN[1];j++)
-	  {   int X; fscanf(inFILE,"%d",&X); _P->x[j][i]=X;	}
+	  {   int X; ReadInputInt(&X); _P->x[j][i]=X;	}
 	else for(i=0;i<IN[1];i++) for(j=0;j<IN[0];j++)
-	  {   int X; fscanf(inFILE,"%d",&X); _P->x[i][j]=X;	}
+	  {   int X; ReadInputInt(&X); _P->x[i][j]=X;	}
 	/* Finish_Poly_Points(_P); */
 	while(fgetc(inFILE )-'\n') if(feof(inFILE)) return 0;/* read to EOL */
      	if(FilterFlag) inFILE=NULL;
 	return 1;
      }  /* End of reading PolyPointList */
-     assert(i!=3);
+     if(i==3) InputError("Error in INPUT: need at least 4 numbers for weight input!");
      S=IN[i-1]; 
      for(j=0;j<i-1;j++) if((IN[j]==0)||(S<IN[j])) break; 
      if(j==i-1)				 /* Single Weights with: "w1 ... d" */
      {	_CW->nw=1; _CW->d[0]=S; _CW->N=i-1; 
-        assert(_CW->N <= POLY_Dmax+1);		      /* Increase POLY_Dmax */ 
-	for(j=0;j<_CW->N;j++) {_CW->W[0][j]=IN[j]; assert(IN[j]>0);} 
+        if(_CW->N > POLY_Dmax+1) {
+	  printf("Please increase POLY_Dmax to at least %d\n", _CW->N-1);
+	  exit(0);}
+	for(j=0;j<_CW->N;j++) {
+	  if(IN[j]<=0) InputError("Error in INPUT: weights must be positive!");
+	  _CW->W[0][j]=IN[j];} 
 	goto MAP;
      }
      _CW->d[0] = IN[0];                        /* ASSIGN (COMBINED) WEIGHTS */
@@ -204,7 +220,9 @@ int  ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index)
 
 MAP: for(i=0;i<_CW->nw;i++)			/* check consistency of CWS */
      {	Long sum = _CW->d[i] * index, *w = _CW->W[i];
-	for(j=0;j<_CW->N;j++) { assert(w[j]>=0); sum-=w[j]; }
+	for(j=0;j<_CW->N;j++) {
+	  if(w[j]<0) InputError("Error in INPUT: weights must be non-negative!");
+	  sum-=w[j];}
 	if((sum)&&(index==1)){ 
 	  printf("Use option -l for (single) WeightSystems with ");
 	  printf("d!=\\sum(w)\n(only Read_Weight makes the correct ");
@@ -236,7 +254,7 @@ int  Read_PP(PolyPointList *_P)
      { char c;
        while(' '==(c=fgetc(inFILE )));
        ungetc(c,inFILE);    /* read blanks */
-       if(IsNextDigit()) fscanf(inFILE,"%d",&IN[i]); else break;
+       if(IsNextDigit()) ReadInputInt(&IN[i]); else break;
      }
      if(i==0) { if(!InputOK){puts("-h gives you help\n"); exit(0);}
 	else return 0; } InputOK++;
@@ -258,9 +276,9 @@ int  Read_PP(PolyPointList *_P)
 /* allow all numbers in one string (distributed over lines) or
  * matrix blocks with trailing comments	*/
 	if(tr) for(i=0;i<IN[0];i++) for(j=0;j<IN[1];j++)
-	  {   int X; fscanf(inFILE,"%d",&X); _P->x[j][i]=X;	}
+	  {   int X; ReadInputInt(&X); _P->x[j][i]=X;	}
 	else for(i=0;i<IN[1];i++) for(j=0;j<IN[0];j++)
-	  {   int X; fscanf(inFILE,"%d",&X); _P->x[i][j]=X;	}
+	  {   int X; ReadInputInt(&X); _P->x[i][j]=X;	}
 	/* Finish_Poly_Points(_P); */
 	while(fgetc(inFILE )-'\n') if(feof(inFILE)) return 0;/* read to EOL */
      	if(FilterFlag) inFILE=NULL;
@@ -286,18 +304,22 @@ int  Read_CWS(CWS *_CW, PolyPointList *_P)
      { char c;
        while(' '==(c=fgetc(inFILE )));
        ungetc(c,inFILE);    /* read blanks */
-       if(IsNextDigit()) fscanf(inFILE,"%d",&IN[i]); else break;
+       if(IsNextDigit()) ReadInputInt(&IN[i]); else break;
      }
      if(i==0) { if(!InputOK){puts("-h gives you help\n"); exit(0);}
 	else return 0; } InputOK++;
      if(i==1) { puts("Error in INPUT: need at least 2 numbers!"); exit(0);}
      if(i==2) {puts("Error: expected input format is CWS!"); exit(0);}
-     assert(i!=3);
+     if(i==3) InputError("Error in INPUT: need at least 4 numbers for CWS input!");
      S=IN[i-1]; for(j=0;j<i-1;j++) if(S<IN[j]) break;
      if(j==i-1)				 /* Single Weights with: "w1 ... d" */
      {	_CW->nw=1; _CW->d[0]=S; _CW->N=i-1;
-        assert(_CW->N <= POLY_Dmax+1);		      /* Increase POLY_Dmax */
-	for(j=0;j<_CW->N;j++) {_CW->W[0][j]=IN[j]; assert(IN[j]>0);}
+        if(_CW->N > POLY_Dmax+1) {
+	  printf("Please increase POLY_Dmax to at least %d\n", _CW->N-1);
+	  exit(0);}
+	for(j=0;j<_CW->N;j++) {
+	  if(IN[j]<=0) InputError("Error in INPUT: weights must be positive!");
+	  _CW->W[0][j]=IN[j];}
 	goto MAP;
      }
      S=_CW->d[_CW->nw]=IN[0]; 			          /* ASSIGN WEIGHTS */
@@ -325,7 +347,9 @@ int  Read_CWS(CWS *_CW, PolyPointList *_P)
 
 MAP: for(i=0;i<_CW->nw;i++)			/* check consistency of CWS */
      {	Long sum=_CW->d[i], *w=_CW->W[i];
-	for(j=0;j<_CW->N;j++) { assert(w[j]>=0); sum-=w[j]; }
+	for(j=0;j<_CW->N;j++) {
+	  if(w[j]<0) InputError("Error in INPUT: weights must be non-negative!");
+	  sum-=w[j];}
 	if(sum){ /*printf("Use poly.x -w for (single) WeightSystems with ");
 		   printf("d!=\\sum(w)\n(only Read_Weight makes the correct ");
 		   puts("PolyPointList in that case)"); exit(0);*/
@@ -821,4 +845,3 @@ void Print_C5S(C5stats *_C5S){
 	 _C5S->max_h1[1], _C5S->max_h1[2], _C5S->max_h1[3],
 	 _C5S->max_h22, _C5S->min_chi, _C5S->max_chi);
 }
-

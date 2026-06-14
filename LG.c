@@ -22,6 +22,16 @@ int  Is_Gen_CY(int index, PolyPointList *P)
 void WZerror(char *c)
 {    printf("Format error %s in Read_WZeight\n",c);exit(0);
 }    
+static void WeightInputError(const char *message)
+{
+     puts(message);
+     exit(0);
+}
+static void ReadWeightInt(int *value)
+{
+     if(fscanf(inFILE,"%d",value)!=1)
+          WeightInputError("Error in INPUT: missing integer!");
+}
 int  auxString2SInt(char *c,int *n)
 {    int j=0,neg=0; *n=0;     if(c[0]=='-')if(('0'<c[1])&&(c[1]<='9')) neg=j=1;
      while(('0'<=c[j])&&(c[j]<='9')) *n = 10*(*n)+c[j++]-'0';
@@ -37,14 +47,18 @@ int  Read_WZ_PP(Weight *WZ)     /* read "d w_i" [ or "w_i d" if last=max ] */
      if(FilterFlag) inFILE=stdin; else
      if(inFILE==stdin) printf("type degree and weights  [d  w1 w2 ...]: "); 
      C=fgetc(inFILE); if( !IsDigit(C) ) return 0; ungetc(C,inFILE);	 *nz=0;
-     fscanf(inFILE,"%d",I);
+     ReadWeightInt(I);
      for(i=1; i<W_Nmax+2; i++)
      {	while(' '==(C=fgetc(inFILE))); ungetc(C,inFILE);
-	if(IsDigit(C)) fscanf(inFILE,"%d",&I[i]); else break;
+	if(IsDigit(C)) ReadWeightInt(&I[i]); else break;
      }	WZ->N=i-1; if(WZ->N>W_Nmax) { puts("Increase POLY_Dmax"); exit(0); }
-     for(i=0;i<=WZ->N;i++) assert(I[i]>0);
+     for(i=0;i<=WZ->N;i++)
+	if(I[i]<=0) WeightInputError("Error in INPUT: weights must be positive!");
      if(I[WZ->N]>I[0]) { WZ->d=I[WZ->N]; shift=0; } else WZ->d=I[0];
-     for(i=0;i<WZ->N;i++) {WZ->w[i]=I[i+shift]; assert(WZ->w[i]<WZ->d);} 
+     for(i=0;i<WZ->N;i++) {
+	WZ->w[i]=I[i+shift];
+	if(WZ->w[i]>=WZ->d)
+	     WeightInputError("Error in INPUT: weights must be smaller than degree!");}
      WZ->r=0; for(i=0;i<WZ->N;i++) WZ->r+=WZ->w[i]; 
      if(WZ->r%WZ->d)WZ->r=0; else WZ->r/=WZ->d;
      for(n=0;n<999;n++)					/* read /Z*: * * * */
@@ -57,7 +71,8 @@ int  Read_WZ_PP(Weight *WZ)     /* read "d w_i" [ or "w_i d" if last=max ] */
      while(c[i]==b)i++; 
      while(i<n)
      {  int j, k, s; if((c[i]!='/')||(c[i+1]!='Z')) break;
-        i+=2; assert(*nz<POLY_Dmax);		 WZ->m[*nz]=0;
+        i+=2; if(*nz>=POLY_Dmax) {puts("Increase POLY_Dmax"); exit(0);}
+	WZ->m[*nz]=0;
 	while((i<n)&&IsDigit(c[i])) WZ->m[*nz]=10*WZ->m[*nz]+c[i++]-'0';
 	j=0;
 	if(WZ->m[*nz]<=0) WZerror("Order not positive");
@@ -193,15 +208,19 @@ int  Read_Weight(Weight *_W)     /* read "d w_i" [ or "w_i d" if last=max ] */
      if(FilterFlag) inFILE=stdin; else
      if(inFILE==stdin) printf("type degree and weights  [d  w1 w2 ...]: "); 
      c=fgetc(inFILE); if( !IsDigit(c) ) return 0; ungetc(c,inFILE); 
-     fscanf(inFILE,"%d",I);
+     ReadWeightInt(I);
      for(i=1; i<W_Nmax+2; i++)
      {	while(' '==(c=fgetc(inFILE))); ungetc(c,inFILE);
-	if(IsDigit(c)) fscanf(inFILE,"%d",&I[i]); else break;
+	if(IsDigit(c)) ReadWeightInt(&I[i]); else break;
      }  while(fgetc(inFILE )-'\n') if(feof(inFILE))return 0; /* read to EOL */
      _W->N=i-1; if(_W->N>W_Nmax) { puts("Increase POLY_Dmax"); exit(0); }
-     for(i=0;i<=_W->N;i++) assert(I[i]>0);
+     for(i=0;i<=_W->N;i++)
+	if(I[i]<=0) WeightInputError("Error in INPUT: weights must be positive!");
      if(I[_W->N]>I[0]) { _W->d=I[_W->N]; shift=0; } else _W->d=I[0];
-     for(i=0;i<_W->N;i++) {_W->w[i]=I[i+shift]; assert(_W->w[i]<_W->d);} 
+     for(i=0;i<_W->N;i++) {
+	_W->w[i]=I[i+shift];
+	if(_W->w[i]>=_W->d)
+	     WeightInputError("Error in INPUT: weights must be smaller than degree!");}
      if(FilterFlag) inFILE=NULL;
      return 1;
 }

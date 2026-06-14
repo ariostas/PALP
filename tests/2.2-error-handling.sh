@@ -27,3 +27,26 @@ Please increase POLY_Dmax to at least 12 = 7 + 6 - 1
 EOF
 )
 run_test
+
+SKIP=
+SKIPREASON=
+
+COMMAND="echo '1 1 1' | ./poly-${DIM}d.x -f"
+DESCRIPTION="poly-${DIM}d.x rejects incomplete weight input"
+EXPECTED="Error in INPUT: need at least 4 numbers for weight input!"
+run_test
+
+COMMAND="printf '2 4\n0 0 0\n' | ./poly-${DIM}d.x -f"
+DESCRIPTION="poly-${DIM}d.x rejects incomplete point matrix input"
+EXPECTED="Error in INPUT: missing integer!"
+run_test
+
+COMMAND="echo '5 0 1' | ./poly-${DIM}d.x -fl"
+DESCRIPTION="poly-${DIM}d.x -l rejects zero weight input"
+EXPECTED="Error in INPUT: weights must be positive!"
+run_test
+
+COMMAND="echo '5 5' | ./poly-${DIM}d.x -fl"
+DESCRIPTION="poly-${DIM}d.x -l rejects weight equal to degree"
+EXPECTED="Error in INPUT: weights must be smaller than degree!"
+run_test

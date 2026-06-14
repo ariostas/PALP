@@ -52,10 +52,21 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
      - Focused tests: `tests/3.2.11-poly-l.sh` and `tests/7.2.8-mori-b.sh` passed for `DIM=4,5,6,11`.
      - `make check`: passed.
 
-5. Convert assertion-only user checks into explicit runtime checks.
+5. [x] Convert assertion-only user checks into explicit runtime checks.
    - Start with parsers and fixed-size array boundaries.
    - Keep assertions for internal invariants.
    - Verification: add tests for invalid input and capacity errors.
+   - Completed parser runtime checks:
+     - Added checked integer reads for CWS and polytope matrix input in `Coord.c`.
+     - Replaced assertion-only checks for incomplete weight input, single-weight size limits, non-positive weights, negative CWS weights, and excess `/Z` quotient factors.
+     - Added matching checks in `LG.c` for `Read_WZ_PP()` and `Read_Weight()`.
+     - Added invalid-input regressions to `tests/2.2-error-handling.sh`.
+     - Internal algorithm assertions were left unchanged.
+     - `cc --version`: GCC 13.3.0.
+     - `make -j2`: passed.
+     - `make all-dims -j2`: passed.
+     - Focused tests: `tests/2.2-error-handling.sh`, `tests/2.1-polytope-input.sh`, `tests/3.2.11-poly-l.sh`, `tests/4.2.1-cws-w.sh`, `tests/4.2.6-cws-N.sh`, and `tests/6.3-nef-output.sh` passed for `DIM=4,5,6,11`.
+     - `make check`: passed.
 
 6. Normalize matrix and array shape contracts.
    - Introduce named C typedefs or small wrapper structs for `PairMat`, normal-form matrices, and incidence arrays.
