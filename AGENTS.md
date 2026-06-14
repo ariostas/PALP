@@ -45,7 +45,7 @@ cmake -S . -B build -D CMAKE_BUILD_TYPE=Release
 cmake --build build
 ```
 
-The maintained make-based build is `GNUmakefile`. The legacy `Makefile` appears stale; do not use it unless you are explicitly fixing it.
+The maintained make-based build is `GNUmakefile`. The top-level `Makefile` is only a compatibility wrapper that delegates to `GNUmakefile`.
 
 ## Important Build Details
 

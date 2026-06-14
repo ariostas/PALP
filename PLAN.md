@@ -83,10 +83,18 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
      - Focused tests: `poly -fA` passed for `DIM=5,6,11`; `DIM=4` exposed `ISSUES.md` item 16. `tests/6.4.4-nef-H.sh`, `tests/7.2.3-mori-g.sh`, and `tests/7.2.8-mori-b.sh` passed for `DIM=4,5,6,11` except the existing long-test skip for `nef-11d.x -H`.
      - `make check`: passed.
 
-7. Remove stale build paths.
+7. [x] Remove stale build paths.
    - Either delete/update `Makefile` or make it delegate to `GNUmakefile`.
    - Make CMake and GNUmakefile source lists match exactly.
    - Verification: both build systems produce all five main executables.
+   - Completed build-path cleanup:
+     - Replaced stale `Makefile` with a compatibility wrapper that delegates targets to `GNUmakefile`.
+     - Confirmed CMake and GNUmakefile source lists agree for shared, class, nef, and Mori modules.
+     - Updated `AGENTS.md` to describe the wrapper.
+     - `make -f Makefile -j2`: passed.
+     - `make -f Makefile all-dims -j2`: passed.
+     - `cmake --build build -j2`: passed.
+     - `make -f Makefile check`: passed.
 
 ## Phase 2: Prepare for C++ Compilation
 

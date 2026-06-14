@@ -90,6 +90,7 @@ This file records issues found during an initial code-reading and build-warning 
 - Evidence: It refers to `Moricone.c` instead of `MoriCone.c` and has a malformed `mori` rule with dependencies and the link command on the same line. The maintained build appears to be `GNUmakefile` and CMake.
 - Risk: Users or agents invoking `make -f Makefile` can get a broken or incomplete build and then debug the wrong thing.
 - Suggested check: Remove the stale file, redirect it to `GNUmakefile`, or update it to match the maintained source list.
+- Status: Fixed in Phase 1 item 7 by replacing `Makefile` with a compatibility wrapper that delegates to `GNUmakefile`; verified with wrapper builds, CMake, and `make -f Makefile check`.
 
 ## 13. Global `FILE *` input/output state limits reentrancy
 
