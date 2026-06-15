@@ -22,7 +22,7 @@ string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(SOURCES Coord.c Rat.cc Vertex.c Polynf.c)
+set(SOURCES Coord.cc Rat.cc Vertex.c Polynf.c)
 set(CLASS_SRC Subpoly.c Subadd.c Subdb.c)
 set(NEF_SRC E_Poly.c Nefpart.c LG.c)
 set(MORI_SRC MoriCone.c SingularInput.c LG.c)

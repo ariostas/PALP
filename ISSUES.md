@@ -21,7 +21,7 @@ This file records issues found during an initial code-reading and build-warning 
 ## 3. Runtime correctness depends on assertions being enabled
 
 - Location: `CMakeLists.txt:14-15`, many `assert()` checks across core algorithms
-- Evidence: CMake explicitly strips `-DNDEBUG` because compiling with it breaks the code. Bounds checks and even important input validations are often only `assert()` calls, for example `Coord.c:178-179`, `MoriCone.c:1528-1532`, and many fixed-array writes.
+- Evidence: CMake explicitly strips `-DNDEBUG` because compiling with it breaks the code. Bounds checks and even important input validations are often only `assert()` calls, for example `Coord.cc:178-179`, `MoriCone.c:1528-1532`, and many fixed-array writes.
 - Risk: Release builds or downstream embedders that define `NDEBUG` can silently remove checks and turn malformed or simply large inputs into memory corruption.
 - Suggested check: Introduce explicit checked preconditions for user input, capacity limits, and allocation results. Reserve `assert()` for internal invariants after the explicit checks exist.
 
@@ -42,7 +42,7 @@ This file records issues found during an initial code-reading and build-warning 
 
 ## 6. Combined-weight-system and weight parsers write before all bounds are checked
 
-- Location: `Coord.c:139-179`, `Coord.c:285-321`, `LG.c:32-74`, `LG.c:191-204`
+- Location: `Coord.cc:139-179`, `Coord.cc:285-321`, `LG.c:32-74`, `LG.c:191-204`
 - Evidence: Input numbers are collected into fixed arrays and then mapped into fixed-size `CWS`/`Weight` fields. Several important capacity checks are assertions, and some dimensions are checked only after partially filling arrays.
 - Risk: Malformed or unusually large CWS input can trigger assertion aborts in normal builds and memory corruption if assertions are disabled. Failed `fscanf()` calls can also leave local integers uninitialized.
 - Suggested check: Replace the scanf loops with a checked tokenizer that validates token count, conversion success, sign, and destination capacity before writing into fixed arrays.
@@ -119,6 +119,13 @@ This file records issues found during an initial code-reading and build-warning 
 - Evidence: `echo '5 1 1 1 1 1' | ./poly-4d.x -fA` aborts with `Make_ANF: Assertion 'P->n<POLY_Dmax' failed`. The same smoke test succeeds for `poly-5d.x`, `poly-6d.x`, and `poly-11d.x`.
 - Risk: The affine normal form path temporarily adds one coordinate row, so it needs `POLY_Dmax > P->n`. As written, this is a user-facing capacity condition enforced only by `assert()`, producing an abort instead of a clear diagnostic.
 - Suggested check: Replace the assertion with an explicit `POLY_Dmax` capacity check, add an invalid-input regression for `poly-4d.x -A`, and verify `poly -fA` output remains unchanged for dimensions with enough headroom.
+
+## 17. `Print_CWH()` dimension-specific Hodge indexing relies on an implicit invariant
+
+- Location: `Coord.cc:367-386`, `Global.h:154-155`
+- Evidence: After compiling `Coord.cc` as C++ in Phase 2 item 10, `make all-dims -j2` warns for `POLY_Dmax=4` and `POLY_Dmax=5` that `Print_CWH()` may index `_BH->h1[3]` or `_BH->h1[4]` past the `h1[POLY_Dmax-1]` array. The guarded branches are `_BH->n == 5` and `_BH->n == 6`, so this may be unreachable when `POLY_Dmax` bounds `_BH->n`.
+- Risk: If any caller can pass a `BaHo` whose `n` exceeds the compile-time `POLY_Dmax`, Hodge output can read past `h1`. If the invariant is real, it is undocumented and not explicit enough for C++ warning cleanup.
+- Suggested check: Add an explicit capacity guard or assertion tying `_BH->n` to `POLY_Dmax`, then rerun `make all-dims -j2` and the Hodge-output tests.
 
 ## Build observations from this pass
 

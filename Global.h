@@ -211,7 +211,7 @@ typedef struct{
 statistics on large lists of weight systems, cf. classification of 4fold weights
 */
 
-/*  ==========         I/O functions (from Coord.c)		==========  */
+/*  ==========         I/O functions (from Coord.cc)		==========  */
 
 int  Read_CWS_PP(CWS *C, PolyPointList *P);
 /*

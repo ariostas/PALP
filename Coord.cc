@@ -7,13 +7,13 @@
 
 typedef struct {Long x[AMBI_Dmax][AMBI_Dmax]; int n, N;}     CWLatticeBasis;
 
-void Make_CWS_Points(CWS *_C, PolyPointList *_P);
-void Make_RGC_Points(CWS *Cin, PolyPointList *_P);
+extern "C" void Make_CWS_Points(CWS *_C, PolyPointList *_P);
+extern "C" void Make_RGC_Points(CWS *Cin, PolyPointList *_P);
 void CWS_to_PermCWS(CWS *Cin, CWS *C, int *pi);
 
 /*  ==========  	  I/O functions:                	==========  */
 
-int  IsNextDigit(void){
+extern "C" int  IsNextDigit(void){
   char c; c=fgetc(inFILE); ungetc(c,inFILE);
   if(c=='0') return -1;
   if((c<'0') || ('9'<c)) return 0; else return 1;
@@ -80,10 +80,10 @@ int  auxString2Int(char *c,int *n)
      if(j) while(c[j]==' ') j++;
      return j;
 }
-void CWSZerror(char *c)
+void CWSZerror(const char *c)
 {    printf("Format error %s in Read_CWS_Zinfo\n",c);exit(0);
 }
-void Print_CWS_Zinfo(CWS *CW)
+extern "C" void Print_CWS_Zinfo(CWS *CW)
 {    int i,j; if(CW->nw) for(i=0;i<CW->nz;i++) 
      {	fprintf(outFILE,"/Z%d: ",CW->m[i]);
 	for(j=0;j<CW->N;j++) fprintf(outFILE,"%d ",CW->z[i][j]);
@@ -133,7 +133,7 @@ void checkDimension(int polyDim, int codim, int index){
     exit(0);}
 }
  
-int  ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index)
+extern "C" int  ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index)
 /*   _P is always an M-lattice polytope
      codim = 1, index = 1: CY hypersurface 
      codim > 1, index = 1: _P reflexive, CICY with codimension codim
@@ -496,7 +496,7 @@ void Poly_To_Ambi(CWLatticeBasis *_B, Long *x, Long *X)
  *   x^iB_i^A \in [0,d_k/w_k^A] - 1 - \sum_{l<i} x^l B_l^A
  *									     */
 
-void QuotZ_2_SublatG(Long Z[][VERT_Nmax],int *zm,Long *M,int *d,
+extern "C" void QuotZ_2_SublatG(Long Z[][VERT_Nmax],int *zm,Long *M,int *d,
      Long G[][POLY_Dmax]); 		      /* normalize and diagonalize Z */
 void CWS_2_SublatZ(CWS *C,CWLatticeBasis *B,			       /* in */
 	int *m, Long *M, Long G[POLY_Dmax][POLY_Dmax])		      /* out */
@@ -619,7 +619,7 @@ int Compute_X0(int N, CWS *_C, Long *X0){
   return 0;
 }
 
-void Make_CWS_Points(CWS *Cin, PolyPointList *_P)
+extern "C" void Make_CWS_Points(CWS *Cin, PolyPointList *_P)
 {    int i, j, Amin[POLY_Dmax+1], m=Cin->nz; 
      Long *x=_P->x[_P->np=0], xmin[POLY_Dmax], 
        xmax[POLY_Dmax], Xmax[AMBI_Dmax], X0[AMBI_Dmax], xaux[POLY_Dmax], L, R; 

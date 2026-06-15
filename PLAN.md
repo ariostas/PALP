@@ -57,7 +57,7 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
    - Keep assertions for internal invariants.
    - Verification: add tests for invalid input and capacity errors.
    - Completed parser runtime checks:
-     - Added checked integer reads for CWS and polytope matrix input in `Coord.c`.
+     - Added checked integer reads for CWS and polytope matrix input in `Coord.cc`.
      - Replaced assertion-only checks for incomplete weight input, single-weight size limits, non-positive weights, negative CWS weights, and excess `/Z` quotient factors.
      - Added matching checks in `LG.c` for `Read_WZ_PP()` and `Read_Weight()`.
      - Added invalid-input regressions to `tests/2.2-error-handling.sh`.
@@ -134,7 +134,7 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
      - `make check`: passed.
 
 10. Compile selected modules as C++ without semantic changes.
-    - Start with leaf-like modules: `Rat.cc` done, then `Coord.c`, then `Vertex.c`.
+    - Start with leaf-like modules: `Rat.cc` done, then `Coord.cc` done, then `Vertex.c`.
     - Rename one file at a time only after it compiles cleanly as C++.
     - Verification: full test suite after each file.
     - `Rat.cc` migration completed:
@@ -148,7 +148,19 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
       - `cmake --build build -j2`: passed.
       - `make check`: passed.
-      - Remaining in this item: migrate `Coord.c`, then `Vertex.c`.
+    - `Coord.cc` migration completed:
+      - Renamed `Coord.c` to `Coord.cc`.
+      - Updated CMake source lists and documentation references.
+      - Fixed C++ const-correctness for `CWSZerror()`.
+      - Added explicit C linkage for exported `Coord` helpers used by C translation units: `IsNextDigit()`, `Print_CWS_Zinfo()`, `ReadCwsPp()`, `Make_CWS_Points()`, and the `QuotZ_2_SublatG()` declaration.
+      - `g++ -std=c++17 -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/Coord-smoke.o Coord.cc`: passed.
+      - `make -j2`: passed.
+      - `make all-dims -j2`: passed; `Coord.cc` compiled as C++ for `POLY_Dmax=4,5,6,11`.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `make check`: passed.
+      - New C++ optimizer warnings in `Print_CWH()` for low `POLY_Dmax` builds were filed as `ISSUES.md` item 17.
+      - Remaining in this item: migrate `Vertex.c`.
 
 ## Phase 3: Introduce Modern C++ Types
 
