@@ -10,7 +10,7 @@ PALP is a mixed C/C++ codebase with five main CLI programs:
 - `nef.x`: nef partitions.
 - `mori.x`: triangulations, Mori cone, and Singular integration.
 
-Core shared files are `Global.h`, `Coord.cc`, `Rat.cc`, `Vertex.c`, and `Polynf.c`. Specialized modules include `LG.c`, `Subpoly.c`, `Subadd.c`, `Subdb.c`, `E_Poly.c`, `Nefpart.c`, `MoriCone.c`, and `SingularInput.c`.
+Core shared files are `Global.h`, `Coord.cc`, `Rat.cc`, `Vertex.cc`, and `Polynf.c`. Specialized modules include `LG.c`, `Subpoly.c`, `Subadd.c`, `Subdb.c`, `E_Poly.c`, `Nefpart.c`, `MoriCone.c`, and `SingularInput.c`.
 
 ## Build and Test
 

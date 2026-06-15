@@ -133,8 +133,8 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
      - `make all-dims -j2`: passed; log scan found no compiler errors, implicit declarations, conflicting types, redefinitions, or unknown type names.
      - `make check`: passed.
 
-10. Compile selected modules as C++ without semantic changes.
-    - Start with leaf-like modules: `Rat.cc` done, then `Coord.cc` done, then `Vertex.c`.
+10. [x] Compile selected modules as C++ without semantic changes.
+    - Start with leaf-like modules: `Rat.cc` done, then `Coord.cc` done, then `Vertex.cc` done.
     - Rename one file at a time only after it compiles cleanly as C++.
     - Verification: full test suite after each file.
     - `Rat.cc` migration completed:
@@ -160,7 +160,19 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake --build build -j2`: passed.
       - `make check`: passed.
       - New C++ optimizer warnings in `Print_CWH()` for low `POLY_Dmax` builds were filed as `ISSUES.md` item 17.
-      - Remaining in this item: migrate `Vertex.c`.
+    - `Vertex.cc` migration completed:
+      - Renamed `Vertex.c` to `Vertex.cc`.
+      - Updated CMake source lists and documentation references.
+      - Removed the obsolete `register` storage hint from `swap()`.
+      - Added explicit C linkage for exported `Vertex` helpers used by C translation units through local declarations: `CompareEq()`, `IsGoodCEq()`, `Sort_PPL()`, `GLZ_Start_Simplex()`, `Finish_IP_Check()`, `Make_FaceIPs()`, and `Eval_BaHo()`.
+      - `g++ -std=c++17 -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/Vertex-smoke.o Vertex.cc`: passed.
+      - `make -j2`: passed.
+      - `make all-dims -j2`: passed; `Vertex.cc` compiled as C++ for `POLY_Dmax=4,5,6,11`.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `make check`: passed.
+      - A suspicious `QComplete_Poly()` equation-index expression found during review was filed as `ISSUES.md` item 18.
 
 ## Phase 3: Introduce Modern C++ Types
 

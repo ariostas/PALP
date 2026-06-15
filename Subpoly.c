@@ -22,7 +22,7 @@ typedef struct {int ne; Equation e[CEQ_Nmax];}              CEqList;
 Long CompareEq(Equation *X, Equation *Y, int n);
 int  IsGoodCEq(Equation *_E, PolyPointList *_P, VertexNumList *_V);
 int  Finish_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F,
-                    CEqList *_CEq, INCI *F_I, INCI *CEq_I); /* from Vertex.c */
+                    CEqList *_CEq, INCI *F_I, INCI *CEq_I); /* from Vertex.cc */
 int  Improve_Coords(PolyPointList *_P,VertexNumList *_V);  /* from Polynf.c */
 
 int  New_Improve_Coords(PolyPointList *_P,VertexNumList *_V)

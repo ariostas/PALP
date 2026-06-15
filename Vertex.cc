@@ -97,7 +97,7 @@ void Print_FaceInfo(int M,FaceInfo *_I){
     puts("");     }
 }
 
-void Make_CD2Faces(PolyPointList *_P, VertexNumList *_V, EqList *_E,
+extern "C" void Make_CD2Faces(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 		    FaceInfo *_I);
 
 void Make_Incidence(PolyPointList *_P, VertexNumList *_V, EqList *_E,
@@ -162,7 +162,7 @@ else assert(!INCI_LE(x,_I->v[d][l]));
 /*  ==========						  	==========  */
 /*  ======================================================================  */
 
-void swap(int* i,int* j) {register int k; k=*i; *i=*j; *j=k;}
+void swap(int* i,int* j) {int k; k=*i; *i=*j; *j=k;}
 
 int diff(const void *a, const void *b){return *((int *) a) - *((int *) b);} 
 
@@ -240,7 +240,7 @@ Long DualBraP1(Long *X, Long *Y, int n){
   return (Long) p;
 }
 
-Long CompareEq(Equation *X, Equation *Y, int n)	{       /* return "X-Y"; */
+extern "C" Long CompareEq(Equation *X, Equation *Y, int n)	{       /* return "X-Y"; */
   Long d; while(n--) if((d=X->a[n]-Y->a[n])) return d;
   return X->c-Y->c;
 }
@@ -276,7 +276,7 @@ int Span_Check(EqList *_F, EqList *H, int *n){
   return 1;
 }
 
-int  IsGoodCEq(Equation *_E, PolyPointList *_P, VertexNumList *_V){
+extern "C" int  IsGoodCEq(Equation *_E, PolyPointList *_P, VertexNumList *_V){
   int i=_V->nv; 
   Long s;
   while(!(s=Eval_Eq_on_V(_E, _P->x[_V->v[--i]], _P->n))); 
@@ -296,7 +296,7 @@ int  Search_New_Vertex(Equation *_E, PolyPointList *_P){
   return v;
 }
 
-void Sort_PPL(PolyPointList *_P, VertexNumList *_V){
+extern "C" void Sort_PPL(PolyPointList *_P, VertexNumList *_V){
   /* Vertices first, IP last */
   int i,j;
   for (i=0;i<_V->nv;i++){
@@ -391,7 +391,7 @@ int  New_Start_Vertex(Long *V0,Long *Ea, PolyPointList *P,int *v) /* P.x[v] */
 }
 	
 /*   =========	   GLZ_Start_Simplex()  =>  return codimension 	  =======   */
-int  GLZ_Start_Simplex(PolyPointList *_P, VertexNumList *_V, CEqList *_C)
+extern "C" int  GLZ_Start_Simplex(PolyPointList *_P, VertexNumList *_V, CEqList *_C)
 {    int i, x=0, y=0, *VN=_V->v, *d=&_P->n, r=*d, b[POLY_Dmax]; 
      Long *X=_P->x[x], *Y=_P->x[y], XX=0, YY=0, 
 	B[(POLY_Dmax*(POLY_Dmax+1))/2][POLY_Dmax], W[POLY_Dmax];  if(_P->np<2) 
@@ -653,7 +653,7 @@ int  Find_Equations(PolyPointList *_P, VertexNumList *_V, EqList *_F){
   return i;
 }
 
-int  Finish_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F,
+extern "C" int  Finish_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F,
 		     CEqList *_CEq, INCI *F_I, INCI *CEq_I){
   int IP=1;
   while(0<=_CEq->ne) if (IP_Search_Bad_Eq(_CEq,_F,CEq_I,F_I,_P,&IP)){
@@ -875,7 +875,7 @@ void RaiseNip(INCI x, FaceInfo *_I, int n){
       if(INCI_EQ(x,_I->f[i][j])) {_I->nip[i][j]++; return;}	
 }
 
-void Make_FaceIPs(PolyPointList *_P, VertexNumList *_V, EqList *_E, 
+extern "C" void Make_FaceIPs(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 		  PolyPointList *_DP, FaceInfo *_I){    
   /*   compute IP's of faces by computing Incidences for all points and
    *   comparing with Incidences of dual faces                             */
@@ -908,7 +908,7 @@ void PrintFaceIPs(PolyPointList *_P,FaceInfo *_I){
     puts("");     }
 }
 
-void Eval_BaHo(FaceInfo *_I, BaHo *_BH){
+extern "C" void Eval_BaHo(FaceInfo *_I, BaHo *_BH){
   /* Calculate Hodge/Picard numbers from FaceInfo */
   int i,j, n=_BH->n;
   int *h1;

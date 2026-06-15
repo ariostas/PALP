@@ -45,7 +45,7 @@ typedef struct {
 /* ====================================================== */
 /* =========            P R O T O T Y P E s     ========= */
 
-/* from Vertex.c */
+/* from Vertex.cc */
 void Sort_PPL(PolyPointList *_P, VertexNumList *_V);
  
 /* from Polynf.c */ 

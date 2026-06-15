@@ -399,7 +399,7 @@ The e'th facet of *P is determined as a (P->n-1)-dimensional polytope:
 *nv_of_facet vertices represented by vertices_of_facet.
 */
 
-/*  ==========     General purpose functions from Vertex.c   	==========  */
+/*  ==========     General purpose functions from Vertex.cc   	==========  */
 
 void swap(int *i,int *j);
 /*
@@ -472,7 +472,7 @@ limits and 0 otherwise.
 */
 
 
-/*  ==========   Polytope analysis functions (from Vertex.c)    ==========  */
+/*  ==========   Polytope analysis functions (from Vertex.cc)   ==========  */
 
 int  Find_Equations(PolyPointList *P, VertexNumList *VNL, EqList *EL);
 /*
@@ -516,7 +516,7 @@ of *BH are calculated. *P must be reflexive; *P and *DP must be complete.
 */
 
 
-/*  ======  typedefs and functions (from Vertex.c) related to INCIs  ====  */
+/*  ======  typedefs and functions (from Vertex.cc) related to INCIs  ==== */
 
 #define                 INT_Nbits            32
 #define                 LONG_LONG_Nbits      64

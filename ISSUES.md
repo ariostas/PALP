@@ -127,6 +127,13 @@ This file records issues found during an initial code-reading and build-warning 
 - Risk: If any caller can pass a `BaHo` whose `n` exceeds the compile-time `POLY_Dmax`, Hodge output can read past `h1`. If the invariant is real, it is undocumented and not explicit enough for C++ warning cleanup.
 - Suggested check: Add an explicit capacity guard or assertion tying `_BH->n` to `POLY_Dmax`, then rerun `make all-dims -j2` and the Hodge-output tests.
 
+## 18. `QComplete_Poly()` appears to initialize every facet distance from `_E->e[n]`
+
+- Location: `Vertex.cc:1003-1060`
+- Evidence: In `QComplete_Poly()`, the loop that initializes `EyD[j]` uses `_E->e[i].c * Den` before resetting `i` in the following inner loop. At that point `i` is left at `n` by the preceding `for(i=0;i<n;i++)` loop, so every `EyD[j]` starts from `_E->e[n].c` rather than the matching `_E->e[j].c`.
+- Risk: Quick Hodge/statistics output can use the wrong constant term for all facets, or read past the intended equations if `n >= _E->ne`. The existing tests pass, so either this path is weakly covered, the data often masks the error, or there is an undocumented invariant that makes `_E->e[n].c` usable here.
+- Suggested check: Build a focused regression around `QuickAnalysis()`/`Print_VP()` output, compare against the full `Complete_Poly()` path, and then test whether changing the initializer to `_E->e[j].c * Den` preserves or intentionally corrects output.
+
 ## Build observations from this pass
 
 - `make -j2` completed and produced the default `.x` executables.
