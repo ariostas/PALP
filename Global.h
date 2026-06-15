@@ -1,8 +1,15 @@
+#ifndef PALP_GLOBAL_H
+#define PALP_GLOBAL_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <assert.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*
 These are include files that should exist in your C library.
 */
@@ -612,3 +619,9 @@ int QuickAnalysis(PolyPointList *_P, BaHo *_BH, FaceInfo *_FI);
 /*
 Fast computation of FaceInfo and Hodge numbers.
 */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

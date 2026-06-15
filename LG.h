@@ -1,9 +1,20 @@
+#ifndef PALP_LG_H
+#define PALP_LG_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define	 WZinput 	(1)	/* WZ-input (in progress)  */
 
 #define  W_Nmax		(POLY_Dmax+1)
 
+#ifndef min
 #define  min(a,b)  	(((a)<(b)) ? (a) : (b))
+#endif
+#ifndef max
 #define  max(a,b)  	(((a)>(b)) ? (a) : (b))
+#endif
 
 #if (POLY_Dmax < 7)
 #define	 Pint           int
@@ -35,6 +46,7 @@ typedef struct {int d, N, z[POLY_Dmax][W_Nmax], m[POLY_Dmax], M, r, R;/* Ref */
 typedef struct {int D,E,sts; Pint h[POLY_Dmax][POLY_Dmax];}		VaHo;
 
 int Read_W_PP(Weight *, PolyPointList *);
+int Read_Weight(Weight *);
 int Trans_Check(Weight);
 void LGO_VaHo(Weight *,VaHo *);
 void Write_Weight(Weight *_W);
@@ -43,3 +55,9 @@ void Write_WH(Weight *_W, BaHo *_BH, VaHo *_VH, int rc, int tc,
 void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP);
 
 Long V_to_G_GI(Long *V,int d, Long G[][POLY_Dmax],Long GI[][POLY_Dmax]);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

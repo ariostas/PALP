@@ -1,3 +1,10 @@
+#ifndef PALP_MORI_H
+#define PALP_MORI_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* =========================================================== */
 /* ===                                                     === */
 /* ===                  M o r i . h                        === */
@@ -144,3 +151,9 @@ can hold at least Wmax sets of coefficients.
 */
 
 Long SimplexVolume(Long **V,int d);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

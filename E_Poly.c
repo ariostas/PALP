@@ -7,8 +7,6 @@
 #define max(a,b) (((a)>(b)) ? (a):(b))
 
 void Sort_PPL(PolyPointList *_P, VertexNumList *_V);
-void part_nef(PolyPointList *, VertexNumList *, EqList *, PartList *,
-	      int *, NEF_Flags *);
 
 void IP_Fiber_Data(PolyPointList *, PolyPointList *,int nv,
 		   Long G[VERT_Nmax][POLY_Dmax][POLY_Dmax],int fd[VERT_Nmax],

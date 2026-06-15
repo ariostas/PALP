@@ -45,6 +45,12 @@ cmake -S . -B build -D CMAKE_BUILD_TYPE=Release
 cmake --build build
 ```
 
+C++ header smoke test:
+
+```sh
+c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc
+```
+
 The maintained make-based build is `GNUmakefile`. The top-level `Makefile` is only a compatibility wrapper that delegates to `GNUmakefile`.
 
 ## Important Build Details

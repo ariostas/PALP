@@ -784,7 +784,6 @@ void MakeMobius(MobiusData *M,int X)   /* d[i] divisors, mt[i][j] 0<=j<=i<=n */
 }
 void FreeMobius(MobiusData *M){free(M->d);}
 void Calc_VaHo(Weight *W,VaHo *V);
-void PoincarePoly(int N, int *w, int d, PoCoLi *P, PoCoLi *Z,PoCoLi *R);
 void Aux_Phase_Poly(PoCoLi *P,int w,int d, int r, int s, int x);
 int  Index_Trace_Test(VaHo *V,int WI,int T)
 {    int i,j,D=V->D;for(i=0;i<=D;i++)for(j=0;j<=D;j++){T-=V->h[i][j];

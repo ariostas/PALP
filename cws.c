@@ -53,8 +53,6 @@ void  PrintCWSUsage(char *c){
 
 void Die(char *comment){ printf("\n%s\n",comment); exit(0);}
 
-int Read_Weight(Weight *);
-
 int READ_Weight(Weight *_W, FILE *INFILE){
   inFILE=INFILE;
   return Read_Weight(_W);
@@ -1910,7 +1908,6 @@ Long L_Point_Count(Weight *W,PolyPointList *P,VertexNumList *V,EqList *E){
   Find_Equations(P,V,E); return NP_use_lat(E,P);
 }
 
-int Read_Weight(Weight *);
 Long Poly_Point_Count(PolyPointList *P,VertexNumList *V,EqList *E);
 
 Long W_Point_Count(Weight *W,PolyPointList *P,VertexNumList *V,EqList *E){

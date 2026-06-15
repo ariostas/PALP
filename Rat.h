@@ -1,5 +1,9 @@
-#ifndef __Rat__
-#define __Rat__
+#ifndef PALP_RAT_H
+#define PALP_RAT_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef	struct {Long N; Long D;} 		             Rat;  /* = N/D */
 
@@ -18,8 +22,6 @@ Rat  rP(Rat a, Rat b);		/*  a * b	rational Product   */
 Rat  rQ(Rat a, Rat b);    	/*  a / b	rational Quotient */
 int  rC(Rat a, Rat b);          /* Compare = [1 / 0 / -1] if a [gt/eq/lt] b */
 void Rpr(Rat c);		/*  write  "c.N/c.D"  to outFN */
-
-#endif
 
 typedef	struct {LLong N; LLong D;} 		             LRat;  /* = N/D */
 
@@ -46,3 +48,9 @@ void  Map_Permut(int *d,int *pi,int *pinv,ARG_FUN,void *AuxPtr);
 
 Long  W_to_GLZ(Long *W, int *d, Long **GLZ);	/* "triangluar" form of GLZ */
 Long  PW_to_GLZ(Long *W, int *d, Long **GLZ);	/* improved by permutations */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

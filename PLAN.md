@@ -98,11 +98,23 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
 
 ## Phase 2: Prepare for C++ Compilation
 
-8. Add include guards and C++ compatibility shims.
+8. [x] Add include guards and C++ compatibility shims.
    - Guard every header.
    - Remove duplicate local declarations where headers should be authoritative.
    - Add `extern "C"` only if C and C++ objects must coexist temporarily.
    - Verification: C build unchanged; headers can be included from a trivial `.cc` file.
+   - Completed header compatibility pass:
+     - Added include guards and C++ linkage wrappers to `Global.h`, `Rat.h`, `LG.h`, `Subpoly.h`, `Nef.h`, and `Mori.h`.
+     - Fixed `Rat.h` so the guard covers the full header, including `LRat` declarations.
+     - Added `tests/header-smoke.cc`, which includes every public header twice from C++.
+     - Removed redundant local declarations for public prototypes and published `Read_Weight()` from `LG.h`.
+     - Guarded duplicate `min`/`max` macro definitions to avoid redefinition warnings when headers are included together.
+     - `cc --version`: GCC 13.3.0.
+     - `c++ --version`: GCC 13.3.0.
+     - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+     - `make -j2`: passed.
+     - `make all-dims -j2`: passed; log scan found no `implicit declaration`, macro redefinition, conflicting type, or compiler error lines.
+     - `make check`: passed.
 
 9. Introduce fixed-width type aliases.
    - Replace macro aliases like `Long` and `LLong` with a central typedef/using layer.
