@@ -176,7 +176,7 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
 
 ## Phase 3: Introduce Modern C++ Types
 
-11. Wrap rational numbers.
+11. [x] Wrap rational numbers.
     - Replace free-function `Rat` operations with a small value type.
     - Add explicit construction and checked division.
     - Verification: unit tests for arithmetic and all existing CLI tests.
@@ -207,12 +207,27 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake --build build -j2`: passed.
       - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
       - `make check`: passed.
-      - Remaining in this item: migrate additional C++ call sites from free `Rat`/`LRat` functions to the new value types where it is behavior-preserving.
+      - No additional raw `Rat`/`LRat` production call sites remain in the currently migrated C++ modules, apart from the legacy C ABI implementations in `Rat.cc` and the wrappers themselves.
+      - Remaining legacy rational uses are in C translation units and should be migrated when those modules become C++.
 
 12. Wrap bounded arrays.
     - Use `std::array` for compile-time bounded vectors/matrices.
     - Provide `.size()`-checked helpers before changing algorithms.
     - Verification: no output changes; sanitizer builds improve.
+    - First local bounded-array migration completed:
+      - Converted `Vertex.cc` `Compute_InvMat()` local rational matrices/vectors and pivot-index buffer to `std::array`.
+      - Kept public C-style input/output matrix contracts unchanged.
+      - `g++ -std=c++17 -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/Vertex-array-smoke.o Vertex.cc`: passed.
+      - `make check-rat-wrapper`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make -j2`: passed.
+      - Focused tests: `tests/3.2.7-poly-e.sh`, `tests/3.2.23-poly-P.sh`, and `tests/6.4.18-nef-v.sh` passed for `DIM=6`.
+      - `make all-dims -j2`: passed.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
+      - `make check`: passed.
+      - Remaining in this item: migrate more local bounded work buffers in C++ modules before changing public data structures.
 
 13. Replace manual allocation with RAII.
     - Use `std::vector` for variable-size work buffers.

@@ -1,6 +1,8 @@
 #include "Global.h"
 #include "Rat.h"
 
+#include <array>
+
 #define MAX_BAD_EQ	(POLY_Dmax>5)	/* previously 6; needed for nef !? */
 #define SHOW_NEW_CEq    0               /* (POLY_Dmax>12) 
 					   tracks polytope analysis  */
@@ -749,9 +751,14 @@ void Compute_InvMat(int n, EqList *_E, int OrdFac[VERT_Nmax],
 		    Long InvMat[POLY_Dmax][POLY_Dmax]){
   /* Find first POLY_Dmax linearly independent facets + Inverse Matrix */
 
-  palp::LongRational ind[POLY_Dmax][POLY_Dmax], x[POLY_Dmax], y[POLY_Dmax],
-    f, PInvMat[POLY_Dmax][POLY_Dmax];
-  int i, j, k, l, rank=0, one[POLY_Dmax];
+  using LongRationalRow = std::array<palp::LongRational, POLY_Dmax>;
+  using LongRationalMatrix = std::array<LongRationalRow, POLY_Dmax>;
+
+  LongRationalMatrix ind, PInvMat;
+  LongRationalRow x, y;
+  palp::LongRational f;
+  std::array<int, POLY_Dmax> one;
+  int i, j, k, l, rank=0;
   
   for (i=0;i<n;i++) for (j=0;j<n;j++) PInvMat[i][j]=palp::LongRational(0);
   for (i=0;i<n;i++) PInvMat[i][i]=palp::LongRational(1);
