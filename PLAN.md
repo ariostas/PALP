@@ -194,7 +194,20 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake --build build -j2`: passed.
       - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
       - `make check`: passed.
-      - Remaining in this item: migrate C++ call sites from free `Rat`/`LRat` functions to the new value types where it is behavior-preserving.
+    - First production call-site migration completed:
+      - Migrated `Vertex.cc` `Compute_InvMat()` from raw `LRat` arrays and `LrD()`/`LrP()`/`LrQ()` calls to `palp::LongRational` arithmetic.
+      - Preserved the existing final integer denominator and inverse-matrix output contract.
+      - `g++ -std=c++17 -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/Vertex-rational-smoke.o Vertex.cc`: passed.
+      - `make check-rat-wrapper`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make -j2`: passed.
+      - `make all-dims -j2`: passed.
+      - Focused tests: `tests/3.2.7-poly-e.sh`, `tests/3.2.23-poly-P.sh`, and `tests/6.4.18-nef-v.sh` passed for `DIM=6`.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
+      - `make check`: passed.
+      - Remaining in this item: migrate additional C++ call sites from free `Rat`/`LRat` functions to the new value types where it is behavior-preserving.
 
 12. Wrap bounded arrays.
     - Use `std::array` for compile-time bounded vectors/matrices.

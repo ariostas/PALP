@@ -749,40 +749,42 @@ void Compute_InvMat(int n, EqList *_E, int OrdFac[VERT_Nmax],
 		    Long InvMat[POLY_Dmax][POLY_Dmax]){
   /* Find first POLY_Dmax linearly independent facets + Inverse Matrix */
 
-  LRat ind[POLY_Dmax][POLY_Dmax], x[POLY_Dmax], y[POLY_Dmax], f, 
-    PInvMat[POLY_Dmax][POLY_Dmax];
+  palp::LongRational ind[POLY_Dmax][POLY_Dmax], x[POLY_Dmax], y[POLY_Dmax],
+    f, PInvMat[POLY_Dmax][POLY_Dmax];
   int i, j, k, l, rank=0, one[POLY_Dmax];
   
-  for (i=0;i<n;i++) for (j=0;j<n;j++) PInvMat[i][j]=LrI(0);
-  for (i=0;i<n;i++) PInvMat[i][i]=LrI(1);
+  for (i=0;i<n;i++) for (j=0;j<n;j++) PInvMat[i][j]=palp::LongRational(0);
+  for (i=0;i<n;i++) PInvMat[i][i]=palp::LongRational(1);
   i=0;
   while (rank<n){
-    for (j=0;j<n;j++) x[j]=LrI(_E->e[OrdFac[i]].a[j]);
-    for (j=0;j<n;j++) y[j]=LrI(0);
-    y[rank]=LrI(1);
+    for (j=0;j<n;j++) x[j]=palp::LongRational(_E->e[OrdFac[i]].a[j]);
+    for (j=0;j<n;j++) y[j]=palp::LongRational(0);
+    y[rank]=palp::LongRational(1);
     for (j=0;j<rank;j++) {
       f=x[one[j]];
       for (k=0;k<n;k++) {
-        x[k]=LrD(x[k],LrP(f,ind[j][k])); 
-        y[k]=LrD(y[k],LrP(f,PInvMat[j][k]));  } }
+        x[k]=x[k] - f * ind[j][k];
+        y[k]=y[k] - f * PInvMat[j][k];  } }
     one[rank]=-1;
-    for (l=0;(l<n)&&(one[rank]==-1);l++) if (x[l].N) one[rank]=l;
+    for (l=0;(l<n)&&(one[rank]==-1);l++) if (x[l].numerator()) one[rank]=l;
     if(one[rank]>-1){
       for (k=0;k<n;k++) {
-        ind[rank][k]=LrQ(x[k],x[one[rank]]);
-        PInvMat[rank][k]=LrQ(y[k],x[one[rank]]); }
+        ind[rank][k]=x[k] / x[one[rank]];
+        PInvMat[rank][k]=y[k] / x[one[rank]]; }
       for (j=0;j<rank;j++) {
         f=ind[j][one[rank]];
         for (k=0;k<n;k++)         {
-          ind[j][k]=LrD(ind[j][k],LrP(ind[rank][k],f));   
-          PInvMat[j][k]=LrD(PInvMat[j][k],LrP(PInvMat[rank][k],f));  }     }
+          ind[j][k]=ind[j][k] - ind[rank][k] * f;
+          PInvMat[j][k]=PInvMat[j][k] - PInvMat[rank][k] * f;  }     }
       BasFac[rank]=OrdFac[i];
       rank++; }  
     i++; }
   for (i=0;i<n;i++) for (j=0;j<n;j++) 
-    *Den=(*Den/LFgcd(*Den,PInvMat[i][j].D))*PInvMat[i][j].D;
+    *Den=(*Den/LFgcd(*Den,PInvMat[i][j].denominator()))*
+      PInvMat[i][j].denominator();
   for (i=0;i<n;i++) for (j=0;j<n;j++) 
-    InvMat[one[i]][j]=(*Den/PInvMat[i][j].D)*PInvMat[i][j].N;
+    InvMat[one[i]][j]=(*Den/PInvMat[i][j].denominator())*
+      PInvMat[i][j].numerator();
 
   for (i=0;i<n;i++){
     for (j=0;j<n;j++) {
