@@ -251,6 +251,19 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake --build build -j2`: passed.
       - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
       - `make check`: passed.
+    - Fourth local bounded-array migration completed:
+      - Converted `Coord.cc` weight-equation basis work buffers in `Orig_Solve_Next_WEq()` and `Solve_Next_WEq()` to `std::array`.
+      - Converted `Coord.cc` `Reduce_PPL_2_Sublat()` local coordinate vector to `std::array`.
+      - Kept `CWLatticeBasis`, `W_to_GLZ()`, `REgcd()`, and sublattice reduction public interfaces unchanged by using `.data()` adapters.
+      - `g++ -std=c++17 -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/Coord-array-smoke.o Coord.cc`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make -j2`: passed.
+      - Focused tests: `tests/2.1-polytope-input.sh`, `tests/2.2-error-handling.sh`, `tests/4.2.1-cws-w.sh`, and `tests/4.2.6-cws-N.sh` passed for `DIM=6`.
+      - `make all-dims -j2`: passed; the known `Print_CWH()` low-`POLY_Dmax` warnings remain tracked as `ISSUES.md` item 17.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
+      - `make check`: passed.
       - Remaining in this item: migrate more local bounded work buffers in C++ modules before changing public data structures.
 
 13. Replace manual allocation with RAII.

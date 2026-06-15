@@ -1,6 +1,8 @@
 #include "Global.h"
 #include "Rat.h"
 
+#include <array>
+
 #undef	TEST_Wbase
 #undef  USE_Old_Wbase
 #define NO_COORD_IMPROVEMENT		/* switch off weight permutation */
@@ -410,7 +412,8 @@ void PrintBasis(CWLatticeBasis *_B)
 }
 
 void Orig_Solve_Next_WEq(Long *NW, CWLatticeBasis *_B)
-{    int i, j, P=0, p[AMBI_Dmax]; Long W[AMBI_Dmax], G;	_B->n=_B->N-1; 
+{    int i, j, P=0; std::array<int, AMBI_Dmax> p; std::array<Long, AMBI_Dmax> W;
+     Long G;	_B->n=_B->N-1;
      for(i=0;i<_B->N;i++) 
      {	for(j=0;j<_B->n;j++) _B->x[j][i]=0; 		      /* init B.x=0 */
 	if(NW[i]) {p[P]=i; W[P++]=NW[i];}		/* non-zero weights */
@@ -422,7 +425,8 @@ void Orig_Solve_Next_WEq(Long *NW, CWLatticeBasis *_B)
      _B->x[i-1][p[0]]=-W[1]/G; _B->x[i-1][p[1]]=W[0]/G;
      j=2; while(++i<_B->N)
      {	if(NW[i])
-	{   int k; Long *X=_B->x[i-1], K[AMBI_Dmax], g=REgcd(W, &j, K); 
+	{   int k; Long *X=_B->x[i-1]; std::array<Long, AMBI_Dmax> K;
+	    Long g=REgcd(W.data(), &j, K.data());
 	    G=Fgcd(g,NW[i]); if(g/G<0) G=-G; X[i]= g/G; g=W[j]/G;
 	    for(k=0;k<j;k++) X[p[k]]=-K[k]*g;
 	    j++;
@@ -431,15 +435,17 @@ void Orig_Solve_Next_WEq(Long *NW, CWLatticeBasis *_B)
      }
 }
 void Solve_Next_WEq(Long *NW, CWLatticeBasis *_B)
-{    Long W[AMBI_Dmax], *X[AMBI_Dmax], GLZ[AMBI_Dmax][AMBI_Dmax];
-     int i, j, P=0, p[AMBI_Dmax]; _B->n=_B->N-1;
+{    std::array<Long, AMBI_Dmax> W;
+     std::array<Long *, AMBI_Dmax> X;
+     std::array<std::array<Long, AMBI_Dmax>, AMBI_Dmax> GLZ;
+     int i, j, P=0; std::array<int, AMBI_Dmax> p; _B->n=_B->N-1;
 #ifdef TEST_Wbase
      Orig_Solve_Next_WEq(NW,_B); PrintBasis(_B);
 #endif
      for(i=0;i<_B->N;i++) 
      {	for(j=0;j<_B->n;j++) _B->x[j][i]=0;		      /* init B.x=0 */
-	if(NW[i]) {p[P]=i; X[P]=GLZ[P]; W[P++]=NW[i];}	/* non-zero weights */
-     }	if(P>1) W_to_GLZ(W,&P,X);		/* P>1, compute GLZ */
+	if(NW[i]) {p[P]=i; X[P]=GLZ[P].data(); W[P++]=NW[i];} /* non-zero weights */
+     }	if(P>1) W_to_GLZ(W.data(),&P,X.data());		/* P>1, compute GLZ */
      else {/* printf("P=%d W[0]=%d for W_to_GLZ\n",P,W[0]);exit(0);*/assert(P);
 	for(i=0;i<p[0];i++)_B->x[i][i]=1;
 	while((++i)<_B->N)_B->x[i-1][i]=1;
@@ -507,7 +513,7 @@ void CWS_2_SublatZ(CWS *C,CWLatticeBasis *B,			       /* in */
 }
 void Reduce_PPL_2_Sublat(PolyPointList *P,int *nm,Long *M,Long G[][POLY_Dmax])
 {    int i,j,n=0,N; for(N=0;N<P->np;N++) 
-     {	Long X[POLY_Dmax]; for(i=0;i<P->n;i++)
+     {	std::array<Long, POLY_Dmax> X; for(i=0;i<P->n;i++)
 	{   X[i]=0; for(j=0;j<P->n;j++) X[i]+=G[i][j]*P->x[N][j];
 	}   for(i=0;i<*nm;i++) if(X[i]%M[i]) break; if(i<*nm) continue;
 	for(i=0;i<*nm;i++) P->x[n][i]=X[i]/M[i]; 
