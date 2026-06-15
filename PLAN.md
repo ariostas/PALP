@@ -134,9 +134,21 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
      - `make check`: passed.
 
 10. Compile selected modules as C++ without semantic changes.
-    - Start with leaf-like modules: `Rat.c`, then `Coord.c`, then `Vertex.c`.
+    - Start with leaf-like modules: `Rat.cc` done, then `Coord.c`, then `Vertex.c`.
     - Rename one file at a time only after it compiles cleanly as C++.
     - Verification: full test suite after each file.
+    - `Rat.cc` migration completed:
+      - Renamed `Rat.c` to `Rat.cc`.
+      - Updated GNUmakefile to compile `.cc` objects with `g++` and link mixed C/C++ executables with the C++ linker.
+      - Enabled CXX in CMake, set C++17 as the required standard, and added sanitizer CXX flags to presets.
+      - Removed obsolete `register` storage hints from `Rat.cc`.
+      - `g++ -std=c++17 -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/Rat-smoke.o Rat.cc`: passed.
+      - `make -j2`: passed.
+      - `make all-dims -j2`: passed; `Rat.cc` compiled as C++ for `POLY_Dmax=4,5,6,11`.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `make check`: passed.
+      - Remaining in this item: migrate `Coord.c`, then `Vertex.c`.
 
 ## Phase 3: Introduce Modern C++ Types
 

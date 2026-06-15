@@ -108,7 +108,7 @@ Max number of codimension 2 faces.
 
 #define GL_Long		Long
 /*
-Uses W_to_GLZ like in Rat.c
+Uses W_to_GLZ like in Rat.cc
 */
 
 #define MAXLD (26)

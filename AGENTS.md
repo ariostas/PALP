@@ -2,7 +2,7 @@
 
 ## Project Shape
 
-PALP is a C codebase with five main CLI programs:
+PALP is a mixed C/C++ codebase with five main CLI programs:
 
 - `poly.x`: polytope analysis.
 - `class.x`: classification/database workflows.
@@ -10,7 +10,7 @@ PALP is a C codebase with five main CLI programs:
 - `nef.x`: nef partitions.
 - `mori.x`: triangulations, Mori cone, and Singular integration.
 
-Core shared files are `Global.h`, `Coord.c`, `Rat.c`, `Vertex.c`, and `Polynf.c`. Specialized modules include `LG.c`, `Subpoly.c`, `Subadd.c`, `Subdb.c`, `E_Poly.c`, `Nefpart.c`, `MoriCone.c`, and `SingularInput.c`.
+Core shared files are `Global.h`, `Coord.c`, `Rat.cc`, `Vertex.c`, and `Polynf.c`. Specialized modules include `LG.c`, `Subpoly.c`, `Subadd.c`, `Subdb.c`, `E_Poly.c`, `Nefpart.c`, `MoriCone.c`, and `SingularInput.c`.
 
 ## Build and Test
 
@@ -57,6 +57,7 @@ The maintained make-based build is `GNUmakefile`. The top-level `Makefile` is on
 
 - `POLY_Dmax` controls many compile-time array sizes and must be consistent across all object files.
 - `GNUmakefile` handles per-dimension builds such as `poly-4d.x`, `poly-5d.x`, `poly-6d.x`, and `poly-11d.x`.
+- GNUmakefile compiles `.cc` files with `g++` and links executables with the C++ linker while C and C++ objects coexist.
 - `Long` and `LLong` are typedef aliases in `Global.h`, not macros. The current contract preserves the historical underlying types: `Long` is `long` with at least 32 bits, and `LLong` is `long long` with at least 64 bits.
 - CMake removes `-DNDEBUG` because this code relies on assertions for runtime correctness. Do not add `NDEBUG` casually.
 - Object files and `.x` executables are generated in the repository root.

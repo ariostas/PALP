@@ -50,7 +50,7 @@ This file records issues found during an initial code-reading and build-warning 
 
 ## 7. Rational arithmetic assumes nonzero denominators and can divide by zero
 
-- Location: `Rat.c:7-13`, `Rat.c:23-51`, `Rat.c:81-90`, `Rat.c:171-177`, `Rat.c:187-215`, `Rat.c:245-254`
+- Location: `Rat.cc:7-13`, `Rat.cc:23-51`, `Rat.cc:81-90`, `Rat.cc:171-177`, `Rat.cc:187-215`, `Rat.cc:245-254`
 - Evidence: `rR(a,b)` calls `Fgcd(a,b)` and divides by `g` without checking `b != 0`. `Fgcd()` itself starts with `a %= b`, which is undefined when `b == 0`. Similar assumptions exist in the `LRat` path.
 - Risk: Unexpected zero denominators from matrix reduction or input parsing can crash or corrupt computations instead of producing a controlled error.
 - Suggested check: Add denominator preconditions to rational constructors/division, use `NNgcd()` where zeros are valid, and add tests for zero-denominator rejection.

@@ -7,18 +7,22 @@ project(PALP
     "A Package for Analyzing Lattice Polytopes "
   LANGUAGES
     C
+    CXX
 )
 
 set(POLY_Dmax 6 CACHE STRING "Maximum polytope dimension")
 set(PALP_TEST_DIMENSIONS "4;5;6;11" CACHE STRING "POLY_Dmax values to build and test with CTest")
 set(PALP_TESTS_LONG OFF CACHE BOOL "Run PALP tests that require LONG=1")
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Compiling with -DNDEBUG breaks the code
 string(REPLACE "-DNDEBUG" "" CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
+string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(SOURCES Coord.c Rat.c Vertex.c Polynf.c)
+set(SOURCES Coord.c Rat.cc Vertex.c Polynf.c)
 set(CLASS_SRC Subpoly.c Subadd.c Subdb.c)
 set(NEF_SRC E_Poly.c Nefpart.c LG.c)
 set(MORI_SRC MoriCone.c SingularInput.c LG.c)

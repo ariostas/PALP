@@ -3,9 +3,11 @@
 #   main programs:	 class.c  cws.c  poly.c  nef.c  mori.c
 
 CC ?= gcc
+CXX ?= g++
 
 CPPFLAGS += -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 CFLAGS ?= -O3 -g -W -Wall
+CXXFLAGS ?= $(CFLAGS)
 # CFLAGS=-O3 -g				      # add -g for GNU debugger gdb
 # CFLAGS=-Ofast -O3 -mips4 -n32		      # SGI / 32 bit
 # CFLAGS=-Ofast -O3 -mips4 -64                # SGI / 64 bit
@@ -76,15 +78,19 @@ mori_OBJ_$(2)   = MoriCone-$(2)d.o SingularInput-$(2)d.o LG-$(2)d.o
 ifeq ($(2),)
 %-$(2)d.o: %.c
 	$(COMPILE.c) -o $$@ $$<
+%-$(2)d.o: %.cc
+	$(COMPILE.cc) -o $$@ $$<
 else
 %-$(2)d.o: %.c
 	$(COMPILE.c) -DPOLY_Dmax=$(2) -o $$@ $$<
+%-$(2)d.o: %.cc
+	$(COMPILE.cc) -DPOLY_Dmax=$(2) -o $$@ $$<
 endif
 
 # Link the program foo-Nd.x from foo-Nd.o, OBJECTS_N, and foo_OBJ_N.
-# The LINK.c macro is built in to GNU Make.
+# Use the C++ linker while mixed C/C++ objects coexist.
 $(1)-$(2)d.x: $(1)-$(2)d.o $$(OBJECTS_$(2)) $$($(1)_OBJ_$(2))
-	$(LINK.c) -o $$@ $$^
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $$@ $$^ $(LDLIBS)
 
 # Add foo-Nd.x to the "all-dims" target
 all-dims: $(1)-$(2)d.x

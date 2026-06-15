@@ -23,6 +23,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_FLAGS": "-O1 -g -fno-omit-frame-pointer -fsanitize=address",
+        "CMAKE_CXX_FLAGS": "-O1 -g -fno-omit-frame-pointer -fsanitize=address",
         "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address",
         "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=address"
       }
@@ -35,6 +36,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_FLAGS": "-O1 -g -fno-omit-frame-pointer -fsanitize=undefined -fno-sanitize-recover=undefined",
+        "CMAKE_CXX_FLAGS": "-O1 -g -fno-omit-frame-pointer -fsanitize=undefined -fno-sanitize-recover=undefined",
         "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=undefined",
         "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=undefined"
       }
