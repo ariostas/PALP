@@ -180,6 +180,21 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
     - Replace free-function `Rat` operations with a small value type.
     - Add explicit construction and checked division.
     - Verification: unit tests for arithmetic and all existing CLI tests.
+    - C++ wrapper foundation completed:
+      - Added opt-in `palp::Rational` and `palp::LongRational` value types around the existing `Rat` and `LRat` C ABI.
+      - Constructors reject zero denominators with `std::domain_error`.
+      - Division operators reject division by zero before calling the legacy quotient helpers.
+      - Added `tests/rat-wrapper-test.cc` for arithmetic, normalization, comparison, legacy conversion, and checked error paths.
+      - Added `make check-rat-wrapper` and a `rat-wrapper-test` CTest entry.
+      - `make check-rat-wrapper`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/rat-wrapper-test.cc`: passed.
+      - `make -j2`: passed.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
+      - `make check`: passed.
+      - Remaining in this item: migrate C++ call sites from free `Rat`/`LRat` functions to the new value types where it is behavior-preserving.
 
 12. Wrap bounded arrays.
     - Use `std::array` for compile-time bounded vectors/matrices.

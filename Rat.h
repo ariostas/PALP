@@ -53,4 +53,160 @@ Long  PW_to_GLZ(Long *W, int *d, Long **GLZ);	/* improved by permutations */
 }
 #endif
 
+#ifdef __cplusplus
+
+#include <stdexcept>
+
+namespace palp {
+
+class Rational {
+public:
+  Rational() : value_(rI(0)) {}
+  explicit Rational(Long value) : value_(rI(value)) {}
+
+  Rational(Long numerator, Long denominator)
+  {
+    if (denominator == 0) {
+      throw std::domain_error("Rational denominator must be nonzero");
+    }
+    value_ = rR(numerator, denominator);
+  }
+
+  explicit Rational(Rat value) : Rational(value.N, value.D) {}
+
+  Long numerator() const noexcept { return value_.N; }
+  Long denominator() const noexcept { return value_.D; }
+  Rat legacy() const noexcept { return value_; }
+
+  friend Rational operator+(Rational lhs, Rational rhs)
+  {
+    return from_legacy(rS(lhs.value_, rhs.value_));
+  }
+
+  friend Rational operator-(Rational lhs, Rational rhs)
+  {
+    return from_legacy(rD(lhs.value_, rhs.value_));
+  }
+
+  friend Rational operator*(Rational lhs, Rational rhs)
+  {
+    return from_legacy(rP(lhs.value_, rhs.value_));
+  }
+
+  friend Rational operator/(Rational lhs, Rational rhs)
+  {
+    if (rhs.value_.N == 0) {
+      throw std::domain_error("Rational division by zero");
+    }
+    return from_legacy(rQ(lhs.value_, rhs.value_));
+  }
+
+  friend bool operator==(Rational lhs, Rational rhs)
+  {
+    return rC(lhs.value_, rhs.value_) == 0;
+  }
+
+  friend bool operator!=(Rational lhs, Rational rhs) { return !(lhs == rhs); }
+  friend bool operator<(Rational lhs, Rational rhs)
+  {
+    return rC(lhs.value_, rhs.value_) < 0;
+  }
+  friend bool operator>(Rational lhs, Rational rhs) { return rhs < lhs; }
+  friend bool operator<=(Rational lhs, Rational rhs) { return !(rhs < lhs); }
+  friend bool operator>=(Rational lhs, Rational rhs) { return !(lhs < rhs); }
+
+private:
+  static Rational from_legacy(Rat value)
+  {
+    Rational result;
+    result.value_ = value;
+    return result;
+  }
+
+  Rat value_;
+};
+
+class LongRational {
+public:
+  LongRational() : value_(LrI(0)) {}
+  explicit LongRational(LLong value) : value_(LrI(value)) {}
+
+  LongRational(LLong numerator, LLong denominator)
+  {
+    if (denominator == 0) {
+      throw std::domain_error("LongRational denominator must be nonzero");
+    }
+    value_ = LrR(numerator, denominator);
+  }
+
+  explicit LongRational(LRat value) : LongRational(value.N, value.D) {}
+
+  LLong numerator() const noexcept { return value_.N; }
+  LLong denominator() const noexcept { return value_.D; }
+  LRat legacy() const noexcept { return value_; }
+
+  friend LongRational operator+(LongRational lhs, LongRational rhs)
+  {
+    return from_legacy(LrS(lhs.value_, rhs.value_));
+  }
+
+  friend LongRational operator-(LongRational lhs, LongRational rhs)
+  {
+    return from_legacy(LrD(lhs.value_, rhs.value_));
+  }
+
+  friend LongRational operator*(LongRational lhs, LongRational rhs)
+  {
+    return from_legacy(LrP(lhs.value_, rhs.value_));
+  }
+
+  friend LongRational operator/(LongRational lhs, LongRational rhs)
+  {
+    if (rhs.value_.N == 0) {
+      throw std::domain_error("LongRational division by zero");
+    }
+    return from_legacy(LrQ(lhs.value_, rhs.value_));
+  }
+
+  friend bool operator==(LongRational lhs, LongRational rhs)
+  {
+    return LrC(lhs.value_, rhs.value_) == 0;
+  }
+
+  friend bool operator!=(LongRational lhs, LongRational rhs)
+  {
+    return !(lhs == rhs);
+  }
+  friend bool operator<(LongRational lhs, LongRational rhs)
+  {
+    return LrC(lhs.value_, rhs.value_) < 0;
+  }
+  friend bool operator>(LongRational lhs, LongRational rhs)
+  {
+    return rhs < lhs;
+  }
+  friend bool operator<=(LongRational lhs, LongRational rhs)
+  {
+    return !(rhs < lhs);
+  }
+  friend bool operator>=(LongRational lhs, LongRational rhs)
+  {
+    return !(lhs < rhs);
+  }
+
+private:
+  static LongRational from_legacy(LRat value)
+  {
+    LongRational result;
+    result.value_ = value;
+    return result;
+  }
+
+  LRat value_;
+};
+
+}  // namespace palp
+
+#endif
+
 #endif

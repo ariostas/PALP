@@ -41,7 +41,7 @@ all-dims: all
 clean:	;	rm -f *.o
 
 .PHONY: cleanall
-cleanall: ;	rm -f *.o *.x palp_* core
+cleanall: ;	rm -f *.o *.x tests/rat-wrapper-test.x palp_* core
 
 define PROG_DIM_template =
 #
@@ -167,8 +167,15 @@ TESTS = $(wildcard tests/*.sh)
 # The test suite depends on all of the dimension-optimized programs.
 # The main "make check" routine runs each of the tests/*.sh scripts
 # with each applicable value of DIM.
+.PHONY: check-rat-wrapper
+check-rat-wrapper: tests/rat-wrapper-test.x
+	./tests/rat-wrapper-test.x
+
+tests/rat-wrapper-test.x: tests/rat-wrapper-test.cc Rat.cc Rat.h Global.h
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -I. -o $@ tests/rat-wrapper-test.cc Rat.cc
+
 .PHONY: check
-check: $(foreach p,$(PROGRAMS),$(foreach d,$(DIMENSIONS),$(p)-$(d)d.x))
+check: check-rat-wrapper $(foreach p,$(PROGRAMS),$(foreach d,$(DIMENSIONS),$(p)-$(d)d.x))
 	$(foreach t,$(TESTS),$(foreach d,$(DIMENSIONS),\
 	$(newline)@DIM=$(d) $(t)\
 	))

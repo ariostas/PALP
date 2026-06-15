@@ -67,6 +67,10 @@ if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
     target_compile_definitions(mori.x PRIVATE POLY_Dmax=${POLY_Dmax})
 
     if (BUILD_TESTING)
+        add_executable(rat-wrapper-test tests/rat-wrapper-test.cc Rat.cc)
+        target_include_directories(rat-wrapper-test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+        add_test(NAME rat-wrapper-test COMMAND rat-wrapper-test)
+
         function(add_palp_dimension_targets dim)
             add_library(objects-${dim}d STATIC ${SOURCES})
             target_compile_definitions(objects-${dim}d PUBLIC POLY_Dmax=${dim})

@@ -26,6 +26,12 @@ Full regression suite:
 make check
 ```
 
+Focused rational wrapper test:
+
+```sh
+make check-rat-wrapper
+```
+
 `mori.x` tests require `Singular` on `PATH`. In this workspace it was installed into the `vibe` conda environment:
 
 ```sh
