@@ -336,11 +336,15 @@ int EL_to_PPL(EqList *_E, PolyPointList *_P, int *n){
 #define	 TEST_GLZ_EQ		(0)		 /* trace StartSimplex EQs  */
 
 Long VZ_to_Base(Long *V,int *d,Long M[POLY_Dmax][POLY_Dmax])  /* 0 iff V=0 */
-{    int p[POLY_Dmax], i, j, J=0; Long g=0, W[POLY_Dmax], *G[POLY_Dmax]; 
+{    std::array<int, POLY_Dmax> p;
+     std::array<Long, POLY_Dmax> W;
+     std::array<Long *, POLY_Dmax> G;
+     int i, j, J=0; Long g=0;
      for(i=0;i<*d;i++) 	if(V[i]) {W[J]=V[i]; G[J]=M[i]; p[J++]=i;}
 			else for(j=0;j<*d;j++) M[i][j]=(i==j);
      if(J) if(p[0]) { G[0]=M[0]; for(j=0;j<*d;j++) M[p[0]][j]=(j==0);}
-     if(J>1) g=W_to_GLZ(W,&J,G); else if(J){g=*W; M[0][0]=0; M[0][p[0]]=1;}
+     if(J>1) g=W_to_GLZ(W.data(),&J,G.data());
+     else if(J){g=W[0]; M[0][0]=0; M[0][p[0]]=1;}
      if(J>1)
      {  for(i=0;i<J;i++) { int I=J; 
 	for(j=*d-1;j>=0;j--) G[i][j] = (V[j]) ? G[i][--I] : 0; assert(I==0);}

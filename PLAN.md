@@ -227,6 +227,18 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake --build build -j2`: passed.
       - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
       - `make check`: passed.
+    - Second local bounded-array migration completed:
+      - Converted `Vertex.cc` `VZ_to_Base()` local index, vector, and row-pointer work buffers to `std::array`.
+      - Kept the `VZ_to_Base()` signature and `W_to_GLZ()` adapter call unchanged at the public boundary.
+      - `g++ -std=c++17 -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/Vertex-vz-array-smoke.o Vertex.cc`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make -j2`: passed.
+      - Focused tests: `tests/3.2.7-poly-e.sh`, `tests/3.2.11-poly-l.sh`, `tests/3.2.23-poly-P.sh`, and `tests/6.4.18-nef-v.sh` passed for `DIM=6`.
+      - `make all-dims -j2`: passed.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
+      - `make check`: passed.
       - Remaining in this item: migrate more local bounded work buffers in C++ modules before changing public data structures.
 
 13. Replace manual allocation with RAII.
