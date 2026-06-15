@@ -239,6 +239,18 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake --build build -j2`: passed.
       - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
       - `make check`: passed.
+    - Third local bounded-array migration completed:
+      - Converted `Rat.cc` `REgcd()` and `LREgcd()` two-element temporary buffers to `std::array`.
+      - Kept the public C ABI and recursive gcd output buffers unchanged.
+      - `g++ -std=c++17 -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/Rat-array-smoke.o Rat.cc`: passed.
+      - `make check-rat-wrapper`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make -j2`: passed.
+      - `make all-dims -j2`: passed.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
+      - `make check`: passed.
       - Remaining in this item: migrate more local bounded work buffers in C++ modules before changing public data structures.
 
 13. Replace manual allocation with RAII.

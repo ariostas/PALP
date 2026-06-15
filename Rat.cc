@@ -1,6 +1,8 @@
 #include "Global.h"
 #include "Rat.h"
 
+#include <array>
+
 Rat  rI(Long a) 			       		      /*  a -> a/1  */
 {    Rat c; c.N=a; c.D=1; return c;
 }
@@ -105,11 +107,11 @@ Long Egcd(Long A0, Long A1, Long *Vout0, Long *Vout1)
  *   G = v0 x0 + ... + vn xn		with xn=B, xi*=A,
  *									    */
 Long REgcd(Long *Vin, int *_n, Long *Vout)  /*  recursive Egcd(a_1,...,a_n)  */
-{    Long Ain[2], Aout[2], gcd; int N=*_n-1, i;
+{    std::array<Long, 2> Ain, Aout; Long gcd; int N=*_n-1, i;
      if (*_n==2) return Egcd(*Vin,(Vin[1]),Vout,&(Vout[1]));
-     *Ain=REgcd(Vin,&N,Vout); Ain[1]=Vin[N]; 	gcd=
-	Egcd(*Ain,(Ain[1]),Aout,&(Aout[1]));	Vout[N]=Aout[1];
-     for(i=0; i<N; i++) Vout[i] *= (*Aout);
+     Ain[0]=REgcd(Vin,&N,Vout); Ain[1]=Vin[N]; 	gcd=
+	Egcd(Ain[0],(Ain[1]),Aout.data(),&(Aout[1]));	Vout[N]=Aout[1];
+     for(i=0; i<N; i++) Vout[i] *= Aout[0];
      return gcd;
 }
 /*  ==========	   END of (Extended) Greatest Common Divisor	 =========  */
@@ -269,11 +271,11 @@ LLong LEgcd(LLong A0, LLong A1, LLong *Vout0, LLong *Vout1)
  *   G = v0 x0 + ... + vn xn		with xn=B, xi*=A,
  *									    */
 LLong LREgcd(LLong *Vin, int *_n, LLong *Vout)  /*  recursive LEgcd(a_1,...,a_n)  */
-{    LLong Ain[2], Aout[2], gcd; int N=*_n-1, i;
+{    std::array<LLong, 2> Ain, Aout; LLong gcd; int N=*_n-1, i;
      if (*_n==2) return LEgcd(*Vin,(Vin[1]),Vout,&(Vout[1]));
-     *Ain=LREgcd(Vin,&N,Vout); Ain[1]=Vin[N]; 	gcd=
-	LEgcd(*Ain,(Ain[1]),Aout,&(Aout[1]));	Vout[N]=Aout[1];
-     for(i=0; i<N; i++) Vout[i] *= (*Aout);
+     Ain[0]=LREgcd(Vin,&N,Vout); Ain[1]=Vin[N]; 	gcd=
+	LEgcd(Ain[0],(Ain[1]),Aout.data(),&(Aout[1]));	Vout[N]=Aout[1];
+     for(i=0; i<N; i++) Vout[i] *= Aout[0];
      return gcd;
 }
 /*  ==========	   END of (Extended) Greatest Common Divisor	 =========  */
