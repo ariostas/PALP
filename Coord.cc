@@ -526,9 +526,10 @@ Long PD_Floor(Long N,Long D)	/*  assuming PosDenom  D>0:  F <= N/D < F+1  */
 }
 
 void Old_Make_CWS_Points(CWS *Cin, PolyPointList *_P)
-{    int i, j, Amin[POLY_Dmax+1]; Long *x=_P->x[_P->np=0], xmin[POLY_Dmax], 
-	xmax[POLY_Dmax], Xmax[AMBI_Dmax], xaux[POLY_Dmax], L, R; CWS *_C=Cin;
-     CWLatticeBasis B; Long G[POLY_Dmax][POLY_Dmax],M[POLY_Dmax];int m=Cin->nz;
+{    int i, j; std::array<int, POLY_Dmax + 1> Amin;
+     Long *x=_P->x[_P->np=0]; std::array<Long, POLY_Dmax> xmin, xmax, xaux, M;
+     std::array<Long, AMBI_Dmax> Xmax; Long L, R; CWS *_C=Cin;
+     CWLatticeBasis B; Long G[POLY_Dmax][POLY_Dmax];int m=Cin->nz;
 #ifndef NO_COORD_IMPROVEMENT		/* ==== Perm Coord Improvement ==== */
      int pi[AMBI_Dmax]; CWS Caux; _C=&Caux; CWS_to_PermCWS(Cin,_C, pi);
 #endif				       /* = End of Perm Coord Improvement = */
@@ -587,7 +588,7 @@ void Old_Make_CWS_Points(CWS *Cin, PolyPointList *_P)
 		    {	y=(_P->x[_P->np]); for(k=0;k<B.n;k++) y[k]=x[k]; 
 		    }
 		    else if(_P->np == POINT_Nmax)
-		    {	y=xaux; for(k=0;k<B.n;k++) y[k]=x[k];
+		    {	y=xaux.data(); for(k=0;k<B.n;k++) y[k]=x[k];
 		    }
 		    else {puts("Increase POINT_Nmax");exit(0);}
 		    x=y; ++x[0];
@@ -595,7 +596,8 @@ void Old_Make_CWS_Points(CWS *Cin, PolyPointList *_P)
 	        x[j=1]++;
 	    }
 	}
-     }	if(m)CWS_2_SublatZ(_C,&B,&m,M,G);if(m)Reduce_PPL_2_Sublat(_P,&m,M,G);
+     }	if(m)CWS_2_SublatZ(_C,&B,&m,M.data(),G);
+	if(m)Reduce_PPL_2_Sublat(_P,&m,M.data(),G);
 }
 
 int Compute_X0(int N, CWS *_C, Long *X0){
@@ -626,11 +628,11 @@ int Compute_X0(int N, CWS *_C, Long *X0){
 }
 
 extern "C" void Make_CWS_Points(CWS *Cin, PolyPointList *_P)
-{    int i, j, Amin[POLY_Dmax+1], m=Cin->nz; 
-     Long *x=_P->x[_P->np=0], xmin[POLY_Dmax], 
-       xmax[POLY_Dmax], Xmax[AMBI_Dmax], X0[AMBI_Dmax], xaux[POLY_Dmax], L, R; 
+{    int i, j, m=Cin->nz; std::array<int, POLY_Dmax + 1> Amin;
+     Long *x=_P->x[_P->np=0]; std::array<Long, POLY_Dmax> xmin, xmax, xaux, M;
+     std::array<Long, AMBI_Dmax> Xmax, X0; Long L, R;
      CWS *_C=Cin;
-     CWLatticeBasis B; Long G[POLY_Dmax][POLY_Dmax],M[POLY_Dmax];
+     CWLatticeBasis B; Long G[POLY_Dmax][POLY_Dmax];
 #ifndef NO_COORD_IMPROVEMENT		/* ==== Perm Coord Improvement ==== */
      int pi[AMBI_Dmax]; CWS Caux; _C=&Caux; CWS_to_PermCWS(Cin,_C, pi);
 #endif				       /* = End of Perm Coord Improvement = */
@@ -640,7 +642,7 @@ extern "C" void Make_CWS_Points(CWS *Cin, PolyPointList *_P)
      for(i=0;i<Cin->N;i++) Cin->B.e[i]=_C->B.e[pi[i]]; Cin->B.ne=_C->N;
 #endif				       /* = End of Perm Coord Improvement = */
      if (Cin->index == 1) for (i=0; i< Cin->N; i++) X0[i] = 1;
-     else if(!Compute_X0(Cin->N - 1, Cin, X0)){_P->n=0; puts("no X0!");return;}
+     else if(!Compute_X0(Cin->N - 1, Cin, X0.data())){_P->n=0; puts("no X0!");return;}
      /* X0 is the reference point in X-space that is transformed to the 
 	origin of x-space for _P    */
      /*printf("\nX0: ");for (i=0;i<Cin->N;i++) printf("%ld ", X0[i]);puts("");
@@ -700,7 +702,7 @@ extern "C" void Make_CWS_Points(CWS *Cin, PolyPointList *_P)
 		    {	y=(_P->x[_P->np]); for(k=0;k<B.n;k++) y[k]=x[k]; 
 		    }
 		    else if(_P->np == POINT_Nmax)
-		    {	y=xaux; for(k=0;k<B.n;k++) y[k]=x[k];
+		    {	y=xaux.data(); for(k=0;k<B.n;k++) y[k]=x[k];
 		    }
 		    else {puts("Increase POINT_Nmax");exit(0);}
 		    x=y; ++x[0];
@@ -708,7 +710,8 @@ extern "C" void Make_CWS_Points(CWS *Cin, PolyPointList *_P)
 	        x[j=1]++;
 	    }
 	}
-     }	if(m)CWS_2_SublatZ(_C,&B,&m,M,G);if(m)Reduce_PPL_2_Sublat(_P,&m,M,G);
+     }	if(m)CWS_2_SublatZ(_C,&B,&m,M.data(),G);
+	if(m)Reduce_PPL_2_Sublat(_P,&m,M.data(),G);
 }
 
 /*  ==========    Coordinate improvement via CWS-Permutations   ==========  */

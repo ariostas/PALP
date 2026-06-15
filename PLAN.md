@@ -264,6 +264,19 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake --build build -j2`: passed.
       - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
       - `make check`: passed.
+    - Fifth local bounded-array migration completed:
+      - Converted `Coord.cc` `Old_Make_CWS_Points()` and `Make_CWS_Points()` local enumeration vectors to `std::array`.
+      - Kept the `PolyPointList`, `CWS_2_SublatZ()`, `Reduce_PPL_2_Sublat()`, and `Compute_X0()` public interfaces unchanged by using `.data()` adapters.
+      - Left the local `G[POLY_Dmax][POLY_Dmax]` matrices as C arrays because existing helper interfaces still require `Long[][POLY_Dmax]`.
+      - `g++ -std=c++17 -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/Coord-cws-array-smoke.o Coord.cc`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make -j2`: passed.
+      - Focused tests: `tests/2.1-polytope-input.sh`, `tests/2.2-error-handling.sh`, `tests/4.2.1-cws-w.sh`, and `tests/4.2.6-cws-N.sh` passed for `DIM=6`.
+      - `make all-dims -j2`: passed; the known `Print_CWH()` low-`POLY_Dmax` warnings remain tracked as `ISSUES.md` item 17.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
+      - `make check`: passed.
       - Remaining in this item: migrate more local bounded work buffers in C++ modules before changing public data structures.
 
 13. Replace manual allocation with RAII.
