@@ -6,6 +6,7 @@
 #include <string.h>
 #include <time.h>
 #include <assert.h>
+#include <limits.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,8 +17,16 @@ These are include files that should exist in your C library.
 
 /*  ============	basic choice of PARAMETERS	      ============  */
 
-#define	                Long            long
-#define                 LLong           long long
+typedef long Long;
+typedef long long LLong;
+
+#if LONG_MAX < 2147483647L
+#error Long must provide at least a signed 32-bit range
+#endif
+
+#if LLONG_MAX < 9223372036854775807LL
+#error LLong must provide at least a signed 64-bit range
+#endif
 /*
 For reflexive polytopes in 4 or less dimensions, everything should work with
 Long set to 32-bit-integer and LLong set to 64 bits.

@@ -116,10 +116,22 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
      - `make all-dims -j2`: passed; log scan found no `implicit declaration`, macro redefinition, conflicting type, or compiler error lines.
      - `make check`: passed.
 
-9. Introduce fixed-width type aliases.
+9. [x] Introduce fixed-width type aliases.
    - Replace macro aliases like `Long` and `LLong` with a central typedef/using layer.
    - Document required ranges for classified 4D workflows.
    - Verification: binary output remains unchanged on baseline tests.
+   - Completed numeric alias cleanup:
+     - Replaced the `Long` and `LLong` object-like macros in `Global.h` with central typedef aliases.
+     - Preserved the existing underlying types: `Long` is still `long`, and `LLong` is still `long long`.
+     - Added compile-time range checks requiring `Long` to provide at least 32 bits and `LLong` at least 64 bits.
+     - Extended `tests/header-smoke.cc` with matching C++ `static_assert` checks.
+     - Documented the current numeric contract in `AGENTS.md`.
+     - `cc --version`: GCC 13.3.0.
+     - `c++ --version`: GCC 13.3.0.
+     - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+     - `make -j2`: passed.
+     - `make all-dims -j2`: passed; log scan found no compiler errors, implicit declarations, conflicting types, redefinitions, or unknown type names.
+     - `make check`: passed.
 
 10. Compile selected modules as C++ without semantic changes.
     - Start with leaf-like modules: `Rat.c`, then `Coord.c`, then `Vertex.c`.

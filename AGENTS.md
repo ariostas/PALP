@@ -57,6 +57,7 @@ The maintained make-based build is `GNUmakefile`. The top-level `Makefile` is on
 
 - `POLY_Dmax` controls many compile-time array sizes and must be consistent across all object files.
 - `GNUmakefile` handles per-dimension builds such as `poly-4d.x`, `poly-5d.x`, `poly-6d.x`, and `poly-11d.x`.
+- `Long` and `LLong` are typedef aliases in `Global.h`, not macros. The current contract preserves the historical underlying types: `Long` is `long` with at least 32 bits, and `LLong` is `long long` with at least 64 bits.
 - CMake removes `-DNDEBUG` because this code relies on assertions for runtime correctness. Do not add `NDEBUG` casually.
 - Object files and `.x` executables are generated in the repository root.
 
