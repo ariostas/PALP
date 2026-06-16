@@ -210,7 +210,7 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - No additional raw `Rat`/`LRat` production call sites remain in the currently migrated C++ modules, apart from the legacy C ABI implementations in `Rat.cc` and the wrappers themselves.
       - Remaining legacy rational uses are in C translation units and should be migrated when those modules become C++.
 
-12. Wrap bounded arrays.
+12. [x] Wrap bounded arrays.
     - Use `std::array` for compile-time bounded vectors/matrices.
     - Provide `.size()`-checked helpers before changing algorithms.
     - Verification: no output changes; sanitizer builds improve.
@@ -291,7 +291,23 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake --build build -j2`: passed.
       - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
       - `make check`: passed.
-      - Remaining in this item: migrate more local bounded work buffers in C++ modules before changing public data structures.
+    - Seventh local bounded-array migration completed:
+      - Converted `Vertex.cc` `EEV_To_Equation()` `LLong` work vector and `OrthBase_red_by_V()` row-product vector to `std::array`.
+      - Converted `Coord.cc` `Read_CWS_Zinfo()` fixed line buffer to `std::array<char, 999>`.
+      - Kept `VZ_to_Base()` and parser helper boundaries unchanged by using existing pointer-compatible access.
+      - `g++ -std=c++17 -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/Vertex-extra-array-smoke.o Vertex.cc`: passed, with known `Vertex.cc` warnings tracked as `ISSUES.md` item 19.
+      - `g++ -std=c++17 -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/Coord-parser-array-smoke.o Coord.cc`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make -j2`: passed, with known `Vertex.cc` warnings.
+      - Focused tests: `tests/2.1-polytope-input.sh`, `tests/2.2-error-handling.sh`, `tests/3.2.7-poly-e.sh`, `tests/3.2.11-poly-l.sh`, `tests/3.2.23-poly-P.sh`, `tests/4.2.1-cws-w.sh`, `tests/4.2.6-cws-N.sh`, and `tests/6.4.18-nef-v.sh` passed for `DIM=6`.
+      - `make all-dims -j2`: passed, with known `Coord.cc` and `Vertex.cc` warnings tracked as `ISSUES.md` items 17 and 19.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
+      - `make check`: passed.
+    - Item complete for currently migrated C++ modules:
+      - Remaining raw bounded buffers in `Coord.cc`, `Rat.cc`, and `Vertex.cc` are either public/legacy function parameters, pointer aliases, disabled coordinate-improvement code, or matrix-shaped local buffers whose callees still require `Long[][POLY_Dmax]`, `Long[][EQUA_Nmax]`, or `Long[][VERT_Nmax]`.
+      - Those matrix/interface conversions should be handled with the next RAII/interface steps, not by adding casts inside this item.
 
 13. Replace manual allocation with RAII.
     - Use `std::vector` for variable-size work buffers.

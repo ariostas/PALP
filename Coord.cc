@@ -92,7 +92,7 @@ extern "C" void Print_CWS_Zinfo(CWS *CW)
      }	
 }
 int  Read_CWS_Zinfo(FILE *inFILE,CWS *CW)		      /* return !EOF */
-{    int *nz=&CW->nz; int i=0,n; char c[999],b=' '; *nz=0; 
+{    int *nz=&CW->nz; int i=0,n; std::array<char, 999> c; char b=' '; *nz=0;
      for(n=0;n<999;n++)
      {	c[n]=fgetc(inFILE); if(feof(inFILE)) return 0; if(c[n]=='\n') break;
      }  if(n==999) {puts("Out of space in Read_CWS_Zinfo");exit(0);}

@@ -210,7 +210,7 @@ Equation EEV_To_Equation(Equation *_E1, Equation *_E2, Long *_V, int n){
     if (gcd!=1) { for(i=0;i<n;i++) Eq.a[i]/=gcd; Eq.c/=gcd;}}
 #endif
 #if ((LLong_EEV)||(TEST_EEV))				   /* LLong version */
-  { LLong A[POLY_Dmax], C, G; for(i=0;i<n;i++) 
+  { std::array<LLong, POLY_Dmax> A; LLong C, G; for(i=0;i<n;i++)
 	A[i]=((LLong) l)*((LLong)_E1->a[i])-((LLong)m)*((LLong)_E2->a[i]);
     G=C=((LLong) l)*((LLong)_E1->c)-((LLong)m)*((LLong)_E2->c);
     for(i=0;i<n;i++) G=LNNgcd(G,A[i]); assert(G);
@@ -353,9 +353,9 @@ Long VZ_to_Base(Long *V,int *d,Long M[POLY_Dmax][POLY_Dmax])  /* 0 iff V=0 */
 
 int  OrthBase_red_by_V(Long *V, int *d, Long A[][POLY_Dmax], int *r,
 	Long B[][POLY_Dmax])
-{    int i, j, k; Long W[POLY_Dmax], G[POLY_Dmax][POLY_Dmax];
+{    int i, j, k; std::array<Long, POLY_Dmax> W; Long G[POLY_Dmax][POLY_Dmax];
      for(i=0;i<*r;i++) {int j; W[i]=0; for(j=0;j<*d;j++) W[i]+=A[i][j]*V[j];}
-     assert( VZ_to_Base(W,r,G) );
+     assert( VZ_to_Base(W.data(),r,G) );
      for(i=0;i<*r-1;i++) for(k=0;k<*d;k++)
      {	B[i][k]=0; for(j=0;j<*r;j++) B[i][k]+=G[i+1][j]*A[j][k];
      }
