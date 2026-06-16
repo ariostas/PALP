@@ -2,6 +2,8 @@
 #include "Rat.h"
 
 #include <array>
+#include <memory>
+#include <new>
 
 #define MAX_BAD_EQ	(POLY_Dmax>5)	/* previously 6; needed for nef !? */
 #define SHOW_NEW_CEq    0               /* (POLY_Dmax>12) 
@@ -638,24 +640,22 @@ int  Finish_Find_Equations(PolyPointList *_P, VertexNumList *_V,
 
 int  Find_Equations(PolyPointList *_P, VertexNumList *_V, EqList *_F){
   /* return: IP, finds Vertices and Equations for _P even if not IP */
-  int i; 
-  CEqList *CEq = (CEqList *) malloc(sizeof(CEqList)); 
-  INCI *CEq_I = (INCI *) malloc(sizeof(INCI)*CEQ_Nmax);
-  INCI *F_I = (INCI *) malloc(sizeof(INCI)*EQUA_Nmax); 
-  CEq->ne=0;
+  int i;
+  std::unique_ptr<CEqList> CEq(new (std::nothrow) CEqList);
+  std::unique_ptr<INCI[]> CEq_I(new (std::nothrow) INCI[CEQ_Nmax]);
+  std::unique_ptr<INCI[]> F_I(new (std::nothrow) INCI[EQUA_Nmax]);
   if((CEq==NULL)||(CEq_I==NULL)||(F_I==NULL)) {
      printf("Allocation failure in Find_Equations\n"); exit(0);}
-  if (GLZ_Start_Simplex(_P, _V, CEq)) {
+  CEq->ne=0;
+  if (GLZ_Start_Simplex(_P, _V, CEq.get())) {
     _F->ne=CEq->ne; 
     for(i=0;i<_F->ne;i++) _F->e[i]=CEq->e[i]; 
-    free(CEq); free(CEq_I); free(F_I); 
     return 0;}
   _F->ne=0;
   for (i=0;i<CEq->ne;i++) 
     if(INCI_abs(CEq_I[i]=Eq_To_INCI(&(CEq->e[i]),_P,_V))<_P->n)
       {fprintf(outFILE,"Bad CEq in Find_Equations"); exit(0);}
-  i=Finish_Find_Equations(_P, _V, _F, CEq, F_I, CEq_I);
-  free(CEq); free(CEq_I); free(F_I);
+  i=Finish_Find_Equations(_P, _V, _F, CEq.get(), F_I.get(), CEq_I.get());
   return i;
 }
 
@@ -671,20 +671,18 @@ extern "C" int  Finish_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F
 }
 
 int  IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F){
-  int i; 
-  CEqList *CEq = (CEqList *) malloc(sizeof(CEqList)); 
-  INCI *CEq_I = (INCI *) malloc(sizeof(INCI)*CEQ_Nmax);
-  INCI *F_I = (INCI *) malloc(sizeof(INCI)*EQUA_Nmax);  
+  int i;
+  std::unique_ptr<CEqList> CEq(new (std::nothrow) CEqList);
+  std::unique_ptr<INCI[]> CEq_I(new (std::nothrow) INCI[CEQ_Nmax]);
+  std::unique_ptr<INCI[]> F_I(new (std::nothrow) INCI[EQUA_Nmax]);
   if((CEq==NULL)||(CEq_I==NULL)||(F_I==NULL)) {
     printf("Allocation failure in IP_Check\n"); exit(0);}
-  if (GLZ_Start_Simplex(_P, _V, CEq)) {
-    free(CEq); free(CEq_I); free(F_I); return 0;}
+  if (GLZ_Start_Simplex(_P, _V, CEq.get())) return 0;
   for (i=0;i<CEq->ne;i++) 
     if(INCI_abs(CEq_I[i]=Eq_To_INCI(&(CEq->e[i]),_P,_V))<_P->n)
       {fprintf(outFILE,"Bad CEq in IP_Check"); exit(0);}
   _F->ne=0;
-  i=Finish_IP_Check(_P, _V, _F, CEq, F_I, CEq_I);
-  free(CEq); free(CEq_I); free(F_I);
+  i=Finish_IP_Check(_P, _V, _F, CEq.get(), F_I.get(), CEq_I.get());
   return i;
 }
 
@@ -700,18 +698,16 @@ int  Finish_REF_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F,
 }
 
 int  Ref_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F){
-  int i; 
-  CEqList *CEq = (CEqList *) malloc(sizeof(CEqList)); 
-  INCI *CEq_I = (INCI *) malloc(sizeof(INCI)*CEQ_Nmax);
-  INCI *F_I = (INCI *) malloc(sizeof(INCI)*EQUA_Nmax);  
+  int i;
+  std::unique_ptr<CEqList> CEq(new (std::nothrow) CEqList);
+  std::unique_ptr<INCI[]> CEq_I(new (std::nothrow) INCI[CEQ_Nmax]);
+  std::unique_ptr<INCI[]> F_I(new (std::nothrow) INCI[EQUA_Nmax]);
   if((CEq==NULL)||(CEq_I==NULL)||(F_I==NULL)) {
     printf("Allocation failure in Ref_Check\n"); exit(0);}
-  if (GLZ_Start_Simplex(_P, _V, CEq)) {
-    free(CEq); free(CEq_I); free(F_I); return 0;}
+  if (GLZ_Start_Simplex(_P, _V, CEq.get())) return 0;
   for (i=0;i<CEq->ne;i++) CEq_I[i]=Eq_To_INCI(&(CEq->e[i]),_P,_V);
   _F->ne=0;
-  i=Finish_REF_Check(_P, _V, _F, CEq, F_I, CEq_I);
-  free(CEq); free(CEq_I); free(F_I);
+  i=Finish_REF_Check(_P, _V, _F, CEq.get(), F_I.get(), CEq_I.get());
   return i;
 }
 
@@ -944,14 +940,13 @@ extern "C" void Eval_BaHo(FaceInfo *_I, BaHo *_BH){
 void RC_Calc_BaHo(PolyPointList *_P, VertexNumList *_V, EqList *_E, 
                    PolyPointList *_DP, BaHo *_BH){
   /* Needs reflexive and complete _P and _DP */
-  FaceInfo *_FI=(FaceInfo *) malloc(sizeof(FaceInfo)); 
+  std::unique_ptr<FaceInfo> _FI(new (std::nothrow) FaceInfo);
   if(_FI==NULL) {printf("RC_Calc_BaHo: Unable to allocate _FI\n"); exit(0);}
   _BH->mp=_P->np; _BH->mv=_V->nv; _BH->nv=_E->ne; _BH->np=_DP->np; 
   _BH->n=_P->n;
-  Make_Incidence(_P, _V, _E, _FI);
-  Make_FaceIPs(_P, _V, _E, _DP, _FI);
-  Eval_BaHo(_FI, _BH);
-  free(_FI);
+  Make_Incidence(_P, _V, _E, _FI.get());
+  Make_FaceIPs(_P, _V, _E, _DP, _FI.get());
+  Eval_BaHo(_FI.get(), _BH);
 }
 
 

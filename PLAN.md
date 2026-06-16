@@ -309,10 +309,25 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - Remaining raw bounded buffers in `Coord.cc`, `Rat.cc`, and `Vertex.cc` are either public/legacy function parameters, pointer aliases, disabled coordinate-improvement code, or matrix-shaped local buffers whose callees still require `Long[][POLY_Dmax]`, `Long[][EQUA_Nmax]`, or `Long[][VERT_Nmax]`.
       - Those matrix/interface conversions should be handled with the next RAII/interface steps, not by adding casts inside this item.
 
-13. Replace manual allocation with RAII.
+13. [x] Replace manual allocation with RAII.
     - Use `std::vector` for variable-size work buffers.
     - Use automatic storage or `std::unique_ptr` where fixed historical layout is still required.
     - Verification: run sanitizers and compare CLI outputs.
+    - First RAII migration completed:
+      - Converted `Vertex.cc` temporary `CEqList`, `INCI[]`, and `FaceInfo` allocations in `Find_Equations()`, `IP_Check()`, `Ref_Check()`, and `RC_Calc_BaHo()` from `malloc()`/`free()` to `std::unique_ptr`.
+      - Used `std::nothrow` allocation to preserve the existing explicit allocation-failure diagnostics and `exit(0)` behavior.
+      - Removed manual frees on early returns while keeping helper interfaces pointer-compatible through `.get()`.
+      - `g++ -std=c++17 -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/Vertex-raii-smoke.o Vertex.cc`: passed, with known `Vertex.cc` warnings tracked as `ISSUES.md` item 19.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make -j2`: passed, with known `Vertex.cc` warnings.
+      - Focused tests: `tests/3.2.7-poly-e.sh`, `tests/3.2.11-poly-l.sh`, `tests/3.2.23-poly-P.sh`, and `tests/6.4.18-nef-v.sh` passed for `DIM=6`.
+      - `make all-dims -j2`: passed, with known `Vertex.cc` warnings tracked as `ISSUES.md` item 19.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
+      - `make check`: passed.
+      - Sanitizer presets were not rerun for this slice because `ctest --preset asan` and `ctest --preset ubsan` have known pre-existing failures tracked as `ISSUES.md` items 14 and 15.
+      - No `malloc()`/`free()` sites remain in the currently migrated C++ modules (`Coord.cc`, `Rat.cc`, `Vertex.cc`); remaining manual allocation is in C translation units and should be migrated as those modules become C++.
 
 14. Introduce a runtime context.
     - Replace global `inFILE`/`outFILE` and scattered option globals with a context object.
