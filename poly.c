@@ -152,13 +152,15 @@ int main (int narg, char* fn[]){
   if(g+lg+p+d+PS+CD==0) nc=1; /* don't need completion of points */
   if((T==1)&&(B+U+lg+g+s+i+I+m+p+v+e+d+t+S+N+PS+VS+(1-ZS)==0)){ puts(
     "\n-T: Please specify desired output, e.g. via -v or -p \n");exit(0);}
-  if(FilterFlag) {inFILE=NULL; outFILE=stdout;}
+  PALP_RuntimeContext ctx = PALP_RuntimeContextFromGlobals();
+  if(FilterFlag) {ctx.in=NULL; ctx.out=stdout;}
   else {
-    if (narg > ++n)  inFILE=fopen(fn[n],"r");
-    else inFILE=stdin;
-    if (inFILE==NULL){printf("Input file %s not found!\n",fn[n]);exit(0);}
-    if (narg > ++n) outFILE=fopen(fn[n],"w");
-    else outFILE=stdout;     }	
+    if (narg > ++n)  ctx.in=fopen(fn[n],"r");
+    else ctx.in=stdin;
+    if (ctx.in==NULL){printf("Input file %s not found!\n",fn[n]);exit(0);}
+    if (narg > ++n) ctx.out=fopen(fn[n],"w");
+    else ctx.out=stdout;     }
+  PALP_ApplyRuntimeContext(&ctx);
   if(U) {dd=CD; CD=0; if((U==2)||(dd==5)) nc=0;}
   if(i){
     FI=(FaceInfo *) malloc(sizeof(FaceInfo));

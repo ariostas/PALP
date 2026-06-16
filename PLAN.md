@@ -333,6 +333,20 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
     - Replace global `inFILE`/`outFILE` and scattered option globals with a context object.
     - Migrate one executable at a time.
     - Verification: CLI behavior and prompts remain compatible.
+    - First runtime-context migration completed:
+      - Added C-compatible `PALP_RuntimeContext` helpers in `Global.h` to snapshot and apply the legacy `inFILE`/`outFILE` globals.
+      - Migrated `poly.c` startup file-handle setup to configure a `PALP_RuntimeContext` and apply it before shared code runs.
+      - Kept the existing global `inFILE`/`outFILE` ABI intact for all shared modules and other CLI programs.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/poly-context-smoke.o poly.c`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make -j2`: passed, with existing warnings.
+      - Focused tests: `tests/2.1-polytope-input.sh`, `tests/2.2-error-handling.sh`, `tests/3.2.7-poly-e.sh`, `tests/3.2.11-poly-l.sh`, and `tests/3.2.23-poly-P.sh` passed for `DIM=6`.
+      - `make all-dims -j2`: passed, with known warnings.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
+      - `make check`: passed.
+      - Remaining in this item: migrate `class.x`, `cws.x`, `nef.x`, and `mori.x` startup code, then move shared readers/printers from direct globals to context-aware adapters.
 
 ## Phase 4: Modularize Algorithms
 

@@ -123,6 +123,22 @@ Ascii-files for input and output. If not given in the parameter list they
 default to stdin and stdout, respectively.
 */
 
+typedef struct {FILE *in, *out;} PALP_RuntimeContext;
+
+static inline PALP_RuntimeContext PALP_RuntimeContextFromGlobals(void)
+{
+  PALP_RuntimeContext ctx;
+  ctx.in = inFILE;
+  ctx.out = outFILE;
+  return ctx;
+}
+
+static inline void PALP_ApplyRuntimeContext(const PALP_RuntimeContext *ctx)
+{
+  inFILE = ctx->in;
+  outFILE = ctx->out;
+}
+
 
 /*  ==========         Global typedefs           		==========  */
 
