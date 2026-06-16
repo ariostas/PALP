@@ -737,14 +737,14 @@ void Make_Dual_Poly(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 void add_for_completion(Long *yDen, Long Den,
     EqList *_E, PolyPointList *_CP, int *old_np){
   int i,n=_CP->n;
-  Long yold[POLY_Dmax];
+  std::array<Long, POLY_Dmax> yold;
 
   if(Den>1) for(i=0;i<n;i++) {
     if(yDen[i]%Den) return;
     yold[i]=yDen[i]/Den;}
   else for(i=0;i<n;i++) yold[i]=yDen[i];
-  for (i=0;i<_E->ne;i++) if (Eval_Eq_on_V(&(_E->e[i]), yold, n) < 0) return;
-  for (i=0;i<*old_np;i++) if (Vec_Equal(_CP->x[i],yold,n)) return;
+  for (i=0;i<_E->ne;i++) if (Eval_Eq_on_V(&(_E->e[i]), yold.data(), n) < 0) return;
+  for (i=0;i<*old_np;i++) if (Vec_Equal(_CP->x[i],yold.data(),n)) return;
   assert(_CP->np<POINT_Nmax);
   for(i=0;i<n;i++) _CP->x[_CP->np][i]=yold[i];
   _CP->np++;
@@ -810,9 +810,11 @@ void Compute_InvMat(int n, EqList *_E, int OrdFac[VERT_Nmax],
 void Complete_Poly(PairMat VPM, EqList *_E, int nv, 
 			     PolyPointList *_CP){
   int i, j, k, InsPoint, n=_CP->n, old_np=_CP->np;
-  Long MaxDist[EQUA_Nmax], InvMat[POLY_Dmax][POLY_Dmax], Den=1;
-  Long yDen[POLY_Dmax];
-  int OrdFac[VERT_Nmax], BasFac[POLY_Dmax], position[POLY_Dmax];
+  std::array<Long, EQUA_Nmax> MaxDist;
+  Long InvMat[POLY_Dmax][POLY_Dmax], Den=1;
+  std::array<Long, POLY_Dmax> yDen;
+  std::array<int, VERT_Nmax> OrdFac;
+  std::array<int, POLY_Dmax> BasFac, position;
 
   /*_CP->np=0;*/
 
@@ -832,7 +834,7 @@ void Complete_Poly(PairMat VPM, EqList *_E, int nv,
     for (j=i;j>InsPoint;j--) OrdFac[j]=OrdFac[j-1];
     OrdFac[InsPoint]=i; }
 
-  Compute_InvMat(n, _E, OrdFac, BasFac, &Den, InvMat);
+  Compute_InvMat(n, _E, OrdFac.data(), BasFac.data(), &Den, InvMat);
 
   /* printf("Den=%ld  ", Den); mostly 1 or 2!!! */
   
@@ -859,7 +861,7 @@ void Complete_Poly(PairMat VPM, EqList *_E, int nv,
   while(k>=0){
     position[k]++;
     for(i=0;i<n;i++) yDen[i]+=InvMat[i][k];
-    add_for_completion(yDen, Den, _E, _CP, &old_np);
+    add_for_completion(yDen.data(), Den, _E, _CP, &old_np);
     for(k=n-1;(k>=0);k--){
       if (position[k]!=MaxDist[BasFac[k]]-_E->e[BasFac[k]].c) break;
       position[k]=-_E->e[BasFac[k]].c;
@@ -958,11 +960,11 @@ void RC_Calc_BaHo(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 void Qadd_for_completion(Long *yDen, Long Den, int n, int *np, EqList *_E,
 			 FaceInfo *_I){
   int i;
-  Long y[POLY_Dmax];
+  std::array<Long, POLY_Dmax> y;
   INCI x = INCI_0();
   for(i=0;i<n;i++) if(yDen[i]%Den) return;
   for(i=0;i<n;i++) y[i] = yDen[i]/Den;
-  for(i=0;i<_E->ne;i++) x=INCI_PN(x,Eval_Eq_on_V(&(_E->e[i]),y,n));
+  for(i=0;i<_E->ne;i++) x=INCI_PN(x,Eval_Eq_on_V(&(_E->e[i]),y.data(),n));
   RaiseDip(x, _I, n, 1);
   (*np)++;
 }
@@ -972,7 +974,7 @@ void lastline(Long *EyD, Long *yDen, Long Den, EqList *_E, int n, int *np,
 	      Long InvMat[POLY_Dmax][POLY_Dmax], FaceInfo *_I){
   int i, j, l, lmin=0, lmax=MD;
   INCI xmin, xmax;
-  Long y[POLY_Dmax];
+  std::array<Long, POLY_Dmax> y;
   for (j=0;j<_E->ne;j++) if ((EyD[j]<0)&&(IME[n-1][j]<=0)) return;
   for (j=0;(j<_E->ne)&&(lmax >=lmin);j++)
     if (IME[n-1][j]<0) {
@@ -997,7 +999,7 @@ void lastline(Long *EyD, Long *yDen, Long Den, EqList *_E, int n, int *np,
     y[i] = yDen[i] + InvMat[i][n-1] * lmin;
   xmin=INCI_0();
   for(i=0;i<_E->ne;i++) 
-    xmin=INCI_PN(xmin,Eval_Eq_on_V(&(_E->e[i]),y,n));
+    xmin=INCI_PN(xmin,Eval_Eq_on_V(&(_E->e[i]),y.data(),n));
   RaiseDip(xmin, _I, n, 1);
   (*np)++;
   if (lmax == lmin) return;
@@ -1005,7 +1007,7 @@ void lastline(Long *EyD, Long *yDen, Long Den, EqList *_E, int n, int *np,
     y[i] = yDen[i] + InvMat[i][n-1] * lmax;
   xmax=INCI_0();
   for(i=0;i<_E->ne;i++) 
-    xmax=INCI_PN(xmax,Eval_Eq_on_V(&(_E->e[i]),y,n));
+    xmax=INCI_PN(xmax,Eval_Eq_on_V(&(_E->e[i]),y.data(),n));
   RaiseDip(xmax, _I, n, 1);
   (*np)++;
   if (lmax == lmin +1) return;
@@ -1016,10 +1018,13 @@ void lastline(Long *EyD, Long *yDen, Long Den, EqList *_E, int n, int *np,
 void QComplete_Poly(PairMat VPM, EqList *_E, int nv, int n, int *np,
 		    FaceInfo *_I){
   int i, j, k, InsPoint;
-  Long MaxDist[EQUA_Nmax], InvMat[POLY_Dmax][POLY_Dmax], Den=1;
-  Long yDen[POLY_Dmax], EyD[EQUA_Nmax], IME[POLY_Dmax][EQUA_Nmax];
+  std::array<Long, EQUA_Nmax> MaxDist, EyD;
+  Long InvMat[POLY_Dmax][POLY_Dmax], Den=1;
+  std::array<Long, POLY_Dmax> yDen;
+  Long IME[POLY_Dmax][EQUA_Nmax];
   /* IME[k][j] = InvMat [k] * _E[j] */
-  int OrdFac[VERT_Nmax], BasFac[POLY_Dmax], position[POLY_Dmax];
+  std::array<int, VERT_Nmax> OrdFac;
+  std::array<int, POLY_Dmax> BasFac, position;
 
   for(i=0;i<n;i++) for(j=0;j<_I->nf[i];j++) _I->dip[i][j]=0;
   
@@ -1041,7 +1046,7 @@ void QComplete_Poly(PairMat VPM, EqList *_E, int nv, int n, int *np,
     for (j=i;j>InsPoint;j--) OrdFac[j]=OrdFac[j-1];
     OrdFac[InsPoint]=i; }
 
-  Compute_InvMat(n, _E, OrdFac, BasFac, &Den, InvMat);
+  Compute_InvMat(n, _E, OrdFac.data(), BasFac.data(), &Den, InvMat);
 
   for (k=0;k<n;k++)
     for (j=0;j<_E->ne;j++){
@@ -1075,7 +1080,7 @@ void QComplete_Poly(PairMat VPM, EqList *_E, int nv, int n, int *np,
     position[k]++;
     for (i=0;i<n;i++) yDen[i]+=InvMat[i][k];
     for (j=0;j<_E->ne;j++) EyD[j] += IME[k][j];
-    lastline(EyD, yDen, Den, _E, n, np, MaxDist[BasFac[n-1]], IME, InvMat, _I);
+    lastline(EyD.data(), yDen.data(), Den, _E, n, np, MaxDist[BasFac[n-1]], IME, InvMat, _I);
   for (k=n-2;(k>=0);k--){
       if (position[k]!=MaxDist[BasFac[k]]-_E->e[BasFac[k]].c) break;
       position[k]=-_E->e[BasFac[k]].c;

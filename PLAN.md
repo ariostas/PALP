@@ -277,6 +277,20 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake --build build -j2`: passed.
       - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
       - `make check`: passed.
+    - Sixth local bounded-array migration completed:
+      - Converted `Vertex.cc` completion and quick-completion local vectors/index buffers in `add_for_completion()`, `Complete_Poly()`, `Qadd_for_completion()`, `lastline()`, and `QComplete_Poly()` to `std::array`.
+      - Kept the `Compute_InvMat()`, `add_for_completion()`, `lastline()`, and matrix parameter interfaces unchanged by using `.data()` adapters.
+      - Left fixed matrix parameters as C arrays where existing helper signatures require `Long[][POLY_Dmax]` or `Long[][EQUA_Nmax]`.
+      - Added `ISSUES.md` item 19 for the pre-existing `Vertex.cc` warning cluster found during all-dimension verification.
+      - `g++ -std=c++17 -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/Vertex-completion-array-smoke.o Vertex.cc`: passed, with known `Vertex.cc` warnings now tracked in `ISSUES.md`.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make -j2`: passed, with known `Vertex.cc` warnings.
+      - Focused tests: `tests/3.2.7-poly-e.sh`, `tests/3.2.11-poly-l.sh`, `tests/3.2.23-poly-P.sh`, and `tests/6.4.18-nef-v.sh` passed for `DIM=6`.
+      - `make all-dims -j2`: passed, with known `Vertex.cc` warnings tracked as `ISSUES.md` item 19.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
+      - `make check`: passed.
       - Remaining in this item: migrate more local bounded work buffers in C++ modules before changing public data structures.
 
 13. Replace manual allocation with RAII.

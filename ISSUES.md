@@ -134,6 +134,13 @@ This file records issues found during an initial code-reading and build-warning 
 - Risk: Quick Hodge/statistics output can use the wrong constant term for all facets, or read past the intended equations if `n >= _E->ne`. The existing tests pass, so either this path is weakly covered, the data often masks the error, or there is an undocumented invariant that makes `_E->e[n].c` usable here.
 - Suggested check: Build a focused regression around `QuickAnalysis()`/`Print_VP()` output, compare against the full `Complete_Poly()` path, and then test whether changing the initializer to `_E->e[j].c * Den` preserves or intentionally corrects output.
 
+## 19. `Vertex.cc` warning cleanup should separate logic from assertions
+
+- Location: `Vertex.cc:216`, `Vertex.cc:350`, `Vertex.cc:373-375`
+- Evidence: `make all-dims -j2` reports misleading-indentation warnings where `assert(G)` and `assert(I==0)` sit on the same physical line as a preceding `for` loop. The same build also reports that local `Equation E` in `New_Start_Vertex()` may be used uninitialized when passed to `Eval_Eq_on_V()` after only `E.a[0..P->n)` and `E.c` are assigned.
+- Risk: The indentation warnings are probably behavior-preserving today, but they make it too easy to misread assertion scope during modernization. The `Equation E` warning may be a false positive because `Eval_Eq_on_V()` only reads the active dimension, but it depends on that convention rather than on full object initialization.
+- Suggested check: Split the assertion statements onto separate lines, value-initialize `Equation E`, and rerun `make all-dims -j2` plus the vertex-focused tests to confirm no output changes.
+
 ## Build observations from this pass
 
 - `make -j2` completed and produced the default `.x` executables.
