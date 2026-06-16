@@ -346,7 +346,19 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake --build build -j2`: passed.
       - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
       - `make check`: passed.
-      - Remaining in this item: migrate `class.x`, `cws.x`, `nef.x`, and `mori.x` startup code, then move shared readers/printers from direct globals to context-aware adapters.
+    - Second runtime-context migration completed:
+      - Migrated `class.c` startup file-handle setup to configure a `PALP_RuntimeContext` and apply it before shared code runs.
+      - Kept the existing global `inFILE`/`outFILE` ABI intact for shared modules and other CLI programs.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/class-context-smoke.o class.c`: passed, with the existing `x_string` unused warning.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make -j2`: passed, with existing warnings.
+      - Focused tests: no dedicated `class.x` shell tests are currently present; coverage came from full build/test gates.
+      - `make all-dims -j2`: passed, with known warnings.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
+      - `make check`: passed.
+      - Remaining in this item: migrate `cws.x`, `nef.x`, and `mori.x` startup code, then move shared readers/printers from direct globals to context-aware adapters.
 
 ## Phase 4: Modularize Algorithms
 

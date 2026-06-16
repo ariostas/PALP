@@ -293,12 +293,14 @@ int  main (int narg, char* fn[])
       }
   n--;
 
-  if(FilterFlag)      { inFILE=NULL; outFILE=stdout;     }
+  PALP_RuntimeContext ctx = PALP_RuntimeContextFromGlobals();
+  if(FilterFlag)      { ctx.in=NULL; ctx.out=stdout;     }
   else
-    {   if (narg > ++n)  inFILE=fopen(fn[n],"r");  else inFILE=stdin;
-        if (inFILE==NULL){printf("Input file %s not found!\n",fn[n]);exit(0);}
-        if (narg > ++n) outFILE=fopen(fn[n],"w");  else outFILE=stdout;
+    {   if (narg > ++n)  ctx.in=fopen(fn[n],"r");  else ctx.in=stdin;
+        if (ctx.in==NULL){printf("Input file %s not found!\n",fn[n]);exit(0);}
+        if (narg > ++n) ctx.out=fopen(fn[n],"w");  else ctx.out=stdout;
     }
+  PALP_ApplyRuntimeContext(&ctx);
 
        if(sFlag)          VPHM_Sublat_Polys(sFlag,mFlag,dbin,polyi,polyo,_P);
   else if(abFlag==1)	  Ascii_to_Binary(&W,_P,dbin,polyi,polyo);
