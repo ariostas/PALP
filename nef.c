@@ -41,9 +41,10 @@ int IN_WEIGHT(Weight *, CWS *, int *, PolyPointList *, Flags *, int);
 
 void OUT_CWS(CWS *, int *, int *);
 
-void Print_VP(PolyPointList *, VertexNumList *, int, int, Pstat *);
+void Print_VP(PALP_RuntimeContext *, PolyPointList *, VertexNumList *, int,
+	      int, Pstat *);
 
-void Print_Pstat(Pstat *, int, int, int);
+void Print_Pstat(PALP_RuntimeContext *, Pstat *, int, int, int);
 
 void Die(char *);
 
@@ -292,44 +293,47 @@ int main(int narg, char *fn[])
 	  PALP_Make_E_Poly(&ctx, &CW, _P, _V, _E, &codim, &F, &D[0]);	}
 	else{
 	  N++;
-	  Print_VP(_P, _V, VPmax, VPmin, _PS);	}       }
+	  Print_VP(&ctx, _P, _V, VPmax, VPmin, _PS);	}       }
       else{
 	if ((F.Rv == 1) || ((F.V == 1)&&(F.N == 1))){
 	  Find_Equations(_P,_V,_E);
 	  PALP_Print_VL(&ctx, _P, _V, "Vertices of input polytope:");      }    }}
     if (F.VP){
       assert(VPmax < POINT_Nmax); assert(VPmax >= VPmin); 
-      Print_Pstat(_PS, N, VPmax, VPmin);    }
+      Print_Pstat(&ctx, _PS, N, VPmax, VPmin);    }
     free(_E); free(_V); free(_P); free(_PS);
     return 0;
 }
 
-void Print_Pstat(Pstat *_PS, int N, int VPmax, int VPmin){
+void Print_Pstat(PALP_RuntimeContext *ctx, Pstat *_PS, int N, int VPmax,
+		 int VPmin){
+  FILE *output = ctx ? ctx->out : outFILE;
   int i;
   
-  fprintf(outFILE,"\n\n%d  of  %d\n\n",(int) _PS->n,(int) N);
+  fprintf(output,"\n\n%d  of  %d\n\n",(int) _PS->n,(int) N);
   for(i=VPmin; i<=VPmax; i++) 
     if (_PS->P[i] != 0)
-      fprintf(outFILE,"%4d# %4d\n",(int) i, (int) _PS->P[i]);
+      fprintf(output,"%4d# %4d\n",(int) i, (int) _PS->P[i]);
 }
 
-void Print_VP(PolyPointList *_P, VertexNumList *_V, int VPmax, int VPmin, 
-	Pstat *_PS){
+void Print_VP(PALP_RuntimeContext *ctx, PolyPointList *_P, VertexNumList *_V,
+	      int VPmax, int VPmin, Pstat *_PS){
+  FILE *output = ctx ? ctx->out : outFILE;
   int i,j;
 
   if((_P->np <= VPmax) && (_P->np >= VPmin)){
     _PS->P[_P->np] ++; _PS->n ++;
     if(_V->nv>20){
-      fprintf(outFILE,"%d %d P:%d E",_V->nv,_P->n,_P->np);
+      fprintf(output,"%d %d P:%d E",_V->nv,_P->n,_P->np);
       for(i=0;i<_V->nv;i++) {
-	for(j=0;j<_P->n;j++) fprintf(outFILE,"%d ",(int) _P->x[_V->v[i]][j]); 
-	if(i!=(_V->nv-1)) fprintf(outFILE,"E");}}
+	for(j=0;j<_P->n;j++) fprintf(output,"%d ",(int) _P->x[_V->v[i]][j]);
+	if(i!=(_V->nv-1)) fprintf(output,"E");}}
     else {
-      fprintf(outFILE,"%d %d P:%d E",_P->n,_V->nv,_P->np);
+      fprintf(output,"%d %d P:%d E",_P->n,_V->nv,_P->np);
       for(i=0;i<_P->n;i++) {
-	for(j=0;j<_V->nv;j++) fprintf(outFILE," %4d",(int) _P->x[_V->v[j]][i]);
-	if(i!=(_P->n-1)) fprintf(outFILE,"E");}}
-    fprintf(outFILE,"\n");
+	for(j=0;j<_V->nv;j++) fprintf(output," %4d",(int) _P->x[_V->v[j]][i]);
+	if(i!=(_P->n-1)) fprintf(output,"E");}}
+    fprintf(output,"\n");
   }
 }
          

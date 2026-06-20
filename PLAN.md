@@ -521,6 +521,21 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
       - `make check`: passed.
       - Remaining in this item: continue adding context-aware wrappers at shared-module boundaries, then migrate caller paths one at a time.
+    - Ninth runtime-context output migration completed:
+      - Migrated the local `nef.c` vertex/point statistics output helpers `Print_VP()` and `Print_Pstat()` to accept a `PALP_RuntimeContext`.
+      - Updated the `nef.c` `-v` path to pass its local runtime context instead of relying on the global `outFILE`.
+      - Kept fallback behavior to `outFILE` for defensive compatibility when the helpers are called without a context.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/nef-vp-context-smoke.o nef.c`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - Focused test: `DIM=6 tests/6.4.18-nef-v.sh` passed.
+      - Focused file-output smoke: `./nef-6d.x -v tests/input/6.4.18-nef-v.txt /tmp/palp-nef-vp-output.txt` wrote the expected output with no stdout.
+      - `make -j2`: passed.
+      - `make all-dims -j2`: passed.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
+      - `make check`: passed.
+      - Remaining in this item: continue adding context-aware wrappers at shared-module boundaries, then migrate caller paths one at a time.
 
 ## Phase 4: Modularize Algorithms
 
