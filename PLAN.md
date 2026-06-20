@@ -490,7 +490,21 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake --build build -j2`: passed.
       - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
       - `make check`: passed.
-      - Remaining in this item: migrate the `cws.c` convex-hull reader/printer call sites, then continue reducing direct `inFILE`/`outFILE` use inside shared modules.
+    - Seventh shared adapter call-site migration completed:
+      - Migrated the `cws.c` convex-hull `-p` path to use separate `PALP_RuntimeContext` values for each input file and for output.
+      - Migrated the `Conv()` input loops from the legacy `READ_CWS_PP()` helper to `PALP_Read_CWS_PP()` and migrated the vertex-list output from direct `Print_VL()` to `PALP_Print_VL()`.
+      - Updated the legacy `READ_CWS_PP()` helper to delegate through `PALP_Read_CWS_PP()` while preserving its historical `inFILE=INFILE` side effect.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/cws-p-adapter-callsite-smoke.o cws.c`: passed, with known `createweights` warnings tracked in `ISSUES.md`.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make check-runtime-context-adapter`: passed.
+      - Focused smoke commands: `./cws-11d.x -p tests/input/4.2.6-cws-N.txt tests/input/4.2.6-cws-N.txt` and the same command with `/tmp/palp-cws-p-output.txt` passed; `DIM=6 tests/4.2.6-cws-N.sh` and `DIM=6 tests/4.2.1-cws-w.sh` passed.
+      - `make -j2`: passed, with known CWS warnings.
+      - `make all-dims -j2`: passed, with known CWS warnings.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
+      - `make check`: passed.
+      - Remaining in this item: continue reducing direct `inFILE`/`outFILE` use inside shared modules; no active common `Coord.cc` reader/printer call sites remain outside legacy comments.
 
 ## Phase 4: Modularize Algorithms
 

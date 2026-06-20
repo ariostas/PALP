@@ -59,8 +59,10 @@ int READ_Weight(Weight *_W, FILE *INFILE){
 }
 
 int READ_CWS_PP(CWS *_CW, PolyPointList *_P, FILE *INFILE){
-  inFILE=INFILE;
-  return Read_CWS_PP(_CW, _P);
+  PALP_RuntimeContext ctx = PALP_RuntimeContextFromGlobals();
+  ctx.in=INFILE;
+  PALP_ApplyRuntimeContext(&ctx);
+  return PALP_Read_CWS_PP(&ctx, _CW, _P);
 }
 
 void Print_CWS(CWS *_W);
@@ -1835,6 +1837,8 @@ void Conv(int narg, char* fn[])
   FILE *INFILE[2];
   int n=0, x=0, nF=2, i;
   char *infile[2] = {NULL}, *outfile = NULL, *a;
+  PALP_RuntimeContext in_ctx[2];
+  PALP_RuntimeContext out_ctx = PALP_RuntimeContextFromGlobals();
   PolyPointList *P[2], *PP;
   CWS *CW[2];
   VertexNumList *V;
@@ -1869,13 +1873,19 @@ void Conv(int narg, char* fn[])
   for(i = 0; i < nF; i++)
     if((INFILE[i] = fopen(infile[i], "r"))==NULL)
       Die("Unable to open infile to read");
-  if(outfile == NULL) outFILE = stdout;
+  if(outfile == NULL) out_ctx.out = stdout;
   else 
-    if((outFILE = fopen(outfile, "w")) == NULL){
+    if((out_ctx.out = fopen(outfile, "w")) == NULL){
       printf("\nUnable to open file %s for write\n",fn[n]); exit(0);}
-  while(READ_CWS_PP(CW[0], P[0], INFILE[0])){
-    while(READ_CWS_PP(CW[1], P[1], INFILE[1]))
-      if(ConvHull(P[0], P[1], PP, V, (P[0]->n-x))) Print_VL(PP, V, "Vertices of P");
+  PALP_ApplyRuntimeContext(&out_ctx);
+  for(i = 0; i < nF; i++) {
+    in_ctx[i] = out_ctx;
+    in_ctx[i].in = INFILE[i];
+  }
+  while(PALP_Read_CWS_PP(&in_ctx[0], CW[0], P[0])){
+    while(PALP_Read_CWS_PP(&in_ctx[1], CW[1], P[1]))
+      if(ConvHull(P[0], P[1], PP, V, (P[0]->n-x)))
+	PALP_Print_VL(&out_ctx, PP, V, "Vertices of P");
     rewind(INFILE[1]);
   }
   for(i = 0; i < nF; i++){free(P[i]); free(CW[i]);} free(PP);free(V);  
