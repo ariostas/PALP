@@ -370,7 +370,19 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake --build build -j2`: passed.
       - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
       - `make check`: passed.
-      - Remaining in this item: migrate `nef.x` and `mori.x` startup code, then move shared readers/printers from direct globals to context-aware adapters.
+    - Fourth runtime-context migration completed:
+      - Migrated `nef.c` startup file-handle setup to configure and apply a `PALP_RuntimeContext`.
+      - Kept the existing global `inFILE`/`outFILE` ABI intact for shared modules and other CLI programs.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/nef-context-smoke.o nef.c`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - Focused tests: `DIM=6 tests/6.3-nef-output.sh`, `DIM=6 tests/6.3-nef-N-output.sh`, `DIM=6 tests/6.4.18-nef-v.sh`, `DIM=6 tests/6.4.25-nef-G.sh`, and `DIM=6 tests/6.4.13-nef-y.sh` passed.
+      - `make -j2`: passed.
+      - `make all-dims -j2`: passed.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
+      - `make check`: passed.
+      - Remaining in this item: migrate `mori.x` startup code, then move shared readers/printers from direct globals to context-aware adapters.
 
 ## Phase 4: Modularize Algorithms
 

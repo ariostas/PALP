@@ -244,24 +244,26 @@ int main(int narg, char *fn[])
 	      exit(0);}
 	}
     n--;
+    PALP_RuntimeContext ctx = PALP_RuntimeContextFromGlobals();
     if (FilterFlag) {
-	inFILE = NULL;
-	outFILE = stdout;
+	ctx.in = NULL;
+	ctx.out = stdout;
     } 
     else {
 	if (narg > ++n)
-	    inFILE = fopen(fn[n], "r");
+	    ctx.in = fopen(fn[n], "r");
 	else
-	    inFILE = stdin;
-	if (inFILE == NULL) {
+	    ctx.in = stdin;
+	if (ctx.in == NULL) {
 	    printf("Input file %s not found!\n", fn[n]);
 	    exit(0);
 	}
 	if (narg > ++n)
-	    outFILE = fopen(fn[n], "w");
+	    ctx.out = fopen(fn[n], "w");
 	else
-	    outFILE = stdout;
-    }	
+	    ctx.out = stdout;
+    }
+    PALP_ApplyRuntimeContext(&ctx);
     while (IN_WEIGHT(&W, &CW, D, _P, &F, codim)) {
       /* _P is the M-lattice polytope */
       if (F.G) AnalyseGorensteinCone(&CW,_P,_V,_E,&codim,&F);
