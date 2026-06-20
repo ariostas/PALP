@@ -141,6 +141,13 @@ This file records issues found during an initial code-reading and build-warning 
 - Risk: The indentation warnings are probably behavior-preserving today, but they make it too easy to misread assertion scope during modernization. The `Equation E` warning may be a false positive because `Eval_Eq_on_V()` only reads the active dimension, but it depends on that convention rather than on full object initialization.
 - Suggested check: Split the assertion statements onto separate lines, value-initialize `Equation E`, and rerun `make all-dims -j2` plus the vertex-focused tests to confirm no output changes.
 
+## 20. `RecConstructRgcWeights()` may index `yq` past `POLY_Dmax`
+
+- Location: `cws.c:318-328`
+- Evidence: `make all-dims -j2` reports array-bounds warnings in `RecConstructRgcWeights()` for `yq[l]` and `yq[k]`. The local buffer is `Long yq[POLY_Dmax]`, but the loop bounds are based on `X->d`.
+- Risk: This may be another analyzer false positive tied to compile-time dimension invariants, but if `X->d` can reach or exceed the effective buffer size in a reflexive Gorenstein cone workflow, weight construction can corrupt stack state or miss candidates.
+- Suggested check: Document or assert the invariant `X->d <= POLY_Dmax` before the simplex-point loop, add explicit bounds checks around the `yq` writes, and run the `cws -d`/RGC workflows across supported dimensions.
+
 ## Build observations from this pass
 
 - `make -j2` completed and produced the default `.x` executables.

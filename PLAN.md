@@ -358,7 +358,19 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake --build build -j2`: passed.
       - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
       - `make check`: passed.
-      - Remaining in this item: migrate `cws.x`, `nef.x`, and `mori.x` startup code, then move shared readers/printers from direct globals to context-aware adapters.
+    - Third runtime-context migration completed:
+      - Migrated `cws.c` executable-entry default file-handle setup to configure and apply a `PALP_RuntimeContext`.
+      - Kept mode-specific `cws.c` file-handle rewrites unchanged; they remain part of the later shared reader/printer adapter pass.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/cws-context-smoke.o cws.c`: passed, with existing CWS array-bounds warnings tracked as `ISSUES.md` item 11.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - Focused tests: `DIM=6 tests/4.2.1-cws-w.sh` and `DIM=6 tests/4.2.6-cws-N.sh` passed.
+      - `make -j2`: passed, with existing CWS array-bounds warnings.
+      - `make all-dims -j2`: passed; the scan surfaced a separate `RecConstructRgcWeights()` bounds warning now tracked as `ISSUES.md` item 20.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
+      - `make check`: passed.
+      - Remaining in this item: migrate `nef.x` and `mori.x` startup code, then move shared readers/printers from direct globals to context-aware adapters.
 
 ## Phase 4: Modularize Algorithms
 

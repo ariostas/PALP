@@ -85,7 +85,9 @@ void PrintCWSextUsage(char *c)
 }
 
 int  main (int narg, char* fn[])
-{    inFILE=stdin; outFILE=stdout;
+{    PALP_RuntimeContext ctx = PALP_RuntimeContextFromGlobals();
+     ctx.in=stdin; ctx.out=stdout;
+     PALP_ApplyRuntimeContext(&ctx);
      if(narg==1) {printf("\nFor help type `%s -h'\n\n",fn[0]);exit(0);}
      if((fn[1][0]!='-')||(fn[1][1]=='h')) PrintCWSUsage(fn[0]);
      else if(fn[1][1]=='w') Init_IP_Weights(narg, fn);
