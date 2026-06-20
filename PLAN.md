@@ -422,7 +422,20 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake --build build -j2`: passed.
       - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
       - `make check`: passed.
-      - Remaining in this item: migrate the same common reader/printer adapters through `class.c`, `mori.c`, and selected `cws.c`/`nef.c` call sites, then continue reducing direct `inFILE`/`outFILE` use inside shared modules.
+    - Second shared adapter call-site migration completed:
+      - Migrated `mori.c` input dispatch from direct `Read_PP()`/`Read_CWS()` calls to `PALP_Read_PP()`/`PALP_Read_CWS()` with the local runtime context.
+      - Kept direct `fprintf(outFILE, ...)` and `fflush(outFILE)` calls unchanged for this slice.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/mori-adapter-callsite-smoke.o mori.c`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make check-runtime-context-adapter`: passed.
+      - Focused tests: `DIM=6 tests/7.2-mori-P.sh`, `DIM=6 tests/7.2.14-mori-D.sh`, `DIM=6 tests/7.2.3-mori-g.sh`, and `DIM=6 tests/7.2.9-mori-i.sh` passed.
+      - `make -j2`: passed.
+      - `make all-dims -j2`: passed.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
+      - `make check`: passed.
+      - Remaining in this item: migrate the same common reader/printer adapters through `class.c` and selected `cws.c`/`nef.c` call sites, then continue reducing direct `inFILE`/`outFILE` use inside shared modules.
 
 ## Phase 4: Modularize Algorithms
 

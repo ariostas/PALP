@@ -156,7 +156,7 @@ int main (int narg, char* fn[]){
   }
   PALP_ApplyRuntimeContext(&ctx);
   
-  while((Flag.D ? Read_PP(_P) : Read_CWS(CW,_P))) {
+  while((Flag.D ? PALP_Read_PP(&ctx, _P) : PALP_Read_CWS(&ctx, CW,_P))) {
     if (!Ref_Check(_P,&V,E)){
       fprintf(outFILE,"Input not reflexive!\n");
       continue;    }
