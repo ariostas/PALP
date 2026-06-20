@@ -1725,12 +1725,13 @@ void FileRW(char *file, char *m, FILE *rwFILE){
 void IP_Poly_Data(int narg, char* fn[])
 {
   int r = 1, i, n = 0, p=0, d=0;
+  PALP_RuntimeContext ctx = PALP_RuntimeContextFromGlobals();
   CWS CW;
   PolyPointList *_P, *_DP;
   VertexNumList *_V;
   EqList *_E;
 
-  inFILE=stdin; outFILE=stdout; /*puts("IP_Poly_Data: to be done");*/
+  ctx.in=stdin; ctx.out=stdout; /*puts("IP_Poly_Data: to be done");*/
 
   _P = (PolyPointList *) malloc(sizeof(PolyPointList));
   if (_P == NULL) Die("Unable to allocate space for _P");
@@ -1750,22 +1751,23 @@ void IP_Poly_Data(int narg, char* fn[])
       if (fn[n][2] == 'd') d=1;
     }
     if ((fn[n][1] == 'f') || (fn[n][1] == 0))
-      inFILE=NULL;
+      ctx.in=NULL;
   }
   n--;
   if (narg > ++n){
-    if((inFILE = fopen(fn[n], "r")) == NULL){
+    if((ctx.in = fopen(fn[n], "r")) == NULL){
       printf("\nUnable to open file %s for read\n",fn[n]);
       exit(0);
     }
   }
   if (narg > ++n){
-    if((outFILE = fopen(fn[n], "w")) == NULL){
+    if((ctx.out = fopen(fn[n], "w")) == NULL){
       printf("\nUnable to open file %s for write\n",fn[n]);
       exit(0);
     }
   }
-  while (Read_CWS_PP(&CW, _P))
+  PALP_ApplyRuntimeContext(&ctx);
+  while (PALP_Read_CWS_PP(&ctx, &CW, _P))
     if (IP_Check(_P,_V,_E)){
       r=1; i=-1;
       while(r && (++i < _E->ne))
@@ -1778,8 +1780,8 @@ void IP_Poly_Data(int narg, char* fn[])
 	if(r) fprintf(outFILE," N:%d %d",_DP->np, _E->ne);
 	else  fprintf(outFILE," F:%d N:%d", _E->ne,_DP->np);
       }
-      if(p) Print_PPL(_P,"");
-      if(d) Print_PPL(_DP,"");	
+      if(p) PALP_Print_PPL(&ctx, _P,"");
+      if(d) PALP_Print_PPL(&ctx, _DP,"");
       assert(IP_Check(_DP,_V,_E));
       fprintf(outFILE,"\n");
     }

@@ -475,7 +475,22 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake --build build -j2`: passed.
       - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
       - `make check`: passed.
-      - Remaining in this item: migrate the remaining `cws.c` `IP_Poly_Data()` and convex-hull reader/printer call sites, then continue reducing direct `inFILE`/`outFILE` use inside shared modules.
+    - Sixth shared adapter call-site migration completed:
+      - Migrated `cws.c` `IP_Poly_Data()` file setup to a local `PALP_RuntimeContext`.
+      - Migrated the `IP_Poly_Data()` input loop from direct `Read_CWS_PP()` to `PALP_Read_CWS_PP()`.
+      - Migrated the `-ip` and `-id` point-list output paths from direct `Print_PPL()` calls to `PALP_Print_PPL()`.
+      - Kept direct `Print_CWS()` and summary `fprintf(outFILE, ...)` output on legacy globals for this slice.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/cws-i-adapter-callsite-smoke.o cws.c`: passed, with known `createweights` warnings tracked in `ISSUES.md`.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make check-runtime-context-adapter`: passed.
+      - Focused smoke commands: `printf '4 1 1 1 1\n' | ./cws-6d.x -if`, `-ipf`, and `-idf` passed; `DIM=6 tests/4.2.6-cws-N.sh` also passed.
+      - `make -j2`: passed, with known CWS warnings.
+      - `make all-dims -j2`: passed, with known CWS warnings.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
+      - `make check`: passed.
+      - Remaining in this item: migrate the `cws.c` convex-hull reader/printer call sites, then continue reducing direct `inFILE`/`outFILE` use inside shared modules.
 
 ## Phase 4: Modularize Algorithms
 
