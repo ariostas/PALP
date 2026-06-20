@@ -308,10 +308,10 @@ int  main (int narg, char* fn[])
   else if(abFlag==2)      Gen_Ascii_to_Binary(&W,_P,dbin,polyi,polyo);
   else if(abFlag==-2)     Gen_Bin_2_ascii(polyi,dbin,(mFlag=='r'),vf,vt,_P);
   else if(cFlag)          Check_NF_Order(polyi,dbin,cFlag,_P);
-  else if(mFlag=='a')     while(Read_CWS_PP(&W,_P)) Overall_check(&W,_P);
-  else if(mFlag=='r')     while(Read_CWS_PP(&W,_P)) Max_check(&W,_P);
-  else if(mFlag=='v')     while(Read_CWS_PP(&W,_P)) DPvircheck(&W,_P);
-  else if(mFlag=='l')     while(Read_CWS_PP(&W,_P)) DPircheck(&W,_P);
+  else if(mFlag=='a')     while(PALP_Read_CWS_PP(&ctx, &W,_P)) Overall_check(&W,_P);
+  else if(mFlag=='r')     while(PALP_Read_CWS_PP(&ctx, &W,_P)) Max_check(&W,_P);
+  else if(mFlag=='v')     while(PALP_Read_CWS_PP(&ctx, &W,_P)) DPvircheck(&W,_P);
+  else if(mFlag=='l')     while(PALP_Read_CWS_PP(&ctx, &W,_P)) DPircheck(&W,_P);
 #if (POLY_Dmax < 6)
   else if(HFlag=='c')     DB_to_Hodge(dbin, dbout, vf, vt,_P);
   else if(HFlag=='s')     Sort_Hodge(dbin, dbout);

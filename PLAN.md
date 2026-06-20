@@ -435,7 +435,20 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake --build build -j2`: passed.
       - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
       - `make check`: passed.
-      - Remaining in this item: migrate the same common reader/printer adapters through `class.c` and selected `cws.c`/`nef.c` call sites, then continue reducing direct `inFILE`/`outFILE` use inside shared modules.
+    - Third shared adapter call-site migration completed:
+      - Migrated the `class.c` `-ma`, `-mr`, `-mv`, and `-ml` loops from direct `Read_CWS_PP()` calls to `PALP_Read_CWS_PP()` with the local runtime context.
+      - Kept classification/database workflows and direct global-output users unchanged for this slice.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/class-adapter-callsite-smoke.o class.c`: passed, with the known `x_string` unused warning.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make check-runtime-context-adapter`: passed.
+      - Focused smoke commands: `printf '4 1 1 1 1\n' | ./class-6d.x -f -ma`, `-mr`, `-mv`, and `-ml` passed.
+      - `make -j2`: passed.
+      - `make all-dims -j2`: passed, with the known `x_string` unused warning.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
+      - `make check`: passed.
+      - Remaining in this item: migrate selected `cws.c`/`nef.c` reader/printer call sites, then continue reducing direct `inFILE`/`outFILE` use inside shared modules.
 
 ## Phase 4: Modularize Algorithms
 
