@@ -536,6 +536,24 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
       - `make check`: passed.
       - Remaining in this item: continue adding context-aware wrappers at shared-module boundaries, then migrate caller paths one at a time.
+    - Tenth runtime-context output migration completed:
+      - Added `PALP_Print_CWS_Zinfo()` as a context-aware adapter around the common `Print_CWS_Zinfo()` printer.
+      - Extended `tests/runtime-context-adapter-test.cc` to verify the CWS Z-info adapter writes through the supplied output stream and restores globals.
+      - Migrated `nef.c` `OUT_CWS()` to accept `PALP_RuntimeContext`, write to the context output handle, and call `PALP_Print_CWS_Zinfo()`.
+      - Updated the active `nef.c` `WRITE_CWS` path to pass the local runtime context into `OUT_CWS()`.
+      - `g++ -std=c++17 -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/Coord-cws-zinfo-adapter-smoke.o Coord.cc`: passed.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/nef-out-cws-context-smoke.o nef.c`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make check-runtime-context-adapter`: passed.
+      - Focused test after rebuilding `nef-6d.x`: `DIM=6 tests/6.4.19-nef-m.sh` passed.
+      - Focused file-output smoke: `./nef-6d.x -Lv -m /tmp/palp-nef-out-cws-input.txt /tmp/palp-nef-out-cws-output.txt` wrote the expected normalized output with no stdout.
+      - `make -j2`: passed, with known warnings.
+      - `make all-dims -j2`: passed, with known warnings.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
+      - `make check`: passed.
+      - Remaining in this item: continue adding context-aware wrappers at shared-module boundaries, then migrate caller paths one at a time.
 
 ## Phase 4: Modularize Algorithms
 

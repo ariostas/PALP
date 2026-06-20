@@ -50,12 +50,26 @@ int main()
   require(inFILE == stdin, "PALP_Print_PPL did not restore inFILE");
   require(outFILE == stdout, "PALP_Print_PPL did not restore outFILE");
 
+  static CWS cws;
+  cws.nw = 1;
+  cws.nz = 1;
+  cws.N = 3;
+  cws.m[0] = 5;
+  cws.z[0][0] = 4;
+  cws.z[0][1] = 1;
+  cws.z[0][2] = 0;
+  PALP_Print_CWS_Zinfo(&ctx, &cws);
+  require(inFILE == stdin, "PALP_Print_CWS_Zinfo did not restore inFILE");
+  require(outFILE == stdout, "PALP_Print_CWS_Zinfo did not restore outFILE");
+
   std::rewind(output);
   char buffer[256];
   const std::size_t nread = std::fread(buffer, 1, sizeof(buffer) - 1, output);
   buffer[nread] = '\0';
   require(std::strstr(buffer, "2 3  adapter\n") != nullptr,
 	  "PALP_Print_PPL wrote unexpected output");
+  require(std::strstr(buffer, "/Z5: 4 1 0 ") != nullptr,
+	  "PALP_Print_CWS_Zinfo wrote unexpected output");
 
   std::fclose(input);
   std::fclose(output);

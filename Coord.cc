@@ -464,6 +464,13 @@ extern "C" void PALP_Print_Matrix(PALP_RuntimeContext *ctx,
   EndRuntimeContext(ctx, &saved);
 }
 
+extern "C" void PALP_Print_CWS_Zinfo(PALP_RuntimeContext *ctx, CWS *_W)
+{
+  PALP_RuntimeContext saved = BeginRuntimeContext(ctx);
+  Print_CWS_Zinfo(_W);
+  EndRuntimeContext(ctx, &saved);
+}
+
 extern "C" void PALP_Print_CWH(PALP_RuntimeContext *ctx, CWS *_W, BaHo *_BH)
 {
   PALP_RuntimeContext saved = BeginRuntimeContext(ctx);

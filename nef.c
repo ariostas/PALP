@@ -39,7 +39,7 @@ void ChangeToTrianBasis(AmbiPointList *, AmbiLatticeBasis *,
 			PolyPointList *);
 int IN_WEIGHT(Weight *, CWS *, int *, PolyPointList *, Flags *, int);
 
-void OUT_CWS(CWS *, int *, int *);
+void OUT_CWS(PALP_RuntimeContext *, CWS *, int *, int *);
 
 void Print_VP(PALP_RuntimeContext *, PolyPointList *, VertexNumList *, int,
 	      int, Pstat *);
@@ -282,7 +282,7 @@ int main(int narg, char *fn[])
 	assert(nv==_V->nv && ne==_E->ne);
 	if (!F.VP){
 #ifdef  WRITE_CWS
-          OUT_CWS(&CW, D, &F.Msum);
+          OUT_CWS(&ctx, &CW, D, &F.Msum);
 #endif
 	  if (POLY_Dmax  < (_P->n + codim - 1)){
 	    printf("Please increase POLY_Dmax to at least %d = %d + %d - 1\n",
@@ -554,18 +554,19 @@ int IN_WEIGHT(Weight * _W, CWS * _CW, int *_D, PolyPointList * _P,
   return ReadCwsPp(_CW, _P, codim, 1);
 }
 
-void OUT_CWS(CWS * _W, int *_D, int *_M_Flag)
+void OUT_CWS(PALP_RuntimeContext *ctx, CWS * _W, int *_D, int *_M_Flag)
 {
+    FILE *output = ctx ? ctx->out : outFILE;
     int i, j;
 
     for (i = 0; i < _W->nw; i++) {
-	fprintf(outFILE, "%d ", (int) _W->d[i]);
+	fprintf(output, "%d ", (int) _W->d[i]);
 	for (j = 0; j < _W->N; j++)
-	    fprintf(outFILE, "%d ", (int) _W->W[i][j]);
+	    fprintf(output, "%d ", (int) _W->W[i][j]);
 	if (i + 1 < _W->nw)
-	    fprintf(outFILE, " ");
+	    fprintf(output, " ");
     }
     if (*_M_Flag)
-	fprintf(outFILE, "d=%d %d ", (int) _D[1], _D[0]);
-    Print_CWS_Zinfo(_W);
+	fprintf(output, "d=%d %d ", (int) _D[1], _D[0]);
+    PALP_Print_CWS_Zinfo(ctx, _W);
 }

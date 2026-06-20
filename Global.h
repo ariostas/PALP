@@ -287,6 +287,7 @@ resulting output can be used as input for Read_CWS_PP.
 */
 
 void Print_CWH(CWS *C, BaHo *BH);
+void PALP_Print_CWS_Zinfo(PALP_RuntimeContext *ctx, CWS *C);
 void PALP_Print_CWH(PALP_RuntimeContext *ctx, CWS *C, BaHo *BH);
 /*
 Writes a single line that reproduces *C (if C->nw isn't 0, i.e. if the
