@@ -322,6 +322,15 @@ extern "C" int PALP_Read_PP(PALP_RuntimeContext *ctx, PolyPointList *_P)
   return result;
 }
 
+extern "C" int PALP_ReadCwsPp(PALP_RuntimeContext *ctx, CWS *_CW,
+			      PolyPointList *_P, int codim, int index)
+{
+  PALP_RuntimeContext saved = BeginRuntimeContext(ctx);
+  int result = ReadCwsPp(_CW, _P, codim, index);
+  EndRuntimeContext(ctx, &saved);
+  return result;
+}
+
 int  Read_CWS(CWS *_CW, PolyPointList *_P)
 {    int i, j, FilterFlag=(inFILE==NULL);
      int IN[AMBI_Dmax*(AMBI_Dmax+1)], S;

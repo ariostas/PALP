@@ -37,7 +37,8 @@ void MakeRefWeights(int N, int from_d, int to_d);
 
 void ChangeToTrianBasis(AmbiPointList *, AmbiLatticeBasis *,
 			PolyPointList *);
-int IN_WEIGHT(Weight *, CWS *, int *, PolyPointList *, Flags *, int);
+int IN_WEIGHT(PALP_RuntimeContext *, Weight *, CWS *, int *, PolyPointList *,
+	      Flags *, int);
 
 void OUT_CWS(PALP_RuntimeContext *, CWS *, int *, int *);
 
@@ -265,7 +266,7 @@ int main(int narg, char *fn[])
 	    ctx.out = stdout;
     }
     PALP_ApplyRuntimeContext(&ctx);
-    while (IN_WEIGHT(&W, &CW, D, _P, &F, codim)) {
+    while (IN_WEIGHT(&ctx, &W, &CW, D, _P, &F, codim)) {
       /* _P is the M-lattice polytope */
       if (F.G) AnalyseGorensteinCone(&CW,_P,_V,_E,&codim,&F);
       else if (Ref_Check(_P, _V, _E)){
@@ -547,11 +548,11 @@ int Make_WPCICY(Weight * _W, CWS * _CW, int *_D, PolyPointList * _P)
 
 void Make_RGC_Points(CWS *Cin, PolyPointList *_P);
 
-int IN_WEIGHT(Weight * _W, CWS * _CW, int *_D, PolyPointList * _P,
-	      Flags *_F, int codim){
+int IN_WEIGHT(PALP_RuntimeContext *ctx, Weight * _W, CWS * _CW, int *_D,
+	      PolyPointList * _P, Flags *_F, int codim){
   if (_F->Msum) return Make_WPCICY(_W, _CW, _D, _P);
-  if (_F->G) return ReadCwsPp(_CW, _P , 1, codim);
-  return ReadCwsPp(_CW, _P, codim, 1);
+  if (_F->G) return PALP_ReadCwsPp(ctx, _CW, _P , 1, codim);
+  return PALP_ReadCwsPp(ctx, _CW, _P, codim, 1);
 }
 
 void OUT_CWS(PALP_RuntimeContext *ctx, CWS * _W, int *_D, int *_M_Flag)

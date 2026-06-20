@@ -256,6 +256,8 @@ Reads the PolyPointList input *P
 int  PALP_Read_CWS_PP(PALP_RuntimeContext *ctx, CWS *C, PolyPointList *P);
 int  PALP_Read_CWS(PALP_RuntimeContext *ctx, CWS *C, PolyPointList *P);
 int  PALP_Read_PP(PALP_RuntimeContext *ctx, PolyPointList *P);
+int  PALP_ReadCwsPp(PALP_RuntimeContext *ctx, CWS *C, PolyPointList *P,
+		    int codim, int index);
 
 void Print_PPL(PolyPointList *P, const char *comment);
 void Print_VL(PolyPointList *P, VertexNumList *V, const char *comment);

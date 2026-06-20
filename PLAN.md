@@ -554,6 +554,24 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
       - `make check`: passed.
       - Remaining in this item: continue adding context-aware wrappers at shared-module boundaries, then migrate caller paths one at a time.
+    - Eleventh runtime-context input migration completed:
+      - Added `PALP_ReadCwsPp()` as a parameterized context-aware adapter around the custom `ReadCwsPp()` reader.
+      - Extended `tests/runtime-context-adapter-test.cc` to verify `PALP_ReadCwsPp()` reads through the supplied input stream and restores globals.
+      - Migrated `nef.c` `IN_WEIGHT()` to accept `PALP_RuntimeContext` and route non-`-m` input through `PALP_ReadCwsPp()`.
+      - Left the `-m`/`Make_WPCICY()` parser on the legacy global path for a separate focused migration.
+      - `g++ -std=c++17 -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/Coord-readcwsp-adapter-smoke.o Coord.cc`: passed.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/nef-in-weight-context-smoke.o nef.c`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make check-runtime-context-adapter`: passed.
+      - Focused tests after rebuilding `nef-6d.x`: `DIM=6 tests/6.3-nef-output.sh`, `DIM=6 tests/6.3-nef-N-output.sh`, `DIM=6 tests/6.4.25-nef-G.sh`, and `DIM=6 tests/6.4.3-nef-Lv.sh` passed.
+      - Focused file-output smoke: `./nef-6d.x tests/input/6.3-nef-N-output.txt /tmp/palp-nef-in-weight-output.txt` wrote the expected output with no stdout.
+      - `make -j2`: passed, with known warnings.
+      - `make all-dims -j2`: passed, with known warnings.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
+      - `make check`: passed.
+      - Remaining in this item: migrate the `nef.c` `-m`/`Make_WPCICY()` parser to a runtime context, then continue adding context-aware wrappers at shared-module boundaries.
 
 ## Phase 4: Modularize Algorithms
 

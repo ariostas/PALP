@@ -46,11 +46,25 @@ int main()
   require(inFILE == stdin, "PALP_Read_PP did not restore inFILE");
   require(outFILE == stdout, "PALP_Read_PP did not restore outFILE");
 
+  FILE *cws_input = std::tmpfile();
+  require(cws_input != nullptr, "tmpfile failed for CWS input");
+  std::fputs("4 1 1 1 1\n", cws_input);
+  std::rewind(cws_input);
+  ctx.in = cws_input;
+  static CWS cws;
+  static PolyPointList cws_poly;
+  require(PALP_ReadCwsPp(&ctx, &cws, &cws_poly, 1, 1) == 1,
+	  "PALP_ReadCwsPp failed");
+  require(cws.nw == 1, "unexpected CWS weight-system count");
+  require(cws_poly.n == 3, "unexpected CWS polytope dimension");
+  require(inFILE == stdin, "PALP_ReadCwsPp did not restore inFILE");
+  require(outFILE == stdout, "PALP_ReadCwsPp did not restore outFILE");
+
+  ctx.in = input;
   PALP_Print_PPL(&ctx, &poly, "adapter");
   require(inFILE == stdin, "PALP_Print_PPL did not restore inFILE");
   require(outFILE == stdout, "PALP_Print_PPL did not restore outFILE");
 
-  static CWS cws;
   cws.nw = 1;
   cws.nz = 1;
   cws.N = 3;
@@ -72,6 +86,7 @@ int main()
 	  "PALP_Print_CWS_Zinfo wrote unexpected output");
 
   std::fclose(input);
+  std::fclose(cws_input);
   std::fclose(output);
   return 0;
 }
