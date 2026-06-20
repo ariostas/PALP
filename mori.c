@@ -142,17 +142,19 @@ int main (int narg, char* fn[]){
 	//Flag.g=1;	
 	}
 
-  if(Flag.FilterFlag) {inFILE=NULL; outFILE=stdout;}
+  PALP_RuntimeContext ctx = PALP_RuntimeContextFromGlobals();
+  if(Flag.FilterFlag) {ctx.in=NULL; ctx.out=stdout;}
 
   else {
-    if (narg > ++n)  inFILE=fopen(fn[n],"r");
-    else inFILE=stdin;
+    if (narg > ++n)  ctx.in=fopen(fn[n],"r");
+    else ctx.in=stdin;
 
-    if (inFILE==NULL){printf("Input file %s not found!\n",fn[n]);exit(0);}
+    if (ctx.in==NULL){printf("Input file %s not found!\n",fn[n]);exit(0);}
 
-    if (narg > ++n) outFILE=fopen(fn[n],"w");
-    else outFILE=stdout;
+    if (narg > ++n) ctx.out=fopen(fn[n],"w");
+    else ctx.out=stdout;
   }
+  PALP_ApplyRuntimeContext(&ctx);
   
   while((Flag.D ? Read_PP(_P) : Read_CWS(CW,_P))) {
     if (!Ref_Check(_P,&V,E)){
@@ -188,4 +190,3 @@ int main (int narg, char* fn[]){
     fflush(outFILE);  }
   return 0;
 }
-

@@ -382,7 +382,19 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake --build build -j2`: passed.
       - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
       - `make check`: passed.
-      - Remaining in this item: migrate `mori.x` startup code, then move shared readers/printers from direct globals to context-aware adapters.
+    - Fifth runtime-context migration completed:
+      - Migrated `mori.c` startup file-handle setup to configure and apply a `PALP_RuntimeContext`.
+      - Kept the existing global `inFILE`/`outFILE` ABI intact for shared modules and other CLI programs.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/mori-context-smoke.o mori.c`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - Focused tests: `DIM=6 tests/7.2-mori-P.sh`, `DIM=6 tests/7.2.14-mori-D.sh`, `DIM=6 tests/7.2.5-mori-m.sh`, `DIM=6 tests/7.2.8-mori-b.sh`, `DIM=6 tests/7.2.9-mori-i.sh`, and `DIM=6 tests/7.2.11-mori-t.sh` passed or preserved known skips.
+      - `make -j2`: passed.
+      - `make all-dims -j2`: passed.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
+      - `make check`: passed.
+      - Remaining in this item: move shared readers/printers from direct globals to context-aware adapters.
 
 ## Phase 4: Modularize Algorithms
 
