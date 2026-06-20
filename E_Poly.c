@@ -1391,6 +1391,21 @@ void Make_E_Poly(FILE * outFILE, CWS * _W, PolyPointList * _CP,
   /*   ===============	End of FREE Static Allocation	===================  */
 }
 
+void PALP_Make_E_Poly(PALP_RuntimeContext *ctx, CWS *_W, PolyPointList *_CP,
+		      VertexNumList *_CV, EqList *_CE, int *_codim,
+		      Flags *_F, int *_D)
+{
+  PALP_RuntimeContext saved = PALP_RuntimeContextFromGlobals();
+  FILE *output = outFILE;
+  if(ctx != NULL) {
+    PALP_ApplyRuntimeContext(ctx);
+    output = ctx->out;
+  }
+  Make_E_Poly(output, _W, _CP, _CV, _CE, _codim, _F, _D);
+  if(ctx != NULL) *ctx = PALP_RuntimeContextFromGlobals();
+  PALP_ApplyRuntimeContext(&saved);
+}
+
 void SL2Z_Make_Poly_UTriang(PolyPointList *P);
 
 void AnalyseGorensteinCone(CWS *_CW,  PolyPointList *_P, VertexNumList *_V, 

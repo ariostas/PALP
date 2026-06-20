@@ -505,6 +505,22 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
       - `make check`: passed.
       - Remaining in this item: continue reducing direct `inFILE`/`outFILE` use inside shared modules; no active common `Coord.cc` reader/printer call sites remain outside legacy comments.
+    - Eighth shared adapter call-site migration completed:
+      - Added `PALP_Make_E_Poly()` as a context-aware wrapper around the legacy `Make_E_Poly()` entry point, preserving the old ABI.
+      - Migrated the active `nef.c` `Make_E_Poly()` call to pass the local `PALP_RuntimeContext` instead of the global `outFILE`.
+      - The wrapper applies the supplied runtime context, passes the context output handle to `Make_E_Poly()`, updates the context after the call, and restores the previous globals.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/E_Poly-context-wrapper-smoke.o E_Poly.c`: passed, with known `E_Poly.c` warnings tracked in `ISSUES.md`.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/nef-context-wrapper-smoke.o nef.c`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - Focused tests: `DIM=6 tests/6.3-nef-output.sh`, `DIM=6 tests/6.3-nef-N-output.sh`, `DIM=6 tests/6.4.13-nef-y.sh`, and `DIM=6 tests/6.4.25-nef-G.sh` passed.
+      - Focused file-output smoke: `./nef-6d.x /tmp/palp-nef-wrapper-input.txt /tmp/palp-nef-wrapper-output.txt` wrote the expected normalized output with no stdout.
+      - `make -j2`: passed, with known `E_Poly.c` warnings.
+      - `make all-dims -j2`: passed, with known `E_Poly.c` warnings.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
+      - `make check`: passed.
+      - Remaining in this item: continue adding context-aware wrappers at shared-module boundaries, then migrate caller paths one at a time.
 
 ## Phase 4: Modularize Algorithms
 

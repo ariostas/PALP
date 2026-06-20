@@ -289,7 +289,7 @@ int main(int narg, char *fn[])
 	    printf("(%s requires POLY_Dmax >= dim N + codim - 1)\n",
 		   fn[0]);
 	    exit(0);	  }
-	  Make_E_Poly(outFILE, &CW, _P, _V, _E, &codim, &F, &D[0]);	}
+	  PALP_Make_E_Poly(&ctx, &CW, _P, _V, _E, &codim, &F, &D[0]);	}
 	else{
 	  N++;
 	  Print_VP(_P, _V, VPmax, VPmin, _PS);	}       }

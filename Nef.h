@@ -115,6 +115,8 @@ void part_nef(PolyPointList *, VertexNumList *, EqList *, PartList *,
 
 void Make_E_Poly(FILE *, CWS *, PolyPointList *, VertexNumList *, EqList *,
 		 int *, Flags *, int *);
+void PALP_Make_E_Poly(PALP_RuntimeContext *, CWS *, PolyPointList *,
+		      VertexNumList *, EqList *, int *, Flags *, int *);
 
 void Mink_WPCICY(AmbiPointList * _AP_1, AmbiPointList * _AP_2,
 		 AmbiPointList * _AP);
