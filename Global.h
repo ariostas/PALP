@@ -253,11 +253,24 @@ int  Read_PP(PolyPointList *_P);
 Reads the PolyPointList input *P
 */
 
+int  PALP_Read_CWS_PP(PALP_RuntimeContext *ctx, CWS *C, PolyPointList *P);
+int  PALP_Read_CWS(PALP_RuntimeContext *ctx, CWS *C, PolyPointList *P);
+int  PALP_Read_PP(PALP_RuntimeContext *ctx, PolyPointList *P);
+
 void Print_PPL(PolyPointList *P, const char *comment);
 void Print_VL(PolyPointList *P, VertexNumList *V, const char *comment);
 void Print_EL(EqList *EL, int *n, int suppress_c, const char *comment);
 void Print_Matrix(Long Matrix[][VERT_Nmax], int n_lines, int n_columns,
 		  const char *comment);
+void PALP_Print_PPL(PALP_RuntimeContext *ctx, PolyPointList *P,
+		    const char *comment);
+void PALP_Print_VL(PALP_RuntimeContext *ctx, PolyPointList *P,
+		   VertexNumList *V, const char *comment);
+void PALP_Print_EL(PALP_RuntimeContext *ctx, EqList *EL, int *n,
+		   int suppress_c, const char *comment);
+void PALP_Print_Matrix(PALP_RuntimeContext *ctx,
+		       Long Matrix[][VERT_Nmax], int n_lines,
+		       int n_columns, const char *comment);
 /*
 Each of these routines prints a matrix in the format
 #columns #lines  *comment
@@ -274,6 +287,7 @@ resulting output can be used as input for Read_CWS_PP.
 */
 
 void Print_CWH(CWS *C, BaHo *BH);
+void PALP_Print_CWH(PALP_RuntimeContext *ctx, CWS *C, BaHo *BH);
 /*
 Writes a single line that reproduces *C (if C->nw isn't 0, i.e. if the
 input was of CWS type), information on the numbers of points and

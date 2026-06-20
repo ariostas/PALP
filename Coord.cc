@@ -32,6 +32,20 @@ static void ReadInputInt(int *value)
   if(fscanf(inFILE,"%d",value)!=1) InputError("Error in INPUT: missing integer!");
 }
 
+static PALP_RuntimeContext BeginRuntimeContext(PALP_RuntimeContext *ctx)
+{
+  PALP_RuntimeContext saved = PALP_RuntimeContextFromGlobals();
+  if(ctx != NULL) PALP_ApplyRuntimeContext(ctx);
+  return saved;
+}
+
+static void EndRuntimeContext(PALP_RuntimeContext *ctx,
+			      const PALP_RuntimeContext *saved)
+{
+  if(ctx != NULL) *ctx = PALP_RuntimeContextFromGlobals();
+  PALP_ApplyRuntimeContext(saved);
+}
+
 void Print_PPL(PolyPointList *_P, const char *comment){
   int i,j;
   if(_P->np>20){
@@ -242,6 +256,15 @@ int  Read_CWS_PP(CWS *_CW, PolyPointList *_P){
   return ReadCwsPp(_CW, _P, 1, 1);
 }
 
+extern "C" int PALP_Read_CWS_PP(PALP_RuntimeContext *ctx, CWS *_CW,
+				PolyPointList *_P)
+{
+  PALP_RuntimeContext saved = BeginRuntimeContext(ctx);
+  int result = Read_CWS_PP(_CW, _P);
+  EndRuntimeContext(ctx, &saved);
+  return result;
+}
+
 int  Read_PP(PolyPointList *_P)
 {    int i, j, FilterFlag=(inFILE==NULL);
      int IN[AMBI_Dmax*(AMBI_Dmax+1)];
@@ -289,6 +312,14 @@ int  Read_PP(PolyPointList *_P)
      if(i>2){puts("Error: expected input format is matrix of polytope points!");exit(0);}
      if(FilterFlag) inFILE=NULL;
      return 1;
+}
+
+extern "C" int PALP_Read_PP(PALP_RuntimeContext *ctx, PolyPointList *_P)
+{
+  PALP_RuntimeContext saved = BeginRuntimeContext(ctx);
+  int result = Read_PP(_P);
+  EndRuntimeContext(ctx, &saved);
+  return result;
 }
 
 int  Read_CWS(CWS *_CW, PolyPointList *_P)
@@ -366,6 +397,15 @@ MAP: for(i=0;i<_CW->nw;i++)			/* check consistency of CWS */
      return 1;
 }
 
+extern "C" int PALP_Read_CWS(PALP_RuntimeContext *ctx, CWS *_CW,
+			     PolyPointList *_P)
+{
+  PALP_RuntimeContext saved = BeginRuntimeContext(ctx);
+  int result = Read_CWS(_CW, _P);
+  EndRuntimeContext(ctx, &saved);
+  return result;
+}
+
 void Print_CWH(CWS *_W, BaHo *_BH){
   int i, j;
   for(i=0;i<_W->nw;i++)     {	
@@ -389,6 +429,46 @@ void Print_CWH(CWS *_W, BaHo *_BH){
     fprintf(outFILE,"M:%d %d F:%d",_BH->mp,_BH->mv,_BH->nv);
   else fprintf(outFILE,"V:%d F:%d",_BH->mv,_BH->nv);
   fprintf(outFILE,"\n");
+}
+
+extern "C" void PALP_Print_PPL(PALP_RuntimeContext *ctx, PolyPointList *_P,
+			       const char *comment)
+{
+  PALP_RuntimeContext saved = BeginRuntimeContext(ctx);
+  Print_PPL(_P, comment);
+  EndRuntimeContext(ctx, &saved);
+}
+
+extern "C" void PALP_Print_VL(PALP_RuntimeContext *ctx, PolyPointList *_P,
+			      VertexNumList *_V, const char *comment)
+{
+  PALP_RuntimeContext saved = BeginRuntimeContext(ctx);
+  Print_VL(_P, _V, comment);
+  EndRuntimeContext(ctx, &saved);
+}
+
+extern "C" void PALP_Print_EL(PALP_RuntimeContext *ctx, EqList *_E,
+			      int *n, int suppress_c, const char *comment)
+{
+  PALP_RuntimeContext saved = BeginRuntimeContext(ctx);
+  Print_EL(_E, n, suppress_c, comment);
+  EndRuntimeContext(ctx, &saved);
+}
+
+extern "C" void PALP_Print_Matrix(PALP_RuntimeContext *ctx,
+				  Long Matrix[][VERT_Nmax], int n_lines,
+				  int n_columns, const char *comment)
+{
+  PALP_RuntimeContext saved = BeginRuntimeContext(ctx);
+  Print_Matrix(Matrix, n_lines, n_columns, comment);
+  EndRuntimeContext(ctx, &saved);
+}
+
+extern "C" void PALP_Print_CWH(PALP_RuntimeContext *ctx, CWS *_W, BaHo *_BH)
+{
+  PALP_RuntimeContext saved = BeginRuntimeContext(ctx);
+  Print_CWH(_W, _BH);
+  EndRuntimeContext(ctx, &saved);
 }
 
 /*  ==========  	      END of I/O functions		==========  */

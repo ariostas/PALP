@@ -71,6 +71,14 @@ if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
         target_include_directories(rat-wrapper-test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
         add_test(NAME rat-wrapper-test COMMAND rat-wrapper-test)
 
+        add_executable(runtime-context-adapter-test
+            tests/runtime-context-adapter-test.cc
+            Coord.cc
+            Rat.cc
+        )
+        target_include_directories(runtime-context-adapter-test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+        add_test(NAME runtime-context-adapter-test COMMAND runtime-context-adapter-test)
+
         function(add_palp_dimension_targets dim)
             add_library(objects-${dim}d STATIC ${SOURCES})
             target_compile_definitions(objects-${dim}d PUBLIC POLY_Dmax=${dim})

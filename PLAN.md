@@ -394,7 +394,22 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake --build build -j2`: passed.
       - `ctest --test-dir build --output-on-failure`: passed, 197/197 tests.
       - `make check`: passed.
-      - Remaining in this item: move shared readers/printers from direct globals to context-aware adapters.
+    - First shared reader/printer adapter pass completed:
+      - Added context-aware adapters for common `Coord.cc` readers: `PALP_Read_CWS_PP()`, `PALP_Read_CWS()`, and `PALP_Read_PP()`.
+      - Added context-aware adapters for common `Coord.cc` printers: `PALP_Print_PPL()`, `PALP_Print_VL()`, `PALP_Print_EL()`, `PALP_Print_Matrix()`, and `PALP_Print_CWH()`.
+      - The adapters temporarily apply a supplied `PALP_RuntimeContext`, call the legacy global-based function, copy any `inFILE`/`outFILE` mutations back into the context, and restore the previous globals.
+      - Added `tests/runtime-context-adapter-test.cc`, wired into both `make check` and CTest, to verify context-based `Read_PP()`/`Print_PPL()` usage and global restoration.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make check-runtime-context-adapter`: passed.
+      - `make check-rat-wrapper`: passed.
+      - Focused tests: `DIM=6 tests/2.1-polytope-input.sh` and `DIM=6 tests/4.2.6-cws-N.sh` passed.
+      - `make -j2`: passed, with known warnings.
+      - `make all-dims -j2`: passed, with known warnings.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
+      - `make check`: passed.
+      - Remaining in this item: migrate selected shared reader/printer call sites to the new adapters, then continue reducing direct `inFILE`/`outFILE` use inside shared modules.
 
 ## Phase 4: Modularize Algorithms
 

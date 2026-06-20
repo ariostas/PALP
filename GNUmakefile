@@ -41,7 +41,7 @@ all-dims: all
 clean:	;	rm -f *.o
 
 .PHONY: cleanall
-cleanall: ;	rm -f *.o *.x tests/rat-wrapper-test.x palp_* core
+cleanall: ;	rm -f *.o *.x tests/rat-wrapper-test.x tests/runtime-context-adapter-test.x palp_* core
 
 define PROG_DIM_template =
 #
@@ -174,8 +174,15 @@ check-rat-wrapper: tests/rat-wrapper-test.x
 tests/rat-wrapper-test.x: tests/rat-wrapper-test.cc Rat.cc Rat.h Global.h
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -I. -o $@ tests/rat-wrapper-test.cc Rat.cc
 
+.PHONY: check-runtime-context-adapter
+check-runtime-context-adapter: tests/runtime-context-adapter-test.x
+	./tests/runtime-context-adapter-test.x
+
+tests/runtime-context-adapter-test.x: tests/runtime-context-adapter-test.cc Coord.cc Rat.cc Rat.h Global.h
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -I. -o $@ tests/runtime-context-adapter-test.cc Coord.cc Rat.cc
+
 .PHONY: check
-check: check-rat-wrapper $(foreach p,$(PROGRAMS),$(foreach d,$(DIMENSIONS),$(p)-$(d)d.x))
+check: check-rat-wrapper check-runtime-context-adapter $(foreach p,$(PROGRAMS),$(foreach d,$(DIMENSIONS),$(p)-$(d)d.x))
 	$(foreach t,$(TESTS),$(foreach d,$(DIMENSIONS),\
 	$(newline)@DIM=$(d) $(t)\
 	))
