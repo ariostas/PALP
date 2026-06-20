@@ -409,7 +409,20 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `cmake --build build -j2`: passed.
       - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
       - `make check`: passed.
-      - Remaining in this item: migrate selected shared reader/printer call sites to the new adapters, then continue reducing direct `inFILE`/`outFILE` use inside shared modules.
+    - First shared adapter call-site migration completed:
+      - Migrated `poly.c` common `Read_CWS_PP()`, `Print_CWH()`, `Print_PPL()`, `Print_VL()`, `Print_EL()`, and `Print_Matrix()` call sites to the `PALP_*` runtime-context adapters.
+      - Left direct diagnostics and non-`Coord.cc` I/O calls on legacy globals for later, keeping this slice behavior-preserving and scoped.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/poly-adapter-callsite-smoke.o poly.c`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make check-runtime-context-adapter`: passed.
+      - Focused tests: `DIM=6 tests/2.1-polytope-input.sh`, `DIM=6 tests/3.2.7-poly-e.sh`, `DIM=6 tests/3.2.11-poly-l.sh`, `DIM=6 tests/3.2.23-poly-P.sh`, and `DIM=6 tests/3.2.24-poly-Z.sh` passed.
+      - `make -j2`: passed.
+      - `make all-dims -j2`: passed.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
+      - `make check`: passed.
+      - Remaining in this item: migrate the same common reader/printer adapters through `class.c`, `mori.c`, and selected `cws.c`/`nef.c` call sites, then continue reducing direct `inFILE`/`outFILE` use inside shared modules.
 
 ## Phase 4: Modularize Algorithms
 

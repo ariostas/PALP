@@ -167,11 +167,11 @@ int main (int narg, char* fn[]){
     if (FI==NULL) {puts("Unable to allocate space for FaceInfo FI"); exit(0);}}
   if(Q) Initialize_C5S(&C5S, POLY_Dmax); // Initialize statistics
   if(Einstein) Einstein_Metric(CW,_P,&V,E);
-  while(lg ? Read_W_PP(&W,_P) : Read_CWS_PP(CW,_P)) {
+  while(lg ? Read_W_PP(&W,_P) : PALP_Read_CWS_PP(&ctx,CW,_P)) {
     if(q||Q) {
       FaceInfo FI;
       if(!QuickAnalysis(_P, &BH, &FI)) {if(Q) C5S.n_nonIP++; continue;} //non-IP
-      Print_CWH(CW, &BH);
+      PALP_Print_CWH(&ctx, CW, &BH);
       if(Q) Update_C5S(&BH, FI.nf, CW->W[0], &C5S);
       continue;}
     if(T) {
@@ -213,18 +213,18 @@ int main (int narg, char* fn[]){
       if(lg) {
 	if ((Tr=Trans_Check(W))) LGO_VaHo(&W,&VH);
 	Write_WH(&W, &BH, &VH, R, Tr, _P, &V, E); }
-      else Print_CWH(CW, &BH); }
+      else PALP_Print_CWH(&ctx, CW, &BH); }
     if(s&&CW->nw) if(!Span_Check(E,&(CW->B),&_P->n))
       fprintf(outFILE,"No Span\n");
     if(I && !IP) fprintf(outFILE,"No IP\n");
-    if(p) Print_PPL(_P,"Points of P");
-    if(v) Print_VL(_P, &V, "Vertices of P");
-    if(e) Print_EL(E, &_P->n, R,
+    if(p) PALP_Print_PPL(&ctx, _P,"Points of P");
+    if(v) PALP_Print_VL(&ctx, _P, &V, "Vertices of P");
+    if(e) PALP_Print_EL(&ctx, E, &_P->n, R,
           (R ? "Vertices of P-dual <-> Equations of P" : "Equations of P"));
     if(i){Make_Incidence(_P,&V,E,FI); Print_FaceInfo(_P->n,FI);}
-    if(m) Print_Matrix(*PM, E->ne, V.nv,
+    if(m) PALP_Print_Matrix(&ctx, *PM, E->ne, V.nv,
 		       "Pairing matrix of vertices and equations of P");
-    if(d&&(_DP->np>E->ne)) Print_PPL(_DP, "Points of P-dual");
+    if(d&&(_DP->np>E->ne)) PALP_Print_PPL(&ctx, _DP, "Points of P-dual");
     if(S||N||t){
       int SymNum /*, VPMSymNum*/; Long NF[POLY_Dmax][VERT_Nmax]; 
       VPermList *VP = (VPermList*) malloc(sizeof(VPermList)); 
@@ -245,11 +245,11 @@ int main (int narg, char* fn[]){
       Long VM[POLY_Dmax][VERT_Nmax];
       for (j=0; j<E->ne; j++){
 	Make_Facet(_P, &V, E, j, VM, &cc);
-	Print_Matrix(VM,_P->n-1,cc,"");}  }
+	PALP_Print_Matrix(&ctx, VM,_P->n-1,cc,"");}  }
     if(A) {
       AffineNormalForm ANF;
       Make_ANF(_P,&V,E,ANF); 
-      Print_Matrix(ANF, _P->n, V.nv,"Affine normal form");}
+      PALP_Print_Matrix(&ctx, ANF, _P->n, V.nv,"Affine normal form");}
     fflush(outFILE);     }
   if(Q) Print_C5S(&C5S);
   return 0;
