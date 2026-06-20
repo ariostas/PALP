@@ -296,7 +296,7 @@ int main(int narg, char *fn[])
       else{
 	if ((F.Rv == 1) || ((F.V == 1)&&(F.N == 1))){
 	  Find_Equations(_P,_V,_E);
-	  Print_VL(_P, _V, "Vertices of input polytope:");      }    }}
+	  PALP_Print_VL(&ctx, _P, _V, "Vertices of input polytope:");      }    }}
     if (F.VP){
       assert(VPmax < POINT_Nmax); assert(VPmax >= VPmin); 
       Print_Pstat(_PS, N, VPmax, VPmin);    }
