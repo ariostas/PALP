@@ -474,18 +474,22 @@ void Init_moon_Weights(int narg, char* fn[]){
 int  VP_2_CWS(Long *V[], int d, int v, CWS *W);
 void Npoly2cws(int narg, char* fn[])
 {    int n=2; CWS W; EqList E; VertexNumList V; Long *X[VERT_Nmax]; FILE *OF;
+     PALP_RuntimeContext ctx = PALP_RuntimeContextFromGlobals();
      PolyPointList *P=(PolyPointList *)malloc(sizeof(PolyPointList)); 
-     assert(P!=NULL); assert(!strcmp(fn[1],"-N")); inFILE=stdin;outFILE=stdout;
-     if(narg>2) {if(fn[2][0]=='-'){assert(fn[2][1]=='f');inFILE=NULL;} else
-     {	inFILE=fopen(fn[2],"r"); assert(NULL!=inFILE);
-        if(narg>3) {outFILE=fopen(fn[3],"w"); assert(NULL!=outFILE);}
-     }}	OF=outFILE; while(Read_CWS_PP(&W,P))
+     assert(P!=NULL); assert(!strcmp(fn[1],"-N")); ctx.in=stdin;ctx.out=stdout;
+     if(narg>2) {if(fn[2][0]=='-'){assert(fn[2][1]=='f');ctx.in=NULL;} else
+     {	ctx.in=fopen(fn[2],"r"); assert(NULL!=ctx.in);
+        if(narg>3) {ctx.out=fopen(fn[3],"w"); assert(NULL!=ctx.out);}
+     }}	PALP_ApplyRuntimeContext(&ctx);
+     OF=ctx.out;
+     while(PALP_Read_CWS_PP(&ctx, &W,P))
      {  if(W.N) Die("Only PPL-input in Npoly2cws!");
 	if(!IP_Check(P,&V,&E)) Die("Not IP!");
 	Sort_VL(&V);
 	for(n=0;n<V.nv;n++) X[n]=P->x[V.v[n]];
 	if(VP_2_CWS(X,P->n,V.nv,&W)) {Print_CWS(&W);fprintf(outFILE,"\n");}
-	else {outFILE=stderr; Print_PPL(P,"CWS not found"); outFILE=OF;}
+	else {ctx.out=stderr; PALP_Print_PPL(&ctx, P,"CWS not found");
+	      ctx.out=OF; PALP_ApplyRuntimeContext(&ctx);}
      }
 }
 
