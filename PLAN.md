@@ -668,6 +668,22 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
       - `make check`: passed.
       - Remaining in this item: direct output calls remain in broad legacy shared-module internals and help/error paths; continue migrating active CLI presentation paths one at a time.
+    - Eighteenth runtime-context output migration completed:
+      - Migrated the active `poly.c` top-level `Input not reflexive!`, `No Span`, and `No IP` diagnostics from direct `outFILE` writes to the local `PALP_RuntimeContext`.
+      - Migrated the per-input flush in `poly.c` from `outFILE` to `ctx.out`.
+      - Left help text, allocation errors, and deep shared-module output paths unchanged for later targeted passes.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/poly-top-output-context-smoke.o poly.c`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - Focused filter-mode diagnostics after rebuilding `poly-6d.x`: `printf '5 1 1 3\n' | ./poly-6d.x -fI` printed `No IP`, `printf '5 1 2 2\n' | ./poly-6d.x -fs` printed `No Span`, and `printf '5 1 1 3\n' | ./poly-6d.x -fD` printed `Input not reflexive!`.
+      - Focused file-output smokes: `./poly-6d.x -I <(printf '5 1 1 3\n') /tmp/palp-poly-no-ip-output.txt`, `./poly-6d.x -s <(printf '5 1 2 2\n') /tmp/palp-poly-no-span-output.txt`, and `./poly-6d.x -D <(printf '5 1 1 3\n') /tmp/palp-poly-not-reflexive-output.txt` wrote the expected diagnostics to their output files with no stdout.
+      - Focused regression tests: `DIM=6 tests/2.1-polytope-input.sh` and `DIM=6 tests/2.2-error-handling.sh` passed.
+      - `make -j2`: passed.
+      - `make all-dims -j2`: passed; it emitted a stale jobserver FIFO warning from concurrent make invocations but completed successfully.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
+      - `make check`: passed.
+      - Remaining in this item: direct output calls remain in help/error paths, `poly.c` LG/statistics paths, and broad legacy shared-module internals.
 
 ## Phase 4: Modularize Algorithms
 

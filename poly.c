@@ -189,7 +189,7 @@ int main (int narg, char* fn[]){
 	V.nv=_P->np;      }
       else R=EL_to_PPL(E, _DP, &_P->n);}
     else if (o&&!IP) continue;
-    if (D&&!R) {fprintf(outFILE,"Input not reflexive!\n"); continue;}
+    if (D&&!R) {fprintf(ctx.out,"Input not reflexive!\n"); continue;}
     if (r&&!R) continue;
     Sort_VL(&V);
     Make_VEPM(_P,&V,E,*PM);
@@ -215,8 +215,8 @@ int main (int narg, char* fn[]){
 	Write_WH(&W, &BH, &VH, R, Tr, _P, &V, E); }
       else PALP_Print_CWH(&ctx, CW, &BH); }
     if(s&&CW->nw) if(!Span_Check(E,&(CW->B),&_P->n))
-      fprintf(outFILE,"No Span\n");
-    if(I && !IP) fprintf(outFILE,"No IP\n");
+      fprintf(ctx.out,"No Span\n");
+    if(I && !IP) fprintf(ctx.out,"No IP\n");
     if(p) PALP_Print_PPL(&ctx, _P,"Points of P");
     if(v) PALP_Print_VL(&ctx, _P, &V, "Vertices of P");
     if(e) PALP_Print_EL(&ctx, E, &_P->n, R,
@@ -252,7 +252,7 @@ int main (int narg, char* fn[]){
       AffineNormalForm ANF;
       Make_ANF(_P,&V,E,ANF); 
       PALP_Print_Matrix(&ctx, ANF, _P->n, V.nv,"Affine normal form");}
-    fflush(outFILE);     }
+    fflush(ctx.out);     }
   if(Q) Print_C5S(&C5S);
   return 0;
 }
