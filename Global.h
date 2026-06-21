@@ -419,6 +419,8 @@ the i'th coordinate as B[i] / *N) and the lattice volume of *P is returned.
 */
 
 void IPs_degD(PolyPointList *P, VertexNumList *V, EqList *E, int l);
+void PALP_IPs_degD(PALP_RuntimeContext *ctx, PolyPointList *P,
+                   VertexNumList *V, EqList *E, int l);
 /*
  *P is interpreted as the origin and the first level of a Gorenstein cone. 
 The points of the cone up to level l are computed and displayed together with 

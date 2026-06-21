@@ -238,9 +238,10 @@ int main (int narg, char* fn[]){
 	PALP_Print_VL(&ctx, _P, &V, divi);}}
     if(B) {
       Long vB[POLY_Dmax],Z; int j;
-      Long vol=LatVol_Barycent(_P,&V,vB,&Z); printf("vol=%ld, baricent=(",vol); 
-      for(j=0;j<_P->n;j++) printf("%s%ld",j?",":"",vB[j]);
-      printf(")/%ld\n",Z); if(CD) IPs_degD(_P,&V,E,CD);}
+      Long vol=LatVol_Barycent(_P,&V,vB,&Z);
+      fprintf(ctx.out,"vol=%ld, baricent=(",vol);
+      for(j=0;j<_P->n;j++) fprintf(ctx.out,"%s%ld",j?",":"",vB[j]);
+      fprintf(ctx.out,")/%ld\n",Z); if(CD) PALP_IPs_degD(&ctx,_P,&V,E,CD);}
     if(F) { 
       int j, cc;
       Long VM[POLY_Dmax][VERT_Nmax];

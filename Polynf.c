@@ -2471,6 +2471,39 @@ void IPs_degD(PolyPointList *P,VertexNumList *V,EqList *E,int g){
   free(gP); 
 }
 
+void PALP_IPs_degD(PALP_RuntimeContext *ctx, PolyPointList *P,
+		   VertexNumList *V, EqList *E, int g)
+{
+  FILE *output = (ctx != NULL) ? ctx->out : outFILE;
+  PolyPointList *gP = (PolyPointList *) malloc(sizeof(PolyPointList));
+  int e, j=0;
+  for(e=0; e<E->ne; e++) if(E->e[e].c==0) j++;
+  if(j<P->n) {
+    fprintf(output,
+	    "-B#: IPs at degree D is only implemented for Gorenstein cones!\n");
+    exit(0);
+  }
+  assert(gP!=NULL);
+  gP->n=P->n;
+  gP->np=0;
+  Make_Dilat_Poly(P,V,E,g,gP);
+  if(POLY_Dmax*VERT_Nmax<gP->np) {
+    fprintf(output, "increase dim of IP\n");
+    exit(0);
+  }
+  fprintf(output, "IPs:\n");
+  for(j=0; j<gP->np; j++) {
+    int i, cd=0;
+    for(e=0; e<E->ne; e++) if(E->e[e].c==0)
+      if(0==Eval_Eq_on_V(&E->e[e],gP->x[j],P->n)) cd++;
+    if((cd==0)||(E->ne==P->n+1)) {
+      for(i=0; i<P->n; i++) fprintf(output, " %ld", gP->x[j][i]);
+      fprintf(output, "  cd=%d\n", cd);
+    }
+  }
+  free(gP);
+}
+
 
 int  Check_ANF_Form(Long VM[][VERT_Nmax], int d, int v)
 {    int i, r=1, c=0; Long G[POLY_Dmax];

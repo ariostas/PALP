@@ -651,6 +651,23 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
       - `make check`: passed.
       - Remaining in this item: broad legacy shared-module internals still contain direct output calls, but active top-level CLI paths now cover more output surfaces with explicit runtime contexts.
+    - Seventeenth runtime-context output migration completed:
+      - Added `PALP_IPs_degD()` as a context-aware variant of the legacy `IPs_degD()` degree-point printer.
+      - Migrated the active `poly.c` `-B`/`-B#` barycenter and degree-point output to write through the local `PALP_RuntimeContext`.
+      - Left the legacy `IPs_degD()` body unchanged for existing callers.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/Polynf-ips-context-smoke.o Polynf.c`: passed, with known `Polynf.c` warnings tracked in `ISSUES.md`.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/poly-b-context-smoke.o poly.c`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - Focused test after rebuilding `poly-6d.x`: `DIM=6 tests/3.2.27-poly-B.sh` passed.
+      - Focused file-output smoke: `./poly-6d.x -B2 tests/input/3.2.27-poly-B.txt /tmp/palp-poly-b-output.txt` wrote the expected output file with no stdout.
+      - Focused regression test: `DIM=6 tests/2.1-polytope-input.sh` passed.
+      - `make -j2`: passed, with known warnings.
+      - `make all-dims -j2`: passed, with known warnings.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
+      - `make check`: passed.
+      - Remaining in this item: direct output calls remain in broad legacy shared-module internals and help/error paths; continue migrating active CLI presentation paths one at a time.
 
 ## Phase 4: Modularize Algorithms
 
