@@ -634,6 +634,23 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
       - `make check`: passed.
       - Remaining in this item: active CLI paths mostly use runtime contexts at their top-level boundaries; remaining work is concentrated in legacy shared-module internals and direct `puts()`/`printf()` presentation paths.
+    - Sixteenth runtime-context output migration completed:
+      - Added `PALP_Print_FaceInfo()` as a context-aware FaceInfo printer that writes the legacy incidence text to the supplied output stream.
+      - Left the original `Print_FaceInfo()` and `Print_INCI()` behavior unchanged for legacy/debug callers.
+      - Migrated the active `poly.c` `-i` path to pass the local `PALP_RuntimeContext`.
+      - `g++ -std=c++17 -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/Vertex-faceinfo-context-smoke.o Vertex.cc`: passed, with known `Vertex.cc` warnings tracked in `ISSUES.md`.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/poly-faceinfo-context-smoke.o poly.c`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - Focused test after rebuilding `poly-6d.x`: `printf '5 1 1 1 1 1\n' | ./poly-6d.x -fi` printed the expected incidence table.
+      - Focused file-output smoke: `./poly-6d.x -i /tmp/palp-poly-g-input.txt /tmp/palp-poly-faceinfo-output.txt` wrote the expected incidence table with no stdout.
+      - Focused regression tests: `DIM=6 tests/3.2.7-poly-e.sh` and `DIM=6 tests/2.1-polytope-input.sh` passed.
+      - `make -j2`: passed, with known warnings.
+      - `make all-dims -j2`: passed, with known warnings.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
+      - `make check`: passed.
+      - Remaining in this item: broad legacy shared-module internals still contain direct output calls, but active top-level CLI paths now cover more output surfaces with explicit runtime contexts.
 
 ## Phase 4: Modularize Algorithms
 

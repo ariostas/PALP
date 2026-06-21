@@ -653,6 +653,7 @@ Creates the structure FaceInfo *FI from *P, *VNL and *EL.
 */
 
 void Print_FaceInfo(int n, FaceInfo *FI);
+void PALP_Print_FaceInfo(PALP_RuntimeContext *ctx, int n, FaceInfo *FI);
 /*
 Displays the information contained in the FaceInfo *FI.
 */

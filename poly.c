@@ -221,7 +221,7 @@ int main (int narg, char* fn[]){
     if(v) PALP_Print_VL(&ctx, _P, &V, "Vertices of P");
     if(e) PALP_Print_EL(&ctx, E, &_P->n, R,
           (R ? "Vertices of P-dual <-> Equations of P" : "Equations of P"));
-    if(i){Make_Incidence(_P,&V,E,FI); Print_FaceInfo(_P->n,FI);}
+    if(i){Make_Incidence(_P,&V,E,FI); PALP_Print_FaceInfo(&ctx, _P->n, FI);}
     if(m) PALP_Print_Matrix(&ctx, *PM, E->ne, V.nv,
 		       "Pairing matrix of vertices and equations of P");
     if(d&&(_DP->np>E->ne)) PALP_Print_PPL(&ctx, _DP, "Points of P-dual");

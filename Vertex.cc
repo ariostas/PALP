@@ -101,6 +101,48 @@ void Print_FaceInfo(int M,FaceInfo *_I){
     puts("");     }
 }
 
+static int FPrint_INCI(FILE *out, INCI X) {
+  int i=0;
+  while(!INCI_EQ_0(X)) {
+    fprintf(out, "%d", (int) INCI_M2(X));
+    X=INCI_D2(X);
+    i++;
+  }
+  return i;
+}
+
+void PALP_Print_FaceInfo(PALP_RuntimeContext *ctx, int M, FaceInfo *_I)
+{
+  int i, j, k, l;
+  FILE *output = (ctx != NULL) ? ctx->out : outFILE;
+  M--;
+  fprintf(output, "Incidences as binary numbers [F-vector=(%d", _I->nf[0]);
+  for(i=1; i<=M; i++) fprintf(output, " %d", _I->nf[i]);
+  fprintf(output, ")]:\n");
+  fprintf(output,
+	  "v[d][i]: sum_j Incidence(i'th dim-d-face, j-th vertex) x 2^j\n");
+  for(i=0; i<=M; i++) {
+    fprintf(output, "v[%d]: ", i);
+    for(j=0; j<_I->nf[i]; j++) {
+      k=FPrint_INCI(output, _I->v[i][j]);
+      for(l=k; l<_I->nf[0]; l++) fprintf(output, "0");
+      fprintf(output, " ");
+    }
+    fprintf(output, "\n");
+  }
+  fprintf(output,
+	  "f[d][i]: sum_j Incidence(i'th dim-d-face, j-th facet) x 2^j\n");
+  for(i=0; i<=M; i++) {
+    fprintf(output, "f[%d]: ", i);
+    for(j=0; j<_I->nf[i]; j++) {
+      k=FPrint_INCI(output, _I->f[i][j]);
+      for(l=k; l<_I->nf[M]; l++) fprintf(output, "0");
+      fprintf(output, " ");
+    }
+    fprintf(output, "\n");
+  }
+}
+
 extern "C" void Make_CD2Faces(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 		    FaceInfo *_I);
 
