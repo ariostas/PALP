@@ -587,6 +587,22 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
       - `make check`: passed.
       - Remaining in this item: continue adding context-aware wrappers at shared-module boundaries; `nef.c` input dispatch is now context-backed.
+    - Thirteenth runtime-context output migration completed:
+      - Added `PALP_AnalyseGorensteinCone()` as a context-aware wrapper around the legacy `AnalyseGorensteinCone()` entry point.
+      - Migrated the active `nef.c` `-G` path to pass the local `PALP_RuntimeContext`.
+      - Kept the legacy `AnalyseGorensteinCone()` body unchanged for this slice.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/E_Poly-gorenstein-context-smoke.o E_Poly.c`: passed, with known `E_Poly.c` warnings tracked in `ISSUES.md`.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/nef-gorenstein-context-smoke.o nef.c`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - Focused test after rebuilding `nef-6d.x`: `DIM=6 tests/6.4.25-nef-G.sh` passed.
+      - Focused file-output smoke: `./nef-6d.x -G tests/input/6.4.25-nef-G.1.txt /tmp/palp-nef-gorenstein-output.txt` wrote the expected output file; it also preserved the pre-existing blank stdout line from `AnalyseGorensteinCone()`'s direct `puts("")`.
+      - `make -j2`: passed, with known warnings.
+      - `make all-dims -j2`: passed, with known warnings.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
+      - `make check`: passed.
+      - Remaining in this item: continue adding context-aware wrappers at shared-module boundaries.
 
 ## Phase 4: Modularize Algorithms
 

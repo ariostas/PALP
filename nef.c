@@ -268,7 +268,7 @@ int main(int narg, char *fn[])
     PALP_ApplyRuntimeContext(&ctx);
     while (IN_WEIGHT(&ctx, &W, &CW, D, _P, &F, codim)) {
       /* _P is the M-lattice polytope */
-      if (F.G) AnalyseGorensteinCone(&CW,_P,_V,_E,&codim,&F);
+      if (F.G) PALP_AnalyseGorensteinCone(&ctx,&CW,_P,_V,_E,&codim,&F);
       else if (Ref_Check(_P, _V, _E)){
 	int nv=_V->nv, ne=_E->ne;
 	PairMat PM;

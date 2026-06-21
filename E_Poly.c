@@ -1554,3 +1554,14 @@ void AnalyseGorensteinCone(CWS *_CW,  PolyPointList *_P, VertexNumList *_V,
       Print_VL(_P, _V, "Vertices of input polytope:");}
   free(_P_D); free(_E_D); free(_V_D); free(_new_E_D);
 }
+
+void PALP_AnalyseGorensteinCone(PALP_RuntimeContext *ctx, CWS *_CW,
+				PolyPointList *_P, VertexNumList *_V,
+				EqList *_E, int *_codim, Flags *_F)
+{
+  PALP_RuntimeContext saved = PALP_RuntimeContextFromGlobals();
+  if(ctx != NULL) PALP_ApplyRuntimeContext(ctx);
+  AnalyseGorensteinCone(_CW, _P, _V, _E, _codim, _F);
+  if(ctx != NULL) *ctx = PALP_RuntimeContextFromGlobals();
+  PALP_ApplyRuntimeContext(&saved);
+}
