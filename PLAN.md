@@ -619,6 +619,21 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
       - `make check`: passed.
       - Remaining in this item: continue adding context-aware wrappers at shared-module boundaries and then decide which legacy direct `puts()`/`printf()` output paths should be converted without changing CLI text.
+    - Fifteenth runtime-context output migration completed:
+      - Migrated the remaining active `poly.c` `-G` divisibility vertex-list output from direct `Print_VL()` to `PALP_Print_VL()` with the local `PALP_RuntimeContext`.
+      - Kept the legacy divisibility computation and output text unchanged.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/poly-print-vl-context-smoke.o poly.c`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - Focused test after rebuilding `poly-6d.x`: `printf '5 1 1 1 1 1\n' | ./poly-6d.x -fG` printed the expected `divisible by factor=5` vertex list.
+      - Focused file-output smoke: `./poly-6d.x -G /tmp/palp-poly-g-input.txt /tmp/palp-poly-g-output.txt` wrote the expected output file with no stdout.
+      - Focused regression tests: `DIM=6 tests/3.2.23-poly-P.sh`, `DIM=6 tests/3.2.24-poly-Z.sh`, and `DIM=6 tests/2.1-polytope-input.sh` passed.
+      - `make -j2`: passed.
+      - `make all-dims -j2`: passed.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
+      - `make check`: passed.
+      - Remaining in this item: active CLI paths mostly use runtime contexts at their top-level boundaries; remaining work is concentrated in legacy shared-module internals and direct `puts()`/`printf()` presentation paths.
 
 ## Phase 4: Modularize Algorithms
 

@@ -234,7 +234,8 @@ int main (int narg, char* fn[]){
     if(R&&(PS||VS||CD)) IP_Simplices(_DP, (!D)*E->ne, PS*ZS, VS*ZS, CD);
     if(G) {
       char divi[99]; Long g=Divisibility_Index(_P,&V); 
-      if(g>1){sprintf(divi,"divisible by factor=%ld",g); Print_VL(_P,&V,divi);}}
+      if(g>1){sprintf(divi,"divisible by factor=%ld",g);
+	PALP_Print_VL(&ctx, _P, &V, divi);}}
     if(B) {
       Long vB[POLY_Dmax],Z; int j;
       Long vol=LatVol_Barycent(_P,&V,vB,&Z); printf("vol=%ld, baricent=(",vol); 
