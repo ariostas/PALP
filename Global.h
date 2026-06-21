@@ -317,6 +317,7 @@ As an example, the complete output for the quintic threefold reads
 void Initialize_C5S(C5stats *_C5S, int n);
 void Update_C5S(BaHo *_BH, int *nf, Long *W, C5stats *_C5S);
 void Print_C5S(C5stats *_C5S);
+void PALP_Print_C5S(PALP_RuntimeContext *ctx, C5stats *_C5S);
 /*
 Routines for handling the structure C5stats
 */

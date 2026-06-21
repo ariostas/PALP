@@ -253,6 +253,6 @@ int main (int narg, char* fn[]){
       Make_ANF(_P,&V,E,ANF); 
       PALP_Print_Matrix(&ctx, ANF, _P->n, V.nv,"Affine normal form");}
     fflush(ctx.out);     }
-  if(Q) Print_C5S(&C5S);
+  if(Q) PALP_Print_C5S(&ctx, &C5S);
   return 0;
 }

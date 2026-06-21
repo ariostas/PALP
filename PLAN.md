@@ -684,6 +684,25 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
       - `make check`: passed.
       - Remaining in this item: direct output calls remain in help/error paths, `poly.c` LG/statistics paths, and broad legacy shared-module internals.
+    - Nineteenth runtime-context output migration completed:
+      - Added `PALP_Print_C5S()` as a context-aware variant of the legacy 5D classification statistics printer.
+      - Migrated the active `poly.c` `-Q` final statistics output to write through the local `PALP_RuntimeContext`.
+      - Left the legacy `Print_C5S()` body unchanged for existing/debug callers.
+      - Extended `tests/runtime-context-adapter-test.cc` to verify `PALP_Print_C5S()` writes to the supplied output stream without changing legacy globals.
+      - `g++ -std=c++17 -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/Coord-c5s-context-smoke.o Coord.cc`: passed.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/poly-c5s-context-smoke.o poly.c`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - `make check-runtime-context-adapter`: passed.
+      - Focused `-Q` stdout smoke after rebuilding `poly-6d.x`: `printf '6 1 1 1 1 1 1\n5 1 1 1 1 1\n' | ./poly-6d.x -fQ` printed the expected per-input Hodge summaries and final statistics.
+      - Focused `-Q` file-output smoke: `./poly-6d.x -Q <(printf '6 1 1 1 1 1 1\n5 1 1 1 1 1\n') /tmp/palp-poly-q-output.txt` wrote the expected statistics to the output file with no stdout.
+      - Focused regression tests: `DIM=6 tests/2.1-polytope-input.sh` and `DIM=6 tests/3.2.25-poly-numbers.sh` passed.
+      - `make -j2`: passed, with known warnings.
+      - `make all-dims -j2`: passed, with known warnings.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
+      - `make check`: passed.
+      - Remaining in this item: direct output calls remain in help/error paths, `poly.c` LG mode, and broad legacy shared-module internals.
 
 ## Phase 4: Modularize Algorithms
 

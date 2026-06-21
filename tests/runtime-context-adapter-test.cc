@@ -76,14 +76,45 @@ int main()
   require(inFILE == stdin, "PALP_Print_CWS_Zinfo did not restore inFILE");
   require(outFILE == stdout, "PALP_Print_CWS_Zinfo did not restore outFILE");
 
+  C5stats c5s;
+  std::memset(&c5s, 0, sizeof(c5s));
+  c5s.n_nonIP = 2;
+  c5s.n_ref = 3;
+  c5s.max_mp = 11;
+  c5s.max_mv = 5;
+  c5s.max_np = 7;
+  c5s.max_nv = 4;
+  c5s.max_w = 13;
+  c5s.n_w[1] = 3;
+  c5s.max_nf[0] = 1;
+  c5s.max_nf[1] = 2;
+  c5s.max_nf[2] = 3;
+  c5s.max_nf[3] = 4;
+  c5s.max_nf[4] = 5;
+  c5s.max_h1[1] = 6;
+  c5s.max_h1[2] = 7;
+  c5s.max_h1[3] = 8;
+  c5s.max_h22 = 9;
+  c5s.min_chi = -10;
+  c5s.max_chi = 12;
+  PALP_Print_C5S(&ctx, &c5s);
+  require(inFILE == stdin, "PALP_Print_C5S changed inFILE");
+  require(outFILE == stdout, "PALP_Print_C5S changed outFILE");
+
   std::rewind(output);
-  char buffer[256];
+  char buffer[2048];
   const std::size_t nread = std::fread(buffer, 1, sizeof(buffer) - 1, output);
   buffer[nread] = '\0';
   require(std::strstr(buffer, "2 3  adapter\n") != nullptr,
 	  "PALP_Print_PPL wrote unexpected output");
   require(std::strstr(buffer, "/Z5: 4 1 0 ") != nullptr,
 	  "PALP_Print_CWS_Zinfo wrote unexpected output");
+  require(std::strstr(buffer, "non-IP: #=2\n") != nullptr,
+	  "PALP_Print_C5S wrote unexpected non-IP output");
+  require(std::strstr(buffer,
+		      "reflexive: #=3, max_mp=11, max_mv=5, max_np=7, max_nv=4, max_w=13\n")
+	  != nullptr,
+	  "PALP_Print_C5S wrote unexpected reflexive output");
 
   std::fclose(input);
   std::fclose(cws_input);

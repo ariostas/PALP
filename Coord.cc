@@ -950,3 +950,30 @@ void Print_C5S(C5stats *_C5S){
 	 _C5S->max_h1[1], _C5S->max_h1[2], _C5S->max_h1[3],
 	 _C5S->max_h22, _C5S->min_chi, _C5S->max_chi);
 }
+
+void PALP_Print_C5S(PALP_RuntimeContext *ctx, C5stats *_C5S){
+  FILE *output = (ctx != NULL) ? ctx->out : outFILE;
+  int i;
+  assert(POLY_Dmax>4);
+  fprintf(output, "non-IP: #=%ld\n", _C5S->n_nonIP);
+  fprintf(output,
+	  "IP, non-reflexive: #=%ld, max_mp=%d, max_mv=%d, max_nv=%d, max_w=%ld\n",
+	  _C5S->n_IP_nonRef, _C5S->nr_max_mp, _C5S->nr_max_mv,
+	  _C5S->nr_max_nv, _C5S->nr_max_w);
+  fprintf(output, "  #(w5) of given ld: ");
+  for (i=0; i<MAXLD; i++) fprintf(output, " %d:%ld", i, _C5S->nr_n_w[i]);
+  fprintf(output, "\n");
+  fprintf(output,
+	  "reflexive: #=%ld, max_mp=%d, max_mv=%d, max_np=%d, max_nv=%d, max_w=%ld\n",
+	  _C5S->n_ref, _C5S->max_mp, _C5S->max_mv, _C5S->max_np,
+	  _C5S->max_nv, _C5S->max_w);
+  fprintf(output, "  #(w5) of given ld: ");
+  for (i=0; i<MAXLD; i++) fprintf(output, " %d:%ld", i, _C5S->n_w[i]);
+  fprintf(output, "\n");
+  fprintf(output, "  max #(faces): %d %d %d %d %d\n", _C5S->max_nf[0],
+	  _C5S->max_nf[1], _C5S->max_nf[2], _C5S->max_nf[3],
+	  _C5S->max_nf[4]);
+  fprintf(output, "  h11<=%d, h12<=%d, h13<=%d, h22<=%d, %d<=chi<=%d\n",
+	  _C5S->max_h1[1], _C5S->max_h1[2], _C5S->max_h1[3],
+	  _C5S->max_h22, _C5S->min_chi, _C5S->max_chi);
+}
