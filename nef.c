@@ -537,9 +537,23 @@ int Read_WPCICY(Weight * _W, int *_D)
     return 1;
 }
 
-int Make_WPCICY(Weight * _W, CWS * _CW, int *_D, PolyPointList * _P)
+int PALP_Read_WPCICY(PALP_RuntimeContext *ctx, Weight *_W, int *_D)
 {
-    int r = Read_WPCICY(_W, _D);
+    PALP_RuntimeContext saved = PALP_RuntimeContextFromGlobals();
+    int result;
+    if (ctx != NULL)
+	PALP_ApplyRuntimeContext(ctx);
+    result = Read_WPCICY(_W, _D);
+    if (ctx != NULL)
+	*ctx = PALP_RuntimeContextFromGlobals();
+    PALP_ApplyRuntimeContext(&saved);
+    return result;
+}
+
+int Make_WPCICY(PALP_RuntimeContext *ctx, Weight * _W, CWS * _CW, int *_D,
+		PolyPointList * _P)
+{
+    int r = PALP_Read_WPCICY(ctx, _W, _D);
 
     Make_Poly_WPCICY(_W, _D, _P);
     Make_CW_WPCICY(_W, _CW);
@@ -550,7 +564,7 @@ void Make_RGC_Points(CWS *Cin, PolyPointList *_P);
 
 int IN_WEIGHT(PALP_RuntimeContext *ctx, Weight * _W, CWS * _CW, int *_D,
 	      PolyPointList * _P, Flags *_F, int codim){
-  if (_F->Msum) return Make_WPCICY(_W, _CW, _D, _P);
+  if (_F->Msum) return Make_WPCICY(ctx, _W, _CW, _D, _P);
   if (_F->G) return PALP_ReadCwsPp(ctx, _CW, _P , 1, codim);
   return PALP_ReadCwsPp(ctx, _CW, _P, codim, 1);
 }

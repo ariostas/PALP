@@ -572,6 +572,21 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
       - `make check`: passed.
       - Remaining in this item: migrate the `nef.c` `-m`/`Make_WPCICY()` parser to a runtime context, then continue adding context-aware wrappers at shared-module boundaries.
+    - Twelfth runtime-context input migration completed:
+      - Added local `PALP_Read_WPCICY()` wrapper around the legacy `Read_WPCICY()` parser in `nef.c`.
+      - Migrated `Make_WPCICY()` and the `nef.c` `-m`/Minkowski-sum input path to pass the local `PALP_RuntimeContext`.
+      - Kept the existing `Read_WPCICY()` parser body unchanged for this slice.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/nef-wpcicy-context-smoke.o nef.c`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - Focused test after rebuilding `nef-6d.x`: `DIM=6 tests/6.4.19-nef-m.sh` passed.
+      - Focused file-output smoke: `./nef-6d.x -Lv -m /tmp/palp-nef-wpcicy-input.txt /tmp/palp-nef-wpcicy-output.txt` wrote the expected normalized output with no stdout.
+      - `make -j2`: passed.
+      - `make all-dims -j2`: passed.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
+      - `make check`: passed.
+      - Remaining in this item: continue adding context-aware wrappers at shared-module boundaries; `nef.c` input dispatch is now context-backed.
 
 ## Phase 4: Modularize Algorithms
 
