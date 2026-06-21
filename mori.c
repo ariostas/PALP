@@ -186,7 +186,7 @@ int main (int narg, char* fn[]){
 	printf("(%s -M requires POLY_Dmax >= #(points) - dim N -1)\n",
 	       fn[0]);
 	exit(0);      }   }
-    HyperSurfDivisorsQ(_P,&V,E,&Flag);
+    PALP_HyperSurfDivisorsQ(&ctx,_P,&V,E,&Flag);
     fflush(outFILE);  }
   return 0;
 }

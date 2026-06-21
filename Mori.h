@@ -64,6 +64,9 @@ simplices in INCI format.
 
 void HyperSurfDivisorsQ(PolyPointList *_P,VertexNumList*V,EqList *E,
 		MORI_Flags *Flag);
+void PALP_HyperSurfDivisorsQ(PALP_RuntimeContext *ctx,
+		PolyPointList *_P,VertexNumList*V,EqList *E,
+		MORI_Flags *Flag);
 /*
 Hypersurface divisors Q(charges) permutes the N-lattice points of
 non-intersecting divisors to the end of the PPL *_P, calls IP_Simplex_Fiber

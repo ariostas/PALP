@@ -603,6 +603,22 @@ Goal: move PALP from C toward maintainable modern C++ while preserving the histo
       - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
       - `make check`: passed.
       - Remaining in this item: continue adding context-aware wrappers at shared-module boundaries.
+    - Fourteenth runtime-context output migration completed:
+      - Added `PALP_HyperSurfDivisorsQ()` as a context-aware wrapper around the legacy Mori `HyperSurfDivisorsQ()` shared entry point.
+      - Migrated the active `mori.c` post-input processing path to pass the local `PALP_RuntimeContext`.
+      - Kept the legacy `HyperSurfDivisorsQ()` body unchanged for this slice.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/MoriCone-context-wrapper-smoke.o MoriCone.c`: passed, with known `MoriCone.c` warnings tracked in `ISSUES.md`.
+      - `gcc -O3 -g -W -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -c -o /tmp/mori-context-wrapper-smoke.o mori.c`: passed.
+      - `c++ -std=c++17 -I. -fsyntax-only tests/header-smoke.cc`: passed.
+      - Focused tests after rebuilding `mori-6d.x`: `DIM=6 tests/7.2.3-mori-g.sh`, `DIM=6 tests/7.2.4-mori-I.sh`, `DIM=6 tests/7.2.5-mori-m.sh`, and `DIM=6 tests/7.2.9-mori-i.sh` passed, with the known skipped `-m` case unchanged.
+      - Focused file-output smoke: `./mori-6d.x -DPI tests/input/7.2.14-mori-D.txt /tmp/palp-mori-context-output.txt` wrote the expected output file with no stdout.
+      - `make -j2`: passed, with known warnings.
+      - `make all-dims -j2`: passed, with known warnings.
+      - `cmake -S . -B build -D CMAKE_BUILD_TYPE=Release`: passed.
+      - `cmake --build build -j2`: passed.
+      - `ctest --test-dir build --output-on-failure`: passed, 198/198 tests.
+      - `make check`: passed.
+      - Remaining in this item: continue adding context-aware wrappers at shared-module boundaries and then decide which legacy direct `puts()`/`printf()` output paths should be converted without changing CLI text.
 
 ## Phase 4: Modularize Algorithms
 

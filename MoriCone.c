@@ -1431,6 +1431,16 @@ void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
   free(F);
 }
 
+void PALP_HyperSurfDivisorsQ(PALP_RuntimeContext *ctx, PolyPointList *_P,
+			     VertexNumList *V, EqList *E, MORI_Flags *_Flag)
+{
+  PALP_RuntimeContext saved = PALP_RuntimeContextFromGlobals();
+  if(ctx != NULL) PALP_ApplyRuntimeContext(ctx);
+  HyperSurfDivisorsQ(_P, V, E, _Flag);
+  if(ctx != NULL) *ctx = PALP_RuntimeContextFromGlobals();
+  PALP_ApplyRuntimeContext(&saved);
+}
+
 /****************************************************************
  *                   MORI CONE: mori.x -DM
  ****************************************************************
