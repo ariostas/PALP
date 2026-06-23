@@ -11,9 +11,9 @@
 /* ======================================================== */
 /* =========            H E A D E R s             ========= */
 
-#include "Global.h"
-#include "LG.h"
-#include "Mori.h"
+#include <palp/Global.h>
+#include <palp/LG.h>
+#include <palp/Mori.h>
 
 /*==========================================================*/
 

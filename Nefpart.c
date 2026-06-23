@@ -1,5 +1,5 @@
-#include "Global.h"
-#include "Nef.h"
+#include <palp/Global.h>
+#include <palp/Nef.h>
 
 #ifndef CEQ_Nmax
 #define CEQ_Nmax       EQUA_Nmax  

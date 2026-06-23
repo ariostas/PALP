@@ -15,8 +15,8 @@
  *      Subdb   data base
  */
 
-#include "Global.h"
-#include "Subpoly.h"
+#include <palp/Global.h>
+#include <palp/Subpoly.h>
 
 #if ( POLY_Dmax * POINT_Nmax  > 83400000 )
 #error		decrease POLY_Dmax or/and POINT_Nmax for compiling class

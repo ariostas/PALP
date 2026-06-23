@@ -6,9 +6,9 @@
 /*  ==========                                                  ==========  */
 /*  ======================================================================  */
 
-#include "Global.h"
-#include "Nef.h"
-#include "LG.h"
+#include <palp/Global.h>
+#include <palp/Nef.h>
+#include <palp/LG.h>
 
 /*  ==========            l o c a l  T Y P E D E F s            ==========  */
 

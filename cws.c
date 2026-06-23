@@ -1,5 +1,5 @@
-#include "Global.h"
-#include "LG.h"
+#include <palp/Global.h>
+#include <palp/LG.h>
 #include "Rat.h"
 
 FILE *inFILE, *outFILE;

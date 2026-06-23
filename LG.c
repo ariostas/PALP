@@ -1,6 +1,6 @@
-#include "Global.h"
+#include <palp/Global.h>
 #include "Rat.h"
-#include "LG.h"
+#include <palp/LG.h>
 
 #define SHOW_b01_TWIST	(0)
 #define Tout		(0)

@@ -11,8 +11,8 @@
  *      Polynf	normal form and symmetries
  */
 
-#include "Global.h"
-#include "LG.h"
+#include <palp/Global.h>
+#include <palp/LG.h>
 #define OSL (42)  /* opt_string's length */
 
 

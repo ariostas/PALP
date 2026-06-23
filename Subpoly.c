@@ -1,5 +1,5 @@
-#include "Global.h"
-#include "Subpoly.h"
+#include <palp/Global.h>
+#include <palp/Subpoly.h>
 #include "Rat.h"
 
 #define  subl_int                LLong

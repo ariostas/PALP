@@ -1,4 +1,4 @@
-#include "Global.h"
+#include <palp/Global.h>
 #include "Rat.h"
 
 #define MAX_BAD_EQ	(POLY_Dmax>5)	/* previously 6; needed for nef !? */

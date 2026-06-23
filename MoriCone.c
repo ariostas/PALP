@@ -11,10 +11,10 @@
 /* ======================================================== */
 /* =========            H E A D E R s             ========= */
 
-#include "Global.h"
+#include <palp/Global.h>
 #include "Rat.h"
-#include "Mori.h"
-#include "LG.h"
+#include <palp/Mori.h>
+#include <palp/LG.h>
 
 
 /* ======================================================== */

@@ -22,6 +22,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Public include directories: project root (legacy private headers such as Rat.h)
+# and include/ (namespaced public headers under palp/).
+set(PALP_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 # Pick the .cpp version of a PALP source if it exists, otherwise the .c version.
 # This allows incremental migration from C to C++ without editing this file
 # every time a source file is renamed.
@@ -48,19 +52,19 @@ palp_sources(MORI_SRC MoriCone SingularInput LG)
 
 add_library(objects STATIC ${SOURCES})
 target_compile_definitions(objects PUBLIC POLY_Dmax=${POLY_Dmax})
-target_include_directories(objects PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(objects PUBLIC ${PALP_INCLUDE_DIRS})
 
 add_library(class_objects STATIC ${CLASS_SRC})
 target_compile_definitions(class_objects PUBLIC POLY_Dmax=${POLY_Dmax})
-target_include_directories(class_objects PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(class_objects PUBLIC ${PALP_INCLUDE_DIRS})
 
 add_library(nef_objects STATIC ${NEF_SRC})
 target_compile_definitions(nef_objects PUBLIC POLY_Dmax=${POLY_Dmax})
-target_include_directories(nef_objects PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(nef_objects PUBLIC ${PALP_INCLUDE_DIRS})
 
 add_library(mori_objects STATIC ${MORI_SRC})
 target_compile_definitions(mori_objects PUBLIC POLY_Dmax=${POLY_Dmax})
-target_include_directories(mori_objects PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(mori_objects PUBLIC ${PALP_INCLUDE_DIRS})
 
 if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
     include(CTest)
@@ -95,22 +99,22 @@ if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
             palp_sources(DIM_SOURCES Coord Rat Vertex Polynf)
             add_library(objects-${dim}d STATIC ${DIM_SOURCES})
             target_compile_definitions(objects-${dim}d PUBLIC POLY_Dmax=${dim})
-            target_include_directories(objects-${dim}d PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+            target_include_directories(objects-${dim}d PUBLIC ${PALP_INCLUDE_DIRS})
 
             palp_sources(DIM_CLASS_SRC Subpoly Subadd Subdb)
             add_library(class_objects-${dim}d STATIC ${DIM_CLASS_SRC})
             target_compile_definitions(class_objects-${dim}d PUBLIC POLY_Dmax=${dim})
-            target_include_directories(class_objects-${dim}d PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+            target_include_directories(class_objects-${dim}d PUBLIC ${PALP_INCLUDE_DIRS})
 
             palp_sources(DIM_NEF_SRC E_Poly Nefpart LG)
             add_library(nef_objects-${dim}d STATIC ${DIM_NEF_SRC})
             target_compile_definitions(nef_objects-${dim}d PUBLIC POLY_Dmax=${dim})
-            target_include_directories(nef_objects-${dim}d PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+            target_include_directories(nef_objects-${dim}d PUBLIC ${PALP_INCLUDE_DIRS})
 
             palp_sources(DIM_MORI_SRC MoriCone SingularInput LG)
             add_library(mori_objects-${dim}d STATIC ${DIM_MORI_SRC})
             target_compile_definitions(mori_objects-${dim}d PUBLIC POLY_Dmax=${dim})
-            target_include_directories(mori_objects-${dim}d PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+            target_include_directories(mori_objects-${dim}d PUBLIC ${PALP_INCLUDE_DIRS})
 
             palp_sources(DIM_POLY_SRC poly LG)
             add_executable(poly-${dim}d.x ${DIM_POLY_SRC})

@@ -1,5 +1,5 @@
-#include "Global.h"
-#include "Subpoly.h"
+#include <palp/Global.h>
+#include <palp/Subpoly.h>
 
 
 /*   VF_2_ucNF / UCnf2vNF compression/decompression assumes that vNF[0][0]==1

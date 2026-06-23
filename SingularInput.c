@@ -14,8 +14,8 @@
 
 #include <unistd.h> /* close */
 
-#include "Global.h"
-#include "Mori.h"
+#include <palp/Global.h>
+#include <palp/Mori.h>
 
 /* ======================================================== */
 /* =========            D E F I N I T I O N s     ========= */
