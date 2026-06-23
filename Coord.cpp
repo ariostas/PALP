@@ -1,11 +1,14 @@
 #include <palp/Global.h>
 #include "Rat.h"
 
+#include <array>
+#include <vector>
+
 #undef	TEST_Wbase
 #undef  USE_Old_Wbase
 #define NO_COORD_IMPROVEMENT		/* switch off weight permutation */
 
-typedef struct {Long x[AMBI_Dmax][AMBI_Dmax]; int n, N;}     CWLatticeBasis;
+using CWLatticeBasis = struct {Long x[AMBI_Dmax][AMBI_Dmax]; int n, N;};
 
 void Make_CWS_Points(CWS *_C, PolyPointList *_P);
 void Make_RGC_Points(CWS *Cin, PolyPointList *_P);
@@ -79,10 +82,12 @@ void Print_CWS_Zinfo(CWS *CW)
      }	
 }
 int  Read_CWS_Zinfo(FILE *inFILE,CWS *CW)		      /* return !EOF */
-{    int *nz=&CW->nz; int i=0,n; char c[999],b=' '; *nz=0; 
-     for(n=0;n<999;n++)
-     {	c[n]=fgetc(inFILE); if(feof(inFILE)) return 0; if(c[n]=='\n') break;
-     }  if(n==999) {puts("Out of space in Read_CWS_Zinfo");exit(0);}
+{    int *nz=&CW->nz; int i=0,n; std::array<char,999> c; char b=' '; *nz=0;
+     for(n=0;n<999;n++) {
+       c[n]=fgetc(inFILE); if(feof(inFILE)) return 0;
+       if(c[n]=='\n') break;
+     }
+     if(n==999) {puts("Out of space in Read_CWS_Zinfo");exit(0);}
      while(c[i]==b)i++;
      if((c[i]=='=')&&(c[i+1]=='d'))i+=2;
      while(c[i]==b)i++; 
@@ -128,7 +133,7 @@ int  ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index)
      codim = 1, index > 1: _P a Gorenstein polytope with index index, 
                            determines a reflexive Gorenstein cone       */
 {    int i, j, FilterFlag=(inFILE==NULL); 
-     int IN[AMBI_Dmax*(AMBI_Dmax+1)], S; 
+     std::vector<int> IN(AMBI_Dmax*(AMBI_Dmax+1)); int S;
      static int InputOK;
      _CW->nw=_CW->N=_CW->nz=0;
      _CW->index = index;
@@ -224,7 +229,7 @@ int  Read_CWS_PP(CWS *_CW, PolyPointList *_P){
 
 int  Read_PP(PolyPointList *_P)
 {    int i, j, FilterFlag=(inFILE==NULL);
-     int IN[AMBI_Dmax*(AMBI_Dmax+1)];
+     std::vector<int> IN(AMBI_Dmax*(AMBI_Dmax+1));
      static int InputOK;
      /* _CW->nw=_CW->N=_CW->nz=0; */
 
@@ -273,7 +278,7 @@ int  Read_PP(PolyPointList *_P)
 
 int  Read_CWS(CWS *_CW, PolyPointList *_P)
 {    int i, j, FilterFlag=(inFILE==NULL);
-     int IN[AMBI_Dmax*(AMBI_Dmax+1)], S;
+     std::vector<int> IN(AMBI_Dmax*(AMBI_Dmax+1)); int S;
      static int InputOK;
      _CW->nw=_CW->N=_CW->nz=0;
      _CW->index = 1;

@@ -16,11 +16,6 @@ void Poly_Sym(PolyPointList *_P, VertexNumList *_V, EqList *_F, int *sym_num,
 /*   ===============	local Typedefs and Headers	===================  */
 
 typedef struct {
-  int ne; 
-  Equation e[CEQ_Nmax];
-} CEqList;
-
-typedef struct {
   int nv;                /*   #vertices of face */ 
   int v[VERT_Nmax];      /*   vertices of face */
 } VList; 

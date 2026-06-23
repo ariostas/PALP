@@ -15,7 +15,6 @@
 #define  IMPROVE_SL_REGCD	(0)
 
 typedef struct {int nk, k[VERT_Nmax];} KeepList;
-typedef struct {int ne; Equation e[CEQ_Nmax];}              CEqList;
 
 /*  ==========	Auxiliary routines from other modules           ==========  */
 

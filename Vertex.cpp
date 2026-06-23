@@ -11,8 +11,6 @@
 #define CEQ_Nmax        EQUA_Nmax
 #endif
 
-typedef struct {int ne; Equation e[CEQ_Nmax];}              CEqList;
-
 /*  ======================================================================  */
 /*  ==========		     			  		==========  */
 /*  ==========	   I N C I D E N C E S (as bit patterns)	==========  */

@@ -134,7 +134,8 @@ This structure determines an equation of the type ax+c=0, explicitly:
 sum_{i=1}^n E.a[i] x_i + E.c = 0.
 */
 
-typedef struct {int ne; Equation e[EQUA_Nmax];}		     EqList;
+typedef struct {int ne; Equation e[EQUA_Nmax];}			     EqList;
+typedef struct {int ne; Equation e[EQUA_Nmax];} CEqList;
 /*
 A list of equations; EL.ne is the number of equations in the list.
 */
@@ -219,6 +220,12 @@ int  Read_CWS(CWS *_CW, PolyPointList *_P);
 */
 
 int  Read_PP(PolyPointList *_P);
+int  ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index);
+int  IsNextDigit(void);
+void Make_CWS_Points(CWS *_C, PolyPointList *_P);
+void Print_CWS_Zinfo(CWS *CW);
+void Sort_PPL(PolyPointList *_P, VertexNumList *_V);
+int  GLZ_Start_Simplex(PolyPointList *_P, VertexNumList *_V, CEqList *_C);
 /*
 Reads the PolyPointList input *P
 */
@@ -610,10 +617,25 @@ void Print_FaceInfo(int n, FaceInfo *FI);
 Displays the information contained in the FaceInfo *FI.
 */
 
-int QuickAnalysis(PolyPointList *_P, BaHo *_BH, FaceInfo *_FI);
+int  QuickAnalysis(PolyPointList *_P, BaHo *_BH, FaceInfo *_FI);
 /*
 Fast computation of FaceInfo and Hodge numbers.
 */
+
+
+
+/* ====== Functions used across modules but defined in leaf files ====== */
+
+Long CompareEq(Equation *X, Equation *Y, int n);
+int  IsGoodCEq(Equation *_E, PolyPointList *_P, VertexNumList *_V);
+int  Finish_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F,
+                     CEqList *_CEq, INCI *F_I, INCI *CEq_I);
+void Make_FaceIPs(PolyPointList *_P, VertexNumList *_V, EqList *_E,
+                  PolyPointList *_DP, FaceInfo *_I);
+void Eval_BaHo(FaceInfo *_I, BaHo *_BH);
+void QuotZ_2_SublatG(Long Z[][VERT_Nmax], int *zm, Long *M, int *d,
+                     Long G[][POLY_Dmax]);
+int  Improve_Coords(PolyPointList *_P, VertexNumList *_V);
 
 #ifdef __cplusplus
 }
