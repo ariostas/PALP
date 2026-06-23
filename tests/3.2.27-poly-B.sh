@@ -10,7 +10,7 @@
 # We sort the output because for lower POLY_Dmax, it's
 # violently permuted. The "-r" simply ensures that the
 # vol=... header appears before the coordinates.
-COMMAND="./poly-${DIM}d.x -B2 tests/input/3.2.27-poly-B.txt | sort -br"
+COMMAND="./poly-${DIM}d.x -B2 tests/input/3.2.27-poly-B.txt | LC_ALL=C sort -br"
 DESCRIPTION="poly-${DIM}d.x -B2 example on pages 19-20"
 EXPECTED=$(cat<<-EOF
 vol=5, baricent=(5,0,0,0,0)/6
