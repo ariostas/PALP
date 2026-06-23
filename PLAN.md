@@ -13,6 +13,10 @@ separate phase after migration.
 - **One file per step**: each step converts a single `.c` file to `.cpp` (or
   a single cross-cutting concern). Verify with `cmake --build build && ctest`
   after each step.
+- **Commit after every step**: once verification passes, the changes for that
+  step must be committed before moving on. Use a descriptive commit message
+  (e.g., "Migrate Rat.c to Rat.cpp"). This keeps history reviewable and makes
+  it easy to bisect if a later step breaks a test.
 - **POLY_Dmax stays compile-time**: keep `constexpr` equivalent of current
   macros; do not switch to dynamic allocation in the migration phase.
 - **No new features**: don't refactor algorithms; only modernize the language
@@ -432,7 +436,9 @@ suite. See `ISSUES.md` for the full list. Apply in order of severity.
    representative input across dims 4, 5, 6, 11 against pre-migration golden
    output.
 6. **Git**: after each successful step, commit with a descriptive message
-   (e.g., "Migrate Rat.c → Rat.cpp").
+   (e.g., "Migrate Rat.c → Rat.cpp"). The commit is part of the step; no
+   subsequent step may begin until the previous one is committed and the
+   repository is in a clean state.
 
 ---
 
