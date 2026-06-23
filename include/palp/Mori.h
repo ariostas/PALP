@@ -143,5 +143,27 @@ between 1 and codim are computed. It is assumed that p<=VERT_Nmax and that W
 can hold at least Wmax sets of coefficients.
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 Long SimplexVolume(Long *V[POLY_Dmax+1],int d);
+
+/* Matrix / circuit helpers defined in Polynf.cpp and used by MoriCone.c */
+typedef struct {int v, d; Long **x;} Matrix;
+void Init_Matrix(Matrix *M, int v, int d);
+void Free_Matrix(Matrix *M);
+void Print_LMatrix(Matrix M, char *s);
+Long VxV(Long *X, Long *Y, int d);
+int  Make_G_for_GxMT_UT(Matrix M, Matrix G);
+
+/* IP-simplex / fibration helpers from Polynf.cpp */
+void IP_Simplex_Fiber(Long PM[][POLY_Dmax], int p, int d,
+                      FibW *F, int Wmax, int CD);
+void Aux_IPS_Print_WP(Long *W, int w, int cd);
+void Print_QuotZ(int Z[][VERT_Nmax], int *M, int p, int n);
+
+#ifdef __cplusplus
+}
+#endif
 

@@ -286,6 +286,14 @@ Routines for handling the structure C5stats
 int  Make_Poly_Sym_NF(PolyPointList *P, VertexNumList *VNL, EqList *EL,
 		      int *SymNum, int V_perm[][VERT_Nmax],
 		      Long NF[POLY_Dmax][VERT_Nmax], int t, int S, int N);
+void Poly_Sym(PolyPointList *_P, VertexNumList *_V, EqList *_F, int *sym_num,
+              int V_perm[][VERT_Nmax]);
+int  GLZ_Make_Trian_NF(Long X[][VERT_Nmax], int *n, int *nv,
+                       GL_Long G[POLY_Dmax][POLY_Dmax]);
+void SL2Z_Make_Poly_UTriang(PolyPointList *P);
+void IP_Fiber_Data(PolyPointList *PD, PolyPointList *AuxP, int nv,
+                   Long G[VERT_Nmax][POLY_Dmax][POLY_Dmax],
+                   int fd[VERT_Nmax], int *nf, int CD);
 /*
 Given *P, *VNL and *EL, the following objects are determined:
 the number *SymNum of GL(n,Z)-symmetries of the polytope,
@@ -636,6 +644,21 @@ void Eval_BaHo(FaceInfo *_I, BaHo *_BH);
 void QuotZ_2_SublatG(Long Z[][VERT_Nmax], int *zm, Long *M, int *d,
                      Long G[][POLY_Dmax]);
 int  Improve_Coords(PolyPointList *_P, VertexNumList *_V);
+Long V_to_G_GI(Long *V, int d, Long G[][POLY_Dmax], Long GI[][POLY_Dmax]);
+int  Make_Poly_NF(PolyPointList *_P, VertexNumList *_V, EqList *_E,
+                  Long pNF[POLY_Dmax][VERT_Nmax]);
+int  Init_rVM_VPM(PolyPointList *P, VertexNumList *_V, EqList *_F,
+                  int *d, int *v, int *f,
+                  Long VM[POLY_Dmax][VERT_Nmax],
+                  Long VPM[VERT_Nmax][VERT_Nmax]);
+void Eval_Poly_NF(int *d, int *v, int *f, Long VM[POLY_Dmax][VERT_Nmax],
+                  Long VPM[VERT_Nmax][VERT_Nmax],
+                  Long pNF[POLY_Dmax][VERT_Nmax], int t);
+int  Make_Lattice_Basis(int d, int p, Long *P[POLY_Dmax],
+                        Long G[][POLY_Dmax], Long *D);
+int  Remove_Identical_Points(PolyPointList *P);
+Long Poly_Point_Count(PolyPointList *P, VertexNumList *V, EqList *E);
+int  VP_2_CWS(Long *V[], int d, int v, CWS *W);
 
 #ifdef __cplusplus
 }

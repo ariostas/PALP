@@ -41,5 +41,3 @@ void Write_Weight(Weight *_W);
 void Write_WH(Weight *_W, BaHo *_BH, VaHo *_VH, int rc, int tc,
 	      PolyPointList *_P, VertexNumList *_V, EqList *_E);
 void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP);
-
-Long V_to_G_GI(Long *V,int d, Long G[][POLY_Dmax],Long GI[][POLY_Dmax]);

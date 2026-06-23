@@ -33,33 +33,7 @@
 #define TRACE_TRIANGULATION	(0)	/* detailed triangulation info */
 
 
-/* ====================================================== */
-/* =========           T Y P E D E F s          ========= */
 
-/*** from Polynf.c ***/
-typedef struct {
-	int v, d;
-	Long **x;
-} Matrix;
-
-/* ====================================================== */
-/* =========            P R O T O T Y P E s     ========= */
-
-/* from Vertex.c */
-void Sort_PPL(PolyPointList *_P, VertexNumList *_V);
- 
-/* from Polynf.c */ 
-void Init_Matrix(Matrix *M,int v, int d);
-
-int Make_G_for_GxMT_UT(Matrix M,Matrix G);
- 
-void Free_Matrix(Matrix *M);
- 
-Long VxV(Long *X,Long *Y,int d);
- 
-void Aux_IPS_Print_WP(Long *W,int w,int cd);
-void Print_LMatrix(Matrix M, char *s);
-void Print_QuotZ(int Z[][VERT_Nmax],int *M,int p,int n);
 /*
 Auxiliary print functions
 */
