@@ -195,6 +195,10 @@ statistics on large lists of weight systems, cf. classification of 4fold weights
 
 /*  ==========         I/O functions (from Coord.c)		==========  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int  Read_CWS_PP(CWS *C, PolyPointList *P);
 /*
 Reads either a CWS or a PolyPointList.
@@ -610,3 +614,7 @@ int QuickAnalysis(PolyPointList *_P, BaHo *_BH, FaceInfo *_FI);
 /*
 Fast computation of FaceInfo and Hodge numbers.
 */
+
+#ifdef __cplusplus
+}
+#endif
