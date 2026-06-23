@@ -1,6 +1,7 @@
 #include <palp/Global.h>
 #include "Rat.h"
-#include <palp/LG.h>
+#include <palp/LG.h>     /* defines AmbiPointList and AmbiLatticeBasis */
+#include <palp/Nef.h>
 
 #define SHOW_b01_TWIST	(0)
 #define Tout		(0)
@@ -19,7 +20,7 @@ int  Is_Gen_CY(int index, PolyPointList *P)
      for(i=0;i<E->ne;i++) if(1!=Eval_Eq_on_V(&E->e[i],IP,P->n)) break;
      free(E); return i==E->ne;
 }
-void WZerror(char *c)
+void WZerror(const char *c)
 {    printf("Format error %s in Read_WZeight\n",c);exit(0);
 }    
 int  auxString2SInt(char *c,int *n)
@@ -165,13 +166,9 @@ return 1;
 
 extern FILE *inFILE, *outFILE;
 
-typedef struct {Long x[POINT_Nmax][W_Nmax]; int N, np;}   AmbiPointList;
-typedef struct {Long x[POLY_Dmax][W_Nmax]; int N, n;}     AmbiLatticeBasis;
+/* nef.c also uses AmbiLatticeBasis via LG.h. */
 
 Long Wperm_to_GLZ(Long *W, int *d, Long **G, int *P);
-void WeightLatticeBasis(Weight *_w, AmbiLatticeBasis *_B);	
-void WeightMakePoints(Weight *_W , AmbiPointList *_P);
-int  ChangeToTrianBasis(AmbiPointList*,	AmbiLatticeBasis *, PolyPointList *);
 
 /*  ==========  	  I/O functions:                	==========  */
 

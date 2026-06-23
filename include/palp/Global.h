@@ -657,7 +657,8 @@ void Eval_Poly_NF(int *d, int *v, int *f, Long VM[POLY_Dmax][VERT_Nmax],
 int  Make_Lattice_Basis(int d, int p, Long *P[POLY_Dmax],
                         Long G[][POLY_Dmax], Long *D);
 int  Remove_Identical_Points(PolyPointList *P);
-Long Poly_Point_Count(PolyPointList *P, VertexNumList *V, EqList *E);
+int  Init_Multiloop(int *N, int *I, int *j, int *J);
+int  Multiloop(int *N,int *I,int *j,int *J);
 int  VP_2_CWS(Long *V[], int d, int v, CWS *W);
 
 #ifdef __cplusplus

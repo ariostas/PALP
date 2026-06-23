@@ -12,7 +12,6 @@
 
 /*  ==========            l o c a l  T Y P E D E F s            ==========  */
 
-typedef struct { Long x[POLY_Dmax][W_Nmax]; int N, n; }	     AmbiLatticeBasis;
 typedef struct { Long x[AMBI_Dmax][AMBI_Dmax]; int n, N; }   CWLatticeBasis;
 typedef struct { Long P[POINT_Nmax]; Long n; }               Pstat;
 
@@ -29,14 +28,7 @@ void Sort_PPL(PolyPointList *_P, VertexNumList *_V);
 
 void NormTriangularBasis(AmbiLatticeBasis * _B);
 
-void WeightLatticeBasis(Weight * _w, AmbiLatticeBasis * _B);
-
-void WeightMakePoints(Weight * _W, AmbiPointList * _P);
-
 void MakeRefWeights(int N, int from_d, int to_d);
-
-void ChangeToTrianBasis(AmbiPointList *, AmbiLatticeBasis *,
-			PolyPointList *);
 int IN_WEIGHT(Weight *, CWS *, int *, PolyPointList *, Flags *, int);
 
 void OUT_CWS(CWS *, int *, int *);

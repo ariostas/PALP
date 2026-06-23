@@ -62,7 +62,7 @@ typedef struct {
   int E[4*(Pos_Max)][4*(Pos_Max)];
 } EPoly;
 
-typedef struct {
+typedef struct AmbiPointList_ {
     Long x[POINT_Nmax][W_Nmax];
     int N, np;
 } AmbiPointList;

@@ -58,7 +58,7 @@ separate phase after migration.
 
 ### Phase 0 — Infrastructure
 
-#### Step 0.1 — Update CMakeLists.txt for C++ support
+- [x] #### Step 0.1 — Update CMakeLists.txt for C++ support
 
 - Change `LANGUAGES C` to `LANGUAGES C CXX`.
 - Add `set(CMAKE_CXX_STANDARD 17)` and `set(CMAKE_CXX_STANDARD_REQUIRED ON)`.
@@ -68,7 +68,7 @@ separate phase after migration.
 - Keep the existing C targets working unchanged.
 - **Verify**: `cmake --build build && cd build && ctest` — all pass.
 
-#### Step 0.2 — Reorganize headers into `include/palp/`
+- [x] #### Step 0.2 — Reorganize headers into `include/palp/`
 
 - Create `include/palp/` directory.
 - Copy (not move yet) `Global.h`, `Rat.h`, `LG.h`, `Nef.h`, `Mori.h`,
@@ -81,7 +81,7 @@ separate phase after migration.
   migration).
 - **Verify**: build + test.
 
-#### Step 0.3 — Create C++ compatibility shim
+- [x] #### Step 0.3 — Create C++ compatibility shim
 
 - Create `include/palp/palp_types.h` defining the integer type aliases in a
   C++-friendly way:
@@ -101,7 +101,7 @@ separate phase after migration.
 These modules have no dependencies on other PALP modules (only on standard C
 library and each other in a simple chain). Convert in dependency order.
 
-#### Step 1.1 — `Rat.c` → `Rat.cpp`
+- [x] #### Step 1.1 — `Rat.c` → `Rat.cpp`
 
 - Rename file, update CMakeLists.
 - Remove `register` keyword (all instances).
@@ -114,7 +114,7 @@ library and each other in a simple chain). Convert in dependency order.
 - **Verify**: build + test (especially `tests/2.*` which exercise `poly.x`
   which uses `Rat`).
 
-#### Step 1.2 — `Vertex.c` → `Vertex.cpp`
+- [x] #### Step 1.2 — `Vertex.c` → `Vertex.cpp`
 
 - Replace `malloc`/`free` for temp arrays (`CEq`, `CEq_I`, `F_I`) with
   `std::vector` or `std::make_unique`.
@@ -123,7 +123,7 @@ library and each other in a simple chain). Convert in dependency order.
 - Keep `exit(0)` calls for now (bug fix is Phase 5).
 - **Verify**: build + test (all `tests/2.*`, `tests/3.*`).
 
-#### Step 1.3 — `Coord.c` → `Coord.cpp`
+- [x] #### Step 1.3 — `Coord.c` → `Coord.cpp`
 
 - Replace `char c[999]` local buffers with `std::array<char, 999>` or
   `std::string`.
@@ -132,7 +132,7 @@ library and each other in a simple chain). Convert in dependency order.
 - Keep `static int InputOK` as-is for now (documented in ISSUES.md #43).
 - **Verify**: build + test (all `tests/2.*`, `tests/4.*`).
 
-#### Step 1.4 — `Polynf.c` → `Polynf.cpp` (largest: ~3223 lines)
+- [x] #### Step 1.4 — `Polynf.c` → `Polynf.cpp` (largest: ~3223 lines)
 
 This is the highest-risk step. Take extra care.
 
@@ -152,7 +152,7 @@ This is the highest-risk step. Take extra care.
 - **Verify**: build + test for ALL dimensions (4, 5, 6, 11) — run full
   `make check` or `ctest` with `DIM` variations.
 
-#### Step 1.5 — `LG.c` → `LG.cpp` (~1113 lines)
+- [x] #### Step 1.5 — `LG.c` → `LG.cpp` (~1113 lines)
 
 - Replace `register` keyword (all instances).
 - Replace `char c[999]` with `std::array<char, 999>`.
@@ -422,6 +422,12 @@ suite. See `ISSUES.md` for the full list. Apply in order of severity.
 - Remove `#define TEST`/`#undef TEST` toggling (ISSUES.md #37).
 
 ---
+
+## Tracking completed work
+
+Mark each step with `- [x]` as it is completed and committed. Keep this list
+up to date so the current state of the migration is always visible at a
+glance. The next unmarked item is the current step.
 
 ## Verification Protocol (after every step)
 

@@ -147,6 +147,7 @@ can hold at least Wmax sets of coefficients.
 extern "C" {
 #endif
 
+int  IsDigit(char c);
 Long SimplexVolume(Long *V[POLY_Dmax+1],int d);
 
 /* Matrix / circuit helpers defined in Polynf.cpp and used by MoriCone.c */

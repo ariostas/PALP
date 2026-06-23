@@ -13,6 +13,10 @@
 
 typedef struct {int n; int *e; Pint *c; int A;}		  PoCoLi;  /* e=exp */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void AllocPoCoLi(PoCoLi *P);		      /* allocate e[P.A] and c[P.A] */
 void Free_PoCoLi(PoCoLi *P);				/* free P.e and P.c */
 void Poly_Sum(PoCoLi *A,PoCoLi *B,PoCoLi *S);			 /* S = A+B */
@@ -34,10 +38,25 @@ typedef struct {int d, N, z[POLY_Dmax][W_Nmax], m[POLY_Dmax], M, r, R;/* Ref */
 
 typedef struct {int D,E,sts; Pint h[POLY_Dmax][POLY_Dmax];}		VaHo;
 
+/* AmbiPointList is defined identically in Nef.h and LG.cpp.  Use Nef.h's tag. */
+typedef struct AmbiPointList_ AmbiPointList;
+
+/* AmbiLatticeBasis is used by nef.c; the full definition must match LG.cpp. */
+typedef struct AmbiLatticeBasis_ { Long x[POLY_Dmax][W_Nmax]; int N, n; } AmbiLatticeBasis;
+
 int Read_W_PP(Weight *, PolyPointList *);
+int Read_Weight(Weight *_W);
+void WeightLatticeBasis(Weight *_w, AmbiLatticeBasis *_B);
+void WeightMakePoints(Weight *_W, AmbiPointList *_P);
+int  ChangeToTrianBasis(AmbiPointList *_AP,
+                        AmbiLatticeBasis *_B, PolyPointList *_PP);
 int Trans_Check(Weight);
 void LGO_VaHo(Weight *,VaHo *);
 void Write_Weight(Weight *_W);
 void Write_WH(Weight *_W, BaHo *_BH, VaHo *_VH, int rc, int tc,
 	      PolyPointList *_P, VertexNumList *_V, EqList *_E);
 void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP);
+
+#ifdef __cplusplus
+}
+#endif
