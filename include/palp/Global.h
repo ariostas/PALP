@@ -9,8 +9,12 @@ These are include files that should exist in your C library.
 
 /*  ============	basic choice of PARAMETERS	      ============  */
 
-#define	                Long            long
-#define                 LLong           long long
+#ifdef __cplusplus
+#  include "palp/palp_types.h"
+#else
+#  define                Long            long
+#  define                LLong           long long
+#endif
 /*
 For reflexive polytopes in 4 or less dimensions, everything should work with
 Long set to 32-bit-integer and LLong set to 64 bits.
