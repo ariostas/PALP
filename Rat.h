@@ -5,9 +5,14 @@
 extern "C" {
 #endif
 
+#ifdef __cplusplus
+struct Rat { Long N; Long D; Rat(Long n=0, Long d=1) : N(n), D(d) {} };
+struct LRat { LLong N; LLong D; LRat(LLong n=0, LLong d=1) : N(n), D(d) {} };
+#else
 typedef	struct {Long N; Long D;} 			             Rat;  /* = N/D */
 
 typedef	struct {LLong N; LLong D;} 			             LRat;  /* = N/D */
+#endif
 
 Long Fgcd(Long a, Long b);		   /* Fast greatest common divisor  */
 Long NNgcd(Long a, Long b); 		   /* NonNegative gcd handling zero */

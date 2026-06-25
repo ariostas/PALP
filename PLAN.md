@@ -106,10 +106,9 @@ library and each other in a simple chain). Convert in dependency order.
 - [x] Rename `Rat.c` → `Rat.cpp` and ensure mixed C/C++ linkage via `extern "C"`
   in `Rat.h`.
 - [x] Remove `register` keyword (all instances).
-- [ ] Replace `#ifdef TEST` test blocks: gate behind `#ifndef NDEBUG` or remove
-  dead test code.
-- [ ] Convert `Rat`/`LRat` structs: add default constructors, keep as POD-like
-  structs.
+- [x] Replace `#ifdef TEST` test blocks: none present in `Rat.c`/`Rat.cpp`.
+- [x] Convert `Rat`/`LRat` structs: add C++ constructors, keep as POD-like
+  structs (C compatibility preserved via `#ifdef __cplusplus`).
 - **Verify**: build + test (especially `tests/2.*` which exercise `poly.x`
   which uses `Rat`).
 
