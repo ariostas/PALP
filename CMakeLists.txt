@@ -6,7 +6,7 @@ project(PALP
   DESCRIPTION
     "A Package for Analyzing Lattice Polytopes "
   LANGUAGES
-    C CXX
+    CXX
 )
 
 set(POLY_Dmax 6 CACHE STRING "Maximum polytope dimension")
@@ -14,7 +14,6 @@ set(PALP_TEST_DIMENSIONS "4;5;6;11" CACHE STRING "POLY_Dmax values to build and 
 set(PALP_TESTS_LONG OFF CACHE BOOL "Run PALP tests that require LONG=1")
 
 # Compiling with -DNDEBUG breaks the code
-string(REPLACE "-DNDEBUG" "" CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
 string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -22,24 +21,22 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Enable strict warnings for all C++ targets.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+
 # Public include directories: project root (legacy private headers such as Rat.h)
 # and include/ (namespaced public headers under palp/).
 set(PALP_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-# Pick the .cpp version of a PALP source if it exists, otherwise the .c version.
-# This allows incremental migration from C to C++ without editing this file
-# every time a source file is renamed.
+# Pick the .cpp version of a PALP source. All PALP sources are now C++.
 function(palp_sources out_var)
   set(result)
   foreach(src ${ARGN})
     set(cpp_src "${src}.cpp")
-    set(c_src "${src}.c")
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${cpp_src}")
       list(APPEND result "${cpp_src}")
-    elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${c_src}")
-      list(APPEND result "${c_src}")
     else()
-      message(FATAL_ERROR "PALP source not found: ${c_src} or ${cpp_src}")
+      message(FATAL_ERROR "PALP C++ source not found: ${cpp_src}")
     endif()
   endforeach()
   set(${out_var} ${result} PARENT_SCOPE)

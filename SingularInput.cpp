@@ -170,7 +170,7 @@ void HyperSurfSingular(PolyPointList *P,triang *T, triang *SR ,MORI_Flags *_Flag
 
 
  	int *he, i;
-        he=malloc(divclassnr*sizeof(int));         
+        he=(int *)malloc(divclassnr*sizeof(int));         
 	
 	for(i=0;i<divclassnr;i++)        
 		he[i]=0;

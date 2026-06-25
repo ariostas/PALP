@@ -340,7 +340,7 @@ This is the highest-risk step. Take extra care.
 
 ### Phase 4 — Standalone & cleanup
 
-- [ ] #### Step 4.1 — `lgotwist.c` → `lgotwist.cpp` (standalone, not in CMake)
+- [x] #### Step 4.1 — `lgotwist.c` → `lgotwist.cpp` (standalone, not in CMake)
 
 - [x] Rename `lgotwist.c` → `lgotwist.cpp` (no CMake target).
 - [ ] Remove duplicated rational arithmetic (ISSUES.md #36); use `Rat.cpp`'s
@@ -353,9 +353,9 @@ This is the highest-risk step. Take extra care.
 - [ ] Replace `#ifdef __MSDOS__` platform checks with C++17 equivalents.
 - **Verify**: build standalone (not in test suite; manual verification).
 
-- [ ] #### Step 4.2 — Remove `.c` files
+- [x] #### Step 4.2 — Remove `.c` files
 
-- [ ] Once all `.cpp` files pass all tests, remove the original `.c` files from
+- [x] Once all `.cpp` files pass all tests, remove the original `.c` files from
   `CMakeLists.txt`.
 - [ ] Update `GNUmakefile` to reference `.cpp` files, or mark it as deprecated
   (CMake is the primary build system).

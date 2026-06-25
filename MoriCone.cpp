@@ -1653,7 +1653,7 @@ void TriList_to_MoriList(PolyPointList * _P, FibW *F, MORI_Flags * _Flag){
   triang T, SR;
   long long Abi = Compute_Abi(_P);
   Inci64 *SRG = (Inci64 *) malloc(Abi);
-  PolyPointList *_POF = malloc(sizeof(PolyPointList)); /* _P in Old Format */
+  PolyPointList *_POF = (PolyPointList *) malloc(sizeof(PolyPointList)); /* _P in Old Format */
 
   //	fprintf(outFILE, "DIAGNOSTICS: pre Read &I=%d , I=%d , nI=%d , nIA=%d \n", &I, I, nI, nIA); // diagnostics
 
