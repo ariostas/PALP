@@ -203,7 +203,7 @@ This is the highest-risk step. Take extra care.
   integer literals.
 - **Verify**: build + run all `tests/4.*` scripts.
 
-#### Step 2.3 — `class.c` → `class.cpp`
+- [x] #### Step 2.3 — `class.c` → `class.cpp`
 
 - Replace `char Blank=0` pointer-to-empty-string hack with `std::string` and
   `.c_str()` where needed. Careful: many functions take `char*` — keep
