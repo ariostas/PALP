@@ -1,5 +1,4 @@
-#ifndef PALP_TYPES_H
-#define PALP_TYPES_H
+#pragma once
 
 /*
  * C++-friendly type aliases for the integer types used throughout PALP.
@@ -13,4 +12,3 @@
 using Long  = long;
 using LLong = long long;
 
-#endif /* PALP_TYPES_H */

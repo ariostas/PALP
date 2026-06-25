@@ -1,5 +1,4 @@
-#ifndef PALP_LG_H
-#define PALP_LG_H
+#pragma once
 
 #define	 WZinput 	(1)	/* WZ-input (in progress)  */
 
@@ -56,4 +55,3 @@ void Write_WH(Weight *_W, BaHo *_BH, VaHo *_VH, int rc, int tc,
 	      PolyPointList *_P, VertexNumList *_V, EqList *_E);
 void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP);
 
-#endif

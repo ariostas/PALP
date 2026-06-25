@@ -1,5 +1,4 @@
-#ifndef PALP_MORI_H
-#define PALP_MORI_H
+#pragma once
 
 /* =========================================================== */
 /* ===                                                     === */
@@ -163,5 +162,4 @@ void IP_Simplex_Fiber(Long PM[][POLY_Dmax], int p, int d,
 void Aux_IPS_Print_WP(Long *W, int w, int cd);
 void Print_QuotZ(int Z[][VERT_Nmax], int *M, int p, int n);
 
-#endif
 

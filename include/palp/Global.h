@@ -1,5 +1,4 @@
-#ifndef PALP_GLOBAL_H
-#define PALP_GLOBAL_H
+#pragma once
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -661,4 +660,3 @@ int  Multiloop(int *N,int *I,int *j,int *J);
 Long Poly_Point_Count(PolyPointList *P, VertexNumList *V, EqList *E);
 int  VP_2_CWS(Long *V[], int d, int v, CWS *W);
 
-#endif

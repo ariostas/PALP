@@ -1,5 +1,4 @@
-#ifndef PALP_SUBPOLY_H
-#define PALP_SUBPOLY_H
+#pragma once
 
 #include <limits.h>
 
@@ -223,5 +222,4 @@ void AuxPut_hNF(FILE *F,int *v,int *nu,unsigned char *Huc,FInfoList *Io,
 #define min(a,b)	(((a) < (b)) ? (a) : (b))
 #define max(a,b)	(((a) > (b)) ? (a) : (b))
 
-#endif
 

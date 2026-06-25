@@ -72,8 +72,7 @@ separate phase after migration.
 
 - Create `include/palp/` directory.
 - Copy (not move yet) `Global.h`, `Rat.h`, `LG.h`, `Nef.h`, `Mori.h`,
-  `Subpoly.h` into `include/palp/` with `#pragma once` added (keep existing
-  include guards as well for safety).
+  `Subpoly.h` into `include/palp/` with `#pragma once` added.
 - Add `include/palp/` to `target_include_directories` for all targets.
 - Update all `#include "Global.h"` etc. to `#include "palp/Global.h"` in all
   `.c` files.
@@ -348,8 +347,11 @@ This is the highest-risk step. Take extra care.
 - [x] Move all C++ sources under `src/` and `Rat.h` under `include/palp/`.
 - [x] Remove `extern "C"` shims from all headers and source files now that the
   project is C++-only.
-- [x] Add proper include guards to headers that were missing them (`Global.h`,
-  `LG.h`, `Nef.h`, `Mori.h`, `Subpoly.h`).
+- [x] Remove `extern "C"` shims from all headers and source files now that the
+  project is C++-only.
+- [x] Add proper include guards (now `#pragma once`) to all headers
+  (`Global.h`, `LG.h`, `Nef.h`, `Mori.h`, `Subpoly.h`, `Rat.h`,
+  `palp_types.h`).
 - [ ] Clean up any remaining forwarding shims from Step 0.2.
 - **Verify**: full clean build + test.
 
