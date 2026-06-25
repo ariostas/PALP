@@ -101,54 +101,57 @@ separate phase after migration.
 These modules have no dependencies on other PALP modules (only on standard C
 library and each other in a simple chain). Convert in dependency order.
 
-- [x] #### Step 1.1 — `Rat.c` → `Rat.cpp`
+- [ ] #### Step 1.1 — `Rat.c` → `Rat.cpp`
 
-- Rename file, update CMakeLists.
-- Remove `register` keyword (all instances).
-- Replace `#ifdef TEST` test blocks: gate behind `#ifndef NDEBUG` or remove
+- [x] Rename `Rat.c` → `Rat.cpp` and ensure mixed C/C++ linkage via `extern "C"`
+  in `Rat.h`.
+- [x] Remove `register` keyword (all instances).
+- [ ] Replace `#ifdef TEST` test blocks: gate behind `#ifndef NDEBUG` or remove
   dead test code.
-- Convert `Rat`/`LRat` structs: add default constructors, keep as POD-like
+- [ ] Convert `Rat`/`LRat` structs: add default constructors, keep as POD-like
   structs.
-- Replace function bodies minimally: `register Long g = Fgcd(a,b)` →
-  `Long g = Fgcd(a,b)`.
 - **Verify**: build + test (especially `tests/2.*` which exercise `poly.x`
   which uses `Rat`).
 
-- [x] #### Step 1.2 — `Vertex.c` → `Vertex.cpp`
+- [ ] #### Step 1.2 — `Vertex.c` → `Vertex.cpp`
 
-- Replace `malloc`/`free` for temp arrays (`CEq`, `CEq_I`, `F_I`) with
+- [x] Rename `Vertex.c` → `Vertex.cpp` and ensure mixed C/C++ linkage via
+  `extern "C"` in `Global.h`.
+- [x] Replace `malloc`/`free` for temp arrays (`CEq`, `CEq_I`, `F_I`) with
   `std::vector` or `std::make_unique`.
-- Keep `INCI` macros and typedefs as-is (performance-critical bit operations).
-- Replace `register` usage (none in this file, but check).
-- Keep `exit(0)` calls for now (bug fix is Phase 5).
+- [x] Keep `INCI` macros and typedefs as-is (performance-critical bit operations).
+- [x] Keep `exit(0)` calls for now (bug fix is Phase 5).
 - **Verify**: build + test (all `tests/2.*`, `tests/3.*`).
 
-- [x] #### Step 1.3 — `Coord.c` → `Coord.cpp`
+- [ ] #### Step 1.3 — `Coord.c` → `Coord.cpp`
 
-- Replace `char c[999]` local buffers with `std::array<char, 999>` or
-  `std::string`.
-- Replace `fscanf`-based parsing: add return-value checks but keep identical
-  output behavior (check return, on failure produce same error message).
-- Keep `static int InputOK` as-is for now (documented in ISSUES.md #43).
+- [x] Rename `Coord.c` → `Coord.cpp` and ensure mixed C/C++ linkage via
+  `extern "C"` in `Global.h`.
+- [x] Replace some `char c[999]` local buffers with `std::array<char, 999>` or
+  `std::vector`.
+- [ ] Replace remaining `fscanf`-based parsing: add return-value checks but keep
+  identical output behavior (check return, on failure produce same error message).
+- [ ] Keep `static int InputOK` as-is for now (documented in ISSUES.md #43).
 - **Verify**: build + test (all `tests/2.*`, `tests/4.*`).
 
-- [x] #### Step 1.4 — `Polynf.c` → `Polynf.cpp` (largest: ~3223 lines)
+- [ ] #### Step 1.4 — `Polynf.c` → `Polynf.cpp` (largest: ~3223 lines)
 
 This is the highest-risk step. Take extra care.
 
-- Consider splitting the conversion into sub-steps if needed, but keep as
-  one translation unit (one `.cpp` file). Optionally use `#include "Polynf_*.ipp"`
-  internal fragments if the file is unwieldy.
-- Replace `#if (VERT_Nmax < 129)` stack-vs-heap conditionals with uniform
-  `std::vector` allocation.
-- Replace `volatile` with `std::atomic` or remove if no longer needed (verify
+- [x] Rename `Polynf.c` → `Polynf.cpp` and ensure mixed C/C++ linkage via
+  `extern "C"` in `Mori.h` / `Global.h`.
+- [x] Replace some `#if (VERT_Nmax < 129)` stack-vs-heap conditionals with
+  `std::make_unique` allocation.
+- [ ] Replace remaining `#if (VERT_Nmax < 129)` stack-vs-heap conditionals with
+  uniform `std::vector` allocation.
+- [ ] Replace `volatile` with `std::atomic` or remove if no longer needed (verify
   behavior unchanged).
-- Replace `static int` counters with a struct passed explicitly where feasible;
+- [ ] Replace `static int` counters with a struct passed explicitly where feasible;
   if too invasive, leave as `static` and document (ISSUES.md #16).
-- Replace `register` (remove).
-- Replace `#define TEST`/`#undef TEST`/`#define TEST` mid-file toggling with
+- [ ] Replace remaining `register` usage (remove).
+- [x] Replace `#define TEST`/`#undef TEST`/`#define TEST` mid-file toggling with
   `constexpr bool` flags at top of file.
-- Remove `puts("PM")` debug print (ISSUES.md #33).
+- [x] Remove `puts("PM")` debug print (ISSUES.md #33).
 - **Verify**: build + test for ALL dimensions (4, 5, 6, 11) — run full
   `make check` or `ctest` with `DIM` variations.
 
