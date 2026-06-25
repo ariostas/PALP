@@ -103,7 +103,8 @@ library and each other in a simple chain). Convert in dependency order.
 
 - [ ] #### Step 1.1 — `Rat.c` → `Rat.cpp`
 
-- [x] Rename `Rat.c` → `Rat.cpp` and ensure mixed C/C++ linkage via `extern "C"`
+- [x] Rename `Rat.c` → `Rat.cpp` (mixed C/C++ linkage was temporarily ensured
+  via `extern "C"`; removed after full C++ migration).
   in `Rat.h`.
 - [x] Remove `register` keyword (all instances).
 - [x] Replace `#ifdef TEST` test blocks: none present in `Rat.c`/`Rat.cpp`.
@@ -114,8 +115,7 @@ library and each other in a simple chain). Convert in dependency order.
 
 - [ ] #### Step 1.2 — `Vertex.c` → `Vertex.cpp`
 
-- [x] Rename `Vertex.c` → `Vertex.cpp` and ensure mixed C/C++ linkage via
-  `extern "C"` in `Global.h`.
+- [x] Rename `Vertex.c` → `Vertex.cpp`.
 - [x] Replace `malloc`/`free` for temp arrays (`CEq`, `CEq_I`, `F_I`) with
   `std::vector` or `std::make_unique`.
 - [x] Keep `INCI` macros and typedefs as-is (performance-critical bit operations).
@@ -124,8 +124,7 @@ library and each other in a simple chain). Convert in dependency order.
 
 - [ ] #### Step 1.3 — `Coord.c` → `Coord.cpp`
 
-- [x] Rename `Coord.c` → `Coord.cpp` and ensure mixed C/C++ linkage via
-  `extern "C"` in `Global.h`.
+- [x] Rename `Coord.c` → `Coord.cpp`.
 - [x] Replace some `char c[999]` local buffers with `std::array<char, 999>` or
   `std::vector`.
 - [ ] Replace remaining `fscanf`-based parsing: add return-value checks but keep
@@ -137,8 +136,7 @@ library and each other in a simple chain). Convert in dependency order.
 
 This is the highest-risk step. Take extra care.
 
-- [x] Rename `Polynf.c` → `Polynf.cpp` and ensure mixed C/C++ linkage via
-  `extern "C"` in `Mori.h` / `Global.h`.
+- [x] Rename `Polynf.c` → `Polynf.cpp`.
 - [x] Replace some `#if (VERT_Nmax < 129)` stack-vs-heap conditionals with
   `std::make_unique` allocation.
 - [ ] Replace remaining `#if (VERT_Nmax < 129)` stack-vs-heap conditionals with
@@ -156,7 +154,7 @@ This is the highest-risk step. Take extra care.
 
 - [ ] #### Step 1.5 — `LG.c` → `LG.cpp` (~1113 lines)
 
-- [x] Rename `LG.c` → `LG.cpp` and ensure mixed C/C++ linkage via `extern "C"`.
+- [x] Rename `LG.c` → `LG.cpp`.
 - [ ] Replace `register` keyword (all instances).
 - [ ] Replace `char c[999]` with `std::array<char, 999>`.
 - [ ] Replace `AllocPoCoLi`/`Free_PoCoLi` manual pointer arithmetic with
@@ -171,8 +169,7 @@ This is the highest-risk step. Take extra care.
 
 - [ ] #### Step 1.6 — `Nefpart.c` → `Nefpart.cpp` (~837 lines)
 
-- [x] Rename `Nefpart.c` → `Nefpart.cpp` and ensure mixed C/C++ linkage via
-  `extern "C"` in `Nef.h`.
+- [x] Rename `Nefpart.c` → `Nefpart.cpp`.
 - [ ] Remove `scanf("%c", &c)` interactive debug pause (ISSUES.md #38) or gate
   behind `#ifndef NDEBUG`.
 - [ ] Replace bubble sort (`Bubble_PTL`) with `std::sort` — verify identical
@@ -187,8 +184,7 @@ This is the highest-risk step. Take extra care.
 
 - [ ] #### Step 2.1 — `poly.c` → `poly.cpp`
 
-- [x] Rename `poly.c` → `poly.cpp` and ensure mixed C/C++ linkage via
-  `extern "C"` in `Subpoly.h`.
+- [x] Rename `poly.c` → `poly.cpp`.
 - [ ] Replace `malloc` for large compile-time-sized structs (`CWS`, `EqList`,
   `PolyPointList`, `PairMat`, `FaceInfo`) with `std::make_unique` or stack
   allocation (they are fixed-size).
@@ -201,7 +197,7 @@ This is the highest-risk step. Take extra care.
 
 - [ ] #### Step 2.2 — `cws.c` → `cws.cpp` (~1935 lines)
 
-- [x] Rename `cws.c` → `cws.cpp` and ensure mixed C/C++ linkage.
+- [x] Rename `cws.c` → `cws.cpp`.
 - [ ] Replace `WDIM=800000` and `TWDIM=16384` magic constants with `constexpr int`.
 - [ ] Replace VLA `int IN[AMBI_Dmax*(AMBI_Dmax+1)]` with `std::array` or
   `std::vector`.
@@ -213,8 +209,7 @@ This is the highest-risk step. Take extra care.
 
 - [ ] #### Step 2.3 — `class.c` → `class.cpp`
 
-- [x] Rename `class.c` → `class.cpp` and ensure mixed C/C++ linkage via
-  `extern "C"` in `Subpoly.h`.
+- [x] Rename `class.c` → `class.cpp`.
 - [ ] Replace `char Blank=0` pointer-to-empty-string hack with `std::string` and
   `.c_str()` where needed. Careful: many functions take `char*` — keep
   `.c_str()` pointers valid for the duration of use.
@@ -226,8 +221,7 @@ This is the highest-risk step. Take extra care.
 
 - [ ] #### Step 2.4 — `nef.c` → `nef.cpp`
 
-- [x] Rename `nef.c` → `nef.cpp` and ensure mixed C/C++ linkage via `extern "C"`
-  in `Nef.h`.
+- [x] Rename `nef.c` → `nef.cpp`.
 - [ ] Replace local typedefs (`AmbiLatticeBasis`, `CWLatticeBasis`, `Pstat`) with
   proper struct definitions; check if they duplicate types from `Coord.c`.
 - [ ] Replace VLA `Long PM[EQUA_Nmax][VERT_Nmax]` with `std::vector`.
@@ -236,8 +230,7 @@ This is the highest-risk step. Take extra care.
 
 - [ ] #### Step 2.5 — `mori.c` → `mori.cpp`
 
-- [x] Rename `mori.c` → `mori.cpp` and ensure mixed C/C++ linkage via
-  `extern "C"` in `Mori.h`.
+- [x] Rename `mori.c` → `mori.cpp`.
 - [ ] Replace all `malloc` calls with `std::make_unique` or stack allocation.
   Fix the memory leaks (ISSUES.md #8) by ensuring RAII cleanup.
 - [ ] Keep `FILE *inFILE, *outFILE` global definition here (mori.x defines them).
@@ -249,8 +242,7 @@ This is the highest-risk step. Take extra care.
 
 - [ ] #### Step 3.1 — `E_Poly.c` → `E_Poly.cpp` (~1544 lines)
 
-- [x] Rename `E_Poly.c` → `E_Poly.cpp` and ensure mixed C/C++ linkage via
-  `extern "C"` in `Nef.h`.
+- [x] Rename `E_Poly.c` → `E_Poly.cpp`.
 - [ ] Remove local `#define min`/`#define max` (ISSUES.md #28); use `std::min`/
   `std::max` from `<algorithm>`.
 - [ ] Fix `int h[POLY_Dmax][POLY_Dmax] = {{0},{0}}` → `int h[POLY_Dmax][POLY_Dmax]
@@ -262,8 +254,7 @@ This is the highest-risk step. Take extra care.
 
 - [ ] #### Step 3.2 — `Nefpart.c` → `Nefpart.cpp` (~837 lines)
 
-- [x] Rename `Nefpart.c` → `Nefpart.cpp` and ensure mixed C/C++ linkage via
-  `extern "C"` in `Nef.h`.
+- [x] Rename `Nefpart.c` → `Nefpart.cpp`.
 - [ ] Remove `scanf("%c", &c)` interactive debug pause (ISSUES.md #38) or gate
   behind `#ifndef NDEBUG`.
 - [ ] Replace bubble sort (`Bubble_PTL`) with `std::sort` — verify identical
@@ -274,8 +265,7 @@ This is the highest-risk step. Take extra care.
 
 - [ ] #### Step 3.3 — `MoriCone.c` → `MoriCone.cpp` (~1792 lines)
 
-- [x] Rename `MoriCone.c` → `MoriCone.cpp` and ensure mixed C/C++ linkage via
-  `extern "C"` in `Mori.h`.
+- [x] Rename `MoriCone.c` → `MoriCone.cpp`.
 - [ ] Fix `assert(++m < binco)` (ISSUES.md #1): move `++m` out of assert:
   ```cpp
   ++m; assert(m < binco);
@@ -290,8 +280,7 @@ This is the highest-risk step. Take extra care.
 
 - [ ] #### Step 3.4 — `SingularInput.c` → `SingularInput.cpp` (~591 lines)
 
-- [x] Rename `SingularInput.c` → `SingularInput.cpp` and ensure mixed C/C++
-  linkage via `extern "C"` in `Mori.h`.
+- [x] Rename `SingularInput.c` → `SingularInput.cpp`.
 - [ ] Replace `char filename[20]` with `std::string`.
 - [ ] Replace `char string[maxline]` VLA with `std::vector<char>`.
 - [ ] Add `malloc` NULL check for `he` (ISSUES.md #10).
@@ -303,8 +292,7 @@ This is the highest-risk step. Take extra care.
 
 - [ ] #### Step 3.5 — `Subpoly.c` → `Subpoly.cpp` (~1614 lines)
 
-- [x] Rename `Subpoly.c` → `Subpoly.cpp` and ensure mixed C/C++ linkage via
-  `extern "C"` in `Subpoly.h`.
+- [x] Rename `Subpoly.c` → `Subpoly.cpp`.
 - [ ] Replace `subl_int` typedef with explicit `int64_t`.
 - [ ] Replace `exit(0)` with `palp::die()`.
 - [ ] Replace `drop_point[POLY_Dmax]` "silence compiler" zero-init with `= {}`
@@ -314,8 +302,7 @@ This is the highest-risk step. Take extra care.
 
 - [ ] #### Step 3.6 — `Subadd.c` → `Subadd.cpp` (~1408 lines)
 
-- [x] Rename `Subadd.c` → `Subadd.cpp` and ensure mixed C/C++ linkage via
-  `extern "C"` in `Subpoly.h`.
+- [x] Rename `Subadd.c` → `Subadd.cpp`.
 - [ ] Replace `fscanf(F, "%c%c%c%c", &A, &B, &C, &D)` with `fread` for binary I/O
   (more correct and faster).
 - [ ] Replace `unsigned char auxUC[POLY_Dmax*VERT_Nmax]` VLA with `std::vector`.
@@ -326,8 +313,7 @@ This is the highest-risk step. Take extra care.
 
 - [ ] #### Step 3.7 — `Subdb.c` → `Subdb.cpp` (~1915 lines)
 
-- [x] Rename `Subdb.c` → `Subdb.cpp` and ensure mixed C/C++ linkage via
-  `extern "C"` in `Subpoly.h`.
+- [x] Rename `Subdb.c` → `Subdb.cpp`.
 - [ ] Replace `goto END_SL` / `goto END_VN` with structured flow control (lambdas
   or early-return helper functions).
 - [ ] Replace `static unsigned char uc[NUC_Nmax]` and `static int ms3`
@@ -360,6 +346,10 @@ This is the highest-risk step. Take extra care.
 - [x] Remove the deprecated `GNUmakefile` and root `Makefile` (CMake is the
   primary and only supported build system).
 - [x] Move all C++ sources under `src/` and `Rat.h` under `include/palp/`.
+- [x] Remove `extern "C"` shims from all headers and source files now that the
+  project is C++-only.
+- [x] Add proper include guards to headers that were missing them (`Global.h`,
+  `LG.h`, `Nef.h`, `Mori.h`, `Subpoly.h`).
 - [ ] Clean up any remaining forwarding shims from Step 0.2.
 - **Verify**: full clean build + test.
 

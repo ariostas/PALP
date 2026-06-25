@@ -1,6 +1,5 @@
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef PALP_SUBPOLY_H
+#define PALP_SUBPOLY_H
 
 #include <limits.h>
 
@@ -221,10 +220,8 @@ void AuxGet_uc(FILE *F,int *nu, unsigned char *uc);
 void AuxPut_hNF(FILE *F,int *v,int *nu,unsigned char *Huc,FInfoList *Io,
         int *slNF,int *slSM,int *slNM,int *slNB,unsigned char *ucSL,int *SLp);
 
-#ifdef __cplusplus
-}
-#endif
-
 #define min(a,b)	(((a) < (b)) ? (a) : (b))
 #define max(a,b)	(((a) > (b)) ? (a) : (b))
+
+#endif
 

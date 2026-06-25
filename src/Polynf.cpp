@@ -6,9 +6,6 @@
 #include <memory>
 #include <vector>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define	SORT_CWS	(0)
 #define FIB_PERM	(27)		    /* print permutation for p<=# */
@@ -3201,6 +3198,3 @@ int Make_Fano5d(PolyPointList *P,int *Dpt,EqList *E,	    /* nc=#Circuits */
   return nf;/* nf = number of output polytopes (just for statistics) */
 }
 
-#ifdef __cplusplus
-}
-#endif

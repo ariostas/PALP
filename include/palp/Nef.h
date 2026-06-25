@@ -1,3 +1,6 @@
+#ifndef PALP_NEF_H
+#define PALP_NEF_H
+
 #define Nef_Max 	500000
 #define NP_Max          500000
 #define W_Nmax (POLY_Dmax+1)
@@ -101,25 +104,13 @@ typedef struct Vector Vector ;
 typedef struct {
   struct Vector *L;
   int n;
-  Long np, NP_max;						} DYN_PPL;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+  Long np, NP_max;					} DYN_PPL;
 
 void part_nef(PolyPointList *, VertexNumList *, EqList *, PartList *,
 	      int *, NEF_Flags *);
 
-#ifdef __cplusplus
-}
-#endif
-
 void Mink_WPCICY(AmbiPointList * _AP_1, AmbiPointList * _AP_2,
 		 AmbiPointList * _AP);
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void Make_E_Poly(FILE *, CWS *, PolyPointList *, VertexNumList *, EqList *,
 		 int *, Flags *, int *);
@@ -135,6 +126,4 @@ void Print_CWS_Zinfo(CWS *);
 void AnalyseGorensteinCone(CWS *_CW,  PolyPointList *_P, VertexNumList *_V, 
 			   EqList *_E, int *_codim, Flags * _F);
 
-#ifdef __cplusplus
-}
 #endif

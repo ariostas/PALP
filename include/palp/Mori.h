@@ -1,3 +1,6 @@
+#ifndef PALP_MORI_H
+#define PALP_MORI_H
+
 /* =========================================================== */
 /* ===                                                     === */
 /* ===                  M o r i . h                        === */
@@ -16,10 +19,6 @@
 
 /* ====================================================== */
 /* =========         P R O T O T Y P E s        ========= */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /*** from mori.c ***/
 typedef struct {
@@ -133,16 +132,8 @@ among their points, the triangulation T and the SR ideal it generates the the in
 for SINGULAR.
 */
 
-#ifdef __cplusplus
-}
-#endif
-
 
 /*======== 	dependences from other modules  ======== */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /*** from Polynf.c ***/
 void IP_Simplex_Fiber(Long PM[][POLY_Dmax], int p, int d, /* need PM[i]!=0 */ FibW *F, int Wmax, int CD);
@@ -172,7 +163,5 @@ void IP_Simplex_Fiber(Long PM[][POLY_Dmax], int p, int d,
 void Aux_IPS_Print_WP(Long *W, int w, int cd);
 void Print_QuotZ(int Z[][VERT_Nmax], int *M, int p, int n);
 
-#ifdef __cplusplus
-}
 #endif
 

@@ -1,3 +1,6 @@
+#ifndef PALP_GLOBAL_H
+#define PALP_GLOBAL_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -195,10 +198,6 @@ statistics on large lists of weight systems, cf. classification of 4fold weights
 */
 
 /*  ==========         I/O functions (from Coord.c)		==========  */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 int  Read_CWS_PP(CWS *C, PolyPointList *P);
 /*
@@ -662,6 +661,4 @@ int  Multiloop(int *N,int *I,int *j,int *J);
 Long Poly_Point_Count(PolyPointList *P, VertexNumList *V, EqList *E);
 int  VP_2_CWS(Long *V[], int d, int v, CWS *W);
 
-#ifdef __cplusplus
-}
 #endif

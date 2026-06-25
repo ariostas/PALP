@@ -1,3 +1,6 @@
+#ifndef PALP_LG_H
+#define PALP_LG_H
+
 #define	 WZinput 	(1)	/* WZ-input (in progress)  */
 
 #define  W_Nmax		(POLY_Dmax+1)
@@ -12,10 +15,6 @@
 #endif                             /* type of coefficients in PolyCoeffList */
 
 typedef struct {int n; int *e; Pint *c; int A;}		  PoCoLi;  /* e=exp */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void AllocPoCoLi(PoCoLi *P);		      /* allocate e[P.A] and c[P.A] */
 void Free_PoCoLi(PoCoLi *P);				/* free P.e and P.c */
@@ -57,6 +56,4 @@ void Write_WH(Weight *_W, BaHo *_BH, VaHo *_VH, int rc, int tc,
 	      PolyPointList *_P, VertexNumList *_V, EqList *_E);
 void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP);
 
-#ifdef __cplusplus
-}
 #endif
