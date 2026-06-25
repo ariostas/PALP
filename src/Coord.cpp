@@ -141,25 +141,29 @@ int  ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index)
      else if(inFILE==stdin)     {
        puts("Degrees and weights  `d1 w11 w12 ... d2 w21 w22 ...'");
        puts("  or `#lines #columns' (= `PolyDim #Points' or `#Points PolyDim'):");}
-     for(i=0;i<AMBI_Dmax*(AMBI_Dmax+1);i++)
-     { char c;
-       while(' '==(c=fgetc(inFILE )));
-       ungetc(c,inFILE);    /* read blanks */
-       if(IsNextDigit()) fscanf(inFILE,"%d",&IN[i]); else break;
-     }
-     if(i==0) { if(!InputOK){puts("-h gives you help\n"); exit(0);}
+      for(i=0;i<AMBI_Dmax*(AMBI_Dmax+1);i++)
+      { char c;
+        while(' '==(c=fgetc(inFILE )));
+        ungetc(c,inFILE);    /* read blanks */
+        if(IsNextDigit()) {
+          if(fscanf(inFILE,"%d",&IN[i])!=1) {
+            puts("Error: failed to read input number"); exit(0);
+          }
+        } else break;
+      }
+      if(i==0) { if(!InputOK){puts("-h gives you help\n"); exit(0);}
 	else return 0; } InputOK++;
-     if(i==1) { puts("Error in INPUT: need at least 2 numbers!"); exit(0);}
-     if(i==2) 					      /* READ PolyPointList */
-     {	int tr=0;
-       while('\n'!=fgetc(inFILE));      /* read to end of line */
-       if(IN[0]==IN[1]){ 
-	 puts("The number of points must be larger than the dimension!");
-	 exit(0);}
-       if(IN[0]>IN[1]) {tr=IN[0];IN[0]=IN[1];IN[1]=tr;} tr=!tr;
+      if(i==1) { puts("Error in INPUT: need at least 2 numbers!"); exit(0);}
+      if(i==2) 					      /* READ PolyPointList */
+      {	int tr=0;
+        while('\n'!=fgetc(inFILE));      /* read to end of line */
+        if(IN[0]==IN[1]){ 
+ 	 puts("The number of points must be larger than the dimension!");
+ 	 exit(0);}
+        if(IN[0]>IN[1]) {tr=IN[0];IN[0]=IN[1];IN[1]=tr;} tr=!tr;
 	checkDimension(IN[0], codim, index);
- 	if(IN[1]>POINT_Nmax) {puts("Please increase POINT_Nmax"); exit(0);}
- 	if((inFILE==stdin)&&!FilterFlag)  
+  	if(IN[1]>POINT_Nmax) {puts("Please increase POINT_Nmax"); exit(0);}
+  	if((inFILE==stdin)&&!FilterFlag)  
 	  printf("Type the %d coordinates as %s=%d lines with %s=%d columns:\n",
 		IN[0]*IN[1], tr ? "dim" : "#pts", tr ? IN[0] : IN[1],
 		tr ? "#pts" : "dim", tr ? IN[1] : IN[0]);
@@ -167,16 +171,20 @@ int  ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index)
 	/* allow all numbers in one string (distributed over lines) or
 	 * matrix blocks with trailing comments	*/
 	if(tr) for(i=0;i<IN[0];i++) for(j=0;j<IN[1];j++)
-	  {   int X; fscanf(inFILE,"%d",&X); _P->x[j][i]=X;	}
+	  {   int X; if(fscanf(inFILE,"%d",&X)!=1)
+	        { puts("Error: failed to read polytope matrix entry"); exit(0); }
+	      _P->x[j][i]=X;	}
 	else for(i=0;i<IN[1];i++) for(j=0;j<IN[0];j++)
-	  {   int X; fscanf(inFILE,"%d",&X); _P->x[i][j]=X;	}
+	  {   int X; if(fscanf(inFILE,"%d",&X)!=1)
+	        { puts("Error: failed to read polytope matrix entry"); exit(0); }
+	      _P->x[i][j]=X;	}
 	/* Finish_Poly_Points(_P); */
 	while(fgetc(inFILE )-'\n') if(feof(inFILE)) return 0;/* read to EOL */
-     	if(FilterFlag) inFILE=NULL;
+      	if(FilterFlag) inFILE=NULL;
 	return 1;
-     }  /* End of reading PolyPointList */
-     assert(i!=3);
-     S=IN[i-1]; 
+      }  /* End of reading PolyPointList */
+      assert(i!=3);
+      S=IN[i-1];
      for(j=0;j<i-1;j++) if((IN[j]==0)||(S<IN[j])) break; 
      if(j==i-1)				 /* Single Weights with: "w1 ... d" */
      {	_CW->nw=1; _CW->d[0]=S; _CW->N=i-1; 
@@ -237,17 +245,21 @@ int  Read_PP(PolyPointList *_P)
      else if(inFILE==stdin)     {
        printf("`#lines #columns' (= `PolyDim #Points' or `#Points PolyDim'):\n");
      };
-     for(i=0;i<AMBI_Dmax*(AMBI_Dmax+1);i++)
-     { char c;
-       while(' '==(c=fgetc(inFILE )));
-       ungetc(c,inFILE);    /* read blanks */
-       if(IsNextDigit()) fscanf(inFILE,"%d",&IN[i]); else break;
-     }
-     if(i==0) { if(!InputOK){puts("-h gives you help\n"); exit(0);}
+      for(i=0;i<AMBI_Dmax*(AMBI_Dmax+1);i++)
+      { char c;
+        while(' '==(c=fgetc(inFILE )));
+        ungetc(c,inFILE);    /* read blanks */
+        if(IsNextDigit()) {
+          if(fscanf(inFILE,"%d",&IN[i])!=1) {
+            puts("Error: failed to read input number"); exit(0);
+          }
+        } else break;
+      }
+      if(i==0) { if(!InputOK){puts("-h gives you help\n"); exit(0);}
 	else return 0; } InputOK++;
-     if(i==1) { puts("Error in INPUT: need at least 2 numbers!"); exit(0);}
-     if(i==2) 					      /* READ PolyPointList */
-     {	int tr=0;
+      if(i==1) { puts("Error in INPUT: need at least 2 numbers!"); exit(0);}
+      if(i==2) 					      /* READ PolyPointList */
+      {	int tr=0;
        while('\n'!=fgetc(inFILE));      /* read to end of line */
        if(IN[0]==IN[1]){ 
 	 puts("The number of points must be larger than the dimension!");
@@ -263,9 +275,13 @@ int  Read_PP(PolyPointList *_P)
 /* allow all numbers in one string (distributed over lines) or
  * matrix blocks with trailing comments	*/
 	if(tr) for(i=0;i<IN[0];i++) for(j=0;j<IN[1];j++)
-	  {   int X; fscanf(inFILE,"%d",&X); _P->x[j][i]=X;	}
+	  {   int X; if(fscanf(inFILE,"%d",&X)!=1)
+	        { puts("Error: failed to read polytope matrix entry"); exit(0); }
+	      _P->x[j][i]=X;	}
 	else for(i=0;i<IN[1];i++) for(j=0;j<IN[0];j++)
-	  {   int X; fscanf(inFILE,"%d",&X); _P->x[i][j]=X;	}
+	  {   int X; if(fscanf(inFILE,"%d",&X)!=1)
+	        { puts("Error: failed to read polytope matrix entry"); exit(0); }
+	      _P->x[i][j]=X;	}
 	/* Finish_Poly_Points(_P); */
 	while(fgetc(inFILE )-'\n') if(feof(inFILE)) return 0;/* read to EOL */
      	if(FilterFlag) inFILE=NULL;
@@ -287,16 +303,20 @@ int  Read_CWS(CWS *_CW, PolyPointList *_P)
      else if(inFILE==stdin)     {
        printf("Degrees and weights  `d1 w11 w12 ... d2 w21 w22 ...':\n");
      };
-     for(i=0;i<AMBI_Dmax*(AMBI_Dmax+1);i++)
-     { char c;
-       while(' '==(c=fgetc(inFILE )));
-       ungetc(c,inFILE);    /* read blanks */
-       if(IsNextDigit()) fscanf(inFILE,"%d",&IN[i]); else break;
-     }
-     if(i==0) { if(!InputOK){puts("-h gives you help\n"); exit(0);}
+      for(i=0;i<AMBI_Dmax*(AMBI_Dmax+1);i++)
+      { char c;
+        while(' '==(c=fgetc(inFILE )));
+        ungetc(c,inFILE);    /* read blanks */
+        if(IsNextDigit()) {
+          if(fscanf(inFILE,"%d",&IN[i])!=1) {
+            puts("Error: failed to read input number"); exit(0);
+          }
+        } else break;
+      }
+      if(i==0) { if(!InputOK){puts("-h gives you help\n"); exit(0);}
 	else return 0; } InputOK++;
-     if(i==1) { puts("Error in INPUT: need at least 2 numbers!"); exit(0);}
-     if(i==2) {puts("Error: expected input format is CWS!"); exit(0);}
+      if(i==1) { puts("Error in INPUT: need at least 2 numbers!"); exit(0);}
+      if(i==2) {puts("Error: expected input format is CWS!"); exit(0);}
      assert(i!=3);
      S=IN[i-1]; for(j=0;j<i-1;j++) if(S<IN[j]) break;
      if(j==i-1)				 /* Single Weights with: "w1 ... d" */

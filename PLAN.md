@@ -100,19 +100,18 @@ separate phase after migration.
 These modules have no dependencies on other PALP modules (only on standard C
 library and each other in a simple chain). Convert in dependency order.
 
-- [ ] #### Step 1.1 — `Rat.c` → `Rat.cpp`
+- [x] #### Step 1.1 — `Rat.c` → `Rat.cpp`
 
 - [x] Rename `Rat.c` → `Rat.cpp` (mixed C/C++ linkage was temporarily ensured
   via `extern "C"`; removed after full C++ migration).
-  in `Rat.h`.
 - [x] Remove `register` keyword (all instances).
 - [x] Replace `#ifdef TEST` test blocks: none present in `Rat.c`/`Rat.cpp`.
 - [x] Convert `Rat`/`LRat` structs: add C++ constructors, keep as POD-like
-  structs (C compatibility preserved via `#ifdef __cplusplus`).
+  structs.
 - **Verify**: build + test (especially `tests/2.*` which exercise `poly.x`
   which uses `Rat`).
 
-- [ ] #### Step 1.2 — `Vertex.c` → `Vertex.cpp`
+- [x] #### Step 1.2 — `Vertex.c` → `Vertex.cpp`
 
 - [x] Rename `Vertex.c` → `Vertex.cpp`.
 - [x] Replace `malloc`/`free` for temp arrays (`CEq`, `CEq_I`, `F_I`) with
@@ -128,6 +127,8 @@ library and each other in a simple chain). Convert in dependency order.
   `std::vector`.
 - [ ] Replace remaining `fscanf`-based parsing: add return-value checks but keep
   identical output behavior (check return, on failure produce same error message).
+- [x] `ReadCwsPp`, `Read_PP`, `Read_CWS` now check `fscanf` return values and exit
+  with a descriptive error message on failure.
 - [ ] Keep `static int InputOK` as-is for now (documented in ISSUES.md #43).
 - **Verify**: build + test (all `tests/2.*`, `tests/4.*`).
 
