@@ -233,7 +233,7 @@ This is the highest-risk step. Take extra care.
 
 ### Phase 3 — Secondary libraries (depend on Phase 1 + 2)
 
-#### Step 3.1 — `E_Poly.c` → `E_Poly.cpp` (~1544 lines)
+- [x] #### Step 3.1 — `E_Poly.c` → `E_Poly.cpp` (~1544 lines)
 
 - Remove local `#define min`/`#define max` (ISSUES.md #28); use `std::min`/
   `std::max` from `<algorithm>`.
