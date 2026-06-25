@@ -350,7 +350,7 @@ void Write_Bin_File(FILE *F,NF_List *L)
      AuxCalcNumbers(L,_AI);
      Print_Expect(_AI);
      fflush(stdout);
-     nVmax=max(L->Aux.nVmax,AI.nVmax); NUCmax=max(L->Aux.NUCmax,AI.NUCmax);
+     nVmax=palp::max(L->Aux.nVmax,AI.nVmax); NUCmax=palp::max(L->Aux.NUCmax,AI.NUCmax);
      for(i=L->d+1;i<=nVmax;i++)
      { int v_li=0;
        for(j=1;j<=NUCmax;j++)
@@ -1186,8 +1186,8 @@ void Add_Polya_2_Polyi(char *polyi,char *polya,char *polyo)
      printf("SL: %dnf %dsm %dnm %db -> ",slNF,slSM,slNM,slNB);
 
      FSEEK(FI,HIpos,SEEK_SET); FSEEK(FA,HApos,SEEK_SET); Init_FInfoList(&FIo);
-     FIo.nVmax=max(FIi.nVmax,FIa.nVmax);
-     FIo.NUCmax=max(FIi.NUCmax,FIa.NUCmax); tnb=0;
+     FIo.nVmax=palp::max(FIi.nVmax,FIa.nVmax);
+     FIo.NUCmax=palp::max(FIi.NUCmax,FIa.NUCmax); tnb=0;
      for(v=d+1;v<=FIo.nVmax;v++) for(nu=1;nu<=FIo.NUCmax;nu++) 
      if((FIo.NFnum[v][nu]=FIi.NFnum[v][nu]+FIa.NFnum[v][nu]))
      {	FIo.nNUC[v]++; Oli++; tnb+=FIo.NFnum[v][nu];

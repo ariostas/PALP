@@ -5,6 +5,19 @@
 #include <string.h>
 #include <time.h>
 #include <assert.h>
+#include <algorithm>
+
+namespace palp {
+  template <typename T, typename U>
+  constexpr auto min(T&& a, U&& b) -> decltype((a < b) ? std::forward<T>(a) : std::forward<U>(b)) {
+    return (a < b) ? std::forward<T>(a) : std::forward<U>(b);
+  }
+  template <typename T, typename U>
+  constexpr auto max(T&& a, U&& b) -> decltype((a > b) ? std::forward<T>(a) : std::forward<U>(b)) {
+    return (a > b) ? std::forward<T>(a) : std::forward<U>(b);
+  }
+}
+
 /*
 These are include files that should exist in your C library.
 */

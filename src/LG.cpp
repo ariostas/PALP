@@ -3,15 +3,24 @@
 #include <palp/LG.h>     /* defines AmbiPointList and AmbiLatticeBasis */
 #include <palp/Nef.h>
 
-#define SHOW_b01_TWIST	(0)
-#define Tout		(0)
-#define	DET_WARN_ONLY	(0)		     /* continue if group has det!=1 */
+#include <array>
+#include <vector>
+
+namespace {
+  constexpr bool SHOW_b01_TWIST = false;
+  constexpr bool Tout = false;
+  constexpr bool DET_WARN_ONLY = false;  /* continue if group has det!=1 */
+  constexpr int ABBREV_POLY_PRINT = 4;   /* !=0 => #(leading/trailing terms */
+  constexpr bool NO_COORD_IMPROVEMENT = true; /* switch off weight permutation */
+  constexpr bool TEST_LG = false;        /* debug prints/tests in LG.cpp */
+  constexpr bool TEST_PP = false;        /* Poincare polynomial debug prints */
+  constexpr bool TEST_PD = false;        /* Poincare duality test */
+}
+
+#define NO_COORD_IMPROVEMENT
 
 #define	COEFF_Nmax	(d*D+2*N)
 
-#define	ABBREV_POLY_PRINT	(4)	  /* !=0 => #(leading/trailing terms */
-
-#define NO_COORD_IMPROVEMENT		/* switch off weight permutation */
 #undef	W_PERM_CODE
 int  Is_Gen_CY(int index, PolyPointList *P)
 {    int i; Long *IP=P->x[P->np]; VertexNumList V;     /* IP = IP(index * P) */
@@ -32,7 +41,8 @@ int  auxString2SInt(char *c,int *n)
 }
 int  Read_WZ_PP(Weight *WZ)     /* read "d w_i" [ or "w_i d" if last=max ] */
 {    int i,j,k,a,n,d,shift=1, I[W_Nmax+2], *nz=&WZ->M; 
-     int FilterFlag=(inFILE==NULL); char C, c[999],b=' ';
+     int FilterFlag=(inFILE==NULL); char C, b=' ';
+     std::array<char,999> c;
      Long BM[W_Nmax][W_Nmax], *B[W_Nmax], Wa[POLY_Dmax], Za[POLY_Dmax], 
 	F[W_Nmax], G[POLY_Dmax][POLY_Dmax], GI[POLY_Dmax][POLY_Dmax],X;
      if(FilterFlag) inFILE=stdin; else
@@ -161,8 +171,8 @@ return 1;
 }
 
 
-#undef	TEST_PP				    /*  print some diagnostic info  */
-#define	TEST_PD				   /*  check Poincare duality of PP */
+// constexpr flags for this translation unit are at the top of the file:
+//   TEST_PP, TEST_PD
 
 extern FILE *inFILE, *outFILE;
 
@@ -272,7 +282,7 @@ void TEST_LatticeBasis(AmbiLatticeBasis *_B)      /* print AmbiLatticeBasis */
 	for(a=0;a<_B->N;a++) printf(" %3d",(int) _B->x[p][a]);
 	puts("");     }	
 }
-#ifdef	TEST
+
 void TEST_WeightMakePoints(AmbiPointList *_P)
 {    int i,j; static int MaxPoNum; if(_P->np>MaxPoNum) MaxPoNum = _P->np;
      if(_P->np>20)
@@ -285,7 +295,6 @@ void TEST_WeightMakePoints(AmbiPointList *_P)
      }
      printf("PointNum=%d [max=%d]\n",_P->np,MaxPoNum);
 }
-#endif
 
 void Ambi_2_Lattice(Long *A,AmbiLatticeBasis *B,Long *P)
 {    int i, p=B->n; while(p--) 
@@ -305,29 +314,28 @@ void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP)
 	Wperm_to_GLZ(_W->w,&n,G,pi);for(i=0;i<n;i++)Waux.w[i]=_W_in->w[pi[i]];
      }
 #endif				       /* = End of Perm Coord Improvement = */
-     if(_AP==NULL) {printf("Unable to allocate space for _AP\n"); exit(0);}
-     WeightLatticeBasis(_W, &B);	/* TEST_LatticeBasis(&B); */
-     WeightMakePoints(_W, _AP);	
-#ifdef TEST
-     puts("\nWeights:");     Write_Weight(_W);  
-     puts("AmbiPoints:");    TEST_WeightMakePoints(_AP); 	
-     puts("Basis:");	     TEST_LatticeBasis(&B);
-     printf("POINT_Num=%d\n",_AP->np);	
-#endif
-     assert(_AP->np <= POINT_Nmax);   
-     nip=ChangeToTrianBasis(_AP, &B, _PP);
-#ifdef	TEST
-     Print_PPL(_PP,"PolyPoints:");
-#endif
+      if(_AP==NULL) {printf("Unable to allocate space for _AP\n"); exit(0);}
+      WeightLatticeBasis(_W, &B);	/* TEST_LatticeBasis(&B); */
+      WeightMakePoints(_W, _AP);	
+      if constexpr (TEST_LG) {
+      puts("\nWeights:");     Write_Weight(_W);  
+      puts("AmbiPoints:");    TEST_WeightMakePoints(_AP); 	
+      puts("Basis:");	     TEST_LatticeBasis(&B);
+      printf("POINT_Num=%d\n",_AP->np);	
+      }
+      assert(_AP->np <= POINT_Nmax);   
+      nip=ChangeToTrianBasis(_AP, &B, _PP);
+      if constexpr (TEST_LG)
+      Print_PPL(_PP,"PolyPoints:");
 #ifdef GEN_CY
-     {	int i; for(i=0;i<_W->N;i++) index+=_W->w[i]; if(index%_W->d)index=0;}
-     index/=_W->d; if(index>1)
-     {  Long A[AMBI_Dmax];int i;for(i=0;i<B.N;i++)A[i]=1-index*_AP->x[nip][i];
+      { int i; for(i=0;i<_W->N;i++) index+=_W->w[i]; if(index%_W->d)index=0;}
+      index/=_W->d; if(index>1)
+      {  Long A[AMBI_Dmax];int i;for(i=0;i<B.N;i++)A[i]=1-index*_AP->x[nip][i];
 	assert(_PP->np<POINT_Nmax); /* need one more to store IP for GEN_CY */
 	Ambi_2_Lattice(A,&B,_PP->x[_PP->np]);
-     }
+      }
 #endif
-     free(_AP); return;
+      free(_AP); return;
 }
 #if	(WZinput) 
 int Read_W_PP(Weight *W, PolyPointList *P){ W->P=P; return Read_WZ_PP(W); }
@@ -343,8 +351,7 @@ int Read_W_PP(Weight *_W, PolyPointList *_PP){
  *   M[0]:= (-n1, n0, 0, ...) / gcd(n0,n1);
  *   M[i]:= (0,...,0,g/ng,0,...)- (ni/ng) * egcd.Vout(n0,...,n(i-1),0,...);
  *   	    with g=gcd(n0,...,n[i-1]); ng=gcd(g,ni);
- *									    */
-#ifdef TEST
+ *								    */
 void NormTriangularBasis(AmbiLatticeBasis *_B)
 {    int p=_B->n-1, a=_B->N-1;	while(p--) 
      {	int pi=_B->n; 	while(0==_B->x[p][--a]);
@@ -368,9 +375,9 @@ void OldWeightLatticeBasis(Weight *_w, AmbiLatticeBasis *_B)
 	for(j=0;j<i;j++) V[j]=-Vout[j]*g; 
 	j++; while(j<_w->N) V[j++]=0;
      }
-     NormTriangularBasis(_B); /* TEST_LatticeBasis(_B); */
+     NormTriangularBasis(_B); /* TEST_LatticeBasis(&B); */
 }
-#endif
+
 void WeightLatticeBasis(Weight *_w, AmbiLatticeBasis *_B)	
 {    Long *B[W_Nmax], E[W_Nmax]; int i; _B->N=_w->N; _B->n=_w->N-1;
      B[0]=E; for(i=0;i<_B->n;i++) B[i+1]=_B->x[i]; W_to_GLZ(_w->w,&(_w->N),B);
@@ -422,9 +429,7 @@ int  ChangeToTrianBasis(AmbiPointList *_AP,
      {	int i, p=1; for(i=0; i < _B->N; i++) if( ! _AP->x[n][i] ) p=0;
 	if(p) { ipcount++; nIP=n; }
      }
-#ifdef	TEST
-     if(ipcount-1) puts("*** Wrong IP-count: take any point as origin! ***");
-#endif
+      if constexpr (TEST_LG) if(ipcount-1) puts("*** Wrong IP-count: take any point as origin! ***");
      for(n=0; n<_AP->np; n++)
      {	int i, p=_B->n; 
 	while(p--) 
@@ -444,8 +449,8 @@ int IfRefWWrite(Weight *W, PolyPointList *P)
 }
 void Rec_RefWeights(Weight *W, PolyPointList *P, int g, int sum, int *npp, 
 	int *nrp, int n)
-{    int wmax=W->d/(W->N-n+1); wmax=min(wmax,W->w[n+1]); 
-     wmax=min(wmax,sum-n);
+{    int wmax=W->d/(W->N-n+1); wmax=palp::min(wmax,W->w[n+1]); 
+     wmax=palp::min(wmax,sum-n);
      if(n) for(W->w[n]=wmax;(n+1)*W->w[n]>=sum;W->w[n]--)
 	Rec_RefWeights(W,P,Fgcd(g,W->w[n]),sum-W->w[n],npp,nrp,n-1);
      else if(1==Fgcd(g,W->w[0]=sum)) {(*npp)++;if(IfRefWWrite(W,P))(*nrp)++;};
@@ -484,9 +489,7 @@ void Add_Mono_2_Poly(int e, Pint c, PoCoLi *P)		   /* use bisection */
        assert(P->n < P->A);}			/* check #(coeff.) of Poly. */
      for(m=P->n++;M<m;m--) {			/* insert new exponent at M */
 	P->c[m]=P->c[m-1]; P->e[m]=P->e[m-1]; } P->e[m]=e;P->c[m]=c;
-#ifdef	TEST_PP
-     {static int M=1; if(P->n/1000000 > M) {printf("#c=%dM ",++M);fflush(0);}}
-#endif
+     if constexpr (TEST_LG) {static int M=1; if(P->n/1000000 > M) {printf("#c=%dM ",++M);fflush(0);}}
 }
 void Init1_xN(PoCoLi *P,int N)					 /* 1 - x^N */
 {    UnitPoly(P); Add_Mono_2_Poly(N,-1,P);
@@ -555,26 +558,25 @@ void Poly_Dif(PoCoLi *A,PoCoLi *B,PoCoLi *D)			/* D = A-B */
 	    D->e[D->n]=B->e[b]; D->c[D->n++]=-B->c[b++];} else b++; 
 }
 void AllocPoCoLi(PoCoLi *P)			/* allocate e[A] and c[A] */
-{    assert(0<P->A); assert( NULL != ( P->e = (int *) malloc( P->A * 
-	(sizeof(int)+sizeof(Pint) ) ) ));  P->c = (Pint *) & P->e[P->A];
+{    assert(0<P->A); P->e.resize(P->A); P->c.resize(P->A);
   // printf("AllocPoCoLi: P->A = %d\n", P->A);
 }
-void Free_PoCoLi(PoCoLi *P) { free(P->e); }	/* free P.e and P.c */
+void Free_PoCoLi(PoCoLi *P) { P->e.clear(); P->c.clear(); P->n=0; }	/* free P.e and P.c */
 void PoincarePoly(int N, int *w, int d, PoCoLi *P, PoCoLi *Z,PoCoLi *R)
-{    int i, e[2]; Pint c[2]; PoCoLi B, *In=Z,*Out=P,*aux;
+{    int i; PoCoLi B; B.A=2; AllocPoCoLi(&B); PoCoLi *In=Z,*Out=P,*aux;
      if(N==0) {UnitPoly(P); return;} 
-     B.e=e; B.c=c; B.A=B.n=2; e[0]=0; c[0]=1; c[1]=-1; Init1_xN(In,d - w[0]);
+     B.n=2; B.e[0]=0; B.c[0]=1; B.c[1]=-1; Init1_xN(In,d - w[0]);
      for(i=1;i<N;i++)
-     {	e[1]=d-w[i]; PolyProd(In,&B,Out); aux=Out; Out=In; In=aux;
+     {   B.e[1]=d-w[i]; PolyProd(In,&B,Out); aux=Out; Out=In; In=aux;
      }  /* printf("\nN =");PrintPoCoLi(Z); */
-     while(i--)
-     {	e[1]=w[i]; assert(BottomUpQuot(In,&B,Out,R)); aux=Out; Out=In; In=aux;
-     }	/* printf("Q =");PrintPoCoLi(P); */	assert((R->n)==0); 
-#ifdef	TEST_PD
-     	{  int M=P->n-1, I=(M+1)/2, E=P->e[P->n-1];
+      while(i--)
+      {   B.e[1]=w[i]; assert(BottomUpQuot(In,&B,Out,R)); aux=Out; Out=In; In=aux;
+      }	/* printf("Q =");PrintPoCoLi(P); */	assert((R->n)==0);
+      if constexpr (TEST_PD)
+      {  int M=P->n-1, I=(M+1)/2, E=P->e[P->n-1];
 	for(i=0;i<I;i++) {assert(P->e[i]==E-P->e[M-i]);
-	assert(P->c[i]==P->c[M-i]); }}
-#endif
+	assert(P->c[i]==P->c[M-i]); }
+      }
 }
 
 
@@ -965,19 +967,18 @@ void Calc_VaHo(Weight *W,VaHo *V) {
 	  sum+=co; }
 	for(i=0;i<W->N;i++){	num*=W->d-W->w[i]; den*=W->w[i];
 	   {long long g=LFgcd(num,den); num/=g; den/=g; }} 
-#ifdef	TEST_PP
-	if(P->n<99) {printf("PP =");PrintPoCoLi(P);} else printf(
-	   "#(Exp,Co)=%d  Exp<=%d  Coeff<=%d  sum=%lld\n",n,P->e[n-1],cM,sum);
-#endif
-	if(den==1) assert(num==sum);
+     if constexpr (TEST_PP)
+     if(P->n<99) {printf("PP =");PrintPoCoLi(P);} else printf(
+	"#(Exp,Co)=%d  Exp<=%d  Coeff<=%d  sum=%lld\n",n,P->e[n-1],cM,sum);
+     if(den==1) assert(num==sum);
 	else { printf("sum=%lld  test=%lld/%lld \n",sum,num,den);}
      }
      for(i=0;i<=D;i++) for(j=0;j<=D;j++) V->h[i][j] = 0;
      for(i=0;i<P->n;i++)if(P->e[i] % d==0) {j=P->e[i]/d; V->h[D-j][j]=P->c[i];}
-#ifdef	TEST_PP
+     if constexpr (TEST_PP) {
      for(i=0;i<=D;i++){for(j=0;j<=D;j++)printf("%6d ",(int)V->h[i][j]);
 	puts("= V-pri");}fflush(0);
-#endif
+     }
      for(k=1;k<d;k++)					/* k-twisted sector */
      {	int th[W_Nmax], Tmt, et=0, eT=0, Deff=0, n=0;
 	for(i=0;i<N;i++)
@@ -994,9 +995,9 @@ void Calc_VaHo(Weight *W,VaHo *V) {
 	    }
 	}
      }	Free_PoCoLi(P); Free_PoCoLi(Z); Free_PoCoLi(R); 
-#ifdef	TEST_PP
+     if constexpr (TEST_PP) {
      for(i=0;i<=D;i++){for(j=0;j<=D;j++)printf("%6d ",V->h[i][j]);puts("= V");}
-#endif
+     }
 }
 
 

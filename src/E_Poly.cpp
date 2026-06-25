@@ -3,8 +3,6 @@
 #include <palp/Rat.h>
 
 /*   ===============	    Typedefs and Headers	===================  */
-#define min(a,b) (((a)<(b)) ? (a):(b))
-#define max(a,b) (((a)>(b)) ? (a):(b))
 
 void Sort_PPL(PolyPointList *_P, VertexNumList *_V);
 void part_nef(PolyPointList *, VertexNumList *, EqList *, PartList *,

@@ -330,8 +330,8 @@ void Add_Polya_2_DBi(char *dbi,char *polya,char *dbo)
      }							    /* SL file done */
 
      FSEEK(FA,HApos,SEEK_SET); Init_FInfoList(&FIo);
-     FIo.nVmax=max(FIi.nVmax,FIa.nVmax);
-     FIo.NUCmax=max(FIi.NUCmax,FIa.NUCmax); /* Tnb=0; */
+     FIo.nVmax=palp::max(FIi.nVmax,FIa.nVmax);
+     FIo.NUCmax=palp::max(FIi.NUCmax,FIa.NUCmax); /* Tnb=0; */
      for(v=d+1;v<=FIo.nVmax;v++) for(nu=1;nu<=FIo.NUCmax;nu++) 
      if( (FIo.NFnum[v][nu]=FIi.NFnum[v][nu]+FIa.NFnum[v][nu]) )
      {	FIo.nNUC[v]++; Oli++; /* Tnb+=FIo.NFnum[v][nu]; */
@@ -768,7 +768,7 @@ void Reduce_Aux_File(char *polyi,char *polys,char *dbsub,char *polyo)
      	}
      	else FIo.NFnum[v][nu]=FIi.NFnum[v][nu];
 	if(FIo.NFnum[v][nu]) 
-	{   FIo.nVmax=max(FIo.nVmax,v); FIo.NUCmax=max(FIo.NUCmax,nu); 
+	{   FIo.nVmax=palp::max(FIo.nVmax,v); FIo.NUCmax=palp::max(FIo.NUCmax,nu); 
 	    FIo.nNUC[v]++; Oli++;
 	}
      }	dv=0;
@@ -1420,7 +1420,7 @@ void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P){
 
   nnf_sum=0;
   if (H1&&H2) {HM_from=(H1<H2 ? H1 : H2); HM_to=HM_from;}
-  else if (H1||H2) {HM_to=max(H1,H2); HM_from=max(0,HM_to-Hod_Dif_max);}
+  else if (H1||H2) {HM_to=palp::max(H1,H2); HM_from=palp::max(0,HM_to-Hod_Dif_max);}
 
   for (h12=HM_from; h12<=HM_to; h12++) {
 

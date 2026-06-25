@@ -1,11 +1,10 @@
 #pragma once
 
+#include <vector>
+
 #define	 WZinput 	(1)	/* WZ-input (in progress)  */
 
 #define  W_Nmax		(POLY_Dmax+1)
-
-#define  min(a,b)  	(((a)<(b)) ? (a) : (b))
-#define  max(a,b)  	(((a)>(b)) ? (a) : (b))
 
 #if (POLY_Dmax < 7)
 #define	 Pint           int
@@ -13,7 +12,7 @@
 #define	 Pint           long
 #endif                             /* type of coefficients in PolyCoeffList */
 
-typedef struct {int n; int *e; Pint *c; int A;}		  PoCoLi;  /* e=exp */
+typedef struct {int n; std::vector<int> e; std::vector<Pint> c; int A;}		  PoCoLi;  /* e=exp */
 
 void AllocPoCoLi(PoCoLi *P);		      /* allocate e[P.A] and c[P.A] */
 void Free_PoCoLi(PoCoLi *P);				/* free P.e and P.c */

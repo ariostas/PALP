@@ -580,8 +580,8 @@ weights testweisys(WSaux *X,int npoints){
       newboundwei[X->subsets[npoints-2][k][one[i]]]=rs[i];
     minnbw=0; maxnbw=0; 
     for (j=0;j<X->N;j++) {
-      minnbw=min(newboundwei[j].N,minnbw);
-      maxnbw=max(newboundwei[j].N,maxnbw); }
+      minnbw=palp::min(newboundwei[j].N,minnbw);
+      maxnbw=palp::max(newboundwei[j].N,maxnbw); }
     New=((minnbw>=0)&&(maxnbw>0));
     for (i=0;New&&(i<nboundwei);i++) {
       New=0; 
@@ -592,7 +592,7 @@ weights testweisys(WSaux *X,int npoints){
   for (j=0;j<X->N;j++) {
     rattws[j]=rI(0);
     for (i=0;i<nboundwei;i++) rattws[j]=rS(rattws[j],boundwei[i][j]);
-    rattws[j]=rQ(rattws[j],rI(max(nboundwei,1)));}
+    rattws[j]=rQ(rattws[j],rI(palp::max(nboundwei,1)));}
   tws.n[X->N]=1;
   for (j=0;j<X->N;j++) tws.n[X->N]=lcm(tws.n[X->N],rattws[j].D);
   for (j=0;j<X->N;j++) tws.n[j]=rP(rI(tws.n[X->N]),rattws[j]).N;
@@ -609,13 +609,13 @@ void createweights(WSaux *X,int npoints){
 /* #if (N>4) */    for (x4=0; (x4==0) || ((X->N>4) && (x0*tws.n[0]+
 	x1*tws.n[1]+x2*tws.n[2]+x3*tws.n[3]+x4*tws.n[4]<tws.n[X->N]));x4++)
     { sum=0; maxx=0;
-      X->points[npoints][0]=x0; sum+=x0; maxx=max(maxx,x0);
-      X->points[npoints][1]=x1; sum+=x1; maxx=max(maxx,x1);
-      X->points[npoints][2]=x2; sum+=x2; maxx=max(maxx,x2);
+      X->points[npoints][0]=x0; sum+=x0; maxx=palp::max(maxx,x0);
+      X->points[npoints][1]=x1; sum+=x1; maxx=palp::max(maxx,x1);
+      X->points[npoints][2]=x2; sum+=x2; maxx=palp::max(maxx,x2);
   if (X->N>3)    
-      {X->points[npoints][3]=x3; sum+=x3; maxx=max(maxx,x3);}
+      {X->points[npoints][3]=x3; sum+=x3; maxx=palp::max(maxx,x3);}
   if (X->N>4)    
-      {X->points[npoints][4]=x4; sum+=x4; maxx=max(maxx,x4);}
+      {X->points[npoints][4]=x4; sum+=x4; maxx=palp::max(maxx,x4);}
       if ((sum>2)&&(maxx>1)) createweights(X,npoints+1);
       /* if (npoints<3) {printf("%d",npoints); fflush(0);}*/}  }
 }
@@ -702,8 +702,8 @@ int IfIpWWrite(Weight *W, PolyPointList *P, int *rFlag, int *tFlag)
 }
 void Rec_IpWeights(Weight *W, PolyPointList *P, int g, int sum, int *npp, 
 	int *nrp, int n, int *rFlag, int *tFlag)
-{    int wmax=W->d/(W->N-n+1); wmax=min(wmax,W->w[n+1]); 
-     wmax=min(wmax,sum-n);
+{    int wmax=W->d/(W->N-n+1); wmax=palp::min(wmax,W->w[n+1]); 
+     wmax=palp::min(wmax,sum-n);
      if(n) for(W->w[n]=wmax;(n+1)*W->w[n]>=sum;W->w[n]--)
        Rec_IpWeights(W,P,Fgcd(g,W->w[n]),sum-W->w[n],npp,nrp,n-1,rFlag,tFlag);
      else if(1==Fgcd(g,W->w[0]=sum)) {
@@ -782,8 +782,8 @@ void RecMoonWeights(Weight *W, int g, int sum, long *npp, long *nintPP1,
 #endif
 		    ){
   int wmax=W->d/(W->N-n+1);
-  wmax=min(wmax,W->w[n+1]); 
-  wmax=min(wmax,sum-n);
+  wmax=palp::min(wmax,W->w[n+1]); 
+  wmax=palp::min(wmax,sum-n);
   if(n)
     for(W->w[n]=wmax; (n+1)*W->w[n]>=sum; W->w[n]--){
 #if(MOONSHINE_CRITERIA)
@@ -901,7 +901,7 @@ void Make_Trans_Weights(int n,int dmin,int dmax /*,int rFlag */)
  * i has to point at l>=urp                                                 */
 /* let j run; check mod(d||(d-n),j); if (upr) check if upr is resolved by j;*/
 void T_Chon(int i, int urp, int nm, int g,T_aux *X)
-{    int res, j, l=0, ip=i+1, jm=min(nm,X->jmax);
+{    int res, j, l=0, ip=i+1, jm=palp::min(nm,X->jmax);
      if (i<X->n) for(j=(i==X->n-1) ? (1+nm-jm) : 1;j<=jm;j++)
 		{X->wei[i]=j;/*next step*/
         if(urp<0) {if(X->d%j) {res=1; /* i.e. not ferm; res=0 -> resolved */
@@ -912,7 +912,7 @@ void T_Chon(int i, int urp, int nm, int g,T_aux *X)
 			T_Chon(ip,-1,nm-j+1,Fgcd(g,j),X);}
         } else  /* continue;} */
         if(X->d%j) {                   /* now there can be no more fermat */
-        l=max(urp,1); for(res=1;(l<i)&&res;l++) res=(X->d-X->wei[l])%j;
+        l=palp::max(urp,1); for(res=1;(l<i)&&res;l++) res=(X->d-X->wei[l])%j;
         if(urp){if(!res){if((X->d-j)%X->wei[urp]) 
 			T_Chon(ip,urp,nm-j+1,Fgcd(g,j),X);
                             else T_Chon(ip,0,nm-j+1,Fgcd(g,j),X);}}

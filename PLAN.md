@@ -152,20 +152,20 @@ This is the highest-risk step. Take extra care.
 - **Verify**: build + test for ALL dimensions (4, 5, 6, 11) — run full
   `make check` or `ctest` with `DIM` variations.
 
-- [ ] #### Step 1.5 — `LG.c` → `LG.cpp` (~1113 lines)
+- [x] #### Step 1.5 — `LG.c` → `LG.cpp` (~1113 lines)
 
 - [x] Rename `LG.c` → `LG.cpp`.
-- [ ] Replace `register` keyword (all instances).
-- [ ] Replace `char c[999]` with `std::array<char, 999>`.
-- [ ] Replace `AllocPoCoLi`/`Free_PoCoLi` manual pointer arithmetic with
-  `std::vector` for `e[]` and `c[]` arrays, keeping `PoCoLi` as a struct with
-  vectors. Update `Poly_Sum`, `Poly_Dif`, `PolyProd`, etc. to use vector
-  access.
-- [ ] Replace `#if WZinput` / `#ifdef TEST` blocks with `constexpr bool` flags.
-- [ ] Replace `static int MaxPoNum` / `static int M` with explicit state where
-  feasible; otherwise document (ISSUES.md #15).
-- **Verify**: build + test (all `tests/3.2.11*`, `tests/3.2.25*` for LG
-  options).
+- [x] Remove `register` keyword (all instances).
+- [x] Replace `char c[999]` in `Read_WZ_PP` with `std::array<char, 999>`.
+- [x] Replace `AllocPoCoLi`/`Free_PoCoLi` manual pointer arithmetic with
+  `std::vector<int> e` and `std::vector<Pint> c` inside `PoCoLi`. Rewrite
+  `PoincarePoly` local `B` to use `AllocPoCoLi` instead of stack arrays.
+- [x] Replace `#ifdef TEST`/`#ifdef TEST_PP`/`#ifdef TEST_PD` debug blocks with
+  `constexpr bool` flags at the top of `LG.cpp`; remove mid-file `#define TEST`/
+  `#undef TEST` toggles. Keep `#if (WZinput)` macro as-is (always 1).
+- [x] `static int MaxPoNum` (inside `TEST_WeightMakePoints`) and `static int M`
+  (inside `Add_Mono_2_Poly` debug block) remain in compile-time-disabled debug
+  code; documented as harmless (ISSUES.md #15).
 
 - [ ] #### Step 1.6 — `Nefpart.c` → `Nefpart.cpp` (~837 lines)
 
@@ -350,9 +350,14 @@ This is the highest-risk step. Take extra care.
   project is C++-only.
 - [x] Remove `extern "C"` shims from all headers and source files now that the
   project is C++-only.
+- [x] Remove `extern "C"` shims from all headers and source files now that the
+  project is C++-only.
 - [x] Add proper include guards (now `#pragma once`) to all headers
   (`Global.h`, `LG.h`, `Nef.h`, `Mori.h`, `Subpoly.h`, `Rat.h`,
   `palp_types.h`).
+- [x] Consolidate `min`/`max` definitions: introduce `palp::min`/`palp::max`
+  templates in `Global.h`, remove macros from `LG.h`, `Subpoly.h`, and
+  `E_Poly.cpp`. Keep standalone `lgotwist.cpp` macros for now.
 - [ ] Clean up any remaining forwarding shims from Step 0.2.
 - **Verify**: full clean build + test.
 
