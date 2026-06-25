@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <limits.h>
 
 #ifdef  __DECC				/* use local "/tmp" on clusters: */
@@ -216,6 +220,10 @@ void AuxGet_vn_uc(FILE *F,int *v, int *nu, unsigned char *uc);
 void AuxGet_uc(FILE *F,int *nu, unsigned char *uc);
 void AuxPut_hNF(FILE *F,int *v,int *nu,unsigned char *Huc,FInfoList *Io,
         int *slNF,int *slSM,int *slNM,int *slNB,unsigned char *ucSL,int *SLp);
+
+#ifdef __cplusplus
+}
+#endif
 
 #define min(a,b)	(((a) < (b)) ? (a) : (b))
 #define max(a,b)	(((a) > (b)) ? (a) : (b))

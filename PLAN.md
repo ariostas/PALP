@@ -180,7 +180,7 @@ This is the highest-risk step. Take extra care.
 
 ### Phase 2 — Driver programs (depend on Phase 1 libraries)
 
-#### Step 2.1 — `poly.c` → `poly.cpp`
+- [x] #### Step 2.1 — `poly.c` → `poly.cpp`
 
 - Replace `malloc` for large compile-time-sized structs (`CWS`, `EqList`,
   `PolyPointList`, `PairMat`, `FaceInfo`) with `std::make_unique` or stack
