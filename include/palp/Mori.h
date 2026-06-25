@@ -15,11 +15,15 @@
 #define Inci64		unsigned long long
 
 /* ====================================================== */
-/* =========           T Y P E D E F s          ========= */
+/* =========         P R O T O T Y P E s        ========= */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*** from mori.c ***/
 typedef struct {
-  	int FilterFlag, g, m, P, K, i, t, c, d, a, b, D, H, I, M, Read_HyperSurfCounter;
+   	int FilterFlag, g, m, P, K, i, t, c, d, a, b, D, H, I, M, Read_HyperSurfCounter;
 } MORI_Flags;
 /*
 List of flags that correspond to the options of mori.x -h for
@@ -129,8 +133,16 @@ among their points, the triangulation T and the SR ideal it generates the the in
 for SINGULAR.
 */
 
+#ifdef __cplusplus
+}
+#endif
+
 
 /*======== 	dependences from other modules  ======== */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*** from Polynf.c ***/
 void IP_Simplex_Fiber(Long PM[][POLY_Dmax], int p, int d, /* need PM[i]!=0 */ FibW *F, int Wmax, int CD);
@@ -142,10 +154,6 @@ created. If codim!=0 only the IP-simplices with dimension > 1 and codimension
 between 1 and codim are computed. It is assumed that p<=VERT_Nmax and that W 
 can hold at least Wmax sets of coefficients.
 */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 int  IsDigit(char c);
 Long SimplexVolume(Long *V[POLY_Dmax+1],int d);

@@ -222,7 +222,7 @@ This is the highest-risk step. Take extra care.
 - Fix `int long nl` → `long int nl` (or just `long nl`) (ISSUES.md #22).
 - **Verify**: build + run all `tests/6.*` scripts.
 
-#### Step 2.5 — `mori.c` → `mori.cpp`
+- [x] #### Step 2.5 — `mori.c` → `mori.cpp`
 
 - Replace all `malloc` calls with `std::make_unique` or stack allocation.
   Fix the memory leaks (ISSUES.md #8) by ensuring RAII cleanup.
