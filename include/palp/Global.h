@@ -659,6 +659,7 @@ int  Make_Lattice_Basis(int d, int p, Long *P[POLY_Dmax],
 int  Remove_Identical_Points(PolyPointList *P);
 int  Init_Multiloop(int *N, int *I, int *j, int *J);
 int  Multiloop(int *N,int *I,int *j,int *J);
+Long Poly_Point_Count(PolyPointList *P, VertexNumList *V, EqList *E);
 int  VP_2_CWS(Long *V[], int d, int v, CWS *W);
 
 #ifdef __cplusplus

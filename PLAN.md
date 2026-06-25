@@ -192,7 +192,7 @@ This is the highest-risk step. Take extra care.
 - Keep `printf`/`fprintf` as-is for exact output format preservation.
 - **Verify**: build + run ALL `tests/2.*` and `tests/3.*` scripts.
 
-#### Step 2.2 — `cws.c` → `cws.cpp` (~1935 lines)
+- [x] #### Step 2.2 — `cws.c` → `cws.cpp` (~1935 lines)
 
 - Replace `WDIM=800000` and `TWDIM=16384` magic constants with `constexpr int`.
 - Replace VLA `int IN[AMBI_Dmax*(AMBI_Dmax+1)]` with `std::array` or
