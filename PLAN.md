@@ -214,7 +214,7 @@ This is the highest-risk step. Take extra care.
 - **Verify**: build + run any class-related tests (check if class tests exist
   in `tests/`; if not, create a basic smoke test).
 
-#### Step 2.4 — `nef.c` → `nef.cpp`
+- [x] #### Step 2.4 — `nef.c` → `nef.cpp`
 
 - Replace local typedefs (`AmbiLatticeBasis`, `CWLatticeBasis`, `Pstat`) with
   proper struct definitions; check if they duplicate types from `Coord.c`.

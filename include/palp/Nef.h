@@ -114,9 +114,6 @@ void part_nef(PolyPointList *, VertexNumList *, EqList *, PartList *,
 }
 #endif
 
-void Make_E_Poly(FILE *, CWS *, PolyPointList *, VertexNumList *, EqList *,
-		 int *, Flags *, int *);
-
 void Mink_WPCICY(AmbiPointList * _AP_1, AmbiPointList * _AP_2,
 		 AmbiPointList * _AP);
 
@@ -124,17 +121,20 @@ void Mink_WPCICY(AmbiPointList * _AP_1, AmbiPointList * _AP_2,
 extern "C" {
 #endif
 
+void Make_E_Poly(FILE *, CWS *, PolyPointList *, VertexNumList *, EqList *,
+		 int *, Flags *, int *);
+
 int  IsDigit(char);
 
 int  IntSqrt(int q);
 
 void Die(char *);
 
-#ifdef __cplusplus
-}
-#endif
-
 void Print_CWS_Zinfo(CWS *);
 
 void AnalyseGorensteinCone(CWS *_CW,  PolyPointList *_P, VertexNumList *_V, 
 			   EqList *_E, int *_codim, Flags * _F);
+
+#ifdef __cplusplus
+}
+#endif
