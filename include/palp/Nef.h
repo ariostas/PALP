@@ -103,8 +103,16 @@ typedef struct {
   int n;
   Long np, NP_max;						} DYN_PPL;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void part_nef(PolyPointList *, VertexNumList *, EqList *, PartList *,
 	      int *, NEF_Flags *);
+
+#ifdef __cplusplus
+}
+#endif
 
 void Make_E_Poly(FILE *, CWS *, PolyPointList *, VertexNumList *, EqList *,
 		 int *, Flags *, int *);
@@ -112,11 +120,19 @@ void Make_E_Poly(FILE *, CWS *, PolyPointList *, VertexNumList *, EqList *,
 void Mink_WPCICY(AmbiPointList * _AP_1, AmbiPointList * _AP_2,
 		 AmbiPointList * _AP);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int  IsDigit(char);
 
 int  IntSqrt(int q);
 
 void Die(char *);
+
+#ifdef __cplusplus
+}
+#endif
 
 void Print_CWS_Zinfo(CWS *);
 

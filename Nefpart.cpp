@@ -106,7 +106,7 @@ void Dir_Product(PartList *_PTL, VertexNumList *_V, PolyPointList *_P){
   VertexNumList Vtemp;
 
   PolyPointList *_PV = (PolyPointList *) malloc(sizeof(PolyPointList));
-  if(_PV == NULL) Die("Unable to alloc space for PolyPointList _PV");
+  if(_PV == NULL) Die((char*)"Unable to alloc space for PolyPointList _PV");
 
   _PV->n = _P->n;
   for(i = 0; i < _PTL->n; i++){
@@ -202,11 +202,11 @@ void REC_Dir_Product(PartList *_PTL, VertexNumList *_V, PolyPointList *_P){
   Subset Pset, CPset;
 
   _PV = (PolyPointList *) malloc(sizeof(PolyPointList));
-  if(_PV == NULL) Die("Unable to alloc space for PolyPointList _PV");
+  if(_PV == NULL) Die((char*)"Unable to alloc space for PolyPointList _PV");
   _CEtemp = (CEqList *) malloc(sizeof(CEqList));
-  if(_CEtemp == NULL) Die("Unable to alloc space for CEqList _CEtemp");
+  if(_CEtemp == NULL) Die((char*)"Unable to alloc space for CEqList _CEtemp");
   _Vtemp = (VertexNumList *) malloc(sizeof(VertexNumList));
-  if(_Vtemp == NULL) Die("Unable to alloc space for VertexNumList _Vtemp");
+  if(_Vtemp == NULL) Die((char*)"Unable to alloc space for VertexNumList _Vtemp");
   
   for(i = 0; i < _PTL->n; i++){
     _PTL->DirProduct[i] = 0; j = 0;
@@ -321,7 +321,7 @@ void Remove_Sym(SYM *_VP, PartList *_PTL, PartList *_S_PTL){
   _SYM_PTL = (PartList*) malloc(sizeof(PartList));
   assert(_SYM_PTL != NULL);
   
-  if(Nef_Max < SYM_Nmax) Die("\nNeed Nef_Max >= SYM_Nmax!!!\n");
+  if(Nef_Max < SYM_Nmax) Die((char*)"\nNeed Nef_Max >= SYM_Nmax!!!\n");
   for(i = 0; i < _PTL->n; i++){
     _p[i] = 0; _s[i] = 0;
   }

@@ -166,6 +166,16 @@ This is the highest-risk step. Take extra care.
 - **Verify**: build + test (all `tests/3.2.11*`, `tests/3.2.25*` for LG
   options).
 
+- [x] #### Step 1.6 — `Nefpart.c` → `Nefpart.cpp` (~837 lines)
+
+- Remove `scanf("%c", &c)` interactive debug pause (ISSUES.md #38) or gate
+  behind `#ifndef NDEBUG`.
+- Replace bubble sort (`Bubble_PTL`) with `std::sort` — verify identical
+  ordering (the sort key is the partition string; `std::sort` with a custom
+  comparator must produce the same order).
+- Replace `calloc`/`malloc` with `std::vector`.
+- **Verify**: build + run all `tests/6.*` scripts.
+
 ---
 
 ### Phase 2 — Driver programs (depend on Phase 1 libraries)
