@@ -1,5 +1,5 @@
 #include <palp/Global.h>
-#include "Rat.h"
+#include <palp/Rat.h>
 #include <palp/LG.h>     /* defines AmbiPointList and AmbiLatticeBasis */
 #include <palp/Nef.h>
 

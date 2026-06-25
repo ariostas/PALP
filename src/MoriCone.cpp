@@ -12,7 +12,7 @@
 /* =========            H E A D E R s             ========= */
 
 #include <palp/Global.h>
-#include "Rat.h"
+#include <palp/Rat.h>
 #include <palp/Mori.h>
 #include <palp/LG.h>
 

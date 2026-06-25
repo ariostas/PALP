@@ -1,6 +1,6 @@
 #include <palp/Global.h>
 #include <palp/Nef.h>
-#include "Rat.h"
+#include <palp/Rat.h>
 
 /*   ===============	    Typedefs and Headers	===================  */
 #define min(a,b) (((a)<(b)) ? (a):(b))

@@ -15,16 +15,15 @@ run_test() function is defined and documented in lib/run-test.sh.
 Variables
 =========
 
-A few environment variables are passed from the GNUmakefile to the
-test scripts:
+A few environment variables are passed from the CMake build to the
+individual test scripts, via the `palp_run_test` helper:
 
- * DIM: the value of POLY_Dmax to use. The "all-dims" target produces
-   multiple executables, each compiled with a different value for
-   POLY_Dmax. For example, poly-4d.x, poly-5d.x, ..., poly-11d.x. The
-   value of $DIM tells the test script which of those executables to
-   test. The GNUmakefile loops through all possible values of DIM, to
-   ensure that all executables get tested. As a result, the test
-   scripts themselves do not need to repeat any tests.
+ * DIM: the value of POLY_Dmax to use. CMake builds multiple executables,
+   each compiled with a different value for POLY_Dmax. For example,
+   `poly-4d.x`, `poly-5d.x`, ..., `poly-11d.x`. The value of `$DIM` tells
+   the test script which of those executables to test. CMake loops through
+   all configured dimensions to ensure that all executables are tested. As a
+   result, the test scripts themselves do not need to repeat any tests.
 
  * LONG: if set to a non-null value, indicates that the script
    is allowed to run tests that take a long time to run. The

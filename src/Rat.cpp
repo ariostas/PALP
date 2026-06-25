@@ -1,5 +1,5 @@
 #include <palp/Global.h>
-#include "Rat.h"
+#include <palp/Rat.h>
 
 Rat  rI(Long a) 			       		      /*  a -> a/1  */
 {    Rat c; c.N=a; c.D=1; return c; 

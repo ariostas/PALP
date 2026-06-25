@@ -353,12 +353,13 @@ This is the highest-risk step. Take extra care.
 - [ ] Replace `#ifdef __MSDOS__` platform checks with C++17 equivalents.
 - **Verify**: build standalone (not in test suite; manual verification).
 
-- [x] #### Step 4.2 — Remove `.c` files
+- [x] #### Step 4.2 — Remove `.c` files and legacy build files
 
 - [x] Once all `.cpp` files pass all tests, remove the original `.c` files from
   `CMakeLists.txt`.
-- [ ] Update `GNUmakefile` to reference `.cpp` files, or mark it as deprecated
-  (CMake is the primary build system).
+- [x] Remove the deprecated `GNUmakefile` and root `Makefile` (CMake is the
+  primary and only supported build system).
+- [x] Move all C++ sources under `src/` and `Rat.h` under `include/palp/`.
 - [ ] Clean up any remaining forwarding shims from Step 0.2.
 - **Verify**: full clean build + test.
 
@@ -366,7 +367,7 @@ This is the highest-risk step. Take extra care.
 
 - [ ] Remove `palp_types.h` shim if all types are now properly C++.
 - [ ] Consolidate `min`/`max` definitions: delete from `LG.h`, `Subpoly.h`,
-  `E_Poly.c` (all instances of `#define min/max`).
+  `E_Poly.cpp` (all instances of `#define min/max`).
 - [ ] Remove the `-DNDEBUG` workaround in CMake (line 15 of `CMakeLists.txt`)
   if asserts have been replaced with proper error handling in Phase 5.
   If not yet, keep it.

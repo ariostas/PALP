@@ -1,6 +1,6 @@
 #include <palp/Global.h>
 #include <palp/LG.h>
-#include "Rat.h"
+#include <palp/Rat.h>
 
 FILE *inFILE, *outFILE;
 

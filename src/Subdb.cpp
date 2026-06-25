@@ -1,6 +1,6 @@
 #include <palp/Global.h>
 #include <palp/Subpoly.h>
-#include "Rat.h"
+#include <palp/Rat.h>
 				/*  NB mod 2^32, works for #poly<2^32   */
 
 /*  #include <types.h>  ->  defines  _ILP32   (32-bit programs) 

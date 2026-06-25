@@ -1,6 +1,6 @@
 #include <palp/Global.h>
 #include <palp/Subpoly.h>
-#include "Rat.h"
+#include <palp/Rat.h>
 
 #define  subl_int                LLong
 #define  UnAided_IP_CHECK        (POLY_Dmax>4)

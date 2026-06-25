@@ -24,16 +24,18 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Enable strict warnings for all C++ targets.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 
-# Public include directories: project root (legacy private headers such as Rat.h)
-# and include/ (namespaced public headers under palp/).
-set(PALP_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
+# Public include directories: src/ (legacy private headers) and include/
+# (namespaced public headers under palp/).
+set(PALP_INCLUDE_DIRS ${PALP_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-# Pick the .cpp version of a PALP source. All PALP sources are now C++.
+set(PALP_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+# Collect the .cpp version of each PALP source under src/.
 function(palp_sources out_var)
   set(result)
   foreach(src ${ARGN})
-    set(cpp_src "${src}.cpp")
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${cpp_src}")
+    set(cpp_src "${PALP_SOURCE_DIR}/${src}.cpp")
+    if(EXISTS "${cpp_src}")
       list(APPEND result "${cpp_src}")
     else()
       message(FATAL_ERROR "PALP C++ source not found: ${cpp_src}")
