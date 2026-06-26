@@ -2,6 +2,10 @@
 #include <palp/Nef.h>
 #include <palp/Rat.h>
 
+namespace {
+  constexpr bool write_cws = true;  /* output CWS data in E-poly printing */
+}
+
 /*   ===============	    Typedefs and Headers	===================  */
 
 void Sort_PPL(PolyPointList *_P, VertexNumList *_V);
@@ -677,10 +681,10 @@ void Output(PolyPointList * _P, /* PolyPointList * _DP,*/
       if (_F->w){ 
 	PrintWeights(_W); fprintf(outFILE, " ");
       }
-#ifdef	WRITE_CWS
+      if constexpr (write_cws) {
       if (_F->Msum == 1)
 	fprintf(outFILE, " d=%d %d", (int) _D[0], (int) _D[1]);
-#endif
+      }
       if (!_F->p){
 	chi =  Make_Mirror(_EP, h, D, dim);
 	fprintf(outFILE, "H:");

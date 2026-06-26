@@ -5,9 +5,6 @@
 #define W_Nmax (POLY_Dmax+1)
 #define MAXSTRING	100
 
-#undef	WRITE_CWS
-#define	WRITE_CWS
-
 #define Pos_Max   (POLY_Dmax + 2)
 #define FIB_POINT_Nmax  VERT_Nmax
 

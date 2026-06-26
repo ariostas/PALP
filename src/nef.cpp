@@ -8,7 +8,12 @@
 
 #include <palp/Global.h>
 #include <palp/Nef.h>
+#include <palp/Rat.h>
 #include <palp/LG.h>
+
+namespace {
+  constexpr bool write_cws = true;  /* output CWS data in nef Hodge output */
+}
 
 /*  ==========            l o c a l  T Y P E D E F s            ==========  */
 
@@ -270,9 +275,9 @@ int main(int narg, char *fn[])
 	/*Print_PPL(_P,"nachher");*/
 	assert(nv==_V->nv && ne==_E->ne);
 	if (!F.VP){
-#ifdef  WRITE_CWS
+	  if constexpr (write_cws) {
           OUT_CWS(&CW, D, &F.Msum);
-#endif
+	  }
 	  if (POLY_Dmax  < (_P->n + codim - 1)){
 	    printf("Please increase POLY_Dmax to at least %d = %d + %d - 1\n",
 		   (_P->n + codim - 1), _P->n, codim);
