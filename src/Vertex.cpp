@@ -5,10 +5,12 @@
 #include <vector>
 
 #define MAX_BAD_EQ	(POLY_Dmax>5)	/* previously 6; needed for nef !? */
-#define SHOW_NEW_CEq    0               /* (POLY_Dmax>12) 
-					   tracks polytope analysis  */
+namespace {
+  constexpr bool SHOW_NEW_CEq = false;          /* (POLY_Dmax>12) tracks polytope analysis */
+}
+
 #ifndef	CEQ_Nmax	
-#define CEQ_Nmax        EQUA_Nmax
+#define	CEQ_Nmax	EQUA_Nmax
 #endif
 
 /*  ======================================================================  */
@@ -193,8 +195,10 @@ int VNL_to_DEL(PolyPointList *_P, VertexNumList *_V, EqList *_DE){
   return 1;
 }
 
-#define	 LLong_EEV		(1)    /* 1 @ [4662 4 20 333 422 1554 2329] */
-#define  TEST_EEV	      	(0)	       /* compare Long to LLong EEV */
+namespace {
+  constexpr bool LLong_EEV = true;      /* 1 @ [4662 4 20 333 422 1554 2329] */
+  constexpr bool TEST_EEV = false;      /* compare Long to LLong EEV */
+}
 
 Equation EEV_To_Equation(Equation *_E1, Equation *_E2, Long *_V, int n){
   /* Calculate the equation spanned by _V and the intersection of _E1, _E2  */
@@ -202,32 +206,14 @@ Equation EEV_To_Equation(Equation *_E1, Equation *_E2, Long *_V, int n){
   l=Eval_Eq_on_V(_E2,_V,n);
   m=Eval_Eq_on_V(_E1,_V,n);
   g=NNgcd(l,m); assert(g); l/=g; m/=g;
-#if ((!(LLong_EEV))||(TEST_EEV))			    /* Long version */
-  for(i=0;i<n;i++) Eq.a[i]=l*_E1->a[i]-m*_E2->a[i];
-  { int gcd=Eq.c=l*_E1->c-m*_E2->c;
-    for(i=0;i<n;i++) gcd=NNgcd(gcd,Eq.a[i]); assert(gcd);
-    if (gcd!=1) { for(i=0;i<n;i++) Eq.a[i]/=gcd; Eq.c/=gcd;}}
-#endif
-#if ((LLong_EEV)||(TEST_EEV))				   /* LLong version */
-  { LLong A[POLY_Dmax], C, G; for(i=0;i<n;i++) 
+  /* LLong version */
+  { LLong A[POLY_Dmax], C, G; for(i=0;i<n;i++)
 	A[i]=((LLong) l)*((LLong)_E1->a[i])-((LLong)m)*((LLong)_E2->a[i]);
     G=C=((LLong) l)*((LLong)_E1->c)-((LLong)m)*((LLong)_E2->c);
     for(i=0;i<n;i++) G=LNNgcd(G,A[i]); assert(G);
     if(G!=1) {C/=G; for(i=0;i<n;i++) A[i]/=G;}
-#if	(TEST_EEV)						 /* Compare */
-    {	int e=(Eq.c!=C); for(i=0;i<n;i++) if(Eq.a[i]!=A[i]) e=1;     
-	if(e) { printf("Error in EEV: l=%d m=%d g=%d\n",l,m,g);
-	for(i=0;i<n;i++)printf("%d ",_E1->a[i]);printf("  %d = E1\n",_E1->c);
-	for(i=0;i<n;i++)printf("%d ",_E2->a[i]);printf("  %d = E2\n",_E2->c);
-	for(i=0;i<n;i++)printf("%d ",Eq.a[i]);printf("  %d = Eq\n",Eq.c);
-	for(i=0;i<n;i++)printf("%d ",A[i]);printf("  %d = LL_Eq\n",C);
-	exit(0); }
-    }
-#else
     Eq.c=C; for(i=0;i<n;i++) Eq.a[i]=A[i];
-#endif
   }
-#endif
   return Eq;
 }
 
@@ -330,9 +316,9 @@ int EL_to_PPL(EqList *_E, PolyPointList *_P, int *n){
 
 /*  #define  NEW_START_SIMPLEX  (1)     1 @ [16644 1 38 439 2315 5548 8303] */
 
-#define  VERT_WITH_MAX_DISTANCE (0)    /* 0 @ [1845 2 15 97 247 610 874]    */
-#define	 LONG_EQ_FIRST		(0)    /* 0 @ [3425 2 7 137 429 1141 1709]  */
-#define	 TEST_GLZ_EQ		(0)		 /* trace StartSimplex EQs  */
+  constexpr bool VERT_WITH_MAX_DISTANCE = false;    /* 0 @ [1845 2 15 97 247 610 874]    */
+  constexpr bool LONG_EQ_FIRST = false;    /* 0 @ [3425 2 7 137 429 1141 1709]  */
+  constexpr bool TEST_GLZ_EQ = false;		 /* trace StartSimplex EQs  */
 
 Long VZ_to_Base(Long *V,int *d,Long M[POLY_Dmax][POLY_Dmax])  /* 0 iff V=0 */
 {    int p[POLY_Dmax], i, j, J=0; Long g=0, W[POLY_Dmax], *G[POLY_Dmax]; 
@@ -354,14 +340,14 @@ int  OrthBase_red_by_V(Long *V, int *d, Long A[][POLY_Dmax], int *r,
      for(i=0;i<*r-1;i++) for(k=0;k<*d;k++)
      {	B[i][k]=0; for(j=0;j<*r;j++) B[i][k]+=G[i+1][j]*A[j][k];
      }
-#if	(TEST_GLZ_EQ)
+  if constexpr (TEST_GLZ_EQ) {
 	printf("A -> B ... V = "); for(k=0;k<*d;k++) printf(" %5d",V[k]);
-	printf("  W=");for(k=0;k<*r;k++)printf(" %5d",W[k]);puts(""); {int 
+	printf("  W=");for(k=0;k<*r;k++)printf(" %5d",W[k]);puts(""); {int
 	a,b; for(a=0;a<*r-1;a++){for(b=0;b<*d;b++)printf(" %5d",A[a][b]);
 	printf("  =A  B=  ");for(b=0;b<*d;b++)printf(" %5d",B[a][b]);
 	puts("");}for(b=0;b<*d;b++)printf(" %5d",A[a][b]);printf("  =A\n");}
-#endif
-     	return (*r)--;
+  }
+  	return (*r)--;
 }
 
 int  New_Start_Vertex(Long *V0,Long *Ea, PolyPointList *P,int *v) /* P.x[v] */
@@ -377,12 +363,8 @@ int  New_Start_Vertex(Long *V0,Long *Ea, PolyPointList *P,int *v) /* P.x[v] */
         if(d<dn)  {dn=d; Xn=P->x[n=i];}
      }
      if(dp) if(dn) 				 /* points on both sides */
-#if	(VERT_WITH_MAX_DISTANCE)
-			{if(dp+dn>0) *v=p; else *v=n;}
-#else
-			{if(dp+dn>0) *v=n; else *v=p;}
-#endif
-	  else   *v=p;				/* d >=0 */
+				{if(dp+dn>0) *v=n; else *v=p;}
+     else   *v=p;				/* d >=0 */
      else if(dn) *v=n;				/* d <=0 */
           else return 0;
 /*	for(i=0;i<P->n;i++) printf(" %d ",Xp[i]); printf(" = Xp  Xn =");
@@ -413,11 +395,7 @@ int  GLZ_Start_Simplex(PolyPointList *_P, VertexNumList *_V, CEqList *_C)
      for(x=1;x<*d;x++)
      {	for(i=0;i<*d;i++) W[i]=_P->x[y][i]-X[i];
 	OrthBase_red_by_V(W,d,&B[b[x-1]],&r,&B[b[x]]); for(i=0;i<r;i++) 
-#if	(LONG_EQ_FIRST)
-	if(New_Start_Vertex(X,B[b[x]+r-i-1],_P,&y)) break;
-#else
-	if(New_Start_Vertex(X,B[b[x]+i],_P,&y)) break;
-#endif
+	  if(New_Start_Vertex(X,B[b[x]+i],_P,&y)) break;
 	if(i==r) break;
 	_V->v[_V->nv++]=y;	       /* x = dim(span) < d */
      }
@@ -475,12 +453,6 @@ void Make_New_CEqs(PolyPointList *_P, VertexNumList *_V, CEqList *_C,
   static CEqList Bad_C;
   static INCI Bad_C_I[CEQ_Nmax];
 
-#if     (SHOW_NEW_CEq)
-  static int init; static clock_t CLOCK1; static time_t DATE1;
-  if(!init){init=1; CLOCK1=clock(); DATE1=time(NULL);}
-  printf("V=%d F=%d: Ceq=%d",_V->nv,_F->ne,_C->ne);fflush(stdout);
-#endif
-
   Bad_C.ne=_C->ne=0;
   for (i=0;i<Old_C_ne;i++){
     Long dist = Eval_Eq_on_V(&_C->e[i],_P->x[_V->v[_V->nv-1]],_P->n);
@@ -488,10 +460,6 @@ void Make_New_CEqs(PolyPointList *_P, VertexNumList *_V, CEqList *_C,
     if (dist<0) {Bad_C.e[Bad_C.ne]=_C->e[i]; Bad_C_I[Bad_C.ne++]=CEq_I[i];}
     else {_C->e[_C->ne]=_C->e[i]; CEq_I[_C->ne++]=CEq_I[i];}}
     
-#if     (SHOW_NEW_CEq)
-  printf("=%dg+%db",_C->ne,Bad_C.ne);fflush(stdout);
-#endif
-
   Old_C_ne=_C->ne;
   for (i=0;i<_F->ne;i++) F_I[i]=
 	INCI_PN(F_I[i],Eval_Eq_on_V(&_F->e[i],_P->x[_V->v[_V->nv-1]],_P->n));
@@ -531,11 +499,6 @@ void Make_New_CEqs(PolyPointList *_P, VertexNumList *_V, CEqList *_C,
 				    _P->x[_V->v[_V->nv-1]],_P->n);
       assert(IsGoodCEq(&(_C->e[_C->ne++]),_P,_V));}
 
-#if     (SHOW_NEW_CEq)
-  {time_t DATE2=time(NULL); char sm[2]={'s',0}; 
-  int Rs= (int)difftime(DATE2,DATE1);if(Rs>999){Rs/=60; *sm='m';}
-  printf(" done: C.ne=%d  %d%s\n",_C->ne,Rs,sm);fflush(0);}
-#endif
 }
 
 
