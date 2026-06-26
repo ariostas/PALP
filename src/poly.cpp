@@ -13,7 +13,10 @@
 
 #include <palp/Global.h>
 #include <palp/LG.h>
-#define OSL (42)  /* opt_string's length */
+
+namespace {
+  constexpr int OSL = 42;  /* opt_string's length */
+}
 
 
 FILE *inFILE, *outFILE;

@@ -50,7 +50,9 @@ void Print_Nefinfo(PartList *_PTL, /* Flags *_F,*/ time_t *_Tstart, clock_t *_Cs
 
 FILE *inFILE, *outFILE;
 
-#define OSL (31)  /* opt_string's length */
+namespace {
+  constexpr int OSL = 31;  /* opt_string's length */
+}
 
 void  PrintNefUsage(char *c){
   int i;
