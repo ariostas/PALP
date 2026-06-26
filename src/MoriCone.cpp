@@ -383,7 +383,8 @@ void Triang_from_SR(triang *TR,triang *SR){	/* consistency check ... */
   assert(A!=NULL); M=A; N=&A[binco];
   for(i=1;i<p;i++)for(j=0;j<i;j++){M[m]= makeN(i)+makeN(j);	
     for(k=0;k<s;k++) if(Inci64_LE(S[k],M[m])) break;  /* no edge of triangle */
-    if(k==s) {++m; assert(m<binco);}}
+    if(k==s) {++m; assert(m<binco);}
+  }
   for(r=3;r<=d;r++){int x, n=0; for(k=0;k<m;k++) 
     for(x=1+MaxBit(M[k],p); x<p; x++) {N[n]=M[k]+makeN(x);
       for(l=0;l<s;l++) if(Inci64_LE(S[l],N[n])) break;
@@ -401,7 +402,8 @@ void StanleyReisner(triang *SR,triang *T){ /* pre-allocate and compute SR(T) */
   A = (Inci64*) malloc(2*binco*sizeof(Inci64));assert(A!=NULL);M=A;N=&A[binco];
   for(i=1;i<p;i++)for(j=0;j<i;j++){M[m]=(U<<i)+(U<<j);		/* OFFSET=0 */
     for(k=0;k<nI;k++) if(Inci64_LE(M[m],I[k])) break;/* no primitive collect */
-    if(k==nI) S[s++]=M[m]; else {++m; assert(m<binco);}}   /* quadratic generator */
+    if(k==nI) S[s++]=M[m]; else {++m; assert(m<binco);}   /* quadratic generator */
+  }
   for(r=3;r<=d+1;r++){int x, n=0; for(k=0;k<m;k++) 
     for(x=1+MaxBit(M[k],p); x<p; x++) {N[n]=M[k]+(U<<x);
   /*prnI(p,M[k]);printf("=M[%d] x=%d > N[%d]=",k,x,n);prnI(p,N[n]);puts("");*/
@@ -662,19 +664,6 @@ int Triang2dSFan(PolyPointList *P,int p,Inci64 FI,Inci64 *X,Inci64 *CT[ANtri],
 #endif
   return tnt;}		// nmt = # maximal triangulations
 
-#ifdef	OLD_code	// problem: negative cone -> XYZcone
-int ABCline(Long *a,Long *b,Long *c){int i;	// 1:: edge(abc), -1:: acb|cab
-  Long A[3],C[3],AA=0,AC=0,CC=0; 		// 0:: no line or a=b or a=c
-  for(i=0;i<3;i++){AA+=b[i]*a[i];AC+=b[i]*b[i];CC+=b[i]*c[i];}	// A=ab^2-b(ab)
-  for(i=0;i<3;i++){A[i]=a[i]*AC-b[i]*AA; C[i]=c[i]*AC-b[i]*CC;}	// C=cb^2-b(cb)
-//	printf("ABCline a=(%ld,%ld,%ld),b=(%ld,%ld,%ld),c=(%ld,%ld,%ld)  ",
-//	a[0],a[1],a[2],b[0],b[1],b[2],c[0],c[1],c[2]);printf(
-//	"A=(%ld,%ld,%ld),C=(%ld,%ld,%ld)\n",A[0],A[1],A[2],C[0],C[1],C[2]);
-  if(0==(AC=SCALproduct(A,C))) return 0; 	// A/b^2, C/b^2 = ortho. proj.
-  if(!(AA=SCALproduct(A,A))) return 0; if(!(CC=SCALproduct(C,C))) return 0; 
-  if(AA*CC!=AC*AC) return 0; return (AC<0) ? 1 : -1;}	// assuming a!=c
-#endif
-
 int XYZcone(Long *A,Long *B,Long *C){	//  1: B inside cone <AC>_+ 
   int i,j,k; Long x,y,z;		// -1: <ABC>_+ is 2d strict conv. cone
   if(XYZproduct(A,B,C)) return 0;	//  0: <XYZ> 3d or non strictly convex
@@ -836,31 +825,6 @@ int Triang3dSFan(PolyPointList *P,int p,Inci64 FI,Inci64 *X,Inci64 *CT[ANtri],
 
 //for(l=0;l<noe;l++)printf("oe%d=%d%d ",l,OE[l][0],OE[l][1]);puts(" double:");
 //for(f=0;f<3;f++){for(k=0;k<y;k++)printf("%3ld",Y[k][f]);puts(" =Y");}exit(0);
-
-#ifdef	FIRST_TRY__TOO_COMPLICATED_BUT_MIGHT_BE_VIABLE
-    for(i=0;i<en;i++) if(ien[i]) for(f=1;f<=ien[i];f++){     // add split edge
-      if((j=IEli[i][f-1])>i){     		   // if new add Y[k]=Q to YY's
-        IntersectEdges(BZRE(i,0),BZRE(i,1),BZRE(j,0),BZRE(j,1),Y[y]);
-	for(k=r;k<y;k++) if(SameRay(Y[k],Y[y],3)) break;
-	if(k==y){Qinc[q]=makeN(i)+makeN(j);Y[++y]=YY[++q];} //Y[r+q]::E_i & E_j
-	else Qinc[k-r]|=makeN(i)+makeN(j);}
-      else {for(k=0;k<q;k++) if(Inci64_LE(makeN(i)+makeN(j),Qinc[k])) break;
-for(l=k+1;l<q;l++) assert(!Inci64_LE(makeN(i)+makeN(j),Qinc[l]));
-	assert(k<q); k+=r;}		// unique ray with Y[k]::E_i & E_j
-printf("#ie[%d]::i=%d/j=%d split at k=%d y=%d q=%d\n",f-1,i,j,k,y,q);
-for(l=0;l<=noe+f;l++)printf("oe%d=%d%d ",l,OE[l][0],OE[l][1]);puts(" add:");
-      if(f==1) {OE[noe][0]=Eli[i][0]; OE[noe][1]=OE[noe+1][1]=k;
-assert(0<XYZcone(Y[Eli[i][0]],Y[k],Y[Eli[i][1]]));
-	OE[noe+1][0]=Eli[i][1];}		// OE[noe/noe+1]=1st split(E_i)
-      else {for(l=noe;l<noe+f;l++)		// split OE[noe<= ... <noe+f]
-	if(XYZcone(Y[OE[l][0]],Y[k],Y[OE[l][1]])>0) break;// split OE_l by Y_k
-printf("OE[%d]=%d%d k=%d .. l=%d noe=%d f=%d\n",l,OE[l][0],OE[l][1],k,l,noe,f);
-	assert(l<noe+f); OE[noe+f][0]=OE[l][0]; OE[noe+f][1]=OE[l][0]=k;
-for(l++;l<noe+f;l++) assert(-1==XYZcone(Y[OE[l][0]],Y[k],Y[OE[l][1]]));
-	}
-      if(f==ien[i]) noe+=f+1;}
-    else {OE[noe][0]=Eli[i][0];OE[noe++][1]=Eli[i][1];}	// non-intersecting
-#endif
 
     assert(noe<=4*VERT_Nmax); 	nse=noe;	// double/revers orientation
     for(i=0;i<noe;i++){OE[noe+i][0]=OE[i][1]; OE[noe+i][1]=OE[i][0];} noe*=2;
