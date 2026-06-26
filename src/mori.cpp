@@ -13,10 +13,14 @@
 
 #include <palp/Global.h>
 #include <palp/LG.h>
+
+#include <memory>
 #include <palp/Mori.h>
 
 /*==========================================================*/
 
+/* Global FILE pointers are referenced from the library code; kept global for
+   now while the migration is in progress (see ISSUES.md #40). */
 FILE *inFILE, *outFILE;
 
 void  PrintUsage(char *c){
@@ -73,21 +77,26 @@ int main (int narg, char* fn[]){
        Flag.I = 0; // -I: incidence information
        Flag.M = 0; // -M: allows to insert a triangulation
        Flag.Read_HyperSurfCounter = 0; // see Mori.h for description
-  char c;
+   char c;
 
-  CWS *CW=(CWS *) malloc(sizeof(CWS));
+  auto CW_up = std::make_unique<CWS>();
+  CWS *CW = CW_up.get();
 
   VertexNumList V;
-  EqList *E = (EqList *) malloc(sizeof(EqList));
-  EqList *DE = (EqList *) malloc(sizeof(EqList));
-  
-  PolyPointList *_P = (PolyPointList *) malloc(sizeof(PolyPointList)),
-               *_DP = (PolyPointList *) malloc(sizeof(PolyPointList));
+  auto E_up = std::make_unique<EqList>();
+  EqList *E = E_up.get();
+  auto DE_up = std::make_unique<EqList>();
+  EqList *DE = DE_up.get();
+
+  auto _P_up = std::make_unique<PolyPointList>();
+  PolyPointList *_P = _P_up.get();
+  auto _DP_up = std::make_unique<PolyPointList>();
+  PolyPointList *_DP = _DP_up.get();
 
   PairMat *PM = (PairMat *) malloc(sizeof(PairMat)),
          *DPM = (PairMat *) malloc(sizeof(PairMat));
 
-  if((CW==NULL)||(E==NULL)||(_P==NULL)||(DE==NULL)||(_DP==NULL)||(PM==NULL)||(DPM==NULL)){
+  if((PM==NULL)||(DPM==NULL)){
     puts("Allocation failure: Reduce dimensions!");
     exit(0);
   }
