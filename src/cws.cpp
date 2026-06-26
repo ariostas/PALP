@@ -2,6 +2,9 @@
 #include <palp/LG.h>
 #include <palp/Rat.h>
 
+#include <array>
+#include <memory>
+
 namespace {
   constexpr bool Only_IP_CWS = true;
   constexpr bool TRANS_INFO_FOR_IP_WEIGHTS = false;
@@ -14,6 +17,8 @@ namespace {
   constexpr Long mod(Long a, Long b) { return a % b; }
 }
 
+/* Global FILE pointers are referenced from the library code; kept global for
+   now while the migration is in progress (see ISSUES.md #40). */
 FILE *inFILE, *outFILE;
 
 
@@ -411,7 +416,7 @@ int IsNextDigit(void);
 
 void AddHalf(void)
 {
-  int IN[AMBI_Dmax*(AMBI_Dmax+1)]; 
+  std::array<int, AMBI_Dmax*(AMBI_Dmax+1)> IN;
   int i, j, n = 0;
 
   inFILE=stdin; 
@@ -1041,7 +1046,7 @@ void Make_34_CWS(int d)
   if(d == 3){outfile="";
   /*outfile="3u3"*/; u = 1; ef = 1; mkold2(outfile, w3FILE, w3FILE, u, ef);
   /*outfile="2x3"*/; u = 0; ef = 0; mkold2(outfile, w2FILE, w3FILE, u, ef);
-  /*outfile="2x2x2"*/; mk2xxx(outfile, atoi("3"));
+    /*outfile="2x2x2"*/; mk2xxx(outfile, 3);
   }
   if(d == 4){ outfile="";
     /*outfile="4uu4";*/ u = 2; ef = 1; mkold2(outfile, w4FILE, w4FILE, u, ef);
@@ -1051,7 +1056,7 @@ void Make_34_CWS(int d)
     /*outfile="3u3x2";*/ u=1;ef=1;mkold_nno(outfile,w3FILE,w3FILE,w2FILE,u,ef);
     /*outfile="3x2x2";*/ u=0;ef=0;mkold_nno(outfile,w3FILE,w2FILE,w2FILE,u,ef);
     /*outfile="3u3u3";*/ 		mk3u3u3(outfile, w3FILE);
-    /*outfile="2x2x2x2";*/ 		mk2xxx(outfile, atoi("4"));
+    /*outfile="2x2x2x2";*/ 		mk2xxx(outfile, 4);
   }
   fclose(w2FILE);fclose(w3FILE);fclose(w4FILE);
 }
@@ -1141,11 +1146,11 @@ void Select_n_of_W(Weight *_W, int n, FILE *auxFILE){
 
 void PRINT_CWS(CWS *CW){
   {
-    PolyPointList *P, *DP; EqList E; VertexNumList V;
-    P = (PolyPointList *) malloc(sizeof(PolyPointList));
-    if (P == NULL) Die("Unable to allocate space for P");
-    DP = (PolyPointList *) malloc(sizeof(PolyPointList));
-    if (DP == NULL) Die("Unable to allocate space for DP");
+    auto P_up = std::make_unique<PolyPointList>();
+    PolyPointList *P = P_up.get();
+    auto DP_up = std::make_unique<PolyPointList>();
+    PolyPointList *DP = DP_up.get();
+    EqList E; VertexNumList V;
     CW->index = 1;
     Make_CWS_Points(CW, P);
     if (IP_Check(P,&V,&E)){
@@ -1160,7 +1165,6 @@ void PRINT_CWS(CWS *CW){
       assert(IP_Check(DP,&V,&E));
       fprintf(outFILE,"\n");
     }
-    free(DP); free(P); 
   }
 }
 
@@ -1613,13 +1617,12 @@ void Make_IP_CWS(int narg, char* fn[])
 
 /*  ==========  	      POLY DATA:                	==========  */
 
-void FileRW(char *file, char *m, FILE *rwFILE){
-
-  if((rwFILE = fopen(file, m)) == NULL){
-    printf("\n\nUnable to open file %s for %s!\n\n",file,m);
-    exit(0);
-  }
-}
+// void FileRW(char *file, char *m, FILE *rwFILE){
+//   if((rwFILE = fopen(file, m)) == NULL){
+//     printf("\n\nUnable to open file %s for %s!\n\n",file,m);
+//     exit(0);
+//   }
+// }
 
 void IP_Poly_Data(int narg, char* fn[])
 {
@@ -1783,7 +1786,7 @@ void Conv(int narg, char* fn[])
 void td_Print_EL(EqList *_E, int *n, int suppress_c, const char *comment){
   int i,j;
   char command[100];
-  sprintf(command,"rm zzL.tmp");
+  snprintf(command, sizeof(command), "rm zzL.tmp");
   system(command);
   outFILE=fopen("zzL.tmp","w");
   fprintf(outFILE,"%d %d  %s\n",_E->ne,(*n)+1,comment);
@@ -1797,7 +1800,7 @@ Long NP_use_lat(EqList *_E, PolyPointList *_P)
 {
     int tmp;
     char command[100];
-    sprintf(command,"count zzL.tmp | grep '*' | awk '{print $7}' > zzL.tmp1");
+    snprintf(command, sizeof(command), "count zzL.tmp | grep '*' | awk '{print $7}' > zzL.tmp1");
     
     td_Print_EL(_E,&_P->n,0,"");
     system(command);outFILE=fopen("zzL.tmp1","r");
