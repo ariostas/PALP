@@ -61,7 +61,9 @@ namespace {
 
 /*   ------	some flags for testing	------ */
 
-#define SHOW_NFX_LIMIT	(1)		/* exit on NFX_LIMIT violation */
+namespace {
+  constexpr bool show_nfx_limit = true;   /* exit on NFX_LIMIT violation */
+}
 
 /*   ------  local typedefs and headers	------ */
 
@@ -186,14 +188,15 @@ int  GLZ_Make_Trian_NF(Long X[][VERT_Nmax], int *n, int *nv,
 	    NF[i][C]-=R*NF[L][C]; for(j=0;j<*n;j++)G[i][j]-=R*G[L][j];
 	}
      }
-     while(++C<*nv)for(i=0;i<*n;i++)for(j=0;j<*n;j++)NF[i][C]+=G[i][j]*X[j][C];
-     for(i=0;i<*n;i++)for(j=0;j<*nv;j++) { 
-#ifdef	SHOW_NFX_LIMIT
-	g=NF[i][j]; if(g<0) g=-g; if(g>NFX_Limit) { fprintf(stderr,
-	    "NFX_Limit in GL -> %lld !!\n",(long long) g); return 0; } else 
-#endif
-	X[i][j]=NF[i][j]; }
-     return 1;
+      while(++C<*nv)for(i=0;i<*n;i++)for(j=0;j<*n;j++)NF[i][C]+=G[i][j]*X[j][C];
+      for(i=0;i<*n;i++)for(j=0;j<*nv;j++) {
+        if constexpr (show_nfx_limit) {
+          g=NF[i][j]; if(g<0) g=-g;
+          if(g>NFX_Limit) { fprintf(stderr,
+              "NFX_Limit in GL -> %lld !!\n",(long long) g); return 0; }
+        }
+        X[i][j]=NF[i][j]; }
+      return 1;
 }
 /*      =============================================================       */
 
