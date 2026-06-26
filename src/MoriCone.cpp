@@ -222,7 +222,9 @@ void Inci64_2_VNL(Inci64 X, VertexNumList *V, int n){int i; V->nv=0;
 void Print_Inci64_list(int n,Inci64 *I,int p){
   printf("To be done: Print_Inci64_list n=%d p=%d I=%lld\n",n,p,*I);exit(0);}
 
-#define	Inci64_AND(I,J)		((I)&(J))
+namespace {
+  constexpr Inci64 Inci64_AND(Inci64 I, Inci64 J) { return I & J; }
+}
 
 int Inci64_abs(Inci64 X){int abs=X%2; while(X/=2) abs+=X%2; return abs;}
 
@@ -490,8 +492,10 @@ int ConeAngle(Long *L,Long *R){
  */
 
 
-#define		ANfan		20	// alloc number of max 2nd-fans
-#define		ANtri		20	// alloc number of max triang.
+namespace {
+  constexpr int ANfan = 20;  // alloc number of max 2nd-fans
+  constexpr int ANtri = 20;  // alloc number of max triang.
+}
 
 Inci64 FindPolyCircuits(PolyPointList *P,int p,Inci64 F,int f){
   int i,j,k=0,d=P->n,C[VERT_Nmax]; Inci64 X=0; Matrix A,B; Init_Matrix(&A,f,d);
@@ -1419,14 +1423,16 @@ void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
  *
  ****************************************************************/
 
-#define	Inci64_EQ(x,y)   ((x) == (y))           /* check on equality       */
-#define Inci64_0()       (0)                    /* set all bits to 0       */
-#define Inci64_1()	     (1)                    /*set only first bit to 1 */
-#define Inci64_EQ_0(x)   Inci64_EQ(x,Inci64_0())/* check if all bits = 0   */
-#define	Inci64_OR(x,y)   ((x) | (y))            /* bitwise logical or      */
-#define Inci64_PN(x,y)   (2 * (x) + !(y))       /* shift and set first bit */
-#define Inci64_D2(x)     ((x) / 2)              /* shift by one bit        */
-#define Inci64_M2(x)     ((x) % 2)              /* value of first bit      */
+namespace {
+  constexpr Inci64 Inci64_0() { return 0; }
+  constexpr Inci64 Inci64_1() { return 1; }
+  constexpr bool Inci64_EQ(Inci64 x, Inci64 y) { return x == y; }
+  constexpr bool Inci64_EQ_0(Inci64 x) { return Inci64_EQ(x, Inci64_0()); }
+  constexpr Inci64 Inci64_OR(Inci64 x, Inci64 y) { return x | y; }
+  constexpr Inci64 Inci64_PN(Inci64 x, bool y) { return 2 * x + !y; }
+  constexpr Inci64 Inci64_D2(Inci64 x) { return x / 2; }
+  constexpr int Inci64_M2(Inci64 x) { return x % 2; }
+}
 
 
 
