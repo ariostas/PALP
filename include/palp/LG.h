@@ -7,9 +7,9 @@
 #define  W_Nmax		(POLY_Dmax+1)
 
 #if (POLY_Dmax < 7)
-#define	 Pint           int
+using Pint = int;
 #else
-#define	 Pint           long
+using Pint = long;
 #endif                             /* type of coefficients in PolyCoeffList */
 
 typedef struct {int n; std::vector<int> e; std::vector<Pint> c; int A;}		  PoCoLi;  /* e=exp */
