@@ -212,17 +212,19 @@ int  Read_Weight(Weight *_W)     /* read "d w_i" [ or "w_i d" if last=max ] */
      if(FilterFlag) inFILE=NULL;
      return 1;
 }
-#define   StandardOutput   1
+namespace {
+  constexpr bool StandardOutput = true;
+}
 void Write_WH(Weight *_W, BaHo *_BH, VaHo *_VH, int rc, int tc,
 	      PolyPointList *_P, VertexNumList *_V, EqList *_E){
   int i, j;
-#if     StandardOutput
+  if constexpr (StandardOutput) {
   fprintf(outFILE,"%d ",(int)_W->d);
   for(i=0;i<_W->N;i++) fprintf(outFILE,"%d ",(int)_W->w[i]);
-#else  
+  } else {
   for(i=0;i<_W->N;i++) fprintf(outFILE,"%d ",(int)_W->w[i]); 
   fprintf(outFILE,"%d=d ",(int)_W->d);
-#endif
+  }
 #if	WZinput
   for(i=0;i<_W->M;i++){fprintf(outFILE,"/Z%d: ",(int)_W->m[i]);
     for(j=0;j<_W->N;j++)fprintf(outFILE,"%d ",(int)_W->z[i][j]);}
