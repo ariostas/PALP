@@ -611,8 +611,6 @@ void Check_NF_Order(char *polyi,char *dbi, int cF, PolyPointList *_P)/* 1=MM */
      }	printf("  NF o.k.\n");	   assert(!ferror(F)); fclose(F);
 }
 
-#define SUBTRACT_H_FROM_SL
-
 /*	A=h1&h2 B=h1&s2 C=s1&h2 D=s1&s2  1n=1-2  2n=2-1  1i=1-1n  2i=2-2n
  *      1n=(h1-A, s1-C-D)  2n=(h2-A, s2-B-D)  1i=(A,C+D)  2i=(A,B+D)
 
@@ -821,7 +819,6 @@ void Reduce_Aux_File(char *polyi,char *polys,char *dbsub,char *polyo)
 	FIo.NFnum[v][nu]=O_NF; FIo.nNF+=O_NF; FIo.NB+=O_NF*nu;
      }							tnb=0;
 
-#ifdef	SUBTRACT_H_FROM_SL
      uc = & (ucSL[SLp[i=0]]); dv=0;
      for(v=d+1;v<=FIs.nVmax;v++)   if(FIs.nNUC[v])    /* subtract S from SL */
      for(nu=1;nu<=FIs.NUCmax;nu++) if(FIs.NFnum[v][nu])
@@ -862,8 +859,7 @@ void Reduce_Aux_File(char *polyi,char *polys,char *dbsub,char *polyo)
 	    }	assert(!ferror(FS));
 	}
 	else 	END_VN: assert( (uc[0]>v) || ((uc[0]==v)&&(uc[1]>nu)) );
-     }		END_SL: ;
-#endif
+     }	END_SL: ;
 
      for(i=0;i<slNF;i++)					/* write SL */
      {	uc=&ucSL[SLp[i]+2]; v=uc[-2]; nu=uc[-1]; tnb+=nu+2;
@@ -1013,8 +1009,10 @@ void Bin_2_ascii(char *polyi,char *dbin,int max,int vf,int vt,PolyPointList *P)
 /*  ==========                                                  ==========  */
 /*  ======================================================================  */
 
-#define Hod_Dif_max 480
-#define Hod_Min_max 251
+namespace {
+  constexpr int Hod_Dif_max = 480;
+  constexpr int Hod_Min_max = 251;
+}
 
 #if (POLY_Dmax < 6)
 void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto, 
@@ -1546,19 +1544,9 @@ void Close_DB(DataBase *DB)
 	if(ferror(DB->Fv[v])) {printf("File error at v=%d\n",v); exit(0);}
 	fclose(DB->Fv[v]);} free(DB);
 }
-#undef TEST
 int  Read_H_ucNF_from_DB(DataBase *DB, unsigned char *uc)/* p=next read pos */
 {    static Along totNF; int rest; assert(DB!=NULL);
      rest = DB->NFnum[DB->v][DB->nu] - DB->p; 
-#ifdef	TEST
-     {static int vNF, xvNF, nuNF=DB->NFnum[DB->v][DB->nu]; 
-     if(totNF==0){int i,j;for(i=1;i<=DB->NUCmax;i++)vNF+=DB->NFnum[DB->v][i];
-	for(i=DB->v;i<=DB->nVmax;i++) for(j=1;j<=DB->NUCmax;j++)
-	    xvNF+=DB->NFnum[i][j]; 
-	if(xvNF!=DB->nNF) {printf("xvNF=%d  nNF=%d",xvNF,DB->nNF);exit(0);}
-     	xvNF=vNF;
-     }}
-#endif
      assert(0<=rest); if(rest==0)			/* search next v/nu */
      {	int v=DB->v, nu=DB->nu; 			   /* search nu(v): */
 	while(DB->nu < DB->NUCmax) if(DB->NFnum[DB->v][++(DB->nu)]) break;
@@ -1568,19 +1556,8 @@ int  Read_H_ucNF_from_DB(DataBase *DB, unsigned char *uc)/* p=next read pos */
 	    while(DB->nu < DB->NUCmax) if(DB->NFnum[DB->v][++(DB->nu)]) break;
           }   else { assert(totNF==DB->nNF); return 0; } }
 	if((v<DB->v)||(nu<DB->nu)) {rest=DB->NFnum[DB->v][DB->nu]; DB->p=0;}
-#ifdef	TEST
-if((v<DB->v)||(nu<DB->nu)){assert(totNF==nuNF);nuNF+=DB->NFnum[DB->v][DB->nu];}
-	if(v<DB->v) {
-if(vNF){printf("vNF[%d]=%d was=%d v_new=%d\n",v,xvNF,vNF,DB->v);exit(0);}
-		for(i=1;i<=DB->NUCmax;i++) vNF+=DB->NFnum[DB->v][i];}
-#endif
-
      }	assert(DB->p<=DB->NFnum[DB->v][DB->nu]); assert(rest);
      assert(totNF < DB->nNF);
-#ifdef	TEST
-	printf("return 1 at  totNF=%d  v=%d  nu=%d  p=%d\n",
-	    totNF,DB->v,DB->nu,DB->p); assert(0<vNF--);
-#endif
      AuxGet_uc(DB->Fv[DB->v],&DB->nu,uc); ++DB->p; totNF++; return 1;
 }
 
@@ -1634,8 +1611,9 @@ Long AuxGxP(Long *Gi,Long *V,int *d)
 }
 
 /*   Glz x (lincomb(Points)) -> Diag: if(index>1) print vertices of G*P & D */
-#define TEST
-#define TEST_OUT
+namespace {
+  constexpr bool ph_test = true;
+}
 void Aux_Print_CoverPoly(int *I,int *d, int *N,Long *X[POLY_Dmax],
 	Long G[][POLY_Dmax],Long *D,int *x,Long Z[][VERT_Nmax],Long *M,int r)
 {    int i,j,dia=1, err=0; fprintf(outFILE,"%d %d    index=%d  D=%ld",*d,*N,
@@ -1651,7 +1629,7 @@ void Aux_Print_CoverPoly(int *I,int *d, int *N,Long *X[POLY_Dmax],
 	 printf("%ld ",Xij);}
        puts("");
      }
-#ifdef	TEST
+  if constexpr (ph_test) {
 	if((dia==0)||err){
 	  int i,j;printf("D=");for(i=0;i<*d;i++)printf("%ld ",D[i]);
 	  printf("   index[%d]=%d\n",*x,*I);
@@ -1662,7 +1640,7 @@ void Aux_Print_CoverPoly(int *I,int *d, int *N,Long *X[POLY_Dmax],
 	    for(j=0;j<*N;j++) printf("%2ld ",AuxGxP(G[i],X[j],d));
 	    puts("");}
 	  exit(0);}
-#endif
+  }
 }
 void Aux_Print_SLpoly(int *I,int *d, int *N,Long *X[POLY_Dmax],
 	Long G[][POLY_Dmax],Long *D,int *x)
@@ -1672,16 +1650,11 @@ void Aux_Print_SLpoly(int *I,int *d, int *N,Long *X[POLY_Dmax],
      for(i=0;i<*d;i++)
      {	/* int z=1;*/ for(j=0;j<*N;j++)
 	{    Long Xij=AuxGxP(G[i],X[j],d);
-#ifdef	TEST_STUFF
-	if(Xij){if(z&&dia)dia=(labs(Xij)==D[i]);z=0;} /* SUFFICIENT only !!!*/
-        if(dia==0)if(i==(*d-1)){Long g=Xij,T; int J; for(J=j+1;J<*N;J++){T=
-	    labs(AuxGxP(G[i],X[J],d)); if(T) g=Fgcd(g,T);} if(g==D[i]) dia=1;}
-#endif
 	    if(0!=(Xij % D[i])) err=1;
 	    printf("%ld ",Xij/D[i]);}
        puts("");
      }
-#ifdef	TEST
+  if constexpr (ph_test) {
 	if((dia==0)||err){
 	    int i,j;printf("D=");for(i=0;i<*d;i++)printf("%ld ",D[i]);
 	    printf("   index[%d]=%d\n",*x,*I);for(i=0;i<*d;i++)
@@ -1690,7 +1663,7 @@ void Aux_Print_SLpoly(int *I,int *d, int *N,Long *X[POLY_Dmax],
 	    for(j=0;j<*N;j++) printf("%2ld ",AuxGxP(G[i],X[j],d));
 	    puts("");}
 	    exit(0);}
-#endif
+  }
 }
 void Aux_Make_Dual(PolyPointList *P, VertexNumList *V, EqList *E)
 {    Long VM[VERT_Nmax][POLY_Dmax]; int i,j, d=P->n, e=E->ne, v=V->nv; 
@@ -1748,7 +1721,6 @@ void PH_Sublat_Polys(char *dbin, int omitFIP, PolyPointList *_P, char sF)
 	}
      }	if(*dbin) Close_DB(DB);	
 }
-#undef	TEST
 /*	Lattice generated by vertices; UT-decomp of diag	*/
 void V_Sublat_Polys(char mr,char *dbin,char *polyi,char *polyo, 
 	PolyPointList *_P)
@@ -1770,9 +1742,7 @@ void V_Sublat_Polys(char mr,char *dbin,char *polyi,char *polyo,
 	++x;
 	index=Make_Lattice_Basis(_P->n,N,RelPts,G,D); if(1==index) continue;
 	assert(index>0); if(index>max_order) max_order=index;
-#ifdef	TEST
-	Aux_Print_SLpoly(&index,&_P->n, &N,RelPts,G,D,&x);
-#endif
+
 	{   int i,j; subl_int diag[POLY_Dmax], U[POLY_Dmax][VERT_Nmax];
 	    for(i=0;i<_P->n;i++){diag[i]=D[i]; for(j=0;j<V.nv;j++) {int k;
 		U[i][j]=0; for(k=0;k<_P->n;k++) U[i][j]+=G[i][k]*RelPts[j][k];
