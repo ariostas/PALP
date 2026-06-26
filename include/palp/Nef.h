@@ -1,12 +1,12 @@
 #pragma once
 
-#define Nef_Max 	500000
-#define NP_Max          500000
+constexpr int Nef_Max = 500000;
+constexpr int NP_Max = 500000;
 #define W_Nmax (POLY_Dmax+1)
-#define MAXSTRING	100
+constexpr int MAXSTRING = 100;
 
-#define Pos_Max   (POLY_Dmax + 2)
-#define FIB_POINT_Nmax  VERT_Nmax
+constexpr int Pos_Max = POLY_Dmax + 2;
+constexpr int FIB_POINT_Nmax = VERT_Nmax;
 
 typedef struct {
   Long W[FIB_Nmax][FIB_POINT_Nmax];
