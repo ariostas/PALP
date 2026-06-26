@@ -109,12 +109,12 @@ Max number of codimension 2 faces.
 */
 
 
-#define GL_Long		Long
+using GL_Long = Long;
 /*
 Uses W_to_GLZ like in Rat.c
 */
 
-#define MAXLD (26)
+constexpr int MAXLD = 26;
 
 /*
 Used in the handling of large lists of weight systems (cf. C5stats)
@@ -530,8 +530,8 @@ of *BH are calculated. *P must be reflexive; *P and *DP must be complete.
 
 /*  ======  typedefs and functions (from Vertex.c) related to INCIs  ====  */
 
-#define                 INT_Nbits            32
-#define                 LONG_LONG_Nbits      64
+constexpr int INT_Nbits = 32;
+constexpr int LONG_LONG_Nbits = 64;
 /*
 These numbers should be set to the actual numbers of bits occupied by the
 structures "unsigned int" and "unsigned long long" in your version of C.
@@ -544,7 +544,7 @@ typedef		        unsigned int            INCI;
 #elif (VERT_Nmax <= LONG_LONG_Nbits)
 typedef		        unsigned long long	INCI;
 #else
-#define I_NUI     ((VERT_Nmax-1)/INT_Nbits+1)
+constexpr int I_NUI = ((VERT_Nmax-1)/INT_Nbits+1);
 typedef struct {unsigned int ui[I_NUI];}   INCI;
 #endif
 /*
@@ -572,17 +572,17 @@ f[i][j] and dip[i][j] give the same informations for the dual (n-i-1
 */
 
 #if (VERT_Nmax <= LONG_LONG_Nbits)
-#define INCI_M2(x)     ((x) % 2)              /* value of first bit      */
-#define	INCI_AND(x,y)  ((x) & (y))            /* bitwise logical and     */
-#define	INCI_OR(x,y)   ((x) | (y))            /* bitwise logical or      */
-#define	INCI_XOR(x,y)  ((x) ^ (y))            /* bitwise exclusive or    */
-#define	INCI_EQ(x,y)   ((x) == (y))           /* check on equality       */
-#define INCI_LE(x,y)   INCI_EQ(INCI_OR(x,y),y)/* bitwise less or equal */
-#define INCI_EQ_0(x)   INCI_EQ(x,INCI_0())    /* check if all bits = 0   */
-#define INCI_0()       (0)                    /* set all bits to 0       */
-#define INCI_1()       (1)                    /* set only first bit to 1 */
-#define INCI_D2(x)     ((x) / 2)              /* shift by one bit        */
-#define INCI_PN(x,y)   (2 * (x) + !(y))       /* shift and set first bit */
+constexpr int INCI_M2(INCI x)     { return x % 2; }              /* value of first bit      */
+constexpr INCI INCI_AND(INCI x, INCI y)  { return x & y; }            /* bitwise logical and     */
+constexpr INCI INCI_OR(INCI x, INCI y)   { return x | y; }            /* bitwise logical or      */
+constexpr INCI INCI_XOR(INCI x, INCI y)  { return x ^ y; }            /* bitwise exclusive or    */
+constexpr bool INCI_EQ(INCI x, INCI y)   { return x == y; }           /* check on equality       */
+constexpr bool INCI_LE(INCI x, INCI y)   { return INCI_EQ(INCI_OR(x,y),y); }/* bitwise less or equal */
+constexpr bool INCI_EQ_0(INCI x)   { return INCI_EQ(x, INCI_0()); }    /* check if all bits = 0   */
+constexpr INCI INCI_0()       { return 0; }                    /* set all bits to 0       */
+constexpr INCI INCI_1()       { return 1; }                    /* set only first bit to 1 */
+constexpr INCI INCI_D2(INCI x)     { return x / 2; }              /* shift by one bit        */
+constexpr INCI INCI_PN(INCI x, Long y)   { return 2 * x + !(y); }       /* shift and set first bit */
 /*
 For an INCI defined as a single unsigned (long long) integer whose bits are
 regarded as representing incidences, these are useful definitions.
