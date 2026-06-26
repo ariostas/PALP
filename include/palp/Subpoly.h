@@ -8,7 +8,7 @@
 #define	USE_TMP_DIR	(0)
 #endif
 
-#define	NUC_Nmax	256
+constexpr int NUC_Nmax = 256;
 
 /*	on 32-bit architectures the GNU C compiler requires flags:	     *
  *	-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE			     *
@@ -25,65 +25,53 @@
 /*	Along=64bit for polytopes except on bin-files::unsigned  	*/
 /*	SL, self-mirror, NFnum[nv][nu]<2^32,  rec-depth?		*/
 
-#define MAX_REC_DEPTH	16383	 /* present "dirty fix" workes till 128^2-1 */
+constexpr int MAX_REC_DEPTH = 16383;	 /* present "dirty fix" workes till 128^2-1 */
 
 
 /* large files with gcc -> -D_FILE_OFFSET_BITS=64 and ftell -> ftello */
 
-#define	Along		long long	/* signed > addresses bytes DBpolys */
-#define	UPint		unsigned	/* unsigned > #polys in RAM & aux   */
+using Along = long long;	/* signed > addresses bytes DBpolys */
+using UPint = unsigned;	/* unsigned > #polys in RAM & aux   */
 
-#define FORCE_SAVE_TIME         (28800) /* real time for Aux-IO in seconds */
-#define GOOD_SAVE_TIME          (21600) /* same at multiple of 1000 polys */
+constexpr int FORCE_SAVE_TIME = 28800;	/* real time for Aux-IO in seconds */
+constexpr int GOOD_SAVE_TIME = 21600;	/* same at multiple of 1000 polys */
 
-#define	WRITE_DIM	4		/* File IO after weight if WD<= dim */
-#define MIN_NEW		1		/* write file if MIN_NEW <= #newREF */
-#define MIN_W_SAVE_TIME		(7200)  /* min real time for IO after poly */
+constexpr int WRITE_DIM = 4;		/* File IO after weight if WD<= dim */
+constexpr int MIN_NEW = 1;		/* write file if MIN_NEW <= #newREF */
+constexpr int MIN_W_SAVE_TIME = 7200;	/* min real time for IO after poly */
 
 
 #if	(POLY_Dmax < 5)
 
-#define	WATCHREF	(100000)	/* print some info after X refs    */
-#define	SAVE_INC	(1000000)	/* save PolyNFlist after X refs    */
-#define	CperR_MAX	(32)		/* 4*9 is safe for CY (average=10) */
-#define	BASE_MAX	(905)		/* 191->317  184->338  218->464 */
-#define BLOCK_LENGTH    (64)	     /* fraction of data base stored in RAM */
+constexpr int WATCHREF = 100000;	/* print some info after X refs    */
+constexpr int SAVE_INC = 1000000;	/* save PolyNFlist after X refs    */
+constexpr int CperR_MAX = 32;		/* 4*9 is safe for CY (average=10) */
+constexpr int BASE_MAX = 905;		/* 191->317  184->338  218->464 */
+constexpr int BLOCK_LENGTH = 64;	     /* fraction of data base stored in RAM */
 
 #else
 
-#define	WATCHREF	(100000)	    /* print some info after X refs */
-#define	SAVE_INC	(4000000)	    /* save PolyNFlist after X refs */
-#define	CperR_MAX	(40)	    	/*  average is 35 for PolyDim=5  */
-#define	BASE_MAX    (1631723)	/* 1631721 1 903 37947 233103 543907 815860 */
-#define BLOCK_LENGTH    (128)	     /* fraction of data base stored in RAM */
+constexpr int WATCHREF = 100000;	    /* print some info after X refs */
+constexpr int SAVE_INC = 4000000;	    /* save PolyNFlist after X refs */
+constexpr int CperR_MAX = 40;	    	/*  average is 35 for PolyDim=5  */
+constexpr int BASE_MAX = 1631723;	/* 1631721 1 903 37947 233103 543907 815860 */
+constexpr int BLOCK_LENGTH = 128;	     /* fraction of data base stored in RAM */
 
 #endif
 
-#define subl_int	LLong
-#define NB_MAX		POLY_Dmax*VERT_Nmax	/* an uneducated guess */
+using subl_int = LLong;
+constexpr int NB_MAX = POLY_Dmax * VERT_Nmax;	/* an uneducated guess */
 
 #if(POLY_Dmax<5)
-#define SL_Nmax		(65536)
+constexpr int SL_Nmax = 65536;
 #else
-#define SL_Nmax		(300000)
+constexpr int SL_Nmax = 300000;
 #endif
 
 /* ====	    this should be o.k. (only change if you know what you do)  ==== */
 
-#define File_Ext_NCmax  5		 /* space for following FILE_EXTs */
-#define	SAVE_FILE_EXT	".aux"		/* aux. O/I file for big allocation */
-#define	TEMP_FILE_EXT	".tmp"	       /* undefine to directly overwrite aux */
-#define	MOVE_SAVE_FILE	".bak"	      /* move SAVE-file after read  */
-				 /* undef: risk data loss -> save disk space */
-#undef	MOVE_SAVE_FILE		 /* undefine to directly overwrite SAVE file */
-#undef	TEMP_FILE_EXT		 /* undefine to directly overwrite aux file */
-
-
-#ifdef	MOVE_SAVE_FILE			/* consistency of these options */
-#if	USE_TMP_DIR			/* is not yet implemented:      */
-#error		Inconsistent options  USE_TMP_DIR  and  MOVE_SAVE_FILE !!!
-#endif
-#endif
+constexpr int File_Ext_NCmax = 5;		 /* space for following FILE_EXTs */
+constexpr const char* SAVE_FILE_EXT = ".aux";		/* aux. O/I file for big allocation */
 
 typedef struct {
   Along nNF, nNM; int nSM,  /* #ref=2*nNF-nSelfMir.-nNoMir. */ 
@@ -129,9 +117,8 @@ typedef struct {
 		
 /*  ==========          	checks and warnigs		 ========== */
 
-#if	( FORCE_SAVE_TIME <= MIN_W_SAVE_TIME )
-#error	MIN_W_SAVE_TIME should be smaller than AUX-file save_times
-#endif
+static_assert(FORCE_SAVE_TIME > MIN_W_SAVE_TIME,
+	"MIN_W_SAVE_TIME should be smaller than AUX-file save_times");
 
 
 void Make_ANF(PolyPointList *P,VertexNumList *V,       /* affine normal form */
