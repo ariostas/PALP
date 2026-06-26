@@ -194,16 +194,19 @@ This is the highest-risk step. Take extra care.
 - Keep `printf`/`fprintf` as-is for exact output format preservation.
 - **Verify**: build + run ALL `tests/2.*` and `tests/3.*` scripts.
 
-- [ ] #### Step 2.2 — `cws.c` → `cws.cpp` (~1935 lines)
+- [x] #### Step 2.2 — `cws.c` → `cws.cpp` (~1935 lines)
 
 - [x] Rename `cws.c` → `cws.cpp`.
-- [ ] Replace `WDIM=800000` and `TWDIM=16384` magic constants with `constexpr int`.
-- [ ] Replace VLA `int IN[AMBI_Dmax*(AMBI_Dmax+1)]` with `std::array` or
-  `std::vector`.
-- [ ] Remove dead `FileRW()` function (ISSUES.md #6).
-- [ ] Replace `sprintf(command, ...)` with `snprintf` (behavior-preserving, safer).
-- [ ] Replace `atoi("3")` / `atoi("4")` pointless conversions with direct
+- [x] Replace `WDIM=800000` and `TWDIM=16384` magic constants with
+  `constexpr int` (done in the `#define` sweep).
+- [x] Replace VLA `int IN[AMBI_Dmax*(AMBI_Dmax+1)]` with
+  `std::array<int, AMBI_Dmax*(AMBI_Dmax+1)>`.
+- [x] Remove dead `FileRW()` function (ISSUES.md #6) by commenting it out.
+- [x] Replace `sprintf(command, ...)` with `snprintf` (behavior-preserving,
+  safer).
+- [x] Replace `atoi("3")` / `atoi("4")` pointless conversions with direct
   integer literals.
+- [x] Convert `PRINT_CWS` `PolyPointList` allocations to `std::unique_ptr`.
 - **Verify**: build + run all `tests/4.*` scripts.
 
 - [ ] #### Step 2.3 — `class.c` → `class.cpp`
