@@ -1,6 +1,9 @@
 #include <palp/Global.h>
 #include <palp/Subpoly.h>
 #include <palp/Rat.h>
+
+#include <string>
+#include <vector>
 				/*  NB mod 2^32, works for #poly<2^32   */
 
 /*  #include <types.h>  ->  defines  _ILP32   (32-bit programs) 
@@ -37,7 +40,8 @@ void Small_Make_Dual(PolyPointList *_P, VertexNumList *_V, EqList *_E){
 }
 
 void Polyi_2_DBo(char *polyi,char *dbo)
-{    char *dbnames = (char *) malloc(1+strlen(dbo)+File_Ext_NCmax), *fx;
+{    std::string dbnames(dbo);
+     char *fx;
      FILE *F=fopen(polyi,"rb"), *Finfo, *Fv, *Fsl;
      time_t Tstart=time(NULL);          FInfoList L; 		UPint tNF=0;
      int d, v, nu, i, j, list_num, sl_nNF, sl_SM, sl_NM, sl_NB; Along tNB=0;
@@ -45,8 +49,10 @@ void Polyi_2_DBo(char *polyi,char *dbo)
      if (!*polyi) {puts("With -do you require -pi or -di and -pa"); exit(0);}
 
      if(F==NULL) {printf("Input file %s not found\n",polyi); exit(0);}
-     strcpy(dbnames,dbo); fx=&dbnames[strlen(dbo)+1]; 
-     strcat(dbnames,".info"); Finfo=fopen(dbnames,"w"); assert(Finfo!=NULL);
+     dbnames.resize(dbnames.size()+File_Ext_NCmax+1, '\0');
+     dbnames[strlen(dbo)]='\0';
+     fx=&dbnames[strlen(dbo)+1];
+     strcat(dbnames.data(),".info"); Finfo=fopen(dbnames.c_str(),"w"); assert(Finfo!=NULL);
      printf("Read %s (",polyi); fflush(stdout);
 
      Init_FInfoList(&L);                        /* start reading the file */
@@ -70,10 +76,10 @@ void Polyi_2_DBo(char *polyi,char *dbo)
         2*L.nNF-L.nSM-L.nNM, 2*sl_nNF-sl_SM-sl_NM, L.NB+sl_NB,
 	dbo,L.nV+1+(sl_nNF>0)); fflush(stdout);
 
-      fprintf(Finfo,                                          /* write Finfo */
-        "%d  %d %d %d  %d  %lld %d %lld %lld  %d %d %d %d\n\n",
-        d, L.nV, L.nVmax, L.NUCmax,list_num,
-        L.nNF,L.nSM,L.nNM,L.NB,  sl_nNF, sl_SM, sl_NM, sl_NB);
+      fprintf(Finfo,
+         "%d  %d %d %d  %d  %lld %d %lld %lld  %d %d %d %d\n\n",
+         d, L.nV, L.nVmax, L.NUCmax,list_num,
+         L.nNF,L.nSM,L.nNM,L.NB,  sl_nNF, sl_SM, sl_NM, sl_NB);
 
      for(v=d+1;v<=L.nVmax;v++) if(L.nNUC[v])                 /* honest info */
      {  i=0; fprintf(Finfo,"%d %d\n",v,L.nNUC[v]);           /*  v  #nuc's  */
@@ -82,26 +88,26 @@ void Polyi_2_DBo(char *polyi,char *dbo)
                 (++i<L.nNUC[v]) ? "  " : "\n");
         }
      }                                          if(Finfo==stdout) exit(0);
-     if(ferror(Finfo)) {printf("File error in %s\n",dbnames);exit(0);}
+     if(ferror(Finfo)) {printf("File error in %s\n",dbnames.c_str());exit(0);}
      fclose(Finfo); fflush(stdout);
 
      for(v=d+1;v<=L.nVmax;v++) if(L.nNUC[v])         /* write  honest polys */
      {  char ext[4]={'v',0,0,0};
-        ext[1]='0' + v / 10; ext[2]='0' + v % 10;  
-        strcpy(fx,ext); Fv=fopen(dbnames,"wb"); assert(Fv!=NULL); 
+        ext[1]='0' + v / 10; ext[2]='0' + v % 10;
+        strcpy(fx,ext); Fv=fopen(dbnames.c_str(),"wb"); assert(Fv!=NULL);
 
         for(nu=1;nu<=L.NUCmax;nu++) if(L.NFnum[v][nu])
-        {   int vnuNB=nu*L.NFnum[v][nu]; 
+        {   int vnuNB=nu*L.NFnum[v][nu];
             for(i=0;i<vnuNB;i++) fputc(fgetc(F),Fv);
         }
-        if(ferror(Fv)) {printf("File error in %s\n",dbnames);exit(0);} 
+        if(ferror(Fv)) {printf("File error in %s\n",dbnames.c_str());exit(0);}
 	fclose(Fv);
      }
 
      if(sl_nNF)                                  /* write  sublattice polys */
-     {  strcpy(fx,"sl"); Fsl=fopen(dbnames,"wb");
+     {  strcpy(fx,"sl"); Fsl=fopen(dbnames.c_str(),"wb");
         assert(Fsl!=NULL); for(i=0;i<sl_NB;i++) fputc(fgetc(F),Fsl);
-        if(ferror(Fsl)) {printf("File error in %s\n",dbnames);exit(0);}
+        if(ferror(Fsl)) {printf("File error in %s\n",dbnames.c_str());exit(0);}
 	fclose(Fsl);
      }
 
@@ -110,28 +116,30 @@ void Polyi_2_DBo(char *polyi,char *dbo)
      if(ferror(F)) {printf("File error in %s\n",polyi);exit(0);} fclose(F);
 }
 
-void Init_DB(NF_List *_NFL){    
+void Init_DB(NF_List *_NFL){
   /* Read the database, create RAM_poly;
      for given, nv, nuc the matching is as follows:
      DB:  |0|1|...|B-1|B|...|2B|...|((n-1)/B)*B|...|n-2|n-1|
      RAM:             |0  |   1|...| (n-1)/B)-1|
      (n...nNF[nv][nuc], B...BLOCK_LENGTH, the offsets are DB->Fv_pos[v][nuc]
-     and DB->RAM_pos[v][nuc], respectively; 
+     and DB->RAM_pos[v][nuc], respectively;
      each entry |x| corresponds to nuc unsigned characters)  */
 
-  time_t Tstart=time(NULL); 
-  char *dbname = (char *) malloc(1+strlen(_NFL->dbname)+File_Ext_NCmax), *fx;
+  time_t Tstart=time(NULL);
+  std::string dbname(_NFL->dbname);
+  char *fx;
   DataBase *DB=&_NFL->DB;
-  int d, v, nu, i, j, list_num, sl_nNF, sl_SM, sl_NM, sl_NB, 
+  int d, v, nu, i, j, list_num, sl_nNF, sl_SM, sl_NM, sl_NB,
     RAM_pos=0; Along RAM_size=0;
 
-  strcpy(dbname,_NFL->dbname);
-     printf("Reading data-base %s: ",dbname);
-  strcat(dbname,".info");
-  fx=&dbname[strlen(_NFL->dbname)+1];  
+  printf("Reading data-base %s: ",dbname.c_str());
+  dbname.resize(dbname.size()+File_Ext_NCmax+1, '\0');
+  dbname[strlen(_NFL->dbname)]='\0';
+  fx=&dbname[strlen(_NFL->dbname)+1];
+  strcat(dbname.data(),".info");
 
   /* read the info-file: */
-  DB->Finfo=fopen(dbname,"r");
+  DB->Finfo=fopen(dbname.c_str(),"r");
   assert(DB->Finfo!=NULL);
   fscanf(DB->Finfo, "%d  %d %d %d  %d  %lld %d %lld %lld  %d %d %d %d",
           &d,   &DB->nV, &DB->nVmax, &DB->NUCmax,   &list_num,
@@ -154,8 +162,8 @@ void Init_DB(NF_List *_NFL){
       fscanf(DB->Finfo,"%d", &(DB->NFnum[v][nu]));
       RAM_size+=nu*((DB->NFnum[v][nu]-1)/BLOCK_LENGTH);   } } 
 
-  if(ferror(DB->Finfo)) {printf("File error in %s\n",dbname); exit(0);}
-  fclose(DB->Finfo); 
+  if(ferror(DB->Finfo)) {printf("File error in %s\n",dbname.c_str()); exit(0);}
+  fclose(DB->Finfo);
   fflush(stdout);				assert(RAM_size<=INT_MAX);
 
   DB->RAM_NF=(unsigned char *) malloc(RAM_size);
@@ -164,9 +172,9 @@ void Init_DB(NF_List *_NFL){
   /* read the DB-files and create RAM_NF: */
   for (v=2;v<=DB->nVmax;v++) if(DB->nNUC[v]){
     char ext[4]={'v',0,0,0};
-    ext[1]='0' + v / 10; ext[2]='0' + v % 10;  
-    strcpy(fx,ext); 
-    DB->Fv[v]=fopen(dbname,"rb"); 
+    ext[1]='0' + v / 10; ext[2]='0' + v % 10;
+    strcpy(fx,ext);
+    DB->Fv[v]=fopen(dbname.c_str(),"rb");
     assert(DB->Fv[v]!=NULL); 
     FSEEK(DB->Fv[v],0,SEEK_END);
 
@@ -255,15 +263,17 @@ void Add_Polya_2_DBi(char *dbi,char *polya,char *dbo)
      int v, vA, nuA, AslNF, AslSM, AslNM, i;  unsigned Ali, a;	Along AslNB;
      int s, slNF=0, slSM=0, slNM=0, slNB=0, slNP=0; 		UPint Anp;
      int AmI=00,ms, newout=strcmp(dbi,dbo) && (*dbo),j=1+strlen(SAVE_FILE_EXT);
-     char *Ifx, *Ifn = (char *) malloc(j+strlen(dbi)+File_Ext_NCmax), *Ofx,
-     	*Ofn = (char *) malloc(j+strlen(newout ? dbo : dbi)+File_Ext_NCmax);
+     std::vector<char> Ifn(j+strlen(dbi)+File_Ext_NCmax);
+     char *Ifx;
+     std::vector<char> Ofn(j+strlen(newout ? dbo : dbi)+File_Ext_NCmax);
+     char *Ofx;
      FILE *FI, *FA, *FO;  if(*polya==0) {puts("-pa file required"); exit(0);}
 	Init_FInfoList(&FIi); Init_FInfoList(&FIa);
-     strcpy(Ifn,dbi); Ifx=&Ifn[strlen(dbi)]; strcpy(Ifx,".info");
+     strcpy(Ifn.data(),dbi); Ifx=&Ifn[strlen(dbi)]; strcpy(Ifx,".info");
      if(*dbo==0)dbo=dbi;
-     strcpy(Ofn,dbo); Ofx=&Ofn[strlen(dbo)];
+     strcpy(Ofn.data(),dbo); Ofx=&Ofn[strlen(dbo)];
 
-     if(NULL==(FI=fopen(Ifn,"r")))   {printf("Cannot open %s",Ifn);exit(0);}
+     if(NULL==(FI=fopen(Ifn.data(),"r")))   {printf("Cannot open %s",Ifn.data());exit(0);}
      if(NULL==(FA=fopen(polya,"rb"))){printf("Cannot open %s",polya);exit(0);}
      fscanf(FI,"%d%d%d%d%d%lld%d%lld %lld %d%d%d%d",&d,&i,&j,&nu,&Ili,
 	&FIi.nNF,&FIi.nSM,&FIi.nNM,&FIi.NB,&IslNF,&IslSM,&IslNM,&IslNB);
@@ -280,7 +290,7 @@ void Add_Polya_2_DBi(char *dbi,char *polya,char *dbo)
      }                                     assert(tNF==FIi.nNF); tNF=0;
      assert(!fgetc(FA));	/*  rd==0  (recursion depth::no aux-file)  */
      Read_Bin_Info(FA,&j,&Ali,&AslNF,&AslSM,&AslNM,&AslNB,&FIa);assert(d==j);
-     strcpy(Ifx,".sl"); if(IslNF) assert(NULL != (FI=fopen(Ifn,"rb")));
+     strcpy(Ifx,".sl"); if(IslNF) assert(NULL != (FI=fopen(Ifn.data(),"rb")));
      if((IslNB+AslNB))
      assert(NULL != (ucSL = (unsigned char *) malloc( (IslNB+AslNB) )));
      HApos=FTELL(FA); FSEEK(FA,0,SEEK_END); Apos=FTELL(FA);
@@ -326,7 +336,7 @@ void Add_Polya_2_DBi(char *dbi,char *polya,char *dbo)
      printf("SL: %dnf %dsm %dnm %db -> ",slNF,slSM,slNM,slNB);
      if(IslNF) 
      {	HIpos=FTELL(FI); assert(HIpos==IslNB); assert(!ferror(FI)); 
-	fclose(FI); if(!newout) remove(Ifn);
+		fclose(FI); if(!newout) remove(Ifn.data());
      }							    /* SL file done */
 
      FSEEK(FA,HApos,SEEK_SET); Init_FInfoList(&FIo);
@@ -341,9 +351,9 @@ void Add_Polya_2_DBi(char *dbi,char *polya,char *dbo)
      { 	char vxt[5]; strcpy(vxt,".v"); vxt[2]=v/10+'0'; vxt[3]=v%10+'0'; 
 	vxt[4]=0; strcpy(Ofx,vxt); strcpy(Ifx,vxt);
 	if(FIi.nNUC[v])
-	{   if(!newout) {strcat(Ifx,SAVE_FILE_EXT); assert(!rename(Ofn,Ifn));}
-	  if(NULL==(FI=fopen(Ifn,"rb"))){printf("Ifn %s failed",Ifn);exit(0);}
-	} if(NULL==(FO=fopen(Ofn,"wb"))){printf("Ofn %s failed",Ofn);exit(0);}
+	{   if(!newout) {strcat(Ifx,SAVE_FILE_EXT); assert(!rename(Ofn.data(),Ifn.data()));}
+	  if(NULL==(FI=fopen(Ifn.data(),"rb"))){printf("Ifn %s failed",Ifn.data());exit(0);}
+	} if(NULL==(FO=fopen(Ofn.data(),"wb"))){printf("Ofn %s failed",Ofn.data());exit(0);}
 
      for(nu=1;nu<=FIo.NUCmax;nu++) 	if(FIo.NFnum[v][nu])
      {	unsigned int I_NF=FIi.NFnum[v][nu], A_NF=FIa.NFnum[v][nu], O_NF=0;
@@ -392,12 +402,12 @@ void Add_Polya_2_DBi(char *dbi,char *polya,char *dbo)
 	}*/
      }
 	if(FIi.nNUC[v])
-	{   assert(!ferror(FI)); fclose(FI); if(!newout) remove(Ifn); 
-     	}   assert(!ferror(FO)); fclose(FO);
+	{   assert(!ferror(FI)); fclose(FI); if(!newout) remove(Ifn.data());
+      	}   assert(!ferror(FO)); fclose(FO);
      }							tnb=0;
 
      if(slNF)
-     {	strcpy(Ofx,".sl"); assert(NULL != (FO=fopen(Ofn,"wb")));
+     { 	strcpy(Ofx,".sl"); assert(NULL != (FO=fopen(Ofn.data(),"wb")));
      for(i=0;i<slNF;i++)					/* write SL */
      {	uc=&ucSL[SLp[i]+2]; v=uc[-2]; nu=uc[-1]; tnb+=nu+2;
 	assert(uc[-2]<VERT_Nmax); fputc(uc[-2],FO); slNP+=1+(((*uc)%4)==3);
@@ -410,7 +420,7 @@ void Add_Polya_2_DBi(char *dbi,char *polya,char *dbo)
 	d, FIo.nV, FIo.nVmax, FIo.NUCmax,Oli,
 	FIo.nNF,FIo.nSM,FIo.nNM,FIo.NB,	 slNF, slSM, slNM, slNB);
 
-     strcpy(Ofx,".info"); assert(NULL != (FO=fopen(Ofn,"w")));
+     strcpy(Ofx,".info"); assert(NULL != (FO=fopen(Ofn.data(),"w")));
      fprintf(FO,                                           /* write FO.info */
         "%d  %d %d %d  %d  %lld %d %lld %lld  %d %d %d %d\n\n",
         d, FIo.nV, FIo.nVmax, FIo.NUCmax,Oli,
@@ -470,7 +480,8 @@ void Check_NF_Order(char *polyi,char *dbi, int cF, PolyPointList *_P)/* 1=MM */
 {    FILE *F=NULL; FInfoList L; 		/* time_t Tstart=time(NULL); */
      unsigned int rd, i, j, list_num, tln=0, tSM=0; int d, nu, v, si;
      int sl_nNF, sl_SM, sl_NM, sl_NB; Along tNF=0, tNB=0, tNM=0, SLpos, Hpos=0;
-     char *Ifx=NULL, *Ifn = (char *) malloc(1+strlen(dbi)+File_Ext_NCmax);
+     char *Ifx=NULL;
+     std::vector<char> Ifn(1+strlen(dbi)+File_Ext_NCmax);
      if((*polyi)&&(*dbi)) puts("only give one of -pi FILE or -di FILE");
      if((*polyi==0)&&(*dbi==0)) puts("I need one of: -pi FILE or -di FILE");
      if((*polyi==0)+(*dbi==0)!=1) exit(0);	
@@ -510,8 +521,8 @@ void Check_NF_Order(char *polyi,char *dbi, int cF, PolyPointList *_P)/* 1=MM */
      }	
      if(*dbi)
      {	printf("Checking consistency of DataBase %s:\n",dbi);
-     	strcpy(Ifn,dbi); Ifx=&Ifn[strlen(dbi)]; strcpy(Ifx,".info");
-	F=fopen(Ifn,"r"); if(F==NULL) {puts("Info File not found");exit(0);}
+      strcpy(Ifn.data(),dbi); Ifx=&Ifn[strlen(dbi)]; strcpy(Ifx,".info");
+	F=fopen(Ifn.data(),"r"); if(F==NULL) {puts("Info File not found");exit(0);}
      	Init_FInfoList(&L);                       /* start reading the file */
 	fscanf(F,"%d%d%d%d%d%lld%d%lld %lld %d%d%d%d",
         &d,&i,&j,&nu,&list_num,&L.nNF,&L.nSM,&L.nNM,&L.NB,
@@ -550,10 +561,10 @@ void Check_NF_Order(char *polyi,char *dbi, int cF, PolyPointList *_P)/* 1=MM */
      {	Hpos=FTELL(F); FSEEK(F,-sl_NB,SEEK_END); SLpos=FTELL(F);
 	if(SLpos-Hpos==L.NB) printf("NB o.k. ");
      }
-     else if(sl_NB)
-     {	strcpy(Ifx,".sl"); fclose(F);
-        if(NULL==(F=fopen(Ifn,"rb"))){printf("Open %s failed",Ifn);exit(0);}
-     }	else puts("no .sl file");
+      else if(sl_NB)
+      {	strcpy(Ifx,".sl"); fclose(F);
+        if(NULL==(F=fopen(Ifn.data(),"rb"))){printf("Open %s failed",Ifn.data());exit(0);}
+      }	else puts("no .sl file");
      for(si=0;si<sl_nNF;si++)
      {	unsigned char uc[NUC_Nmax]; v=fgetc(F); assert(v<=VERT_Nmax); 
 	nu=fgetc(F); /* assert(nu<=L.NUCmax); */
@@ -575,7 +586,7 @@ void Check_NF_Order(char *polyi,char *dbi, int cF, PolyPointList *_P)/* 1=MM */
      {  Along nbsum=0; if(cF>0){printf(" %d",v);fflush(stdout);}  if(*dbi) 
      	{   char vxt[5]; strcpy(vxt,".v"); vxt[2]=v/10+'0'; vxt[3]=v%10+'0'; 
 	    vxt[4]=0; strcpy(Ifx,vxt); fclose(F);
-            if(NULL==(F=fopen(Ifn,"rb"))){printf("Ifn %s failed",Ifn);exit(0);}
+            if(NULL==(F=fopen(Ifn.data(),"rb"))){printf("Ifn %s failed",Ifn.data());exit(0);}
 	}
         for(nu=1;nu<=L.NUCmax;nu++)      if(L.NFnum[v][nu])
 	{   unsigned char uc[NUC_Nmax];  for(i=0;i<L.NFnum[v][nu];i++)
@@ -598,7 +609,7 @@ void Check_NF_Order(char *polyi,char *dbi, int cF, PolyPointList *_P)/* 1=MM */
      {  int nbsum=0; printf(" %d",v);fflush(stdout);	if(*dbi) 
      	{   char vxt[5]; strcpy(vxt,".v"); vxt[2]=v/10+'0'; vxt[3]=v%10+'0'; 
 	    vxt[4]=0; strcpy(Ifx,vxt); fclose(F);
-            if(NULL==(F=fopen(Ifn,"rb"))){printf("Ifn %s failed",Ifn);exit(0);}
+            if(NULL==(F=fopen(Ifn.data(),"rb"))){printf("Ifn %s failed",Ifn.data());exit(0);}
 	}
         for(nu=1;nu<=L.NUCmax;nu++)      if(L.NFnum[v][nu])
 	{   unsigned char uc[NUC_Nmax];  for(i=0;i<L.NFnum[v][nu];i++)
@@ -634,8 +645,11 @@ void Reduce_Aux_File(char *polyi,char *polys,char *dbsub,char *polyo)
      int IslNF, IslSM, IslNM, db=0, vI, nuI, j, i; unsigned Ili, u;  UPint Inp;
      int SslNF, SslSM, SslNM, dv=0, vS, nuS, s, d; unsigned Sli;    Along Snp;
      int slNF=0, slSM=0, slNM=0, slNB=0, slNP=0, SmI=00, nu,ms, v; UPint Oli=0;
-     char *Sfx=NULL, *Sfn = (*polys) ? (char *) NULL :
-	(char *) malloc(1+strlen(dbsub)+File_Ext_NCmax);   
+      char *Sfx=NULL;
+      std::vector<char> Sfn_buffer;
+      if (*polys == 0)
+        Sfn_buffer.resize(1+strlen(dbsub)+File_Ext_NCmax);
+      char *Sfn = (*polys) ? (char *) NULL : Sfn_buffer.data();
      Along HIPli[VERT_Nmax][NUC_Nmax], HSPli[VERT_Nmax][NUC_Nmax];
 
      if((*polys==0) != (*dbsub==0)) db=(*dbsub!=0); else
@@ -952,21 +966,22 @@ void Bin2aDBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P)
 {    FILE *F; FInfoList L;
      int d, v, nu, i, j, list_num, mc=0, MS,
         sl_nNF, sl_SM, sl_NM, sl_NB, tSM=0, tNM=0;
-     char *Ifx, *Ifn = (char *) malloc(1+strlen(dbi)+File_Ext_NCmax);
-     Long NF[POLY_Dmax][VERT_Nmax]; 
+     std::vector<char> Ifn(1+strlen(dbi)+File_Ext_NCmax);
+     char *Ifx;
+     Long NF[POLY_Dmax][VERT_Nmax];
      VertexNumList V;EqList E;
-     strcpy(Ifn,dbi); Ifx=&Ifn[strlen(dbi)]; strcpy(Ifx,".info");
-     F=fopen(Ifn,"r"); if(F==NULL) {puts("Info File not found");exit(0);}
+     strcpy(Ifn.data(),dbi); Ifx=&Ifn[strlen(dbi)]; strcpy(Ifx,".info");
+     F=fopen(Ifn.data(),"r"); if(F==NULL) {puts("Info File not found");exit(0);}
      Init_FInfoList(&L);                       /* start reading the file */
      fscanf(F,"%d%d%d%d%d%lld%d%lld %lld %d%d%d%d",
 	    &d,&i,&j,&nu,&list_num,&L.nNF,&L.nSM,&L.nNM,&L.NB,
 	    &sl_nNF,&sl_SM,&sl_NM,&sl_NB);   L.nV=i; L.nVmax=j; L.NUCmax=nu;
      if(sl_NB && (vf==2)&&(vt==VERT_Nmax-1))
      {  strcpy(Ifx,".sl"); fclose(F);
-        if(NULL==(F=fopen(Ifn,"rb"))){printf("Open %s failed",Ifn);exit(0);}
-     }  
-     else /* puts("no .sl file"); */ 
-     {	DataBase *DB; Open_DB(dbi, &DB, 0); if((DB->v<vf)||(DB->nVmax>vt))
+         if(NULL==(F=fopen(Ifn.data(),"rb"))){printf("Open %s failed",Ifn.data());exit(0);}
+      }
+      else /* puts("no .sl file"); */
+     {  DataBase *DB; Open_DB(dbi, &DB, 0); if((DB->v<vf)||(DB->nVmax>vt))
 	    DB_fromVF_toVT(DB,vf,vt); /*  read only vf <= v <= vt :: */
 	for(i=0; Read_H_poly_from_DB(DB,_P); i++) Print_PPL(_P,"");
 	printf("#poly=%d\n",i); Close_DB(DB);
@@ -1829,20 +1844,21 @@ void Bin_2_ANF_DBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P)
 {    FILE *F; FInfoList L;
      int d, v, nu, i, j, list_num, mc=0, MS,
         sl_nNF, sl_SM, sl_NM, sl_NB, tSM=0, tNM=0;
-     char *Ifx, *Ifn = (char *) malloc(1+strlen(dbi)+File_Ext_NCmax);
-     Long NF[POLY_Dmax][VERT_Nmax]; 
+     std::vector<char> Ifn(1+strlen(dbi)+File_Ext_NCmax);
+     char *Ifx;
+     Long NF[POLY_Dmax][VERT_Nmax];
      VertexNumList V;EqList E;
-     strcpy(Ifn,dbi); Ifx=&Ifn[strlen(dbi)]; strcpy(Ifx,".info");
-     F=fopen(Ifn,"r"); if(F==NULL) {puts("Info File not found");exit(0);}
+     strcpy(Ifn.data(),dbi); Ifx=&Ifn[strlen(dbi)]; strcpy(Ifx,".info");
+     F=fopen(Ifn.data(),"r"); if(F==NULL) {puts("Info File not found");exit(0);}
      Init_FInfoList(&L);                       /* start reading the file */
      fscanf(F,"%d%d%d%d%d%lld%d%lld %lld %d%d%d%d",
             &d,&i,&j,&nu,&list_num,&L.nNF,&L.nSM,&L.nNM,&L.NB,
             &sl_nNF,&sl_SM,&sl_NM,&sl_NB);   L.nV=i; L.nVmax=j; L.NUCmax=nu;
      if(sl_NB && (vf==2)&&(vt==VERT_Nmax-1))
      {  strcpy(Ifx,".sl"); fclose(F);
-        if(NULL==(F=fopen(Ifn,"rb"))){printf("Open %s failed",Ifn);exit(0);}
-     }  
-     else /* puts("no .sl file"); */ 
+        if(NULL==(F=fopen(Ifn.data(),"rb"))){printf("Open %s failed",Ifn.data());exit(0);}
+     }
+     else /* puts("no .sl file"); */
      {  DataBase *DB; Open_DB(dbi, &DB, 0); if((DB->v<vf)||(DB->nVmax>vt))
             DB_fromVF_toVT(DB,vf,vt); /*  read only vf <= v <= vt :: */
         for(i=0; Read_H_poly_from_DB(DB,_P); i++) 

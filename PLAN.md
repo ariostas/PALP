@@ -299,7 +299,16 @@ This is the highest-risk step. Take extra care.
 - [x] Kept `system()` call; noted in ISSUES.md #11.
 - **Verify**: build + run all `tests/7.*` scripts.
 
-- [ ] #### Step 3.5 — `Subpoly.c` → `Subpoly.cpp` (~1614 lines)
+- [x] #### Step 3.5 — `Subdb.c` → `Subdb.cpp` (~1885 lines)
+
+- [x] Rename `Subdb.c` → `Subdb.cpp`.
+- [x] Converted local filename buffers (`dbnames`, `dbname`, `Ifn`, `Ofn`, `Sfn`)
+  from `malloc`/`free` to `std::string` / `std::vector<char>`.
+- [ ] Left binary `unsigned char *` database buffers and `FILE*` I/O as-is to
+  preserve on-disk format. *Deferred to later phase if needed.*
+- **Verify**: build + run all database-related tests.
+
+- [ ] #### Step 3.6 — `Subpoly.c` → `Subpoly.cpp` (~1614 lines)
 
 - [x] Rename `Subpoly.c` → `Subpoly.cpp`.
 - [ ] Replace `subl_int` typedef with explicit `int64_t`.
