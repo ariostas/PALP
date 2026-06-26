@@ -254,16 +254,21 @@ This is the highest-risk step. Take extra care.
 
 ### Phase 3 — Secondary libraries (depend on Phase 1 + 2)
 
-- [ ] #### Step 3.1 — `E_Poly.c` → `E_Poly.cpp` (~1544 lines)
+- [~] #### Step 3.1 — `E_Poly.c` → `E_Poly.cpp` (~1544 lines)
 
 - [x] Rename `E_Poly.c` → `E_Poly.cpp`.
-- [ ] Remove local `#define min`/`#define max` (ISSUES.md #28); use `std::min`/
-  `std::max` from `<algorithm>`.
-- [ ] Fix `int h[POLY_Dmax][POLY_Dmax] = {{0},{0}}` → `int h[POLY_Dmax][POLY_Dmax]
+- [x] Remove local `#define min`/`#define max` (ISSUES.md #28) — already removed
+  in the `#define` sweep; `palp::min`/`palp::max` in `Global.h` are used.
+- [x] Fix `int h[POLY_Dmax][POLY_Dmax] = {{0},{0}}` → `int h[POLY_Dmax][POLY_Dmax]
   = {}` (ISSUES.md #4).
+- [x] Replace `Die()` function with a `[[noreturn]] void Die(const char *)`
+  signature; updated declarations in `Nef.h`, `nef.cpp`, and `cws.cpp`.
 - [ ] Replace `realloc` in `DYNadd_for_completion` with `std::vector` growth
-  (ISSUES.md #3).
-- [ ] Replace `Die()` function with a `[[noreturn]]` C++ function.
+  (ISSUES.md #3). *Deferred*: `DYN_PPL.L` is a raw `Vector*` used throughout
+  `E_Poly.cpp` and `nef.cpp`; converting it requires changing the struct
+  definition in `Nef.h` and all call sites.
+- [ ] Convert remaining `malloc`/`calloc` allocations in `E_Poly.cpp` to
+  `std::unique_ptr`/`std::vector`.
 - **Verify**: build + run all `tests/6.*` scripts (nef uses E_Poly).
 
 - [ ] #### Step 3.2 — `Nefpart.c` → `Nefpart.cpp` (~837 lines)
