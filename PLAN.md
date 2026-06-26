@@ -408,14 +408,23 @@ Files already converted:
 - `src/Polynf.cpp`: `SORT_CWS`, `FIB_PERM`, `SSR_PRINT`,
   `ALL_FANOS_BUT_INEFFICIENT`, `FANO_CONIFOLD`, `SL_Long`, `KPF`,
   `RelativeSimplexVolume`, `No_OLD_FACE_LIST`, `SQnum_Max`, `TESTfano`,
-  `FanoProjNPmax`, `FPcirNmax`, `PrintFanoProjCand`, `INCIbits`. Active
-  preprocessor-dependent flags (`SMOOTH`, `NON_REF`, `SHOW_NFX_LIMIT`,
-  `NFX_Limit`, etc.) remain as macros.
+  `FanoProjNPmax`, `FPcirNmax`, `PrintFanoProjCand`, `INCIbits`, and `Fputs`
+  to an inline function. Active preprocessor-dependent flags (`SMOOTH`,
+  `NON_REF`, `SHOW_NFX_LIMIT`, `NFX_Limit`, etc.) remain as macros.
 - `src/LG.cpp`: `SHOW_b01_TWIST`, `Tout`, `DET_WARN_ONLY`,
   `ABBREV_POLY_PRINT`, `NO_COORD_IMPROVEMENT`, `TEST_LG`, `TEST_PP`,
   `TEST_PD`, `StandardOutput`.
 - `src/E_Poly.cpp` / `src/nef.cpp`: `WRITE_CWS` replaced with local
   `constexpr bool write_cws`; macro removed from `include/palp/Nef.h`.
+- `src/poly.cpp` / `src/nef.cpp`: `OSL`.
+- `src/MoriCone.cpp`: `ANfan`, `ANtri`, `Inci64_AND`, `Inci64_EQ`,
+  `Inci64_0`, `Inci64_1`, `Inci64_EQ_0`, `Inci64_OR`, `Inci64_PN`,
+  `Inci64_D2`, `Inci64_M2`, plus fix of `assert(++m<binco)` side-effect bug.
+- `include/palp/Global.h`: `GL_Long`, `MAXLD`, `INT_Nbits`,
+  `LONG_LONG_Nbits`, `I_NUI`, and all single-integer `INCI_*` bit helpers.
+- `include/palp/Nef.h`: `Nef_Max`, `NP_Max`, `MAXSTRING`, `Pos_Max`,
+  `FIB_POINT_Nmax`. `W_Nmax` remains a macro because both `Nef.h` and
+  `LG.h` define it for array sizes.
 
 Still to convert in `.cpp` files:
 - `src/Coord.cpp`: `NO_COORD_IMPROVEMENT` is defined, so all
@@ -429,17 +438,15 @@ Still to convert in `.cpp` files:
 - `src/lgotwist.cpp`: standalone; lower priority.
 
 Still to convert in headers:
-- `include/palp/Global.h`: type aliases (`GL_Long`/`SL_Long` already done in
-  `.cpp` but still macro in header), `MAXLD`, `INT_Nbits`, `LONG_LONG_Nbits`,
-  `I_NUI`, and `INCI_*` macros (used as inline bit ops). `POLY_Dmax`,
-  `POINT_Nmax`, `VERT_Nmax`, `FACE_Nmax`, `SYM_Nmax`, `EQUA_Nmax`,
-  `AMBI_Dmax`, `FIB_Nmax`, `CD2F_Nmax` remain compile-time sizing macros.
+- `include/palp/Global.h`: `SL_Long` (already done in `Polynf.cpp` but still
+  macro in header), `POLY_Dmax`, `POINT_Nmax`, `VERT_Nmax`, `FACE_Nmax`,
+  `SYM_Nmax`, `EQUA_Nmax`, `AMBI_Dmax`, `FIB_Nmax`, `CD2F_Nmax` remain
+  compile-time sizing macros.
 - `include/palp/LG.h`: `WZinput` (used in `#if`), `W_Nmax`, `Pint`.
-- `include/palp/Nef.h`: `Nef_Max`, `NP_Max`, `W_Nmax`, `MAXSTRING`,
-  `Pos_Max`, `FIB_POINT_Nmax`.
-- `include/palp/Subpoly.h`: `USE_TMP_DIR`, `NUC_Nmax`, `MAX_REC_DEPTH`,
-  `Along`, `UPint`, `FORCE_SAVE_TIME`, `GOOD_SAVE_TIME`, `WRITE_DIM`,
-  `FTELL`/`FSEEK` macros.
+- `include/palp/Subpoly.h`: `USE_TMP_DIR` (used in `#if`), `NUC_Nmax`,
+  `MAX_REC_DEPTH`, `Along`, `UPint`, `FORCE_SAVE_TIME`, `GOOD_SAVE_TIME`,
+  `WRITE_DIM`, `FTELL`/`FSEEK` macros; also `#if (FORCE_SAVE_TIME <=
+  MIN_W_SAVE_TIME)` static assert must be adapted for `constexpr`.
 
 ---
 
