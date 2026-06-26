@@ -13,6 +13,8 @@
 #include <palp/Global.h>
 #include <palp/LG.h>
 #include <palp/Mori.h>
+
+#include <memory>
 #include <palp/Rat.h>
 
 /* ======================================================== */
@@ -421,12 +423,10 @@ int Check_Mori(PolyPointList *P, int p, triang *T) { // strongly convex(?)
   Long Z[POLY_Dmax + 1];
   VertexNumList V;
   // int e0=0,nm=0,m[VERT_Nmax];; Inci64 IE[VERT_Nmax];
-  PolyPointList *UT = (PolyPointList *)malloc(sizeof(PolyPointList));
+  auto UT = std::make_unique<PolyPointList>();
   Matrix R, VT, G;
-  EqList *E = (EqList *)malloc(sizeof(EqList));
-
-  assert(E != NULL);
-  assert(UT != NULL);
+  EqList E_obj;
+  EqList *E = &E_obj;
   for (i = 1; i < nI; i++)
     for (j = 0; j < i; j++)
       ngen += (Inci64_abs((I[i]) & (I[j])) == d - 1);
@@ -507,7 +507,7 @@ int Check_Mori(PolyPointList *P, int p, triang *T) { // strongly convex(?)
   for (i = 0; i < UT->n; i++)
     UT->x[UT->np][i] = 0;
   UT->np++;
-  Find_Equations(UT, &V, E);
+  Find_Equations(UT.get(), &V, E);
   np = UT->np - 1;
   nv = V.nv - 1;
   Sort_VL(&V);
@@ -515,8 +515,6 @@ int Check_Mori(PolyPointList *P, int p, triang *T) { // strongly convex(?)
   Free_Matrix(&VT);
   Free_Matrix(&R);
   Free_Matrix(&G);
-  free(E);
-  free(UT);
 
   if (np != V.v[nv]) {
     PRNtriang(T, "Non-coherent Triangulation");
@@ -531,12 +529,11 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I) {
   Long Z[POLY_Dmax + 1];
   VertexNumList V;
   Inci64 IE[VERT_Nmax];
-  PolyPointList *UT = (PolyPointList *)malloc(sizeof(PolyPointList));
+  auto UT = std::make_unique<PolyPointList>();
   Matrix R, VT, G;
-  EqList *E = (EqList *)malloc(sizeof(EqList));
+  EqList E_obj;
+  EqList *E = &E_obj;
 
-  assert(E != NULL);
-  assert(UT != NULL);
   for (i = 1; i < nI; i++)
     for (j = 0; j < i; j++)
       ngen += (Inci64_abs((I[i]) & (I[j])) == d - 1);
@@ -616,7 +613,7 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I) {
   for (i = 0; i < UT->n; i++)
     UT->x[UT->np][i] = 0;
   UT->np++;
-  Find_Equations(UT, &V, E);
+  Find_Equations(UT.get(), &V, E);
   np = UT->np - 1;
   nv = V.nv - 1;
   Sort_VL(&V);
@@ -676,8 +673,6 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I) {
   Free_Matrix(&VT);
   Free_Matrix(&R);
   Free_Matrix(&G);
-  free(E);
-  free(UT);
 }
 
 // ===============	Triangulation  <-->  Stanley Reisner	============ //
@@ -2237,8 +2232,7 @@ void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
       Dh0[VERT_Nmax] /*,Dh2[VERT_Nmax]*/;
   Inci64 I[VERT_Nmax], T[FACE_Nmax];
   Long Wsum[VERT_Nmax];
-  FibW *F = (FibW *)malloc(sizeof(FibW));
-  assert(F != NULL);
+  auto F = std::make_unique<FibW>();
 
   /*************************************************************************
    * RECAST PPL
@@ -2270,7 +2264,7 @@ void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
   /************************************************************************/
 
   /* Generates the IP_simplices among point of codim >1 */
-  IP_Simplex_Fiber(_P->x, cp, _P->n, F, FIB_Nmax, 0);
+  IP_Simplex_Fiber(_P->x, cp, _P->n, F.get(), FIB_Nmax, 0);
 
   if (_Flag->P) {
     /************************************************************************
@@ -2410,10 +2404,10 @@ void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
   //    while(Multiloop(N,L,&j,&J)); assert(c==0);}
 
   if (_Flag->M)
-    TriList_to_MoriList(_P, F, _Flag);
+    TriList_to_MoriList(_P, F.get(), _Flag);
   else if (_Flag->g || _Flag->m || _Flag->b || _Flag->i || _Flag->c ||
            _Flag->t || _Flag->d || _Flag->H)
-    Subdivide(_P, V->nv, I, cp, T, &t, _Flag, F);
+    Subdivide(_P, V->nv, I, cp, T, &t, _Flag, F.get());
   if (0) { /* seems to be left-over rubbish  */
     PolyPointList *DP = (PolyPointList *)malloc(sizeof(PolyPointList));
     EqList *DE = (EqList *)malloc(sizeof(EqList));
@@ -2428,9 +2422,8 @@ void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
     //   Dh2[i]=SectionCount(_P,i,DP)-1;
     free(DP);
     free(DE); // for(i=0;i<cp;i++)printf("%d ",Dh2[i]);puts("=h02");
-    Subdivide(_P, V->nv, I, cp, T, &t, _Flag, F);
+    Subdivide(_P, V->nv, I, cp, T, &t, _Flag, F.get());
   }
-  free(F);
 }
 
 /****************************************************************
@@ -2626,11 +2619,10 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
   Long Z[POLY_Dmax + 1];
   VertexNumList V;
   Inci64 IE[VERT_Nmax];
-  PolyPointList *UT = (PolyPointList *)malloc(sizeof(PolyPointList));
+  auto UT = std::make_unique<PolyPointList>();
   Matrix R, VT, G;
-  EqList *E = (EqList *)malloc(sizeof(EqList));
-  assert(E != NULL);
-  assert(UT != NULL);
+  EqList E_obj;
+  EqList *E = &E_obj;
   for (i = 1; i < nI; i++)
     for (j = 0; j < i; j++)
       ngen += (Inci64_abs(Inci64_AND(I[i], I[j])) == d);
@@ -2738,7 +2730,7 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
   for (i = 0; i < UT->n; i++)
     UT->x[UT->np][i] = 0;
   UT->np++;
-  Find_Equations(UT, &V, E);
+  Find_Equations(UT.get(), &V, E);
 
   np = UT->np - 1;
   nv = V.nv - 1;
@@ -2794,8 +2786,6 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
   Free_Matrix(&VT);
   Free_Matrix(&R);
   Free_Matrix(&G);
-  free(E);
-  free(UT);
 }
 
 // #define	SR_GEN_Alloc	(bico*sizeof(Inci64))
@@ -2975,7 +2965,7 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag) {
       //		if(i)fprintf(outFILE," ");
       //			for(j=0;j<T.v;j++){fprintf(outFILE, "%d",
       //(T.I[i]>>(T.v-j-1))%2);} 		fprintf(outFILE, " T[%d]=%d", i,
-      //T.I[i]);// diagnostics
+      // T.I[i]);// diagnostics
       //	}
 
       /*
@@ -2995,7 +2985,7 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag) {
       //		if(i)fprintf(outFILE," ");
       //			for(j=0;j<SR.v;j++){fprintf(outFILE, "%d",
       //(SR.I[i]>>(SR.v-j-1))%2);} 		fprintf(outFILE, " SR[%d]=%d",
-      //i, SR.I[i]);// diagnostics
+      // i, SR.I[i]);// diagnostics
       //	}
 
       puts(" ");
