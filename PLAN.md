@@ -423,8 +423,8 @@ Files already converted:
 - `include/palp/Global.h`: `GL_Long`, `MAXLD`, `INT_Nbits`,
   `LONG_LONG_Nbits`, `I_NUI`, and all single-integer `INCI_*` bit helpers.
 - `include/palp/Nef.h`: `Nef_Max`, `NP_Max`, `MAXSTRING`, `Pos_Max`,
-  `FIB_POINT_Nmax`. `W_Nmax` remains a macro because both `Nef.h` and
-  `LG.h` define it for array sizes.
+  `FIB_POINT_Nmax` converted to `constexpr`. `W_Nmax` remains a macro
+  because both `Nef.h` and `LG.h` define it for array sizes.
 
 Still to convert in `.cpp` files:
 - `src/Coord.cpp`: `NO_COORD_IMPROVEMENT` is defined, so all
@@ -438,15 +438,16 @@ Still to convert in `.cpp` files:
 - `src/lgotwist.cpp`: standalone; lower priority.
 
 Still to convert in headers:
-- `include/palp/Global.h`: `SL_Long` (already done in `Polynf.cpp` but still
-  macro in header), `POLY_Dmax`, `POINT_Nmax`, `VERT_Nmax`, `FACE_Nmax`,
-  `SYM_Nmax`, `EQUA_Nmax`, `AMBI_Dmax`, `FIB_Nmax`, `CD2F_Nmax` remain
-  compile-time sizing macros.
-- `include/palp/LG.h`: `WZinput` (used in `#if`), `W_Nmax`, `Pint`.
-- `include/palp/Subpoly.h`: `USE_TMP_DIR` (used in `#if`), `NUC_Nmax`,
-  `MAX_REC_DEPTH`, `Along`, `UPint`, `FORCE_SAVE_TIME`, `GOOD_SAVE_TIME`,
-  `WRITE_DIM`, `FTELL`/`FSEEK` macros; also `#if (FORCE_SAVE_TIME <=
-  MIN_W_SAVE_TIME)` static assert must be adapted for `constexpr`.
+- `include/palp/Global.h`: `POLY_Dmax`, `POINT_Nmax`, `VERT_Nmax`,
+  `FACE_Nmax`, `SYM_Nmax`, `EQUA_Nmax`, `AMBI_Dmax`, `FIB_Nmax`,
+  `CD2F_Nmax` remain compile-time sizing macros.
+- `include/palp/LG.h`: `WZinput` (used in `#if`), `W_Nmax`.
+- `include/palp/Nef.h`: `W_Nmax`.
+- `include/palp/Subpoly.h`: `USE_TMP_DIR` (used in `#if`), `FTELL`/`FSEEK`
+  (conditional platform macros).
+- `include/palp/Rat.h`: `ARG_FUN` (used as a parameter declaration).
+- `include/palp/Global.h`: the large-`VERT_Nmax` `INCI_*` branch is not
+  currently compiled (`VERT_Nmax <= 64`) and can be converted later.
 
 ---
 
