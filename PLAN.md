@@ -274,19 +274,18 @@ This is the highest-risk step. Take extra care.
   `part_nef`.
 - **Verify**: build + run all `tests/6.*` scripts.
 
-- [ ] #### Step 3.3 — `MoriCone.c` → `MoriCone.cpp` (~1792 lines)
+- [~] #### Step 3.3 — `MoriCone.c` → `MoriCone.cpp` (~1792 lines)
 
 - [x] Rename `MoriCone.c` → `MoriCone.cpp`.
-- [ ] Fix `assert(++m < binco)` (ISSUES.md #1): move `++m` out of assert:
-  ```cpp
-  ++m; assert(m < binco);
-  ```
+- [x] Fix `assert(++m < binco)` (ISSUES.md #1): moved `++m` out of assert.
 - [ ] Replace `Inci64` macros (`makeN`, `putN`, `getN`, etc.) with `constexpr`
-  inline functions.
-- [ ] Remove dead `#ifdef OLD_code` and `#ifdef FIRST_TRY__TOO_COMPLICATED...`
+  inline functions. *Deferred*: they are used heavily and some are
+  performance-critical bit operations; converting them safely requires care.
+- [x] Remove dead `#ifdef OLD_code` and `#ifdef FIRST_TRY__TOO_COMPLICATED...`
   blocks (ISSUES.md #35).
-- [ ] Remove stray `printf` debug (ISSUES.md #34).
-- [ ] Replace `exit(0)` / `exit(1)` with `palp::die()`.
+- [ ] Remove stray `printf` debug (ISSUES.md #34). *Deferred*: remaining
+  debug prints are inside `#if TRACE_TRIANGULATION` blocks.
+- [ ] Replace `exit(0)` / `exit(1)` with `palp::die()`. *Deferred to Phase 5*.
 - **Verify**: build + run all `tests/7.*` scripts.
 
 - [ ] #### Step 3.4 — `SingularInput.c` → `SingularInput.cpp` (~591 lines)
