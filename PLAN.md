@@ -362,12 +362,18 @@ This is the highest-risk step. Take extra care.
 
 - [ ] #### Step 4.3 — Final cleanup
 
-- [ ] Remove `palp_types.h` shim if all types are now properly C++.
-- [ ] Consolidate `min`/`max` definitions: delete from `LG.h`, `Subpoly.h`,
+- [x] Remove `palp_types.h` shim if all types are now properly C++.
+  *Done earlier; no separate `palp_types.h` exists.*
+- [x] Consolidate `min`/`max` definitions: delete from `LG.h`, `Subpoly.h`,
   `E_Poly.cpp` (all instances of `#define min/max`).
+  *`palp::min`/`palp::max` templates are in `Global.h`; no `#define min/max`
+  remain in those files. Standalone `lgotwist.cpp` keeps its own for now.*
 - [ ] Remove the `-DNDEBUG` workaround in CMake (line 15 of `CMakeLists.txt`)
   if asserts have been replaced with proper error handling in Phase 5.
   If not yet, keep it.
+- [ ] Convert remaining header-level `#define` constants that are safe to
+  `constexpr`/`using` without breaking `#if` array-size logic (e.g. type aliases
+  and scalar limits not used in preprocessor conditionals).
 - [ ] Run full test suite across all dimensions:
   ```bash
   for DIM in 4 5 6 11; do
@@ -378,6 +384,62 @@ This is the highest-risk step. Take extra care.
   ```
 - [ ] Run ASAN and UBSAN builds one final time.
 - **Verify**: everything green.
+
+### Step 4.4 — `#define` → `constexpr`/`using` sweep (in progress)
+
+A cross-cutting pass to replace file-local `#define` constants with C++17
+`constexpr`/`using` where it does not change preprocessor-controlled array
+sizes or conditional-compilation behavior. Symbols that are still required by
+`#if`/`#ifdef` guards are left as macros until their guarded blocks are
+converted to `if constexpr` or removed.
+
+Files already converted:
+- `src/cws.cpp`: `Only_IP_CWS`, `TRANS_INFO_FOR_IP_WEIGHTS`, `NFmax`,
+  `SIMPLEX_POINT_Nmax`, `OSL`, `WDIM`, `lcm`, `TWDIM`, `mod`, `ALLOWHALF`,
+  `CHAT`, plus dead-code removal.
+- `src/SingularInput.cpp`: `DijkEQ`, `T_DIV`, `DIVclassBase`,
+  `TEST_PRINT_SINGULAR_IO`, `NORM_SIMP_NUM`, plus `const` correctness for
+  `DivClassBasis` string arguments.
+- `src/Vertex.cpp`: `SHOW_NEW_CEq`, `LLong_EEV`, `TEST_EEV`,
+  `VERT_WITH_MAX_DISTANCE`, `LONG_EQ_FIRST`, `TEST_GLZ_EQ`. `MAX_BAD_EQ`
+  remains a macro because it is used in `#if`.
+- `src/Subdb.cpp`: `SUBTRACT_H_FROM_SL`, `Hod_Dif_max`, `Hod_Min_max`, all
+  local `TEST`/`TEST_OUT` toggles.
+- `src/Polynf.cpp`: `SORT_CWS`, `FIB_PERM`, `SSR_PRINT`,
+  `ALL_FANOS_BUT_INEFFICIENT`, `FANO_CONIFOLD`, `SL_Long`, `KPF`,
+  `RelativeSimplexVolume`, `No_OLD_FACE_LIST`, `SQnum_Max`, `TESTfano`,
+  `FanoProjNPmax`, `FPcirNmax`, `PrintFanoProjCand`, `INCIbits`. Active
+  preprocessor-dependent flags (`SMOOTH`, `NON_REF`, `SHOW_NFX_LIMIT`,
+  `NFX_Limit`, etc.) remain as macros.
+- `src/LG.cpp`: `SHOW_b01_TWIST`, `Tout`, `DET_WARN_ONLY`,
+  `ABBREV_POLY_PRINT`, `NO_COORD_IMPROVEMENT`, `TEST_LG`, `TEST_PP`,
+  `TEST_PD`, `StandardOutput`.
+- `src/E_Poly.cpp` / `src/nef.cpp`: `WRITE_CWS` replaced with local
+  `constexpr bool write_cws`; macro removed from `include/palp/Nef.h`.
+
+Still to convert in `.cpp` files:
+- `src/Coord.cpp`: `NO_COORD_IMPROVEMENT` is defined, so all
+  `#ifndef NO_COORD_IMPROVEMENT` blocks are dead; removing them requires care
+  because `Wperm_to_GLZ`/`CWS_to_PermCWS` are declared in prototypes.
+- `src/LG.cpp`: `COEFF_Nmax` depends on local variables and is used in array
+  sizes; keep as macro for now.
+- `src/MoriCone.cpp`: many local `Inci64_*` macros and geometric helper macros
+  (`BZangle`, `SameRayBZ`, etc.) are performance-critical inline helpers;
+  convert to `constexpr inline` functions.
+- `src/lgotwist.cpp`: standalone; lower priority.
+
+Still to convert in headers:
+- `include/palp/Global.h`: type aliases (`GL_Long`/`SL_Long` already done in
+  `.cpp` but still macro in header), `MAXLD`, `INT_Nbits`, `LONG_LONG_Nbits`,
+  `I_NUI`, and `INCI_*` macros (used as inline bit ops). `POLY_Dmax`,
+  `POINT_Nmax`, `VERT_Nmax`, `FACE_Nmax`, `SYM_Nmax`, `EQUA_Nmax`,
+  `AMBI_Dmax`, `FIB_Nmax`, `CD2F_Nmax` remain compile-time sizing macros.
+- `include/palp/LG.h`: `WZinput` (used in `#if`), `W_Nmax`, `Pint`.
+- `include/palp/Nef.h`: `Nef_Max`, `NP_Max`, `W_Nmax`, `MAXSTRING`,
+  `Pos_Max`, `FIB_POINT_Nmax`.
+- `include/palp/Subpoly.h`: `USE_TMP_DIR`, `NUC_Nmax`, `MAX_REC_DEPTH`,
+  `Along`, `UPint`, `FORCE_SAVE_TIME`, `GOOD_SAVE_TIME`, `WRITE_DIM`,
+  `FTELL`/`FSEEK` macros.
 
 ---
 
