@@ -338,15 +338,16 @@ This is the highest-risk step. Take extra care.
 - [ ] Replace `fgetUI`/`fputUI` with `fread`/`fwrite`-based versions.
 - **Verify**: build + run class-related tests.
 
-- [ ] #### Step 3.7 — `Subdb.c` → `Subdb.cpp` (~1915 lines)
+- [x] #### Step 3.7 — `Subdb.c` → `Subdb.cpp` (~1915 lines)
 
 - [x] Rename `Subdb.c` → `Subdb.cpp`.
-- [ ] Replace `goto END_SL` / `goto END_VN` with structured flow control (lambdas
-  or early-return helper functions).
-- [ ] Replace `static unsigned char uc[NUC_Nmax]` and `static int ms3`
-  (ISSUES.md #14) with a context struct passed as parameter.
-- [ ] Replace `sprintf(com, ...)` with `snprintf` (ISSUES.md #26).
-- [ ] Replace `static EqList E` (ISSUES.md #42) with local variable.
+- [x] Replaced `goto END_SL` / `goto END_VN` with a `bool sl_done` flag and
+  `break` in `Reduce_Aux_File`.
+- [x] Replaced `static unsigned char uc[NUC_Nmax]` and `static int ms3` in
+  `Read_H_poly_from_DB` with `DataBase::last_uc` / `DataBase::last_ms3`.
+- [x] Replaced `sprintf(com, ...)` with `snprintf` in `Extract_from_Hodge_db`.
+- [x] Replaced `static EqList E` in `DB_to_Hodge`, `PH_Sublat_Polys`, and
+  `V_Sublat_Polys` with local variables.
 - **Verify**: build + run class-related tests.
 
 ---

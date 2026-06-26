@@ -834,11 +834,13 @@ void Reduce_Aux_File(char *polyi,char *polys,char *dbsub,char *polyo)
      }							tnb=0;
 
      uc = & (ucSL[SLp[i=0]]); dv=0;
+     bool sl_done = false;
      for(v=d+1;v<=FIs.nVmax;v++)   if(FIs.nNUC[v])    /* subtract S from SL */
      for(nu=1;nu<=FIs.NUCmax;nu++) if(FIs.NFnum[v][nu])
      {	while( (uc[0]<v) || ((uc[0]==v)&&(uc[1]<nu))) 
-	{   uc = & (ucSL[SLp[++i]]); if(i>=slNF) goto END_SL;
+	{   uc = & (ucSL[SLp[++i]]); if(i>=slNF) { sl_done=true; break; }
 	}				      /* go up to (v,nu) in SL-list */
+	    if(sl_done) break;
 	    if(db) if(v>dv) 
 	    {	char vxt[5]; strcpy(vxt,".v"); vxt[2]=v/10+'0';
 		vxt[3]=v%10+'0'; vxt[4]=0; strcpy(Sfx,vxt); 
@@ -851,9 +853,13 @@ void Reduce_Aux_File(char *polyi,char *polys,char *dbsub,char *polyo)
 	    for(u=0;u<FIs.NFnum[v][nu];u++)
 	    {	int HmSL; AuxGet_uc(FS,&nu,ucS);/* Test_ucNF(&d,&v,&nu,ucS);*/
 		while(0 < (HmSL=RIGHTminusLEFT(&uc[2],ucS,&nu))) /* next SL */
-		{   uc = & (ucSL[SLp[++i]]); if(i>=slNF) goto END_SL;
-		    if((uc[0]!=v)||(uc[1]!=nu)) goto END_VN;
+		{   uc = & (ucSL[SLp[++i]]); if(i>=slNF) { sl_done=true; break; }
+		    if((uc[0]!=v)||(uc[1]!=nu)) {
+		      assert( (uc[0]>v) || ((uc[0]==v)&&(uc[1]>nu)) );
+		      break;
+		    }
 		}
+		if(sl_done) break;
 		if(HmSL==0)				       /* remove SL */
 		{   int k, sms=uc[2]%4, hms=(*ucS)%4;
 		    switch(10*hms + sms){ 
@@ -862,9 +868,12 @@ void Reduce_Aux_File(char *polyi,char *polys,char *dbsub,char *polyo)
 			slNB -= nu+2;
 			if(sms==0) --slSM; else if(sms<3) --slNM;
 			--slNF;
-			if(i>=slNF) goto END_SL;
+			if(i>=slNF) { sl_done=true; break; }
 			uc = & (ucSL[SLp[i]]);
-			if((uc[0]!=v)||(uc[1]!=nu)) goto END_VN;
+			if((uc[0]!=v)||(uc[1]!=nu)) {
+			  assert( (uc[0]>v) || ((uc[0]==v)&&(uc[1]>nu)) );
+			  break;
+			}
 			break;
 		    case 12: case 21: 					break;
 		    case 13: case 23: ++slNM; uc[2]-=hms; 		break;
@@ -872,8 +881,9 @@ void Reduce_Aux_File(char *polyi,char *polys,char *dbsub,char *polyo)
 		}			       /* else (SL>H): hence next H */
 	    }	assert(!ferror(FS));
 	}
-	else 	END_VN: assert( (uc[0]>v) || ((uc[0]==v)&&(uc[1]>nu)) );
-     }	END_SL: ;
+	else 	assert( (uc[0]>v) || ((uc[0]==v)&&(uc[1]>nu)) );
+	if(sl_done) break;
+     }
 
      for(i=0;i<slNF;i++)					/* write SL */
      {	uc=&ucSL[SLp[i]+2]; v=uc[-2]; nu=uc[-1]; tnb+=nu+2;
@@ -1038,7 +1048,7 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto,
   DataBase DB;
   VertexNumList V;
   Long VPM[EQUA_Nmax][VERT_Nmax];
-  static EqList E;
+  EqList E;
   time_t Tstart;
   char *dbname = (char *) malloc(1+strlen(dbin)+File_Ext_NCmax), *fx;
   char *dbhname = (char *) malloc(6+strlen(dbout)+File_Ext_NCmax), *fhx;
@@ -1333,8 +1343,9 @@ void Test_Hodge_db(char *dbname){
 void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P){
 
   time_t Tstart;
-  char c=*x_string, hext[9], com[35],
-    *filename = (char *) malloc(6+strlen(dbname)+File_Ext_NCmax), *fhx;
+  char c=*x_string, hext[9], com[80];
+  std::vector<char> filename(6+strlen(dbname)+File_Ext_NCmax);
+  char *fhx;
   unsigned char uc_poly[NUC_Nmax];
   int E=998, H1=0, H2=0, M=0, V=0, N=0, F=0, L=1000, i=0, j, dh, h12, nh, 
     nnf_sum, nnf_d[Hod_Dif_max+1], nnf_dh[Hod_Dif_max+1][Hod_Min_max+1], 
@@ -1405,14 +1416,14 @@ void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P){
     nnf_d[i]=0;
     for(j=0;j<=Hod_Min_max;j++) nnf_dh[i][j]=0;}
 
-  strcpy(filename,dbname);
-  strcat(filename,".hinfo");
+  strcpy(filename.data(),dbname);
+  strcat(filename.data(),".hinfo");
   fhx=&filename[strlen(dbname)+1];
 
-  /* printf("Reading %s\n",filename); fflush(0); */
+  /* printf("Reading %s\n",filename.data()); fflush(0); */
 
   /* read the info-file: */
-  Fhinfo=fopen(filename,"r");
+  Fhinfo=fopen(filename.data(),"r");
   assert(Fhinfo!=NULL);
   while ((fscanf(Fhinfo, "%d",&dh))!=EOF){
     fscanf(Fhinfo, "%d  %d", &nh, &(nnf_d[dh]));
@@ -1423,7 +1434,7 @@ void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P){
       nnf_sum+=nnf_dh[dh][h12];}
     if (nnf_sum!=nnf_d[dh]) {
       printf("nnf_d[%d]!=sum nnf_dh[%d][h12]!", dh, dh); exit(0);}}
-  if(ferror(Fhinfo)) {printf("File error in %s\n",filename); exit(0);}
+  if(ferror(Fhinfo)) {printf("File error in %s\n",filename.data()); exit(0);}
   fclose(Fhinfo);
 
   /* printf("Analysing Hodge-files:\n"); fflush(0); */
@@ -1444,9 +1455,9 @@ void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P){
     for (dh=HD_from; dh<=HD_to; dh++) if (nnf_dh[dh][h12]){
     
       hext[1]='0'+dh/100; hext[2]='0'+(dh/10)%10; hext[3]='0'+dh%10;
-      hext[5]='0'+h12/100; hext[6]='0'+(h12/10)%10; hext[7]='0'+h12%10;      
-      strcpy(fhx,hext); 
-      Fh=fopen(filename,"rb");
+      hext[5]='0'+h12/100; hext[6]='0'+(h12/10)%10; hext[7]='0'+h12%10;
+      strcpy(fhx,hext);
+      Fh=fopen(filename.data(),"rb");
       assert (Fh!=0);
       while((c1=fgetc(Fh))!=EOF){
 	mv=c1/4; 
@@ -1478,14 +1489,14 @@ void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P){
 	  /* if(!MS) puts("!MS");
 	     if(!mirror) puts("!mirror"); */
 	  if (++nnf_sum>L) {printf("Exceeded limit of %d\n",L); return;}
-	  sprintf(com,"M:%d %d N:%d %d H:%d,%d [%d]",
+	  snprintf(com,sizeof(com),"M:%d %d N:%d %d H:%d,%d [%d]",
 		  mp,mv,np,nv,true_H1,true_H2,2*(true_H1-true_H2));
 	  Print_PPL(_P,com);  }
 	if (is_dual&&MS){
 	  VertexNumList VNL; EqList EL;
 	  Long NF[POLY_Dmax][VERT_Nmax];
 	  if (++nnf_sum>L) {printf("Exceeded limit of %d\n",L); return;}
-	  sprintf(com,"M:%d %d N:%d %d H:%d,%d [%d]",
+	  snprintf(com,sizeof(com),"M:%d %d N:%d %d H:%d,%d [%d]",
 		  np,nv,mp,mv,true_H2,true_H1,2*(true_H2-true_H1));
 	  Find_Equations(_P,&VNL,&EL);
 	  Small_Make_Dual(_P, &VNL, &EL);
@@ -1585,14 +1596,16 @@ int  Read_SLpoly_from_DB(void)
 }
 
 int  Read_H_poly_from_DB(DataBase *DB,PolyPointList *P)
-{    static unsigned char uc[NUC_Nmax]; static int ms3; 
-     int i,j, MS; Long NF[POLY_Dmax][VERT_Nmax]; VertexNumList V; EqList E; 
-     if(0==ms3) { if(0==Read_H_ucNF_from_DB(DB,uc)) return 0;} else --uc[0];
-     UCnf2vNF(&DB->d,&DB->v,&DB->nu,uc,NF,&MS); P->n=DB->d; P->np=DB->v;
+{
+     int i,j, MS; Long NF[POLY_Dmax][VERT_Nmax]; VertexNumList V; EqList E;
+     if(DB->last_ms3) { --DB->last_uc[0]; }
+     else { if(0==Read_H_ucNF_from_DB(DB,DB->last_uc)) return 0; }
+     UCnf2vNF(&DB->d,&DB->v,&DB->nu,DB->last_uc,NF,&MS); P->n=DB->d; P->np=DB->v;
      for(i=0;i<P->np;i++) for(j=0;j<P->n;j++) P->x[i][j]=NF[j][i];
      MS%=4;
-     ms3=(MS==3); if(MS==2)
-     {	assert(Ref_Check(P,&V,&E)); P->np=E.ne;
+     DB->last_ms3=(MS==3);
+     if(MS==2)
+     { 	assert(Ref_Check(P,&V,&E)); P->np=E.ne;
 	for(i=0;i<P->np;i++)for(j=0;j<P->n;j++) P->x[i][j]=E.e[i].a[j];
      }	return 1;
 }
@@ -1691,8 +1704,8 @@ void Aux_Make_Dual(PolyPointList *P, VertexNumList *V, EqList *E)
 void PrintVPHMusage(void);
 int  Make_Lattice_Basis(int d, int p, Long *P[POLY_Dmax],  /* index=det(D) */
         Long G[][POLY_Dmax], Long *D);/* G x P generates diagonal lattice D */
-void PH_Sublat_Polys(char *dbin, int omitFIP, PolyPointList *_P, char sF) 
-{     static EqList E; VertexNumList V; int x=0, K, B, I=1; /* index>I only */
+void PH_Sublat_Polys(char *dbin, int omitFIP, PolyPointList *_P, char sF)
+{     EqList E; VertexNumList V; int x=0, K, B, I=1; /* index>I only */
      Long *RelPts[POINT_Nmax];DataBase *DB=NULL; if(*dbin)Open_DB(dbin,&DB,0);
      K=((sF!='P')&&(sF!='H')&&(sF!='Q')&&(sF!='B'));    /*  K=='CoverPoly'  */
      if(('1'<sF)&&(sF<='9')) I=sF-'0';
@@ -1737,22 +1750,22 @@ void PH_Sublat_Polys(char *dbin, int omitFIP, PolyPointList *_P, char sF)
      }	if(*dbin) Close_DB(DB);	
 }
 /*	Lattice generated by vertices; UT-decomp of diag	*/
-void V_Sublat_Polys(char mr,char *dbin,char *polyi,char *polyo, 
+void V_Sublat_Polys(char mr,char *dbin,char *polyi,char *polyo,
 	PolyPointList *_P)
-{    NF_List *_L=(NF_List *) malloc(sizeof(NF_List)); 
+{    NF_List _L_obj;
+     NF_List *_L=&_L_obj;
      int max_order=1;
-     static EqList E; VertexNumList V; int x=0;
+     EqList E; VertexNumList V; int x=0;
      Long *RelPts[VERT_Nmax];DataBase *DB=NULL; if(*dbin)Open_DB(dbin,&DB,0);
-     assert(_L!=NULL); 
      if(!(*polyo)) {
-	puts("You have to specify an output file via -po in -sv-mode."); 
-    	printf("For more help use option `-h'\n");
+	puts("You have to specify an output file via -po in -sv-mode.");
+     	printf("For more help use option `-h'\n");
 	exit(0);}
      _L->of=0; _L->rf=0; _L->iname=polyi; _L->oname=polyo; _L->dbname=dbin;
      Init_NF_List(_L); _L->SL=0;
      while(Read_H_poly_from_DB_or_inFILE(DB,_P))
-     {	Long D[POLY_Dmax],G[POLY_Dmax][POLY_Dmax];
- 	int index, N; assert(Ref_Check(_P,&V,&E)); 
+     { 	Long D[POLY_Dmax],G[POLY_Dmax][POLY_Dmax];
+  	int index, N; assert(Ref_Check(_P,&V,&E));
         for(N=0;N<V.nv;N++) RelPts[N]=_P->x[V.v[N]];
 	++x;
 	index=Make_Lattice_Basis(_P->n,N,RelPts,G,D); if(1==index) continue;
@@ -1765,9 +1778,8 @@ void V_Sublat_Polys(char mr,char *dbin,char *polyi,char *polyo,
 	    Make_All_Sublat(_L, _P->n, V.nv, diag, U, &mr, _P);
 	}
      }	if(*dbin) Close_DB(DB);
-     printf("max_order=%d\n", max_order); Write_List_2_File(polyo,_L); 
+     printf("max_order=%d\n", max_order); Write_List_2_File(polyo,_L);
      _L->TIME=time(NULL); fputs(ctime(&_L->TIME),stdout);
-     free(_L);
 }
 void VPHM_Sublat_Polys(char sFlag,char mr,char *dbin,char *polyi,char *polyo, 
 		       PolyPointList *_P)

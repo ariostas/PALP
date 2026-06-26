@@ -83,7 +83,10 @@ typedef struct {
     nV, nNUC[VERT_Nmax], nVmax, NUCmax, NFnum[VERT_Nmax][NUC_Nmax];
   Along  Fv_pos[VERT_Nmax][NUC_Nmax]; UPint RAM_pos[VERT_Nmax][NUC_Nmax];
   unsigned char *RAM_NF; long long NB;
-  FILE *Finfo, *Fsl, *Fv[VERT_Nmax];   }                           DataBase;
+  FILE *Finfo, *Fsl, *Fv[VERT_Nmax];
+  /* Iteration state for Read_H_poly_from_DB (replaces static locals) */
+  unsigned char last_uc[NUC_Nmax]; int last_ms3;
+}                           DataBase;
 
 typedef	struct {
   Along nNF, nNM; int nSM;	    /* #ref=2*nNF-nSelfMir.-nNoMir. */ 
