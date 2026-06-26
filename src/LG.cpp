@@ -4,6 +4,7 @@
 #include <palp/Rat.h>
 
 #include <array>
+#include <memory>
 #include <vector>
 
 namespace {
@@ -26,16 +27,14 @@ int Is_Gen_CY(int index, PolyPointList *P) {
   int i;
   Long *IP = P->x[P->np];
   VertexNumList V; /* IP = IP(index * P) */
-  EqList *E = (EqList *)malloc(sizeof(EqList));
-  assert(E != NULL);
-  Find_Equations(P, &V, E);
-  for (i = 0; i < E->ne; i++)
-    E->e[i].c *= index;
-  for (i = 0; i < E->ne; i++)
-    if (1 != Eval_Eq_on_V(&E->e[i], IP, P->n))
+  EqList E;
+  Find_Equations(P, &V, &E);
+  for (i = 0; i < E.ne; i++)
+    E.e[i].c *= index;
+  for (i = 0; i < E.ne; i++)
+    if (1 != Eval_Eq_on_V(&E.e[i], IP, P->n))
       break;
-  free(E);
-  return i == E->ne;
+  return i == E.ne;
 }
 void WZerror(const char *c) {
   printf("Format error %s in Read_WZeight\n", c);
@@ -291,18 +290,17 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
     PairMat VPM;
     VertexNumList V;
     PolyPointList *P = WZ->P;
-    EqList *E = (EqList *)malloc(sizeof(EqList));
-    assert(E != NULL);
+    EqList E;
     for (i = 0; i < a; i++) {
-      E->e[i].c = WZ->A[i];
+      E.e[i].c = WZ->A[i];
       VPM[i][0] = WZ->d / WZ->w[i];
       for (j = 0; j < d; j++)
-        E->e[i].a[j] = WZ->B[i][j];
+        E.e[i].a[j] = WZ->B[i][j];
     }
-    E->ne = a;
+    E.ne = a;
     WZ->P->n = d;
     WZ->P->np = 0;
-    Complete_Poly(VPM, E, 1, WZ->P);
+    Complete_Poly(VPM, &E, 1, WZ->P);
     /*	    assert(POINT_Nmax>WZ->P->np); / * Print_PPL(WZ->P,""); obsolete */
     /*	    for(i=0;i<d;i++) WZ->P->x[WZ->P->np][i]=WZ->rI[i]; / * obsolete */
     for (i = 0; i < d; i++)
@@ -321,14 +319,13 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
         P->x[0][i] = 0;
       }
     }
-    Find_Equations(WZ->P, &V, E);
-    for (i = 0; i < E->ne; i++)
-      E->e[i].c *= WZ->r;
-    for (i = 0; i < E->ne; i++)
-      if (1 != Eval_Eq_on_V(&E->e[i], WZ->rI, d))
+    Find_Equations(WZ->P, &V, &E);
+    for (i = 0; i < E.ne; i++)
+      E.e[i].c *= WZ->r;
+    for (i = 0; i < E.ne; i++)
+      if (1 != Eval_Eq_on_V(&E.e[i], WZ->rI, d))
         break;
-    WZ->R = (i == E->ne);
-    free(E);
+    WZ->R = (i == E.ne);
   }
   if (shift != 1) /* normalize sublattice data */
   {
@@ -628,7 +625,9 @@ void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP) {
   AmbiLatticeBasis B;
   Weight *_W = _W_in;
   int /* index=0,*/ nip;
-  AmbiPointList *_AP = (AmbiPointList *)malloc(sizeof(AmbiPointList));
+  auto AP_uptr =
+      std::make_unique<AmbiPointList>(); // value-initialized (zeroed)
+  AmbiPointList *_AP = AP_uptr.get();
 #ifndef NO_COORD_IMPROVEMENT /* ==== Perm Coord Improvement ==== */
   Weight Waux = (*_W);
   _W = &Waux;
@@ -641,11 +640,7 @@ void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP) {
     for (i = 0; i < n; i++)
       Waux.w[i] = _W_in->w[pi[i]];
   }
-#endif /* = End of Perm Coord Improvement = */
-  if (_AP == NULL) {
-    printf("Unable to allocate space for _AP\n");
-    exit(0);
-  }
+#endif                        /* = End of Perm Coord Improvement = */
   WeightLatticeBasis(_W, &B); /* TEST_LatticeBasis(&B); */
   WeightMakePoints(_W, _AP);
   if constexpr (TEST_LG) {
@@ -679,8 +674,6 @@ void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP) {
     Ambi_2_Lattice(A, &B, _PP->x[_PP->np]);
   }
 #endif
-  free(_AP);
-  return;
 }
 #if (WZinput)
 int Read_W_PP(Weight *W, PolyPointList *P) {
@@ -871,13 +864,12 @@ void Rec_RefWeights(Weight *W, PolyPointList *P, int g, int sum, int *npp,
 void MakeRefWeights(int N, int from_d, int to_d) {
   int npp = 0, nrp = 0;
   Weight W;
-  PolyPointList *P = (PolyPointList *)malloc(sizeof(PolyPointList));
+  PolyPointList P;
   W.N = N;
   assert((N <= W_Nmax) && (N < POLY_Dmax + 2));
-  assert(P != NULL);
   for (W.d = from_d; W.d <= to_d; W.d++)
     for (W.w[N - 1] = W.d / 2; W.d <= N * W.w[N - 1]; W.w[N - 1]--)
-      Rec_RefWeights(&W, P, Fgcd(W.d, W.w[W.N - 1]), W.d - W.w[W.N - 1], &npp,
+      Rec_RefWeights(&W, &P, Fgcd(W.d, W.w[W.N - 1]), W.d - W.w[W.N - 1], &npp,
                      &nrp, N - 2);
   fprintf(outFILE, "#primepartitions=%d #refpolys=%d\n", npp, nrp);
   exit(0);
@@ -1343,14 +1335,12 @@ void Fast_c9_VaHo(Weight *W,
     V->h[1][1] = (b01) ? 4 : 20;
     return;
   }
-  wo[0] = woG = (int *)malloc(WM * 3 * sizeof(int));
-  assert(woG != NULL);
+  std::vector<int> wo_buffer(WM * 3, 0);
+  wo[0] = woG = wo_buffer.data();
   wo[1] = woS = &woG[WM];
   wo[2] = woA = &woS[WM];
   for (i = 0; i <= N; i++)
     mask[i] = 1 << i;
-  for (i = 0; i < WM; i++)
-    woG[i] = woS[i] = woA[i] = 0;
   for (k = 0; k < ns; k++) {
     kgV *= W->m[k] / Fgcd(kgV, W->m[k]);
     mo *= W->m[k];
@@ -1405,8 +1395,8 @@ void Fast_c9_VaHo(Weight *W,
   ngb = (zsum2 / mo - 2) / 2; /* /over */
   assert((zsum1 == -2 * (ng + 1) * mo) &&
          (zsum2 == 2 * (ngb + 1) * mo)); /* *over */
-  free(woG); /* woS[word] = #group elements :: survivors==word */
-             /* woG / woA = contributions to ng / ngb */
+  /* woS[word] = #group elements :: survivors==word */
+  /* woG / woA = contributions to ng / ngb */
   if (ng == ngb) {
     b01 = Count_b01(W);
     assert((b01 == 0) || (b01 == 1) || (b01 == 3));
@@ -1427,14 +1417,12 @@ int WIndex_HTrace(Weight *W, int *WI, int *T) /* T=sum(Hij), return over=H00 */
   Long zsum1 = 0, zsum2 = 0, mo = W->d, kgV = mo, omega[POLY_Dmax];
   int *wo[3], *woG, *woA, *woS, WM = 1 << W_Nmax, I[POLY_Dmax];
   Rat prod;
-  wo[0] = woG = (int *)malloc(WM * 3 * sizeof(int));
-  assert(woG != NULL);
+  std::vector<int> wo_buffer(WM * 3, 0);
+  wo[0] = woG = wo_buffer.data();
   wo[1] = woS = &woG[WM];
   wo[2] = woA = &woS[WM];
   for (i = 0; i <= N; i++)
     mask[i] = 1 << i;
-  for (i = 0; i < WM; i++)
-    woG[i] = woS[i] = woA[i] = 0;
   for (k = 0; k < ns; k++) {
     kgV *= W->m[k] / Fgcd(kgV, W->m[k]);
     mo *= W->m[k];
@@ -1485,8 +1473,8 @@ int WIndex_HTrace(Weight *W, int *WI, int *T) /* T=sum(Hij), return over=H00 */
       zsum1 += woG[i] * prod.N;
       zsum2 += woA[i] * prod.N;
     }
-  free(woG); /* woS[word] = #group elements :: survivors==word */
-             /* woG / woA = contributions to ng / ngb */
+  /* woS[word] = #group elements :: survivors==word */
+  /* woG / woA = contributions to ng / ngb */
   assert(zsum1 % mo == 0);
   assert(zsum2 % mo == 0);
   assert(vacnum == 1);
@@ -1539,27 +1527,29 @@ void pff(char *c) {
 }
 
 typedef struct {
-  int X, n, *d, **mt;
+  int X, n;
+  std::vector<int> d_storage;
+  int *d;
+  int **mt;
 } /* mt[i][j]=mobius(j,i) */ MobiusData;
 
 void MakeMobius(MobiusData *M, int X) /* d[i] divisors, mt[i][j] 0<=j<=i<=n */
 {
-  int i, j = 0, n = 0, *d;
+  int i, j = 0, n = 0;
   for (i = 1; i < X / i; i++)
     if (X % i == 0)
       n++;
   M->n = n = 2 * n + (X == i * i); /* #(Div(X)) */
-  M->d = d =
-      (int *)malloc(((n * (n + 3)) / 2) * sizeof(int) + n * sizeof(int *));
-  assert(d != NULL);
-  M->mt = (int **)&d[(n * (n + 3)) / 2];
-  M->mt[0] = &(d[n]);
+  M->d_storage.resize(((n * (n + 3)) / 2) + n);
+  M->d = M->d_storage.data();
+  M->mt = (int **)&M->d[(n * (n + 3)) / 2];
+  M->mt[0] = &(M->d[n]);
   for (i = 1; i < n; i++)
     M->mt[i] = &M->mt[i - 1][i];
   for (i = 1; i <= X / i; i++)
     if (X % i == 0) {
-      d[j] = i;
-      d[n - (++j)] = X / i;
+      M->d[j] = i;
+      M->d[n - (++j)] = X / i;
     }
   for (i = 0; i < n; i++) {
     int k;
@@ -1567,8 +1557,8 @@ void MakeMobius(MobiusData *M, int X) /* d[i] divisors, mt[i][j] 0<=j<=i<=n */
     for (j = i - 1; 0 <= j; j--) {
       M->mt[i][j] = 0;
       for (k = j + 1; k <= i; k++)
-        if (d[i] % d[k] == 0)
-          if (d[k] % d[j] == 0)
+        if (M->d[i] % M->d[k] == 0)
+          if (M->d[k] % M->d[j] == 0)
             M->mt[i][j] -= M->mt[i][k];
     }
   }
@@ -1584,7 +1574,7 @@ void MakeMobius(MobiusData *M, int X) /* d[i] divisors, mt[i][j] 0<=j<=i<=n */
   puts("");
 #endif
 }
-void FreeMobius(MobiusData *M) { free(M->d); }
+void FreeMobius(MobiusData *M) { M->d_storage.clear(); }
 void Calc_VaHo(Weight *W, VaHo *V);
 void PoincarePoly(int N, int *w, int d, PoCoLi *P, PoCoLi *Z, PoCoLi *R);
 void Aux_Phase_Poly(PoCoLi *P, int w, int d, int r, int s, int x);
@@ -1659,8 +1649,8 @@ void LGO_VaHo(Weight *W, VaHo *V) {
       assert(*M % M[j] == 0);
       x[j] = X / M[j];
     }
-    S = (PoCoLi *)malloc(2 * X * sizeof(PoCoLi));
-    assert(S != NULL);
+    std::vector<PoCoLi> S_storage(2 * X);
+    S = S_storage.data();
     for (k = 0; k < W->d; k++) /* Z_d==GSO */
     {
       int v, a = Init_Multiloop(W->m, I, &v, &J);
@@ -1961,7 +1951,6 @@ void LGO_VaHo(Weight *W, VaHo *V) {
       } while (Multiloop(W->m, I, &v, &J));
       assert(a == 0); /* END gen TWISTS */
     }
-    free(S);
     FreeMobius(&MX);
     Free_PoCoLi(&Rem);
     Free_PoCoLi(&Quo);
@@ -2137,28 +2126,39 @@ int OLDsymcheck(int sum, int link, int *mon, Weight W, int *mask) {
     };
   return 0;
 }
-void OLDInit_Trans_Check(int *mask, int **targets, int **mighty) {
-  int i, j, maxPN = 1 << W_Nmax;
-  mask[0] = 1; /* maxPN=2^W_Nmax */
-  for (i = 1; i <= W_Nmax; i++)
-    mask[i] = 2 * mask[i - 1]; /* mask={1,2,4,8,16,32,...} */
+struct TransCheckData {
+  int mask[1 + W_Nmax];
+  std::vector<int> targets;
+  std::vector<int> mighty;
+  bool initialized = false;
+  void init() {
+    int i, j, maxPN = 1 << W_Nmax;
+    mask[0] = 1; /* maxPN=2^W_Nmax */
+    for (i = 1; i <= W_Nmax; i++)
+      mask[i] = 2 * mask[i - 1]; /* mask={1,2,4,8,16,32,...} */
 
-  assert(maxPN == mask[W_Nmax]); /* maximum number of pointers at one point */
-  assert(NULL != (*targets = (int *)malloc(maxPN * sizeof(int))));
-  assert(NULL != (*mighty = (int *)malloc(maxPN * sizeof(int))));
+    assert(maxPN == mask[W_Nmax]); /* maximum number of pointers at one point */
+    targets.resize(maxPN);
+    mighty.resize(maxPN);
 
-  for (i = 0; i < W_Nmax; i++)
-    for (j = mask[i]; j < mask[i + 1]; j++) /* make mighty[] */
-      (*mighty)[j] = (*mighty)[j - mask[i]] + 1;
-}
+    for (i = 0; i < W_Nmax; i++)
+      for (j = mask[i]; j < mask[i + 1]; j++) /* make mighty[] */
+        mighty[j] = mighty[j - mask[i]] + 1;
+
+    initialized = true;
+  }
+};
 
 int OLDTrans_Check(
     Weight W) {     /* returns 1 if non-degenerate potential exists */
   int i, j, k, mon; /* j represents the link!!!        */
-  static int mask[1 + W_Nmax], *targets, *mighty;
+  static TransCheckData data;
   assert(W.N <= W_Nmax);
-  if (targets == NULL)
-    OLDInit_Trans_Check(mask, &targets, &mighty);
+  if (!data.initialized)
+    data.init();
+  int *mask = data.mask;
+  int *targets = data.targets.data();
+  int *mighty = data.mighty.data();
   targets[0] = 0;
   for (i = 0; i < W.N; i++)
     for (j = mask[i]; j < mask[i + 1]; j++) {
@@ -2210,31 +2210,19 @@ int symcheck(symlist sum, int link, Weight W, int *mask) {
   return 0;
 }
 
-void Init_Trans_Check(int *mask, int **targets, int **mighty) {
-  int i, j, maxPN = 1 << W_Nmax;
-  mask[0] = 1; /* maxPN=2^W_Nmax */
-  for (i = 1; i <= W_Nmax; i++)
-    mask[i] = 2 * mask[i - 1]; /* mask={1,2,4,8,16,32,...} */
-
-  assert(maxPN == mask[W_Nmax]); /* maximum number of pointers at one point */
-  assert(NULL != (*targets = (int *)malloc(maxPN * sizeof(int))));
-  assert(NULL != (*mighty = (int *)malloc(maxPN * sizeof(int))));
-
-  for (i = 0; i < W_Nmax; i++)
-    for (j = mask[i]; j < mask[i + 1]; j++) /* make mighty[] */
-      (*mighty)[j] = (*mighty)[j - mask[i]] + 1;
-}
-
 /*   targets[j] bin-encodes the gradients that can be nonzero with variables
      bin-encoded in j;  transversality <==> mighty[j] <= mighty[targets[j]] */
 
 int Trans_Check(Weight W) { /* returns 1 if non-degenerate potential exists */
   int i, j, k, l;           /* j represents the link!!!        */
   symlist dw;
-  static int mask[1 + W_Nmax], *targets, *mighty;
+  static TransCheckData data;
   assert(W.N <= W_Nmax);
-  if (targets == NULL)
-    Init_Trans_Check(mask, &targets, &mighty);
+  if (!data.initialized)
+    data.init();
+  int *mask = data.mask;
+  int *targets = data.targets.data();
+  int *mighty = data.mighty.data();
   targets[0] = 0;
   for (i = 0; i < W.N; i++)
     for (j = mask[i]; j < mask[i + 1]; j++) {
