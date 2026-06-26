@@ -2,6 +2,9 @@
 #include <palp/Subpoly.h>
 #include <palp/Rat.h>
 
+#include <string>
+#include <vector>
+
 using subl_int = LLong;
 constexpr bool UnAided_IP_Check = (POLY_Dmax > 4);
 constexpr bool SIMPLE_CTH = false;
@@ -361,18 +364,17 @@ int kept(int i, KeepList *_KL){
   return -1;
 }
 
-void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E, 
+void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 		   KeepList *_KL, int drop_num,  NF_List *_NFL){
-    
+
   int i, j, n_irrel=0, IP;
-  int *new2old =(int *) malloc(sizeof(int)*POINT_Nmax);
+  std::vector<int> new2old(POINT_Nmax);
   Long drop_point[POLY_Dmax];
   VertexNumList red_V;
-  EqList *new_E=(EqList *) malloc(sizeof(EqList));
-  PolyPointList *red_P = (PolyPointList *) malloc(sizeof (PolyPointList));
-
-  if(red_P==NULL) {puts("Unable to allocate space for red_P"); exit(0);}
-  if(new2old==NULL) {puts("Unable to allocate space for new2old"); exit(0);}
+  EqList new_E_obj;
+  EqList *new_E=&new_E_obj;
+  PolyPointList red_P_obj;
+  PolyPointList *red_P=&red_P_obj;
 
   for (j=0;j<_P->n;j++) drop_point[j]=_P->x[_V->v[drop_num]][j];
 
@@ -386,24 +388,23 @@ void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     else {
       for (j=0;j<_P->n;j++) new_E->e[_E->ne+n_irrel-i-1].a[j]=_E->e[i].a[j];
       new_E->e[_E->ne+n_irrel-i-1].c=_E->e[i].c;}}
-
   /* Create red_P: old vertices, points that are not on irrelevant facets */
   red_P->np=0;
   red_P->n=_P->n;
   for (i=0;i<_V->nv;i++) if (i!=drop_num){
     for (j=0;j<_P->n;j++) red_P->x[red_P->np][j]=_P->x[_V->v[i]][j];
     new2old[red_P->np++]=_V->v[i];}
-  for (i=0;i<_P->np;i++) 
+  for (i=0;i<_P->np;i++)
     if ((i!=_V->v[drop_num])&&Relevant(_P->x[i],&_P->n,new_E,&n_irrel)){
       for (j=0;j<_P->n;j++) red_P->x[red_P->np][j]=_P->x[i][j];
       new2old[red_P->np++]=i;}
 
-  /* Print_PPL(_P); 
+  /* Print_PPL(_P);
   fprintf(outFILE,"new_E:\n");
   for (i=0;i<new_E->ne;i++){
     for (j=0;j<_P->n;j++) fprintf(outFILE,"%d ", new_E->e[i].a[j]);
     fprintf(outFILE," %d\n", new_E->e[i].c);}
-  fprintf(outFILE,"\n"); 
+  fprintf(outFILE,"\n");
   Print_PPL(red_P);
   fprintf(outFILE,"\n");
   printf("drop_point: ");
@@ -417,11 +418,10 @@ void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   else
     IP=Aided_IP_Check(red_P,&red_V,new_E,n_irrel,_V->nv-1);
 
+
   /* puts("After AIP (in D&K):");
   Print_VL(red_P,&red_V);
   Print_EL(new_E,&red_P->n,0); */
-
-  free(red_P);
 
   if(IP){
 
@@ -485,18 +485,17 @@ void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     exit(0);}
 
     Make_All_Subpolys(_P, new_E, &new_V, _KL, _NFL);
-    
+
     /* Reconstruct _P  */
     if (j>=0) _KL->k[j]=_P->np;
     for (j=0;j<_P->n;j++){
       _P->x[_P->np][j]=_P->x[_V->v[drop_num]][j];
       _P->x[_V->v[drop_num]][j]=drop_point[j];}
     _P->np++;}
-  
+
   /* Attach a keep label to the vertex _V->v[drop_num]: */
   _KL->k[_KL->nk]=_V->v[drop_num];
-  _KL->nk++; 
-  free(new2old); free(new_E);
+  _KL->nk++;
 }
 
   
@@ -618,7 +617,8 @@ void Reduce_Poly(PolyPointList *_P, EqList *_E, KeepList *_KL,
      call Make_All_Subpolys for the reduced polyhedron new_P;   */
 
   VertexNumList V;
-  PolyPointList *new_P= (PolyPointList *) malloc(sizeof (PolyPointList));
+  PolyPointList new_P_obj;
+  PolyPointList *new_P = &new_P_obj;
   KeepList new_KL;
   int i, j;
   Long RedVec[POLY_Dmax];
@@ -632,29 +632,29 @@ void Reduce_Poly(PolyPointList *_P, EqList *_E, KeepList *_KL,
   new_P->n=_P->n;
   for (i=0;i<_P->np;i++){
     Long dist=0;
-    for (j=0;j<_P->n;j++) dist-=BE.a[j]*_P->x[i][j];  
+    for (j=0;j<_P->n;j++) dist-=BE.a[j]*_P->x[i][j];
     if (!(dist%BE.c)){
-      for (j=0;j<_P->n;j++) 
+      for (j=0;j<_P->n;j++)
 	new_P->x[new_P->np][j]=_P->x[i][j];
       if (kept(i,_KL)>=0) new_KL.k[new_KL.nk++]=new_P->np;
       new_P->np++; } }
 
-  /*   Print_PPL(new_P); 
+  /*   Print_PPL(new_P);
   fprintf(outFILE,"kept: ");
   for (j=0;j<new_KL.nk;j++) fprintf(outFILE,"%d ",new_KL.k[j]);
   fprintf(outFILE,"\n\n"); */
 
-  if(new_KL.nk!=_KL->nk) {free(new_P); return;}
-  _NFL->nIP++; 
+  if(new_KL.nk!=_KL->nk) {return;}
+  _NFL->nIP++;
 
-  if(!IP_Check(new_P,&V,_E)) {free(new_P); return;}
+  if(!IP_Check(new_P,&V,_E)) {return;}
 
   VPM_checksum_old=rI(0);
   for (i=0;i<_E->ne;i++) {
     Long s=0;
-    for (j=0;j<V.nv;j++) 
+    for (j=0;j<V.nv;j++)
      s+=Eval_Eq_on_V(&(_E->e[i]),new_P->x[V.v[j]], new_P->n);
-    VPM_checksum_old=rS(VPM_checksum_old, rQ(rI(s),rI(_E->e[i].c)));}
+     VPM_checksum_old=rS(VPM_checksum_old, rQ(rI(s),rI(_E->e[i].c)));}
 
   /* Generate RedVec: */
   if (!Make_RedVec(_P->n, BE.a, RedVec)){
@@ -664,38 +664,38 @@ void Reduce_Poly(PolyPointList *_P, EqList *_E, KeepList *_KL,
     fprintf(outFILE," %d\n",(int) BE.c);
     fprintf(outFILE,"kept: ");
     for (j=0;j<_KL->nk;j++) fprintf(outFILE,"%d ",_KL->k[j]);
-    fprintf(outFILE,"\n"); 
+    fprintf(outFILE,"\n");
     fprintf(outFILE,"RedVec: ");
     for (j=0;j<_P->n;j++) fprintf(outFILE,"%d ",(int) RedVec[j]);
-    fprintf(outFILE,"\n"); 
+    fprintf(outFILE,"\n");
     exit(0);}
 
   /*Coordinates of new_P: */
 
   for (i=0;i<new_P->np;i++){
     Long dist=0;
-    for (j=0;j<new_P->n;j++) dist-=BE.a[j]*new_P->x[i][j];  
+    for (j=0;j<new_P->n;j++) dist-=BE.a[j]*new_P->x[i][j];
     if (!(dist%BE.c)){
-      for (j=0;j<new_P->n;j++) 
+      for (j=0;j<new_P->n;j++)
 	new_P->x[i][j]-=(dist-dist/BE.c)*RedVec[j]; } }
 
-  /*   Print_PPL(new_P); 
+  /*   Print_PPL(new_P);
   fprintf(outFILE,"\n\n"); */
 
-  if(!New_Improve_Coords(new_P,&V))   {    
+  if(!New_Improve_Coords(new_P,&V))   {
     Print_PPL(_P,"");
     fprintf(outFILE,"Bad Facet: ");
     for (j=0;j<_P->n;j++) fprintf(outFILE,"%d ",(int) BE.a[j]);
     fprintf(outFILE," %d\n",(int) BE.c);
     fprintf(outFILE,"kept: ");
     for (j=0;j<_KL->nk;j++) fprintf(outFILE,"%d ",_KL->k[j]);
-    fprintf(outFILE,"\n"); 
+    fprintf(outFILE,"\n");
     fprintf(outFILE,"RedVec: ");
     for (j=0;j<_P->n;j++) fprintf(outFILE,"%d ",(int) RedVec[j]);
-    fprintf(outFILE,"\n"); 
+    fprintf(outFILE,"\n");
     puts("WARNING: INCOMPLETE SL REDUCTION"); fflush(stdout);
     if constexpr (INCOMPLETE_SL_REDUCTION) {
-      free(new_P); return;
+      return;
     } else
       exit(0);
   }
@@ -706,16 +706,16 @@ void Reduce_Poly(PolyPointList *_P, EqList *_E, KeepList *_KL,
   VPM_checksum_new=rI(0);
   for (i=0;i<_E->ne;i++) {
     Long s=0;
-    for (j=0;j<V.nv;j++) 
+    for (j=0;j<V.nv;j++)
      s+=Eval_Eq_on_V(&(_E->e[i]),new_P->x[V.v[j]],new_P->n);
     VPM_checksum_new=rS(VPM_checksum_new, rQ(rI(s),rI(_E->e[i].c)));}
   if(VPM_checksum_new.D*VPM_checksum_old.N-
      VPM_checksum_new.N*VPM_checksum_old.D) {
          fprintf(outFILE,"Checksums don't match in Reduce_Poly!"); exit(0); }
 
-  Make_All_Subpolys(new_P,_E,&V,&new_KL, _NFL); 
-  free(new_P);
+  Make_All_Subpolys(new_P,_E,&V,&new_KL, _NFL);
 }
+
 
 
 void Make_All_Subpolys(PolyPointList *_P, EqList *_E, VertexNumList *_V,
@@ -792,75 +792,75 @@ void Make_All_Subpolys(PolyPointList *_P, EqList *_E, VertexNumList *_V,
   _NFL->rd--;
 }
  
-void Ascii_to_Binary(CWS *W, PolyPointList *P, 
+void Ascii_to_Binary(CWS *W, PolyPointList *P,
   char *dbin, char *polyi, char *polyo){
-  NF_List *_NFL=(NF_List *) malloc(sizeof(NF_List)); 
-  VertexNumList V; 
+  NF_List _NFL_obj;
+  NF_List *_NFL=&_NFL_obj;
+  VertexNumList V;
   EqList F;
-  assert(_NFL!=NULL);
   if(!(*polyo)) {
-    puts("You have to specify an output file via -po in -a-mode!\n"); 
+    puts("You have to specify an output file via -po in -a-mode!\n");
     printf("For more help type use option `-h'\n");
     exit(0);}
-  _NFL->of=0; _NFL->rf=0;	
-  _NFL->iname=polyi; _NFL->oname=polyo; _NFL->dbname=dbin; 
+  _NFL->of=0; _NFL->rf=0;
+  _NFL->iname=polyi; _NFL->oname=polyo; _NFL->dbname=dbin;
   Init_NF_List(_NFL);
   _NFL->SL=0;
-  
+
   while(Read_CWS_PP(W,P))    {
     _NFL->hc = 0;
-    _NFL->V= _NFL->F= _NFL->VN= _NFL->FN = _NFL->Xnuc = _NFL->Xdif = 0;	
-    _NFL->Nmin=P->np; _NFL->Nmax=0; 
+    _NFL->V= _NFL->F= _NFL->VN= _NFL->FN = _NFL->Xnuc = _NFL->Xdif = 0;
+    _NFL->Nmin=P->np; _NFL->Nmax=0;
     if(_NFL->d==0) _NFL->d=P->n;
     else if(_NFL->d-P->n) {puts("different dim!"); exit(0);}
     if (!IP_Check(P,&V,&F)){
       puts("IP_Check failed in Ascii_to_Binary!\n"); exit(0);}
     if (Add_NF_to_List(P,&V,&F,_NFL)) if (outFILE!=stdout){
       int i, j;
-      for(i=0;i<W->nw;i++)     {	
+      for(i=0;i<W->nw;i++)     {
 	fprintf(outFILE,"%d ",(int) W->d[i]);
 	for(j=0;j<W->N;j++) fprintf(outFILE,"%d ",(int) W->W[i][j]);
-	if(i+1<W->nw) fprintf(outFILE," "); else fprintf(outFILE,"\n");   } 
+	if(i+1<W->nw) fprintf(outFILE," "); else fprintf(outFILE,"\n");   }
       fflush(0);}  }
-  Write_List_2_File(polyo,_NFL); 
-  free(_NFL);
+  Write_List_2_File(polyo,_NFL);
 }
 
 void Do_the_Classification(CWS *W, PolyPointList *P, /* char *fn, */
   int oFlag, int rFlag, int kFlag, char *polyi, char *polyo, char *dbin) {
 
   /* static int nw; */
-  NF_List *_NFL=(NF_List *) malloc(sizeof(NF_List)); 
-  time_t W_SAVE_TIME=time(NULL); 
-  if(!(*polyo)) { 
-    puts("You have to specify an output file via -po!\n"); 
+  NF_List _NFL_obj;
+  NF_List *_NFL=&_NFL_obj;
+  time_t W_SAVE_TIME=time(NULL);
+  if(!(*polyo)) {
+    puts("You have to specify an output file via -po!\n");
     printf("For more help use option '-h'\n");
     exit(0);}
-  assert(_NFL!=NULL); _NFL->of=oFlag; _NFL->rf=rFlag; _NFL->kf=kFlag; 
-  _NFL->iname=polyi; _NFL->oname=polyo; _NFL->dbname=dbin; 
+  _NFL->of=oFlag; _NFL->rf=rFlag; _NFL->kf=kFlag;
+  _NFL->iname=polyi; _NFL->oname=polyo; _NFL->dbname=dbin;
   Init_NF_List(_NFL);
   rFlag=0; /* now used as "read flag" */
 
-  while(Read_CWS_PP(W,P)) {		   /* make subpolys */
+  while(Read_CWS_PP(W,P)) {				   /* make subpolys */
     if(W->nw>0) _NFL->Nmin=P->np; else _NFL->Nmin=0 /* :: Complete_Poly() */ ;
     _NFL->Nmax=0; _NFL->SL = _NFL->hc = 0;
-    _NFL->V= _NFL->F= _NFL->VN= _NFL->FN = _NFL->Xnuc = _NFL->Xdif = 0;	
+    _NFL->V= _NFL->F= _NFL->VN= _NFL->FN = _NFL->Xnuc = _NFL->Xdif = 0;
     if(_NFL->d==0) _NFL->d=P->n;
     else if(_NFL->d-P->n) {puts("different dim!"); exit(0);}
     if(rFlag) {Read_File_2_List(polyo,_NFL); rFlag=0;}
-    Start_Make_All_Subpolys(P, _NFL); 
+    Start_Make_All_Subpolys(P, _NFL);
     Print_Weight_Info(W,_NFL);
     if((WRITE_DIM <= P->n) && (MIN_NEW <= _NFL->NP))
-    if((int)difftime(time(NULL),W_SAVE_TIME) > MIN_W_SAVE_TIME)   {   
-      Write_List_2_File(polyo,_NFL); 
-      rFlag=1; 
+    if((int)difftime(time(NULL),W_SAVE_TIME) > MIN_W_SAVE_TIME)   {
+      Write_List_2_File(polyo,_NFL);
+      rFlag=1;
       _NFL->SAVE=W_SAVE_TIME=time(NULL);    }  }
 
-  if(rFlag==0) Write_List_2_File(polyo,_NFL); 
-  _NFL->TIME=time(NULL); 
+  if(rFlag==0) Write_List_2_File(polyo,_NFL);
+  _NFL->TIME=time(NULL);
   fputs(ctime(&_NFL->TIME),stdout);
-  free(_NFL);
 }
+
 
 
 /*  ======================================================================  */
@@ -1111,17 +1111,17 @@ void uc_nf_to_P(PolyPointList *_P, int *MS, int *d, int *v, int *nuc,
   for(i=0;i<*v;i++) for(j=0;j<*d;j++) _P->x[i][j]=tNF[j][i];
 }
 
-void Find_Sublat_Polys(char mFlag, char *dbin, char *polyi, char *polyo, 
-		       PolyPointList *_P){	
-  NF_List *_NFL=(NF_List *) malloc(sizeof(NF_List)); 
+void Find_Sublat_Polys(char mFlag, char *dbin, char *polyi, char *polyo,
+		       PolyPointList *_P){
+  NF_List _NFL_obj;
+  NF_List *_NFL=&_NFL_obj;
   VertexNumList Vnl; EqList Fel;
   subl_int x[VERT_Nmax][VERT_Nmax], y[VERT_Nmax][VERT_Nmax];
   time_t Tstart;
   int v, nu, i, j, k, max_order=1;
 
-  assert(_NFL!=NULL);
   if(!(*polyo)) {
-    puts("You have to specify an output file via -po in -sm-mode."); 
+    puts("You have to specify an output file via -po in -sm-mode.");
     printf("For more help use option `-h'\n");
     exit(0);}
   _NFL->of=0; _NFL->rf=0;
@@ -1131,26 +1131,27 @@ void Find_Sublat_Polys(char mFlag, char *dbin, char *polyi, char *polyo,
 
   if (*dbin){
     DataBase *DB=&(_NFL->DB);
-    char *dbname = (char *) malloc(1+strlen(dbin)+File_Ext_NCmax), *fx;
+    std::string dbname(dbin);
+    char *fx;
+    dbname.resize(dbname.size()+File_Ext_NCmax+1, '\0');
+    dbname[strlen(dbin)]='.';
+    dbname[strlen(dbin)+1]='\0';
+    fx=&dbname[strlen(dbin)+1];
     unsigned char uc_poly[NUC_Nmax];
     int MS;
-    
-    strcpy(dbname,dbin);
-    strcat(dbname,".");
-    fx=&dbname[strlen(dbin)+1]; 
-    
+
     printf("Reading DB-files, calculating sublattices:\n"); fflush(0);
-    
+
     /* read the DB-files and calculate Sublattices */
     for (v=2;v<=DB->nVmax;v++) if(DB->nNUC[v]){
       FILE *dbfile;
       char ext[4]={'v',0,0,0};
       ext[1]='0' + v / 10; ext[2]='0' + v % 10;
-      Tstart=time(NULL); 
-      strcpy(fx,ext); 
-      dbfile=fopen(dbname,"rb"); 
-      assert(dbfile!=NULL); 
-      if (!mFlag) {printf("Reading %s\n", dbname); fflush(0);}
+      Tstart=time(NULL);
+      strcpy(fx,ext);
+      dbfile=fopen(dbname.c_str(),"rb");
+      assert(dbfile!=NULL);
+      if (!mFlag) {printf("Reading %s\n", dbname.c_str()); fflush(0);}
       for (nu=0;nu<=DB->NUCmax;nu++) for (i=0; i<DB->NFnum[v][nu]; i++){
 	for (j=0; j<nu; j++) uc_poly[j]=fgetc(dbfile);
 	uc_nf_to_P(_P, &MS, &(_NFL->d), &v, &nu, uc_poly);
@@ -1161,31 +1162,31 @@ void Find_Sublat_Polys(char mFlag, char *dbin, char *polyi, char *polyo,
 	for(j=0;j<Fel.ne;j++) for(k=0;k<Vnl.nv;k++)
 	  x[j][k]=Eval_Eq_on_V(&(Fel.e[j]),_P->x[Vnl.v[k]],_P->n)-1;
 	for(j=0;j<Fel.ne;j++) for(k=0;k<Vnl.nv;k++) y[k][j]=x[j][k];
-	if (MS!=2) 
-	  MakePolyOnSublat(_NFL, x, Vnl.nv, Fel.ne, &max_order, &mFlag, _P); 
-	if (MS>1) 
+	if (MS!=2)
+	  MakePolyOnSublat(_NFL, x, Vnl.nv, Fel.ne, &max_order, &mFlag, _P);
+	if (MS>1)
 	  MakePolyOnSublat(_NFL, y, Fel.ne, Vnl.nv, &max_order, &mFlag, _P); }
 
-      if(ferror(dbfile)) {printf("File error in %s\n",dbname); exit(0);}
+      if(ferror(dbfile)) {printf("File error in %s\n",dbname.c_str()); exit(0);}
       fclose(dbfile);
-      printf(" %dp (%ds)\n", (int)_NFL->NP, (int) difftime(time(NULL),Tstart)); 
+      printf(" %dp (%ds)\n", (int)_NFL->NP, (int) difftime(time(NULL),Tstart));
       fflush(0);  }}
-  
-  else { 
+
+  else {
     CWS W;
     while(Read_CWS_PP(&W,_P)){
       assert(IP_Check(_P,&Vnl,&Fel));
       /* compute VPM */
       for(j=0;j<Fel.ne;j++) for(i=0;i<Vnl.nv;i++)
 	x[j][i]=Eval_Eq_on_V(&(Fel.e[j]),_P->x[Vnl.v[i]],_P->n)-1;
-      MakePolyOnSublat(_NFL, x, Vnl.nv, Fel.ne, &max_order, &mFlag, _P); 
+      MakePolyOnSublat(_NFL, x, Vnl.nv, Fel.ne, &max_order, &mFlag, _P);
       if (!mFlag) Print_Weight_Info(&W,_NFL);}}
-    
+
   printf("max_order=%d\n", max_order);
-  Write_List_2_File(polyo,_NFL); 
+  Write_List_2_File(polyo,_NFL);
   _NFL->TIME=time(NULL); fputs(ctime(&_NFL->TIME),stdout);
-  free(_NFL);
 }
+
 
  
 
@@ -1220,15 +1221,14 @@ int irred(PolyPointList *_P)
 }
     
 void DPircheck(CWS *_W, PolyPointList *_P){
-  int i, j, k; 
+  int i, j, k;
   EqList E,DE;
   VertexNumList V,DV;
-  EqList *B=&_W->B; 
-  PolyPointList *_RDP= (PolyPointList *) malloc(sizeof (PolyPointList));
-  PolyPointList *_PD = (PolyPointList *) malloc(sizeof (PolyPointList));
-  if(_RDP==NULL) {puts("Unable to allocate space for _P"); exit(0);}
-  if(_PD==NULL) {printf("Unable to allocate _PD\n"); exit(0);}
-  
+  EqList *B=&_W->B;
+  PolyPointList RDP_obj, PD_obj;
+  PolyPointList *_RDP= &RDP_obj;
+  PolyPointList *_PD = &PD_obj;
+
   IP_Check(_P,&V,&E);
   Make_Dual_Poly(_P,&V,&E,_PD);
   _RDP->n=_P->n;
@@ -1253,7 +1253,6 @@ void DPircheck(CWS *_W, PolyPointList *_P){
       for(j=0;j<_W->N;j++) fprintf(outFILE,"%d ",(int) _W->W[i][j]);
       if(i+1<_W->nw) fprintf(outFILE," ");     }
     fprintf(outFILE,"\n"); }
-  free(_PD); free(_RDP); 
 } 
 
 
@@ -1305,11 +1304,11 @@ int virred(PolyPointList *_P, EqList *B)
 }
     
 void DPvircheck(CWS *_W, PolyPointList *_P) {
-  int i, j; 
+  int i, j;
   EqList E; EqList *B=&_W->B;
   VertexNumList V;
-  PolyPointList *_PD = (PolyPointList *) malloc(sizeof (PolyPointList));
-  if(_PD==NULL) {printf("Unable to allocate _PD\n"); exit(0);}
+  PolyPointList PD_obj;
+  PolyPointList *_PD = &PD_obj;
 
      Ref_Check(_P,&V,&E);
      Make_Dual_Poly(_P,&V,&E,_PD);
@@ -1320,31 +1319,28 @@ void DPvircheck(CWS *_W, PolyPointList *_P) {
 	 for(j=0;j<_W->N;j++) fprintf(outFILE,"%d ",(int) _W->W[i][j]);
 	 if(i+1<_W->nw) fprintf(outFILE," ");     }
        fprintf(outFILE,"\n"); }
-     free(_PD); 
 }
 
 int Find_Ref_Subpoly(PolyPointList *_P, EqList *_E, VertexNumList *_V,
 		       KeepList *_KL, int *rd);
 
-int Find_RSP_Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E, 
+int Find_RSP_Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 		   KeepList *_KL, int drop_num, int *rd){
-    
+
   int i, j, n_irrel=0, IP/*, test_IP*/;
-  int *new2old =(int *) malloc(sizeof(int)*POINT_Nmax);
+  std::vector<int> new2old(POINT_Nmax);
   Long drop_point[POLY_Dmax];
   VertexNumList red_V/*, test_V*/;
   EqList new_E/*, test_E*/;
-  PolyPointList *red_P = (PolyPointList *) malloc(sizeof (PolyPointList));
-
-  if(red_P==NULL) {puts("Unable to allocate space for red_P"); exit(0);}
-  if(new2old==NULL) {puts("Unable to allocate space for new2old"); exit(0);}
+  PolyPointList red_P_obj;
+  PolyPointList *red_P = &red_P_obj;
 
   for (j=0;j<_P->n;j++) drop_point[j]=_P->x[_V->v[drop_num]][j];
 
   /* Create new_E: Same as *_E, but irrelevant facets first */
 
   new_E.ne=_E->ne;
-  for (i=0;i<_E->ne;i++){ 
+  for (i=0;i<_E->ne;i++){
     if (Eval_Eq_on_V(&(_E->e[i]),drop_point,_P->n)){
       for (j=0;j<_P->n;j++) new_E.e[n_irrel].a[j]=_E->e[i].a[j];
       new_E.e[n_irrel++].c=_E->e[i].c;}
@@ -1358,7 +1354,7 @@ int Find_RSP_Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   for (i=0;i<_V->nv;i++) if (i!=drop_num){
     for (j=0;j<_P->n;j++) red_P->x[red_P->np][j]=_P->x[_V->v[i]][j];
     new2old[red_P->np++]=_V->v[i];}
-  for (i=0;i<_P->np;i++) 
+  for (i=0;i<_P->np;i++)
     if ((i!=_V->v[drop_num])&&Relevant(_P->x[i],&_P->n,&new_E,&n_irrel)){
       for (j=0;j<_P->n;j++) red_P->x[red_P->np][j]=_P->x[i][j];
       new2old[red_P->np++]=i;}
@@ -1374,10 +1370,10 @@ int Find_RSP_Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     int k;
     fprintf(outFILE,"red_P:\n");fflush(0);
     Print_PPL(red_P);
-    fprintf(outFILE,"\n"); 
+    fprintf(outFILE,"\n");
     fprintf(outFILE,"red_V: ");
     for (i=0;i<red_V.nv;i++) fprintf(outFILE,"%d ",red_V.v[i]);
-    fprintf(outFILE,"\n"); 
+    fprintf(outFILE,"\n");
     fprintf(outFILE,"new_E:\n");
     for (i=0;i<new_E.ne;i++){
       for (k=0;k<_P->n;k++) fprintf(outFILE,"%d ", (int) new_E.e[i].a[k]);
@@ -1389,7 +1385,7 @@ int Find_RSP_Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     fprintf(outFILE,"\n");
     fprintf(outFILE,"test_V: ");
     for (i=0;i<test_V.nv;i++) fprintf(outFILE,"%d ",test_V.v[i]);
-    fprintf(outFILE,"\n"); 
+    fprintf(outFILE,"\n");
     fprintf(outFILE,"test_E:\n");
     for (i=0;i<test_E.ne;i++){
       for (k=0;k<_P->n;k++) fprintf(outFILE,"%d ", (int) test_E.e[i].a[k]);
@@ -1398,38 +1394,34 @@ int Find_RSP_Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     exit(0);} */
 
 
-  free(red_P);
-
   if(IP){
     VertexNumList new_V;
 
     /* Create new_V from red_V */
 
     new_V.nv=red_V.nv;
-    for (i=0;i<red_V.nv;i++) if((new_V.v[i]=new2old[red_V.v[i]])==_P->np-1) 
+    for (i=0;i<red_V.nv;i++) if((new_V.v[i]=new2old[red_V.v[i]])==_P->np-1)
       new_V.v[i]=_V->v[drop_num];
 
     /* Drop the vertex _V->v[drop_num]: */
     _P->np--;
-    for (j=0;j<_P->n;j++) _P->x[_V->v[drop_num]][j]=_P->x[_P->np][j]; 
+    for (j=0;j<_P->n;j++) _P->x[_V->v[drop_num]][j]=_P->x[_P->np][j];
     j=kept(_P->np,_KL);
     if (j>=0) _KL->k[j]=_V->v[drop_num];
 
     if (Find_Ref_Subpoly(_P, &new_E, &new_V, _KL, rd)) {
-      free(new2old); 
       return 1;}
-    
+
     /* Reconstruct _P  */
     if (j>=0) _KL->k[j]=_P->np;
     for (j=0;j<_P->n;j++){
       _P->x[_P->np][j]=_P->x[_V->v[drop_num]][j];
       _P->x[_V->v[drop_num]][j]=drop_point[j];}
     _P->np++;}
-  
+
   /* Attach a keep label to the vertex _V->v[drop_num]: */
   _KL->k[_KL->nk]=_V->v[drop_num];
   _KL->nk++; 
-  free(new2old);
   return 0;
 }
 
@@ -1529,11 +1521,10 @@ void Max_check(CWS *_W, PolyPointList *_P) {
 
 int  Poly_Max_check(PolyPointList *_P, VertexNumList *_V, EqList *_E){
   int rm;
-  PolyPointList *_PD = (PolyPointList *) malloc(sizeof(PolyPointList));
-  assert(_PD!=NULL);
+  PolyPointList PD_obj;
+  PolyPointList *_PD = &PD_obj;
   Make_Dual_Poly(_P,_V,_E,_PD);
   rm=!Start_Find_Ref_Subpoly(_PD);
-  free(_PD);
   return rm;
 }
 
@@ -1545,20 +1536,18 @@ int  Poly_Min_check(PolyPointList *_P, VertexNumList *_V, EqList *_E){
 }
 
 void Overall_check(CWS *_W, PolyPointList *_P) {
-  int i, j, k, span, lpm=0, vm=0, r=0; 
+  int i, j, k, span, lpm=0, vm=0, r=0;
   EqList E, DE;
   VertexNumList V, DV;
   EqList *B=&_W->B;
-  PolyPointList *_RDP= (PolyPointList *) malloc(sizeof (PolyPointList));
-  PolyPointList *_PD = (PolyPointList *) malloc(sizeof (PolyPointList));
-  PolyPointList *_PD2 = (PolyPointList *) malloc(sizeof (PolyPointList));
-  if(_RDP==NULL) {puts("Unable to allocate space for _P"); exit(0);}
-  if(_PD==NULL) {printf("Unable to allocate _PD\n"); exit(0);}
-  if(_PD2==NULL) {printf("Unable to allocate _PD\n"); exit(0);}
+  PolyPointList RDP_obj, PD_obj, PD2_obj;
+  PolyPointList *_RDP= &RDP_obj;
+  PolyPointList *_PD = &PD_obj;
+  PolyPointList *_PD2 = &PD2_obj;
 
   if ((_P->n<5) ? !IP_Check(_P,&V,&E) : !Ref_Check(_P,&V,&E)) {
-    free(_PD); free(_PD2); free(_RDP); return;}
-  
+    return;}
+
   /* assert(Ref_Equations(&E)); */
 
   for(i=0;i<_W->nw;i++){
@@ -1568,7 +1557,7 @@ void Overall_check(CWS *_W, PolyPointList *_P) {
   fflush(0);
 
   span=Span_Check(&E, B, &_P->n);
-  
+
   Make_Dual_Poly(_P,&V,&E,_PD);
   *_PD2=*_PD;
 
@@ -1591,8 +1580,8 @@ void Overall_check(CWS *_W, PolyPointList *_P) {
   if (!Start_Find_Ref_Subpoly(_PD)) r=1;
 
   if (span) if (virred(_PD2,B)) vm=1;
-  
-  if ((!span&&vm)||(!lpm&&vm)||(r!=vm)) 
+
+  if ((!span&&vm)||(!lpm&&vm)||(r!=vm))
     fprintf(outFILE,"span:%d lpm:%d vm:%d r:%d\n", span, lpm, vm, r);
   else{
     if(r) fprintf(outFILE,"r");
@@ -1601,5 +1590,4 @@ void Overall_check(CWS *_W, PolyPointList *_P) {
     if(!r&&!lpm&&!span) fprintf(outFILE,"-");
     fprintf(outFILE,"\n");}
   fflush(0);
-  free(_PD); free(_PD2); free(_RDP); 
 }

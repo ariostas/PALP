@@ -308,11 +308,20 @@ This is the highest-risk step. Take extra care.
   preserve on-disk format. *Deferred to later phase if needed.*
 - **Verify**: build + run all database-related tests.
 
-- [ ] #### Step 3.6 — `Subpoly.c` → `Subpoly.cpp` (~1614 lines)
+- [x] #### Step 3.6 — `Subpoly.c` → `Subpoly.cpp` (~1614 lines)
 
 - [x] Rename `Subpoly.c` → `Subpoly.cpp`.
-- [ ] Replace `subl_int` typedef with explicit `int64_t`.
-- [ ] Replace `exit(0)` with `palp::die()`.
+- [x] Converted local feature flags (`UnAided_IP_Check`, `SIMPLE_CTH`,
+  `INCOMPLETE_SL_REDUCTION`, `TEST_Aided_IP_Check`, `IMPROVE_SL_COORD`) to
+  `constexpr`/`if constexpr`.
+- [x] Removed dead `IMPROVE_SL_REGCD` branch.
+- [x] Centralized `CEQ_Nmax` in `Global.h`, removed local fallbacks.
+- [x] Replaced all `malloc`/`free` allocations with stack variables or
+  `std::vector` (`Drop_and_Keep`, `Reduce_Poly`, `DPircheck`, `DPvircheck`,
+  `Find_RSP_Drop_and_Keep`, `Poly_Max_check`, `Overall_check`, `_NFL` objects,
+  `dbname` buffer in `Find_Sublat_Polys`).
+- [x] `subl_int` remains `LLong` alias (consistent with project types).
+- [ ] Replace `exit(0)` with `palp::die()`. *Deferred to Phase 5*.
 - [ ] Replace `drop_point[POLY_Dmax]` "silence compiler" zero-init with `= {}`
   (ISSUES.md, code smell).
 - [ ] Replace `malloc`/`calloc` with `std::vector` or `std::make_unique`.
