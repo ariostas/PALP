@@ -2,18 +2,25 @@
 #include <palp/LG.h>
 #include <palp/Rat.h>
 
+namespace {
+  constexpr bool Only_IP_CWS = true;
+  constexpr bool TRANS_INFO_FOR_IP_WEIGHTS = false;
+  constexpr int NFmax = 10;                 /* maximal number of WS-files */
+  constexpr int SIMPLEX_POINT_Nmax = 50;
+  constexpr int OSL = 24;                    /* opt_string's length */
+  constexpr int WDIM = 800000;
+  constexpr Long lcm(Long a, Long b) { return (a * b) / NNgcd(a, b); }
+  constexpr int TWDIM = 16384;               /* weight-buffer dimension */
+  constexpr Long mod(Long a, Long b) { return a % b; }
+}
+
 FILE *inFILE, *outFILE;
 
-#define	Only_IP_CWS 			1
-#define TRANS_INFO_FOR_IP_WEIGHTS 	0
 
-#define NFmax  10			/* maximal number of WS-files */
 
-#define SIMPLEX_POINT_Nmax		50
 
 typedef struct {  int  u[NFmax];  int nu; } 	CWS_type;
 
-#define OSL (24)  /* opt_string's length */
 
 void  PrintCWSUsage(char *c){
   int i;
@@ -105,8 +112,6 @@ int  main (int narg, char* fn[])
      return 0;
 }
 
-
-#define  WDIM      800000
 
 typedef struct {
   int d, r2, allow11;
@@ -502,9 +507,6 @@ void Init_IP_CWS(int narg, char* fn[])
 
 /*  ==========             ALL  IP  WEIGHTS  in  d <= 4     	==========  */
 
-#define  INFO      0
-
-#define  lcm(a,b)  ((a)*(b)/NNgcd((a),(b)))
 typedef struct {int n[W_Nmax+1];} weights;
 typedef Rat ratmat[W_Nmax][W_Nmax];
 typedef Rat ratvec[W_Nmax];
@@ -692,9 +694,6 @@ int IfIpWWrite(Weight *W, PolyPointList *P, int *rFlag, int *tFlag)
        if(*rFlag && r){Write_Weight(W); fflush(stdout); return 1;} 
        if(!*tFlag && !*rFlag)
 	 {WRITE_Weight(W); if(r) fprintf(outFILE," r"); 
-#if(TRANS_INFO_FOR_IP_WEIGHTS)
-	   if(Trans_Check(*W)) fprintf(outFILE,"%st", r ? "" : " "); 
-#endif
 	   fprintf(outFILE,"\n"); fflush(stdout); return 1;}
        return 0;
      } 
@@ -729,74 +728,19 @@ void Make_IP_Weights(int d, int Dmin, int Dmax, int rFlag, int tFlag)
 }
 
 
-#define MOONSHINE_CRITERIA (0)
-/* if set to (1), weights are written according to the criteria
-   formulated in IfMoonWWrite, otherwise if they satisfy Trans_Check */
-
-#if(MOONSHINE_CRITERIA)
-
-int IfMoonWWrite(Weight *W, Rat *dmwow, long *nsmallchi, int *stf){
-  /* Write the weights determined by the algorithm;
-     if desired, put in extra conditions like the ones below 
-     (here: chi should be a small multiple of 24)                   */
-  int i, D;
-  Rat chi = rI(0);
-  Rat auxrat;
-  for (D=1; D<=W->d; D++)
-    if (!(W->d % D)){
-      /* sf = Strangefun(W->d / D); */
-      auxrat = rR(stf[W->d / D], W->d);
-      for(i=0; i<W->N; i++)
-	if (!(D * W->w[i] % W->d)) {
-	  auxrat = rP(auxrat, dmwow[i]);
-	  auxrat.N *= -1;}
-      chi = rS(auxrat, chi);}
-  if (chi.D != 1) return 0;
-  /* exit if the weight doesn't satisfy certain desired criteria */
-  if (chi.N % 24) return 0;
-  if (abs(chi.N) > 96) return 1;  
-  (*nsmallchi)++; 
-  WRITE_Weight(W);
-  printf("  chi=%ld\n", chi.N);
-  fflush(0);
-  return 1;
-}
-
-int BlaRout(int quot){/* compute |{(i,j): gcd(i,j,quot)=1}| */
-  int sf = 0, bla, qob;
-  int i,j;
-  for (i=1;i<=quot;i++){
-    bla = Fgcd(i,quot);
-    qob = quot/bla;
-    for (j=1;j<=bla;j++)
-      if (Fgcd(j,bla) == 1) sf += qob;}
-  return sf;
-}
-
-#endif
-
 void RecMoonWeights(Weight *W, int g, int sum, long *npp, long *nintPP1,
 		    long *nintchi, int n, long long *PP1N, long long *PP1D
-#if(MOONSHINE_CRITERIA)
-		    , long *nsmallchi, Rat*dmwow, int *stf
-#endif
 		    ){
   int wmax=W->d/(W->N-n+1);
   wmax=palp::min(wmax,W->w[n+1]); 
   wmax=palp::min(wmax,sum-n);
   if(n)
     for(W->w[n]=wmax; (n+1)*W->w[n]>=sum; W->w[n]--){
-#if(MOONSHINE_CRITERIA)
-      dmwow[n] = rR(W->d - W->w[n], W->w[n]);
-#endif
       /*PP1[n] = rP(dmwow[n], PP1[n+1]);*/
       PP1N[n] = PP1N[n+1] * (long long) (W->d - W->w[n]); assert(PP1N[n]>0);
       PP1D[n] = PP1D[n+1] * (long long) W->w[n];
       RecMoonWeights(W, Fgcd(g,W->w[n]), sum-W->w[n], npp, nintPP1, nintchi,
 		     n-1, PP1N, PP1D
-#if(MOONSHINE_CRITERIA)
-		     , nsmallchi, dmwow, stf
-#endif
 		     );}
   else if (1 == Fgcd(g,sum)){
     W->w[0]=sum;
@@ -808,13 +752,6 @@ void RecMoonWeights(Weight *W, int g, int sum, long *npp, long *nintPP1,
     if (PP1N[0] % PP1D[0]) return;
     if (PP1N[n]/PP1N[n+1] != W->d - W->w[n]) return;
     (*nintPP1)++;
-#if(MOONSHINE_CRITERIA)
-    dmwow[n] = rR(W->d - W->w[n], W->w[n]);
-    if(IfMoonWWrite(W, dmwow, nsmallchi, stf)) (*nintchi)++;
-#else
-    if(Trans_Check(*W)){
-      WRITE_Weight(W); fprintf(outFILE,"\n");fflush(stdout); (*nintchi)++;}
-#endif
   }
 }
 
@@ -825,42 +762,17 @@ void MakeMoonWeights(int N, int from_d, int to_d){
   Weight W;
   /* Rat PP1[W_Nmax]; */   /* Poincare polynomial evaluated at t=1 */
   long long PP1N[W_Nmax], PP1D[W_Nmax];
-#if(MOONSHINE_CRITERIA)
-  long int nsmallchi=0, i;
-  Rat dmwow[W_Nmax]; /* dmwow[i] = rR(W.d-W.w[i], W.w[i]); "d minus w over w" */
-  int *stf = (int *) malloc((to_d +1) * sizeof(int));
-  for (i=1; i<=to_d; i++) stf[i] = BlaRout(i);
-#endif
   assert((N<=W_Nmax)&&(N<POLY_Dmax+2));
   W.N=N;
   W.M=0;
   for(W.d=from_d; W.d<=to_d; W.d++){
-#if(MOONSHINE_CRITERIA)
-    /* if results are rare, create output to show that the program is still
-       doing something  */
-    if (W.d>607) printf("d=%d\n",W.d);
-    fflush(0);
-#endif
     for(W.w[N-1]=W.d/2; W.d <= N*W.w[N-1]; W.w[N-1]--){
       /*PP1[N-1] = rR(W.d-W.w[W.N-1], W.w[W.N-1]);*/
       PP1N[N-1] = W.d-W.w[W.N-1];
       PP1D[N-1] = W.w[W.N-1];
-#if(MOONSHINE_CRITERIA)
-     dmwow[N-1] = rR(W.d-W.w[W.N-1], W.w[W.N-1]);
-#endif
      RecMoonWeights(&W, Fgcd(W.d, W.w[W.N-1]), W.d-W.w[W.N-1], &npp, &nintPP1,
 		     &nintchi, N-2, PP1N, PP1D
-#if(MOONSHINE_CRITERIA)
-		     , &nsmallchi, dmwow, stf
-#endif
 		     );}}
-#if(MOONSHINE_CRITERIA)
-  fprintf(outFILE,"#partitions=%ld #intPP1=%ld #intchi=%ld #smallchi=%ld\n",
-	  npp, nintPP1, nintchi, nsmallchi);
-#else
-  fprintf(outFILE,"#partitions=%ld #intPP1=%ld #trans=%ld\n",
-	  npp, nintPP1, nintchi);
-#endif
   exit(0);
 }
 
@@ -1230,12 +1142,6 @@ void Select_n_of_W(Weight *_W, int n, FILE *auxFILE){
 }
 
 void PRINT_CWS(CWS *CW){
-#if (!Only_IP_CWS)
-  {
-    Print_CWS(CW);
-    fprintf(outFILE,"\n");
-  }
-#else
   {
     PolyPointList *P, *DP; EqList E; VertexNumList V;
     P = (PolyPointList *) malloc(sizeof(PolyPointList));
@@ -1258,7 +1164,6 @@ void PRINT_CWS(CWS *CW){
     }
     free(DP); free(P); 
   }
-#endif  
 }
 
 void W_TO_CWS(CWS *CW, Weight *_W, int Nf, int Nr, int Nb, int u)
