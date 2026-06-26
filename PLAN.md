@@ -120,16 +120,15 @@ library and each other in a simple chain). Convert in dependency order.
 - [x] Keep `exit(0)` calls for now (bug fix is Phase 5).
 - **Verify**: build + test (all `tests/2.*`, `tests/3.*`).
 
-- [ ] #### Step 1.3 — `Coord.c` → `Coord.cpp`
+- [x] #### Step 1.3 — `Coord.c` → `Coord.cpp`
 
 - [x] Rename `Coord.c` → `Coord.cpp`.
-- [x] Replace some `char c[999]` local buffers with `std::array<char, 999>` or
-  `std::vector`.
-- [ ] Replace remaining `fscanf`-based parsing: add return-value checks but keep
+- [x] Replace some `char c[999]` local buffers with `std::array<char, 999>`.
+- [x] Replace remaining `fscanf`-based parsing: add return-value checks but keep
   identical output behavior (check return, on failure produce same error message).
-- [x] `ReadCwsPp`, `Read_PP`, `Read_CWS` now check `fscanf` return values and exit
+  `ReadCwsPp`, `Read_PP`, `Read_CWS` now check `fscanf` return values and exit
   with a descriptive error message on failure.
-- [ ] Keep `static int InputOK` as-is for now (documented in ISSUES.md #43).
+- [x] Keep `static int InputOK` as-is for now (documented in ISSUES.md #44).
 - **Verify**: build + test (all `tests/2.*`, `tests/4.*`).
 
 - [x] #### Step 1.4 — `Polynf.c` → `Polynf.cpp` (largest: ~3223 lines)
