@@ -6,6 +6,16 @@
 #include <memory>
 #include <vector>
 
+namespace {
+  constexpr bool TEST_Polynf = false;     /* GLZ matrix checks */
+  constexpr bool TEST_OUT = false;        /* IPS recursion diagnostics */
+  constexpr bool TEST_ImpPhase = false;   /* IP-simplex phase diagnostics */
+  constexpr bool TEST_RK = false;         /* rank checks */
+  constexpr bool TEST_QZ = false;         /* quotient Z checks */
+  constexpr bool TEST_out = false;        /* lowercase alias diagnostics */
+}
+
+
 
 #define	SORT_CWS	(0)
 #define FIB_PERM	(27)		    /* print permutation for p<=# */
@@ -724,11 +734,11 @@ GL_Long GL_V_to_GLZ(GL_Long *V, GL_Long *G[POLY_Dmax], int d)
 	else if(*V<0) G[0][0]=-1;
        g=V[P[0]];
      }	if(g<0) g=-g;
-#ifdef	TEST_OUT
+if constexpr (TEST_OUT) {
 	for(i=0;i<d;i++){printf("G[%d]= ",i);for(j=0;j<d;j++)
 	printf("%2d ",G[i][j]);printf("    V=%d\n",V[i]);}
 	puts("testing GLZ in GL_V_to_GLZ"); fflush(0);
-#endif
+}
  if (TEST_GLZmatrix_ENABLED)
  {int x,y; TEST_GLZmatrix(G,d);
  for(x=0;x<d;x++){Long Y=0; for(y=0;y<d;y++) Y+=G[x][y]*V[y];
@@ -758,12 +768,12 @@ int  TriMat_to_Weight(GL_Long T[][POLY_Dmax], int *p,int r,int *s,
      for(i=0;i<*p;i++) X[i]=0;
      for(i=0;i<=r;i++) X[s[i]]=x[i];
      return 1;
-#ifdef	TEST_OUT
+if constexpr (TEST_OUT) {
 	for(i=0;i<r;i++){printf("r=%d nw=%d:  ",r,*nw);
 	    for(j=0;j<=r;j++)printf(" %2d",T[j][i]);puts("");}
 	for(i=0;i<=r;i++)printf(" %2d",x[i]);printf("  =W  p=%d  S=",*p);
 	for(i=0;i<=r;i++)printf(" %2d",s[i]);puts("");
-#endif
+}
 }
 Long XmY_vecdiff(Long *X, Long*Y, int n)
 {    Long d; while(n--) if((d=X[n]-Y[n])) return d; return 0;
@@ -896,10 +906,10 @@ Long LatVol_Barycent(PolyPointList *P,VertexNumList *V,          /* bary=B/N */
      VertexNumList aV; EqList aE,*e=&aE; Long vol; A->n=P->n; A->np=V->nv;
      for(i=0;i<V->nv;i++) for(j=0;j<P->n;j++) A->x[i][j] = P->x[V->v[i]][j];
      vol=Aux_Vol_Barycent(A,&aV,e,B,N); free(A); 
-#ifdef	TEST_OUT
+if constexpr (TEST_OUT) {
 	Print_PPL(P,"result for:"); printf("vol=%d, B=",vol);
 	for(i=0;i<P->n;i++)printf("%d ",B[i]);printf("/ %d\n",*N); 
-#endif
+}
      for(i=0;i<P->n;i++) if(B[i]) break; 
      if(i==P->n) (*N)=0;
      return vol;  /* N=0 iff B=0 */
@@ -1080,11 +1090,11 @@ int  Add_Square_To_Rel(int el[4],int r,int v,Long rel[SQnum_Max][VERT_Nmax],
      if(r==0){ C[0]=el[0]; for(i=0;i<v;i++) rel[0][i]=0;
 	rel[0][el[0]]=rel[0][el[1]]=1; rel[0][el[2]]=rel[0][el[3]]=-1;
 	return 1;}					 /* initialize */
-#ifdef	TEST_RK
+if constexpr (TEST_RK) {
 	printf("rk=%d  el=%ld %ld %ld %ld\n",r,el[0],el[1],el[2],el[3]);
 	for(i=0;i<r;i++){for(j=0;j<v;j++)printf(" %2d",rel[i][j]);
 	printf(" =rel-in C=%d\n",C[i]);}
-#endif
+}
      for(i=0;i<v;i++) N[i]=0;
      N[el[0]]=N[el[1]]=1; N[el[2]]=N[el[3]]=-1;
      for(l=0;l<r;l++){
@@ -1096,15 +1106,15 @@ int  Add_Square_To_Rel(int el[4],int r,int v,Long rel[SQnum_Max][VERT_Nmax],
 	}
         else if(c==C[l]) {Long A=rel[l][c], B=N[c], g=NNgcd(A,B); 
 	assert(g>0); A/=g; B/=g; 
-#ifdef	TEST_RK
+if constexpr (TEST_RK) {
 	printf("reduce New with %d-th line: N= A/g*N-B/g*rel find new c:\n",l);
 	for(j=0;j<v;j++)printf(" %2d",N[j]);printf(" =N-init c=%d\n",c);
-#endif
+}
 	j=c; for(c=0;j<v;j++) if((N[j]=A*N[j]-B*rel[l][j])) if(c==0) c=j;
-#ifdef	TEST_RK
+if constexpr (TEST_RK) {
 	for(j=0;j<v;j++)printf(" %2d",N[j]);printf(" =N-reduced c=%d\n",c);
     for(i=0;i<=r;i++){for(j=0;j<v;j++)printf("%2d ",rel[i][j]);puts("out");}
-#endif
+}
 	if(c==0) { /* puts("no rank increase"); */ return r;}
 	}
      }	assert(r<SQnum_Max); for(i=0;i<v;i++)rel[r][i]=N[i];C[r]=c; return r+1;
@@ -1362,19 +1372,19 @@ void IPS_Rec_New_Vertex(Long PM[][POLY_Dmax], int *p, int *d, int *nw,
      {	Long *P=PM[*n]; for(i=0;i<*d;i++)
 	{   X[i]=0; for(j=0;j<*d;j++) X[i]+=G[r-1][i][j]*P[j];
 	}   for(j=r;j<*d;j++) if(X[j]) break;
-#ifdef	TEST_OUT
+if constexpr (TEST_OUT) {
 	printf("X=T[r=%d]:",r);for(i=0;i<*d;i++)printf(" %d",X[i]);
 	printf(" j=%d   s=",j);for(i=0;i<=r;i++)printf(" %d",s[i]);puts("");
-#endif
+}
 	if(j<*d) 
 	{   X[r]=GL_V_to_GLZ(&X[r],GN,*d-r); for(i=r+1;i<*d;i++) X[i]=0;
 	    for(i=r;i<*d;i++) for(j=0;j<*d;j++) { G[r][i][j]=0;
 		for(k=0;k<*d-r;k++)G[r][i][j]+=GN[i-r][k]*G[r-1][r+k][j];}
-#ifdef TEST
+if constexpr (TEST_Polynf) {
 	TEST_GLZmatrix(G[r],*d);
 	for(i=0;i<*d;i++){Long Z=0; for(j=0;j<*d;j++) Z+= G[r][i][j]*P[j];
 	assert(Z==X[i]);} 
-#endif
+}
 	    IPS_Rec_New_Vertex(PM,p,d,nw,W,Wmax,G,GI,GN,T,s,r+1,FW,CD);
 	}
 	else if(*CD==0) TriMat_to_WeightZ(T,d,p,r,s,nw,W,Wmax,FW);
@@ -1687,16 +1697,16 @@ void Print_Fiber_PolyData(PolyPointList *P,VertexNumList *V,Long *W,int w,
 	EqList e; VertexNumList v; PolyPointList *F
 	    = (PolyPointList *) malloc(sizeof(PolyPointList));assert(F!=NULL);
 	for(p=0;p<w;p++)if(W[p]){for(i=0;i<D;i++) X[i][s]=P->x[p][i]; s++;}
-#ifdef	TEST_OUT
+if constexpr (TEST_OUT) {
 	{int j; puts("");for(i=0;i<D;i++){printf("X=");
 	for(j=0;j<s;j++)printf("%2d ",X[i][j]);puts("");}}
-#endif
+}
 	PM_to_GLZ_for_UTriang(X,&D,&s,G); INV_GLZmatrix(G,&D,Ginv); 
-#ifdef	TEST_OUT
+if constexpr (TEST_OUT) {
 	{int j; puts("");for(i=0;i<D;i++){printf("G[%d]= ",i);
 	for(j=0;j<D;j++)printf("%2d ",G[i][j]);printf("    X=");
 	for(j=0;j<s;j++)printf("%2d ",X[i][j]);puts("");}}
-#endif
+}
 	for(p=0;p<V->nv;p++) for(i=0;i<D;i++){
 	    GL_Long x=0;
 	    for(s=0;s<D;s++) x+=G[i][s]*P->x[V->v[p]][s];
@@ -1720,9 +1730,7 @@ void Print_Fiber_PolyData(PolyPointList *P,VertexNumList *V,Long *W,int w,
 	{   for(i=d;i<D;i++) if(F->x[p][i]) break;
 	    if(i==D) {if(s<p) for(i=0;i<d;i++) F->x[s][i]=F->x[p][i]; s++;}
 	}   F->n=d;F->np=s;ref=Ref_Check(F,&v,&e);Nmv=e.ne; Nnp=F->np;Nnv=v.nv;
-#ifdef	TEST_OUT
-	puts("\nFiber:");Print_PPL(F,"Fiber");
-#endif
+if constexpr (TEST_OUT) { puts("\nFiber:");Print_PPL(F,"Fiber"); }
 	if(ref) 
 	{   Long PM[VERT_Nmax][VERT_Nmax]; Aux_Make_Dual_Poly(F,&v,&e);
 	    Make_VEPM(F,&v,&e,PM); Complete_Poly(PM,&e,v.nv,F); Nmp=F->np;
@@ -1958,10 +1966,10 @@ void Old_QuotZ_2_SublatG(Long Z[][POLY_Dmax],int *m,int *M,int *d,
      Long G[][POLY_Dmax]) 		      /* normalize and diagonalize Z */
 {    int i,j,k,r;GL_Long GT[POLY_Dmax][POLY_Dmax],Ginv[POLY_Dmax][POLY_Dmax];
      Long g, A[POLY_Dmax][VERT_Nmax]; 
-#ifdef	TEST_QZ
+if constexpr (TEST_QZ) {
 	for(i=0;i<*m;i++){for(j=0;j<*d;j++)printf("%2d  ",Z[i][j]);
 	printf("/%d  input\n",M[i]);}
-#endif
+}
      for(i=0;i<*m;i++)
      {	g=labs(Z[i][0]); for(j=1;j<*d;j++)if(Z[i][j])g=Fgcd(g,labs(Z[i][j]));
 	if(g!=1){if(Fgcd(g,M[i])==1){/*printf("g=%d M=%d\n",g,M[i]);exit(0)*/;}
@@ -1979,7 +1987,7 @@ void Old_QuotZ_2_SublatG(Long Z[][POLY_Dmax],int *m,int *M,int *d,
      {	if((Zi[j]%=M[i]) < 0) Zi[j]+=M[i]; A[j][i]=Zi[j];}}
      r=PM_to_GLZ_for_UTriang(A,d,m,GT); INV_GLZmatrix(GT,d,Ginv);
      for(i=0;i<*d;i++)for(j=0;j<*d;j++)G[i][j]=Ginv[j][i];/* Z*G lower trian */
-#ifdef	TEST_QZ
+if constexpr (TEST_QZ) {
 	printf("rank=%d  m=%d\n",r,*m);
 	for(i=0;i<*m;i++){for(j=0;j<*d;j++)printf("%2d  ",Z[i][j]);
 	printf("/%d  normalized\n",M[i]);}
@@ -1988,7 +1996,7 @@ void Old_QuotZ_2_SublatG(Long Z[][POLY_Dmax],int *m,int *M,int *d,
         for(i=0;i<*d;i++){for(j=0;j<*d;j++)printf("%2d  ",G[i][j]);
 	printf("=G[%d]\n",i);}
 	/*   *m=0; for(i=0;i<*d;i++)for(j=0;j<*d;j++)G[i][j]=(i==j); */
-#endif
+}
      assert((*m) == r);
 }
 
@@ -2047,7 +2055,7 @@ void QuotZ_2_SublatG(Long Z[][VERT_Nmax],int *m,Long *M,int *d,
      for(i=0;i<*m;i++) for(j=0;j<*d;j++) A[j][i]=Z[i][j];
      r=PM_to_GLZ_for_UTriang(A,d,m,GT); INV_GLZmatrix(GT,d,Ginv);
      for(i=0;i<*d;i++)for(j=0;j<*d;j++)G[i][j]=Ginv[j][i];/* Z*G lower trian */
-#ifdef	TEST_QZ
+if constexpr (TEST_QZ) {
 	printf("rank=%d  m=%d\n",r,*m);
 	for(i=0;i<*m;i++){for(j=0;j<*d;j++)printf("%2d  ",Z[i][j]);
 	printf("/%d  normalized\n",M[i]);}
@@ -2056,7 +2064,7 @@ void QuotZ_2_SublatG(Long Z[][VERT_Nmax],int *m,Long *M,int *d,
         for(i=0;i<*d;i++){for(j=0;j<*d;j++)printf("%2d  ",G[i][j]);
 	printf("=G[%d]\n",i);}
 	/*   *m=0; for(i=0;i<*d;i++)for(j=0;j<*d;j++)G[i][j]=(i==j); */
-#endif
+}
      assert((*m) == r);
 }
 
@@ -2078,12 +2086,12 @@ int  PM_2_QuotientZ(Long PM[VERT_Nmax][POLY_Dmax], int *d, int *p,
      {	PM[j][i]=0; for(I=0;I<*d;I++)PM[j][i]+=G[i][I]*Z[I][j];
      }	
 	I=GL_Lattice_Basis_QZ(*n,*p,P,D,Z,M,&rk,G,B);  
-#ifdef TEST_OUT
+if constexpr (TEST_OUT) {
      puts("PM_2_QuotientZ:\n"); for(i=0;i<rk;i++) 
 	printf("%d ",M[i]) ;printf("  index=%d\n",I); for(i=0;i<rk;i++)
 	{for(j=0;j<*p;j++)printf("%3d ",GxP(G[i],PM[j],d)); printf("=GxP Z%d="
 	,M[i]);for(j=0;j<*p;j++)printf(" %2d",Z[i][j]);puts("");}
-#endif
+}
      *n=rk; return I;
 }
 void Aux_Mat_2_QuotientZ(GL_Long T[][POLY_Dmax],int *D,int *np,int *d,int *s,
@@ -2091,15 +2099,15 @@ void Aux_Mat_2_QuotientZ(GL_Long T[][POLY_Dmax],int *D,int *np,int *d,int *s,
 {    int i,j, rk,p=*d+1, *z[POLY_Dmax], *m=NULL;
      Long PM[VERT_Nmax][POLY_Dmax], M[POLY_Dmax], Z[POLY_Dmax][VERT_Nmax];
      for(i=0;i<*D;i++) for(j=0;j<p;j++) PM[j][i]=T[j][i];
-#ifdef	TEST_out
+if constexpr (TEST_out) {
 	{int i,j,dd=*D,pp=p;for(i=0;i<dd;i++){for(j=0;j<pp;j++)
 		printf("%3d",PM[j][i]);puts(" =PM2in");}}
-#endif
+}
      PM_2_QuotientZ(PM,D,&p,Z,M,&rk); 		assert(F->nw>0);
-#ifdef	TEST_out
+if constexpr (TEST_out) {
 	{int i,j,dd=rk,pp=p;for(i=0;i<dd;i++){for(j=0;j<pp;j++)
 		printf("%3d",PM[j][i]);puts(" =PM2out");}}
-#endif
+}
      F->n0[F->nw-1] = (F->nw>1) ? (F->n0[F->nw-2]+F->nz[F->nw-2]) : 0;
      F->nz[F->nw-1] = rk; assert(F->n0[F->nw-1]+F->nz[F->nw-1] <= FIB_Nmax);
      j=F->n0[F->nw-1]; for(i=0;i<rk;i++) {z[i]=F->Z[j+i]; m=&F->M[j];}
@@ -2107,11 +2115,11 @@ void Aux_Mat_2_QuotientZ(GL_Long T[][POLY_Dmax],int *D,int *np,int *d,int *s,
      for(i=0;i<rk;i++) for(j=0;j<*np;j++)z[i][j]=0;
      for(i=0;i<rk;i++)m[i]=M[i];
      for(i=0;i<rk;i++) for(j=0;j<p;j++) z[i][s[j]]=Z[i][j];
-#ifdef	TEST_out
+if constexpr (TEST_out) {
 			printf("F->nw=%d\n",F->nw);
 	for(i=0;i<rk;i++) { printf("Z%d:",M[i]);
 	for(j=0;j<p;j++) printf(" %2d",Z[i][j]); puts("");}
-#endif
+}
      return;
 }
 int  TriMat_to_WeightZ(GL_Long T[][POLY_Dmax], int *d,int *p,int r,int *s,
@@ -2147,10 +2155,10 @@ int  ImprovePhase(int L,Long *A,Long *D,int *d,Long GP[][POLY_Dmax],int *p,
 	if(s<0)s+=m;
 	if(2*s>m){for(l=0;l<*p;l++)A[l]*=-1;s=m-s;}
 	ms=Egcd(m,s,&a,&b); if((r=x/ms)) for(l=0;l<*p;l++) z[l]-=r*b*A[l]; 
-#ifdef TEST_ImpPhase
+if constexpr (TEST_ImpPhase) {
         for(l=0;l<*p;l++)printf("%2d ",A[l]); printf("=lr[%d]   s=%d\n",j,s);
 	printf("ms=%d m=%d s=%d a=%d b=%d r=%d x=%d\n",ms,m,s,a,b,r,x);
-#endif
+}
 	x=Phase(z,*p) % m; if(x==0) return 1; if(x<0)x+=m;
      }	return 0;
 }
@@ -2186,10 +2194,10 @@ int  GL_Lattice_Basis_QZ(int d,int p, Long *P[VERT_Nmax], Long *D, /* index */
 	}   D[L]=g; index*=g; if(tz) 	      /* tz::compute GP[L], A, Z[L] */
 	{   for(c=0;c<p;c++) GP[c][L]=GxP(G[L],P[c],&d); Y=Z[L];
 	    for(l=0;l<=L;l++){V[l]=0;for(c=0;c<p;c++)V[l]+=A[c]*GP[c][l];}
-#ifdef TEST
+if constexpr (TEST_Polynf) {
 	    for(l=L+1;l<d;l++) {V[l]=0;for(c=0;c<p;c++) 
 		V[l]+=A[c]*GxP(G[l],P[c],&d); assert(V[l]==0);}
-#endif
+}
 	    assert(V[L]==g); for(c=0;c<p;c++) Y[c]=A[c]; for(l=0;l<L;l++)
             {   Long R=0; for(c=0;c<p;c++) R+=A[c]*GP[c][l]; 
 		/* printf("V[%d]=%d  R[%d]=%d/%d\n",l,V[l],l,R,D[l]); */
@@ -2245,9 +2253,7 @@ int  GL_Lattice_Basis_QZ(int d,int p, Long *P[VERT_Nmax], Long *D, /* index */
 	    puts("Unexpected in GL_Lattice_Basis_QZ: index>1 for p>VERT_Nmax");
 	    exit(0);}
 	}   *r = (index==1) ? 0 : d;
-#ifdef TEST
-	if(tz) for(L=0;L<d;L++) for(C=0;C<p;C++) assert(GP[C][L]%D[L]==0);
-#endif
+if constexpr (TEST_Polynf) { if(tz) for(L=0;L<d;L++) for(C=0;C<p;C++) assert(GP[C][L]%D[L]==0); }
      for (L=0;L<d;L++) M[L]=D[L];
      Normalize_QuotientZ(r,&p,Z,M); 
      /* Test_Phase(d,p,P,Z,D,*r,"GL_Lattice_Basis_QZ"); */
@@ -2348,10 +2354,10 @@ int  VP_2_CWS(Long *V[], int n, int v, CWS *CW)
 	if(i==v) continue; 
 	for(j=0;j<v;j++) CW->W[CW->nw][j]=W[R][j];
 	CW->d[CW->nw]=d[R];
-#ifdef	TEST_OUT
+if constexpr (TEST_OUT) {
 	for(i=0;i<v;i++)printf("%d ",W[R][i]);printf("=W  Y=");
 	for(i=CW->nw;i<v;i++)printf("%d ",Y[i]); puts("");Print_xxG(C,&v,"C");
-#endif
+}
 	WZ_to_GLZ(&Y[CW->nw],X,&cd,B); C_to_BrxC(B,C,X,&cd,&v); CW->nw++; 
 	/*Print_XXG(B,&cd,"B"); Print_xxG(C,&v,"BxC");*/
 	assert(CW->nw<=v-n); if(CW->nw==v-n) break;

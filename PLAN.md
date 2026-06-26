@@ -132,25 +132,24 @@ library and each other in a simple chain). Convert in dependency order.
 - [ ] Keep `static int InputOK` as-is for now (documented in ISSUES.md #43).
 - **Verify**: build + test (all `tests/2.*`, `tests/4.*`).
 
-- [ ] #### Step 1.4 — `Polynf.c` → `Polynf.cpp` (largest: ~3223 lines)
+- [x] #### Step 1.4 — `Polynf.c` → `Polynf.cpp` (largest: ~3223 lines)
 
 This is the highest-risk step. Take extra care.
 
 - [x] Rename `Polynf.c` → `Polynf.cpp`.
-- [x] Replace some `#if (VERT_Nmax < 129)` stack-vs-heap conditionals with
-  `std::make_unique` allocation.
-- [ ] Replace remaining `#if (VERT_Nmax < 129)` stack-vs-heap conditionals with
-  uniform `std::vector` allocation.
-- [ ] Replace `volatile` with `std::atomic` or remove if no longer needed (verify
-  behavior unchanged).
-- [ ] Replace `static int` counters with a struct passed explicitly where feasible;
-  if too invasive, leave as `static` and document (ISSUES.md #16).
-- [ ] Replace remaining `register` usage (remove).
-- [x] Replace `#define TEST`/`#undef TEST`/`#define TEST` mid-file toggling with
-  `constexpr bool` flags at top of file.
+- [x] Replace `#if (VERT_Nmax < 129)` stack-vs-heap conditionals with RAII
+  allocations (completed in earlier work; none remain).
+- [x] `volatile` was not present in `Polynf.cpp`.
+- [x] `register` keyword was not present in `Polynf.cpp`.
+- [x] `static int` counters (`ConifoldSing` statistics, `Print_Fiber_PolyData`'s
+  `f`, `GL_Lattice_Basis`'s `x`, `Fano5d`'s `FPc`) are left as `static` and
+  documented (ISSUES.md #16): making them explicit parameters would require
+  changing public/internal call signatures and output behavior.
+- [x] Replace `#ifdef TEST`/`#ifdef TEST_OUT`/`#ifdef TEST_ImpPhase`/etc. debug
+  blocks with `constexpr bool` flags at the top of `Polynf.cpp`.
 - [x] Remove `puts("PM")` debug print (ISSUES.md #33).
 - **Verify**: build + test for ALL dimensions (4, 5, 6, 11) — run full
-  `make check` or `ctest` with `DIM` variations.
+  `ctest` with `DIM` variations.
 
 - [x] #### Step 1.5 — `LG.c` → `LG.cpp` (~1113 lines)
 
