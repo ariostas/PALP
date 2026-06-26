@@ -123,7 +123,7 @@ Long W_to_GLZ(Long *W, int *d, Long **GLZ)
      return G;
 }
 /*   Map Permutations: Do "ArgFun" for all permutations pi of *d elements */
-void Map_Permut(int *d,int *pi,int *pinv,ARG_FUN,void *AuxPtr)
+void Map_Permut(int *d, int *pi, int *pinv, ARG_FUN ArgFun, void *AuxPtr)
 {    int i, j, n_rem_perm, n_perm=1, a, b, perm_j;
      for (i=1;i<=*d;i++) n_perm*=i;
      for (i=0;i<n_perm;i++)

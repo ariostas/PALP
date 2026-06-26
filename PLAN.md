@@ -462,11 +462,13 @@ Still to convert in headers:
 - `include/palp/Global.h`: `POLY_Dmax`, `POINT_Nmax`, `VERT_Nmax`,
   `FACE_Nmax`, `SYM_Nmax`, `EQUA_Nmax`, `AMBI_Dmax`, `FIB_Nmax`,
   `CD2F_Nmax` remain compile-time sizing macros; `MULTIPLYING` also
-  remains because it controls a global `#if` branch.
+  remains because it controls a global `#if` branch. Converting these to
+  `constexpr` would require dynamic allocation of all dependent arrays and
+  is out of scope for this sweep.
 - `include/palp/LG.h`: `WZinput` (used in `#if`), `W_Nmax`.
 - `include/palp/Nef.h`: `W_Nmax`.
-- `include/palp/Subpoly.h`: `USE_TMP_DIR` (used in `#if`), `FTELL`/`FSEEK`
-  (conditional platform macros).
+- `include/palp/Subpoly.h`: `USE_TMP_DIR` (used in `#if`). `FTELL`/`FSEEK`
+  are now inline wrapper functions.
 - `include/palp/Rat.h`: `ARG_FUN` (used as a parameter declaration).
 - `include/palp/Global.h`: the large-`VERT_Nmax` `INCI_*` branch is not
   currently compiled (`VERT_Nmax <= 64`) and can be converted later.
