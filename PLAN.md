@@ -224,13 +224,20 @@ This is the highest-risk step. Take extra care.
 - **Verify**: build + run any class-related tests (check if class tests exist
   in `tests/`; if not, create a basic smoke test).
 
-- [ ] #### Step 2.4 — `nef.c` → `nef.cpp`
+- [x] #### Step 2.4 — `nef.c` → `nef.cpp`
 
 - [x] Rename `nef.c` → `nef.cpp`.
-- [ ] Replace local typedefs (`AmbiLatticeBasis`, `CWLatticeBasis`, `Pstat`) with
-  proper struct definitions; check if they duplicate types from `Coord.c`.
-- [ ] Replace VLA `Long PM[EQUA_Nmax][VERT_Nmax]` with `std::vector`.
-- [ ] Fix `int long nl` → `long int nl` (or just `long nl`) (ISSUES.md #22).
+- [x] Replace local typedefs: `CWLatticeBasis` and `Pstat` are now a `using`
+  alias and a `struct`, respectively. `AmbiLatticeBasis` comes from `LG.h`
+  and is no longer re-typedef'd in `nef.cpp`.
+- [x] Replace VLA `Long PM[EQUA_Nmax][VERT_Nmax]` with a
+  `std::vector<std::array<Long, VERT_Nmax>>` and a reinterpret-cast to
+  the 2D array type expected by `Make_VEPM`/`Complete_Poly`.
+- [x] Fix `int long nl` → `long nl` and move `FilterFlag` to a separate `int`
+  declaration (ISSUES.md #22).
+- [x] Convert `malloc`/`calloc` allocations in `main`, `Mink_WPCICY`, and
+  `Make_Poly_WPCICY` to `std::unique_ptr`/`std::vector`.
+- [x] Add comment documenting `FILE *inFILE, *outFILE` globals (ISSUES.md #40).
 - **Verify**: build + run all `tests/6.*` scripts.
 
 - [ ] #### Step 2.5 — `mori.c` → `mori.cpp`
