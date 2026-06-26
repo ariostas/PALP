@@ -20,17 +20,19 @@
 /* ======================================================== */
 /* =========            D E F I N I T I O N s     ========= */
 
-/*** local for Moricone.c ***/
-#define Inci64		unsigned long long
-#define		naT		FACE_Nmax	/* allocate: triangulation */
+namespace {
+  using Inci64 = unsigned long long;        /* local for Moricone.c */
+  constexpr int naT = FACE_Nmax;            /* allocate: triangulation */
 
-/* change to options */
-#define NewtonMonomCOORD	(1)	/* (1) t_i, (2) u,v,w,x,... */
-#define PRINT_MONOMIALS		(0)
-#define EXCEPT_DIV_CLASS_BASE	(1)	/* try 0: D_min, 1: D_max */
+  /* change to options */
+  constexpr bool NewtonMonomCOORD = true;   /* (1) t_i, (2) u,v,w,x,... */
+  constexpr bool PRINT_MONOMIALS = false;
+  constexpr bool EXCEPT_DIV_CLASS_BASE = true; /* try false: D_min, true: D_max */
 
-/* diagnostic stuff */
-#define TRACE_TRIANGULATION	(0)	/* detailed triangulation info */
+  /* diagnostic stuff */
+  constexpr bool TRACE_TRIANGULATION = false; /* detailed triangulation info */
+}
+
 
 
 
@@ -1200,11 +1202,7 @@ int SectionCount(PolyPointList *PN,int k,PolyPointList *PM){int i,n=0;
       int l; for(l=0;l<PM->n;l++) e+=PM->x[i][l]*PN->x[j][l]; if(e<0) break;}
     if(j==PN->np) n++;} return n;}
 
-#if(NewtonMonomCOORD)
-#if((NewtonMonomCOORD<1)||(NewtonMonomCOORD>2))
-#error		NewtonMonomCOORD has to be 1 or 2
-#endif
-void NewtonMonomial(Long *X,int d){int num=0,den=0,i,t=NewtonMonomCOORD==1;
+void NewtonMonomial(Long *X,int d){int num=0,den=0,i,t=NewtonMonomCOORD;
   for(i=0;i<d;i++) if(X[i]>0) num++; else if(X[i]) den++; 
   if(num) {for(i=0;i<d;i++) if(X[i]>0) {if(t)printf("t_%d",i+1);
     else {char uvw[2]={'u',0}; uvw[0]+=i;printf("%s",uvw);}
@@ -1213,7 +1211,6 @@ void NewtonMonomial(Long *X,int d){int num=0,den=0,i,t=NewtonMonomCOORD==1;
     for(i=0;i<d;i++) if(X[i]<0) {if(t)printf("t_%d",i+1);
     else {char uvw[2]={'u',0}; uvw[0]+=i;printf("%s",uvw);}
     if(X[i]<-1)printf("^%d",(int)-X[i]);} if(den>1)printf(")");}}
-#endif
 
 
 /* Hypersurface divisors Q(charges) permutes the N-lattice points of

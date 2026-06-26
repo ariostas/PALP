@@ -14,7 +14,7 @@
 /* =========            D E F I N I T I O N s     ========= */
 
 /*** local for Moricone.c ***/
-#define Inci64		unsigned long long
+using Inci64 = unsigned long long;
 
 /* ====================================================== */
 /* =========         P R O T O T Y P E s        ========= */
