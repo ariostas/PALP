@@ -108,14 +108,9 @@ int main(int narg, char *fn[]) {
   PolyPointList *_DP = _DP_up.get();
   std::unique_ptr<FaceInfo> FI_up;
   FaceInfo *FI = nullptr;
-  PairMat *PM = (PairMat *)malloc(sizeof(PairMat)),
-          *DPM = (PairMat *)malloc(sizeof(PairMat));
+  PairMat PM, DPM;
   C5stats C5S;
 
-  if ((PM == NULL) || (DPM == NULL)) {
-    puts("Allocation failure: Reduce dimensions!");
-    exit(0);
-  }
   CW->nw = 0;
 
   while (narg > ++n) {
@@ -299,18 +294,18 @@ int main(int narg, char *fn[]) {
     if (r && !R)
       continue;
     Sort_VL(&V);
-    Make_VEPM(_P, &V, E, *PM);
+    Make_VEPM(_P, &V, E, PM);
     if (!nc) {
       if (D || !(lg || CW->nw))
-        Complete_Poly(*PM, E, V.nv, _P);
+        Complete_Poly(PM, E, V.nv, _P);
       if (R && !(D && (lg || CW->nw))) {
-        if (0 == Transpose_PM(*PM, *DPM, V.nv, E->ne)) {
+        if (0 == Transpose_PM(PM, DPM, V.nv, E->ne)) {
           fprintf(stderr, "Transpose_PM failed because #eq=%d > VERT_Nmax\n",
                   E->ne);
           exit(0);
         }
         VNL_to_DEL(_P, &V, DE);
-        Complete_Poly(*DPM, DE, E->ne, _DP);
+        Complete_Poly(DPM, DE, E->ne, _DP);
       }
     }
     if (U == 1) {
@@ -358,7 +353,7 @@ int main(int narg, char *fn[]) {
       Print_FaceInfo(_P->n, FI);
     }
     if (m)
-      Print_Matrix(*PM, E->ne, V.nv,
+      Print_Matrix(PM, E->ne, V.nv,
                    "Pairing matrix of vertices and equations of P");
     if (d && (_DP->np > E->ne))
       Print_PPL(_DP, "Points of P-dual");

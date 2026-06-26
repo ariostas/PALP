@@ -100,13 +100,8 @@ int main(int narg, char *fn[]) {
   auto _DP_up = std::make_unique<PolyPointList>();
   PolyPointList *_DP = _DP_up.get();
 
-  PairMat *PM = (PairMat *)malloc(sizeof(PairMat)),
-          *DPM = (PairMat *)malloc(sizeof(PairMat));
+  PairMat PM, DPM;
 
-  if ((PM == NULL) || (DPM == NULL)) {
-    puts("Allocation failure: Reduce dimensions!");
-    exit(0);
-  }
   CW->nw = 0;
 
   while (narg > ++n) {
@@ -212,8 +207,8 @@ int main(int narg, char *fn[]) {
     }
     Sort_VL(&V);
     if (!(Flag.D && Flag.M)) {
-      Make_VEPM(_P, &V, E, *PM);
-      Complete_Poly(*PM, E, V.nv, _P);
+      Make_VEPM(_P, &V, E, PM);
+      Complete_Poly(PM, E, V.nv, _P);
       for (i = V.nv; i < _P->np - 1; i++)
         if (Vec_is_zero(_P->x[i], _P->n)) {
           Swap_Vecs(_P->x[i], _P->x[_P->np - 1], _P->n);
