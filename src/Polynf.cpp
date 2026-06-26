@@ -1255,20 +1255,20 @@ void Einstein_Metric(CWS *CW,PolyPointList *P,VertexNumList *V,EqList *E)
      PolyPointList *A = (PolyPointList *) malloc(sizeof(PolyPointList));
      Long S, **root=(Long**)malloc(POINT_Nmax*sizeof(Long**)), *d=NULL,
 	PM[VERT_Nmax][VERT_Nmax]; assert(A!=NULL); assert(root!=NULL);
-     while(Read_CWS_PP(CW,P))/* nis=noinvss s=sum ks=ksum bcz=bary0 ssr(oot) */
-     {	Long C[POLY_Dmax], N; int nis,r=0,s,ks,bcz,ssr, R=KP_VALUE; char c[90];
-	Long kPM[VERT_Nmax][VERT_Nmax]; 
-#if(NON_REF)
-     	Long D[EQUA_Nmax]; d=D;
-#endif
+      while(Read_CWS_PP(CW,P))/* nis=noinvss s=sum ks=ksum bcz=bary0 ssr(oot) */
+      {	Long C[POLY_Dmax], N; int nis,r=0,s,ks,bcz,ssr, R=KP_VALUE; char c[90];
+	Long kPM[VERT_Nmax][VERT_Nmax];
+        if constexpr (NON_REF) {
+      	  Long D[EQUA_Nmax]; d=D;
+        }
         *c=0; tot++;nis=S=0; A->np=0;A->n=P->n;
-	if(SMOOTH) {if(!Ref_Check(P,V,E)) continue;} else
+	if constexpr (SMOOTH) {if(!Ref_Check(P,V,E)) continue;} else
 	if(NR) Find_Equations(P,V,E); else assert(Ref_Check(P,V,E));
-#if	SMOOTH
-        if(!SimpUnimod(P,V,E,1)) continue;
-	reg++;
-#endif
-	Sort_VL(V); 
+        if constexpr (SMOOTH) {
+          if(!SimpUnimod(P,V,E,1)) continue;
+	  reg++;
+        }
+	Sort_VL(V);
 	for(i=0;i<V->nv;i++){
 	  if (V->v[i] >= V->nv) 
 	    printf("Please do not use weight input with option '-E'!\n");
