@@ -383,11 +383,11 @@ void Triang_from_SR(triang *TR,triang *SR){	/* consistency check ... */
   assert(A!=NULL); M=A; N=&A[binco];
   for(i=1;i<p;i++)for(j=0;j<i;j++){M[m]= makeN(i)+makeN(j);	
     for(k=0;k<s;k++) if(Inci64_LE(S[k],M[m])) break;  /* no edge of triangle */
-    if(k==s) assert(++m<binco);}
+    if(k==s) {++m; assert(m<binco);}}
   for(r=3;r<=d;r++){int x, n=0; for(k=0;k<m;k++) 
     for(x=1+MaxBit(M[k],p); x<p; x++) {N[n]=M[k]+makeN(x);
       for(l=0;l<s;l++) if(Inci64_LE(S[l],N[n])) break;
-      if(l==s) assert(++n<binco);}
+      if(l==s) {++n; assert(n<binco);}}
     Inci64 *swapI=M; M=N; N=swapI; m=n;}
   TR->n=m; assert(m<=TR->nmax); for(k=0;k<m;k++) T[k]=M[k]; free(A);}
 
@@ -401,14 +401,14 @@ void StanleyReisner(triang *SR,triang *T){ /* pre-allocate and compute SR(T) */
   A = (Inci64*) malloc(2*binco*sizeof(Inci64));assert(A!=NULL);M=A;N=&A[binco];
   for(i=1;i<p;i++)for(j=0;j<i;j++){M[m]=(U<<i)+(U<<j);		/* OFFSET=0 */
     for(k=0;k<nI;k++) if(Inci64_LE(M[m],I[k])) break;/* no primitive collect */
-    if(k==nI) S[s++]=M[m]; else assert(++m<binco);}   /* quadratic generator */
+    if(k==nI) S[s++]=M[m]; else {++m; assert(m<binco);}}   /* quadratic generator */
   for(r=3;r<=d+1;r++){int x, n=0; for(k=0;k<m;k++) 
     for(x=1+MaxBit(M[k],p); x<p; x++) {N[n]=M[k]+(U<<x);
   /*prnI(p,M[k]);printf("=M[%d] x=%d > N[%d]=",k,x,n);prnI(p,N[n]);puts("");*/
       for(l=0;l<nI;l++) if(Inci64_LE(N[n],I[l])) break;
       if(l==nI) {for(l=0;l<s;l++) if(Inci64_LE(S[l],N[n])) break;
         if(l==s) {assert(s<SR->nmax);S[s++]=N[n];}}
-      else assert(++n<binco);}
+      else {++n; assert(n<binco);}}
     Inci64 *swapI=M; M=N; N=swapI; m=n;} SR->n=s; SR->v=T->v; SR->d=T->d;
   { int ok=1; triang TeST; TeST.I=A; TeST.nmax=2*binco;   //
     Triang_from_SR(&TeST,SR); if(TeST.n!=T->n) ok=0; else
