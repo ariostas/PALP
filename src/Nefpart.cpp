@@ -1,6 +1,10 @@
 #include <palp/Global.h>
 #include <palp/Nef.h>
 
+#include <algorithm>
+#include <memory>
+#include <vector>
+
 /*   ===============	    Typedefs and Headers	===================  */
 
 int  GLZ_Make_Trian_NF(Long X[][VERT_Nmax], int *n, int *nv,
@@ -101,8 +105,8 @@ void Dir_Product(PartList *_PTL, VertexNumList *_V, PolyPointList *_P){
   CEqList CEtemp;
   VertexNumList Vtemp;
 
-  PolyPointList *_PV = (PolyPointList *) malloc(sizeof(PolyPointList));
-  if(_PV == NULL) Die((char*)"Unable to alloc space for PolyPointList _PV");
+  auto _PV_up = std::make_unique<PolyPointList>();
+  PolyPointList *_PV = _PV_up.get();
 
   _PV->n = _P->n;
   for(i = 0; i < _PTL->n; i++){
@@ -125,7 +129,6 @@ void Dir_Product(PartList *_PTL, VertexNumList *_V, PolyPointList *_P){
     else
       _PTL->DirProduct[i] = 0;
   }
-  free(_PV);
 }
 
 void Set_To_Vlist(int *_S, VertexNumList *_V, PolyPointList *_P, PolyPointList 
@@ -197,12 +200,12 @@ void REC_Dir_Product(PartList *_PTL, VertexNumList *_V, PolyPointList *_P){
   PolyPointList *_PV;
   Subset Pset, CPset;
 
-  _PV = (PolyPointList *) malloc(sizeof(PolyPointList));
-  if(_PV == NULL) Die((char*)"Unable to alloc space for PolyPointList _PV");
-  _CEtemp = (CEqList *) malloc(sizeof(CEqList));
-  if(_CEtemp == NULL) Die((char*)"Unable to alloc space for CEqList _CEtemp");
-  _Vtemp = (VertexNumList *) malloc(sizeof(VertexNumList));
-  if(_Vtemp == NULL) Die((char*)"Unable to alloc space for VertexNumList _Vtemp");
+  auto _PV_up = std::make_unique<PolyPointList>();
+  _PV = _PV_up.get();
+  auto _CEtemp_up = std::make_unique<CEqList>();
+  _CEtemp = _CEtemp_up.get();
+  auto _Vtemp_up = std::make_unique<VertexNumList>();
+  _Vtemp = _Vtemp_up.get();
   
   for(i = 0; i < _PTL->n; i++){
     _PTL->DirProduct[i] = 0; j = 0;
@@ -223,7 +226,6 @@ void REC_Dir_Product(PartList *_PTL, VertexNumList *_V, PolyPointList *_P){
       j++;
     }
   }
-  free(_Vtemp); free(_CEtemp); free(_PV);
 }
 
 int COMP_S(int SA[], int SB[], int *_nv){
@@ -285,14 +287,16 @@ int Bisection_PTL(PartList *_PTL, int s[], int S[]){
 
 void Bubble_PTL(PartList *_PTL, int s[]){
 
-  int i, j, diff=0;
+  int i, diff=0;
 
   for(i = 0; i < _PTL->n; i++)
     s[i] = i;
-  for(i = 0; i < _PTL->n - 1; ++i)
-    for(j = _PTL->n - 1; j > i; --j)
-      if(COMP_S(_PTL->S[s[j-1]], _PTL->S[s[j]], &_PTL->nv) == 1)
-	swap(&s[j-1], &s[j]);
+
+  std::sort(s, s + _PTL->n,
+            [nv = &_PTL->nv, &PTL = *_PTL](int a, int b) {
+              return COMP_S(PTL.S[a], PTL.S[b], nv) < 0;
+            });
+
   for(i = 1; i < _PTL->n; i++){
     if(COMP_S(_PTL->S[s[i-1]], _PTL->S[s[i]], &_PTL->nv) == 0)
       diff += 1;
@@ -304,26 +308,19 @@ void Bubble_PTL(PartList *_PTL, int s[]){
 
 void Remove_Sym(SYM *_VP, PartList *_PTL, PartList *_S_PTL){
 
-  int *_s, *_s_sym, *_p;
   int n=1, i, j, k;
-  PartList *_SYM_PTL;
-  
-  _s = (int*) calloc(_PTL->n, sizeof(int));
-  assert(_s != NULL);
-  _s_sym = (int*) calloc(_VP->ns, sizeof(int));
-  assert(_s_sym != NULL);
-  _p = (int*) calloc(_PTL->n, sizeof(int));
-  assert(_p != NULL);
-  _SYM_PTL = (PartList*) malloc(sizeof(PartList));
-  assert(_SYM_PTL != NULL);
-  
-  if(Nef_Max < SYM_Nmax) Die((char*)"\nNeed Nef_Max >= SYM_Nmax!!!\n");
+  std::vector<int> _s(_PTL->n);
+  std::vector<int> _s_sym(_VP->ns);
+  std::vector<int> _p(_PTL->n);
+  auto _SYM_PTL = std::make_unique<PartList>();
+
+  if(Nef_Max < SYM_Nmax) Die("\nNeed Nef_Max >= SYM_Nmax!!!\n");
   for(i = 0; i < _PTL->n; i++){
     _p[i] = 0; _s[i] = 0;
   }
   for(i = 0; i < _PTL->n; i++)
     NForm_S(_PTL->S[i], &_PTL->nv);
-  Bubble_PTL(_PTL, _s);
+  Bubble_PTL(_PTL, _s.data());
   for(i = 0; i < _PTL->n; i++){
     if(_p[_s[i]] == 0){
       _p[_s[i]] = n;
@@ -334,10 +331,10 @@ void Remove_Sym(SYM *_VP, PartList *_PTL, PartList *_S_PTL){
       _SYM_PTL->n = _VP->ns; _SYM_PTL->nv = _PTL->nv;
       for(j = 0; j < _VP->ns; j++)
 	NForm_S(_SYM_PTL->S[j], &_SYM_PTL->nv);
-      Bubble_PTL(_SYM_PTL, _s_sym);
+      Bubble_PTL(_SYM_PTL.get(), _s_sym.data());
       for(j = 1; j < _VP->ns; j++)
 	if(COMP_S(_SYM_PTL->S[_s_sym[j]], _SYM_PTL->S[_s_sym[j-1]], &_PTL->nv) != 0)
-	  _p[Bisection_PTL(_PTL, _s, _SYM_PTL->S[_s_sym[j]])] = n;
+	  _p[Bisection_PTL(_PTL, _s.data(), _SYM_PTL->S[_s_sym[j]])] = n;
       n++;
     }
   }
@@ -351,7 +348,6 @@ void Remove_Sym(SYM *_VP, PartList *_PTL, PartList *_S_PTL){
     _S_PTL->n += 1;
     n--;
     }
-  free(_s);free(_s_sym);free(_p);free(_SYM_PTL);
 }
 
 void M_TO_MM(MMatrix *_M, MMatrix *_MM, GMatrix *_G, int *_nf){
@@ -371,13 +367,12 @@ void M_TO_MM(MMatrix *_M, MMatrix *_MM, GMatrix *_G, int *_nf){
 
 int Convex_Check(MMatrix *_M, GMatrix *_G, XMatrix *_X, int S[], FVList *_FVl,
 		 NEF_Flags *_F){ 
-  MMatrix *_MM;
   int c_flag = 1, i, j, k, l, d, IP;
 
   if (_F->noconvex) return 1;
 
-  _MM = (MMatrix *) calloc(_FVl->nf, sizeof(MMatrix)); 
-  assert(_MM != NULL);
+  std::vector<MMatrix> _MM_vec(_FVl->nf);
+  MMatrix *_MM = _MM_vec.data();
 
   M_TO_MM(_M, _MM, _G, &_FVl->nf);
  
@@ -409,7 +404,6 @@ int Convex_Check(MMatrix *_M, GMatrix *_G, XMatrix *_X, int S[], FVList *_FVl,
   }
   if (c_flag && _F->Test)
 		Print_M(_MM, &_FVl->nf, "M-Matrix:");
-  free(_MM);
   return c_flag;
 }
 
@@ -690,11 +684,13 @@ void Select_Sv(int S[], V_Flag *_VF, MMatrix *_M, GMatrix *_G, XMatrix *_X,
     if(step.v == 0)
       Zero_M_Rank(_MR, &step.f);
     if(!New_V(_VF, &_FVl->vl[step.f].v[step.v])){
+#ifndef NDEBUG
       if (_F->Test){
 	char c;
 	fprintf(outFILE, "\nold vertex f:%d v:%d\n",step.f,step.v);
-	scanf("%c",&c);
+	if (scanf("%c",&c) != 1) c = '\n';
       }
+#endif
       if((_MR->m[step.f] == _M[step.f].d) || 
 	 (_Y[step.f].X[_MR->m[step.f]][step.v] == 0)){
 	if(Check_Consistence(&step, _Y, _M, S, _MR, _FVl)){
@@ -774,20 +770,21 @@ void part_nef(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   M_Rank MR;
   int i, f[FACE_Nmax], S[VERT_Nmax] = {0}; 
 
-  PartList *_PTL = (PartList *) malloc(sizeof(PartList));
-  assert(_PTL != NULL);
+  PartList *_PTL;
+  auto _PTL_up = std::make_unique<PartList>();
+  _PTL = _PTL_up.get();
 
   Make_Incidence(_P, _V, _E, &I);
 
-  FVl.vl = (VList *) calloc(I.nf[_P->n - 1], sizeof(VList));
-  assert(FVl.vl != NULL);
+  std::vector<VList> FVl_vl_vec(I.nf[_P->n - 1]);
+  FVl.vl = FVl_vl_vec.data();
 
+  std::vector<VList> FVl_temp_vl_vec;
   if (_F->Sort){
-    FVl_temp.vl = (VList *) calloc(I.nf[_P->n - 1], sizeof(VList));
-    assert(FVl_temp.vl != NULL);
-    INCI_To_FVList(&I, _P, &FVl_temp);   
+    FVl_temp_vl_vec.resize(I.nf[_P->n - 1]);
+    FVl_temp.vl = FVl_temp_vl_vec.data();
+    INCI_To_FVList(&I, _P, &FVl_temp);
     Sort_FVList(&FVl_temp, &FVl, f);
-    free(FVl_temp.vl);
   }
   else
     INCI_To_FVList(&I, _P, &FVl);
@@ -795,34 +792,30 @@ void part_nef(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     Print_VL(_P, _V, "Vertices of P:");
     Print_FVl(&FVl, "Facets/Vertices:");
   }
-  _X = (XMatrix *) calloc(FVl.nf, sizeof(XMatrix)); 
-  assert(_X != NULL);
-  _Y = (XMatrix *) calloc(FVl.nf, sizeof(XMatrix)); 
-  assert(_Y != NULL); 
-  _M = (MMatrix *) calloc(FVl.nf, sizeof(MMatrix)); 
-  assert(_M != NULL);
-  _G = (GMatrix *) calloc(FVl.nf, sizeof(GMatrix)); 
-  assert(_G != NULL); 
+  std::vector<XMatrix> _X_vec(FVl.nf);
+  _X = _X_vec.data();
+  std::vector<XMatrix> _Y_vec(FVl.nf);
+  _Y = _Y_vec.data();
+  std::vector<MMatrix> _M_vec(FVl.nf);
+  _M = _M_vec.data();
+  std::vector<GMatrix> _G_vec(FVl.nf);
+  _G = _G_vec.data();
 
   for(i = 0; i < FVl.nf; i++){
-    Make_Matrix(&_X[i], &_Y[i], &FVl.vl[i], _P, _V);  
+    Make_Matrix(&_X[i], &_Y[i], &FVl.vl[i], _P, _V);
     GLZ_Make_Trian_NF(_Y[i].X, &_P->n, &FVl.vl[i].nv, _G[i].G);
-  }  
+  }
   Initial_Conditions(_M, _Y, &MR, &step, &FVl, &VF, S, _codim, &_P->n, _PTL);
   Select_Sv(S, &VF, _M, _G, _X, _Y, &MR, &FVl, step, _PTL, _F);
-  free(_X); free(_Y); free(_M); free(_G); free(FVl.vl);
   if(_F->Sym){
-    SYM *_VP = (SYM *) malloc(sizeof(SYM));
-    assert(_VP != NULL);
-    
+    auto _VP = std::make_unique<SYM>();
+
     Poly_Sym(_P, _V, _E, &_VP->ns, _VP->Vp);
-    Remove_Sym(_VP, _PTL, _OUT_PTL);
-    free(_VP);
+    Remove_Sym(_VP.get(), _PTL, _OUT_PTL);
   }
   else
     Copy_PTL(_PTL, _OUT_PTL);
   /*Dir_Product(_OUT_PTL, _V, _P);*/
   if(*_codim > 1)
     REC_Dir_Product(_OUT_PTL, _V, _P);
-  free(_PTL);
 }
