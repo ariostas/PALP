@@ -602,7 +602,7 @@ void SL_List_Remove(int *NV,int *nUC, /* unsigned char *UC, */
      S->SLN--; S->NP--; S->nSLP--;
 }
 
-#define	MirTest(A,B)	((((A)+(B)) % 4) != 3)	   /* 1=same, 0=only mirror */
+inline bool MirTest(int A, int B) { return (((A)+(B)) % 4) != 3; }   /* 1=same, 0=only mirror */
 /*	ucNF_Sort_Add = 1 = continue = V is honest and new ;
  *			0 = SL or Ex(honest)
  *      Search...List = 1 : 0 : -1  iff  honest : new : sublattice
@@ -778,24 +778,23 @@ void Print_Weight_Info(CWS *W,NF_List *_L)
 
 /*   ===============	    compression package		=================== */
 
-#if	(INT_MAX != 2147483647)		/* UINT_MAX == 4294967295 */	
-#error	use other date types	      /* ULLONG_MAX == 18446744073709551615 */
-#endif
-#define	UCM		256		/* Unsigned Char Modulo  (= max+1)  */
-#define USM		65536		/* Unsigned Short Modulo (= max+1)  */
-#define Nint_XLong	(NB_MAX + 1) / 2
-#define NX(d,v)		((d)*(v)-((d)*(d-1))/2)
+static_assert(INT_MAX == 2147483647, "use other data types");
+
+namespace {
+  constexpr int UCM = 256;          /* Unsigned Char Modulo  (= max+1)  */
+  constexpr int USM = 65536;        /* Unsigned Short Modulo (= max+1)  */
+  constexpr int Nint_XLong = (NB_MAX + 1) / 2;
+  constexpr int NX(int d, int v) { return d * v - (d * (d - 1)) / 2; }
 
 #ifdef	USE_UNIT_ENCODE
-#define UNIT_NX(d,v)		((d)*((v)-(d))+1)
-#define UNIT_OFF		(8)
+  constexpr int UNIT_NX(int d, int v) { return d * (v - d) + 1; }
+  constexpr int UNIT_OFF = 8;
 #else
-#define UNIT_OFF		(4)
+  constexpr int UNIT_OFF = 4;
 #endif
 
-#ifndef	LL_BASE		
-#define	LL_BASE		32767	  /* limit for 64-bit BaseGetInt: cf. NF of */
-#endif			    /* 3198174 49 1723 74375 456882 1066058 1599087 */
+  constexpr int LL_BASE = 32767;    /* limit for 64-bit BaseGetInt */
+}
 
 typedef struct {int n; unsigned short x[Nint_XLong];}		UXLong;
 
