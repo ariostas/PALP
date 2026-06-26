@@ -7,9 +7,6 @@
 #define  SIMPLE_CTH	         (0)
 #define	 INCOMPLETE_SL_REDUCTION (0)
 #define  TEST_Aided_IP_CHECK     (0)
-#ifndef	 CEQ_Nmax	
-#define  CEQ_Nmax                EQUA_Nmax
-#endif
 
 #define  IMPROVE_SL_COORD	(0)	      /* 0=no  1=SL(old)  2=GL(new) */
 #define  IMPROVE_SL_REGCD	(0)

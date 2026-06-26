@@ -69,8 +69,10 @@ be considerably slowed down.
 #endif
 
 #ifndef			EQUA_Nmax			/* default setting */
-#define                 EQUA_Nmax       VERT_Nmax
+constexpr int EQUA_Nmax = VERT_Nmax;
 #endif
+
+constexpr int CEQ_Nmax = EQUA_Nmax;
 /*
 POINT_Nmax, VERT_Nmax and FACE_Nmax denote the maximal numbers of points,
 vertices and faces, respectively.

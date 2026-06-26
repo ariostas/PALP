@@ -9,10 +9,6 @@ namespace {
   constexpr bool SHOW_NEW_CEq = false;          /* (POLY_Dmax>12) tracks polytope analysis */
 }
 
-#ifndef	CEQ_Nmax	
-#define	CEQ_Nmax	EQUA_Nmax
-#endif
-
 /*  ======================================================================  */
 /*  ==========		     			  		==========  */
 /*  ==========	   I N C I D E N C E S (as bit patterns)	==========  */

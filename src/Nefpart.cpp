@@ -1,10 +1,6 @@
 #include <palp/Global.h>
 #include <palp/Nef.h>
 
-#ifndef CEQ_Nmax
-#define CEQ_Nmax       EQUA_Nmax  
-#endif
-
 /*   ===============	    Typedefs and Headers	===================  */
 
 int  GLZ_Make_Trian_NF(Long X[][VERT_Nmax], int *n, int *nv,
