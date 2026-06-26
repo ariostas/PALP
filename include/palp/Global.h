@@ -595,7 +595,7 @@ enhanced by V.
 */
 
 #else
-#define INCI_M2(x)      ((x).ui[0] % 2)
+constexpr int INCI_M2(const INCI &x) { return x.ui[0] % 2; }
 INCI INCI_AND(INCI x, INCI y);
 INCI INCI_OR(INCI x, INCI y);
 INCI INCI_XOR(INCI x, INCI y);
