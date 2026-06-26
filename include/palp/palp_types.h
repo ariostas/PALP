@@ -9,6 +9,5 @@
  * standard-library names or template parameters.
  */
 
-using Long  = long;
+using Long = long;
 using LLong = long long;
-

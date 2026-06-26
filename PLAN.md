@@ -13,6 +13,10 @@ separate phase after migration.
 - **One file per step**: each step converts a single `.c` file to `.cpp` (or
   a single cross-cutting concern). Verify with `cmake --build build && ctest`
   after each step.
+- **Run `clang-format` before every commit**: the project uses the default
+  LLVM style (via the `.clang-format` file at the repository root). Format all
+  changed C++ sources and headers with `clang-format -i` before staging, and
+  verify that `cmake --build` and `ctest` still pass afterwards.
 - **Commit after every step**: once verification passes, the changes for that
   step must be committed before moving on. Use a descriptive commit message
   (e.g., "Migrate Rat.c to Rat.cpp"). This keeps history reviewable and makes

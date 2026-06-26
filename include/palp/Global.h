@@ -1,22 +1,24 @@
 #pragma once
 
+#include <algorithm>
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <assert.h>
-#include <algorithm>
 
 namespace palp {
-  template <typename T, typename U>
-  constexpr auto min(T&& a, U&& b) -> decltype((a < b) ? std::forward<T>(a) : std::forward<U>(b)) {
-    return (a < b) ? std::forward<T>(a) : std::forward<U>(b);
-  }
-  template <typename T, typename U>
-  constexpr auto max(T&& a, U&& b) -> decltype((a > b) ? std::forward<T>(a) : std::forward<U>(b)) {
-    return (a > b) ? std::forward<T>(a) : std::forward<U>(b);
-  }
+template <typename T, typename U>
+constexpr auto min(T &&a, U &&b)
+    -> decltype((a < b) ? std::forward<T>(a) : std::forward<U>(b)) {
+  return (a < b) ? std::forward<T>(a) : std::forward<U>(b);
 }
+template <typename T, typename U>
+constexpr auto max(T &&a, U &&b)
+    -> decltype((a > b) ? std::forward<T>(a) : std::forward<U>(b)) {
+  return (a > b) ? std::forward<T>(a) : std::forward<U>(b);
+}
+} // namespace palp
 
 /*
 These are include files that should exist in your C library.
@@ -25,10 +27,10 @@ These are include files that should exist in your C library.
 /*  ============	basic choice of PARAMETERS	      ============  */
 
 #ifdef __cplusplus
-#  include "palp/palp_types.h"
+#include "palp/palp_types.h"
 #else
-#  define                Long            long
-#  define                LLong           long long
+#define Long long
+#define LLong long long
 #endif
 /*
 For reflexive polytopes in 4 or less dimensions, everything should work with
@@ -38,9 +40,9 @@ For higher dimensional or complicated non-reflexive polytopes it may be
 necessary to set even Long to 64 bits.
 */
 
-#ifndef POLY_Dmax       /* You can set POLY_Dmax at compilation:
-                           use -D POLY_Dmax=<value> in the C flags  */
-#define   		POLY_Dmax	6	/* max dim of polytope	    */
+#ifndef POLY_Dmax   /* You can set POLY_Dmax at compilation:                   \
+                       use -D POLY_Dmax=<value> in the C flags  */
+#define POLY_Dmax 6 /* max dim of polytope	    */
 #endif
 /*
 POLY_Dmax should be set to the dimension of the polytopes that are analysed.
@@ -48,27 +50,27 @@ While the programs still work if POLY_Dmax is set to a higher value, they may
 be considerably slowed down.
 */
 
-#if	(POLY_Dmax <= 3)
-#define   		POINT_Nmax	40	/* max number of points	    */
-#define   		VERT_Nmax	16	/* max number of vertices   */
-#define   		FACE_Nmax	30      /* max number of faces      */
-#define	                SYM_Nmax	88	/* cube: 2^D*D! plus extra  */
+#if (POLY_Dmax <= 3)
+#define POINT_Nmax 40 /* max number of points	    */
+#define VERT_Nmax 16  /* max number of vertices   */
+#define FACE_Nmax 30  /* max number of faces      */
+#define SYM_Nmax 88   /* cube: 2^D*D! plus extra  */
 
-#elif	(POLY_Dmax == 4)
-#define   		POINT_Nmax	700	/* max number of points	    */
-#define 		VERT_Nmax	64      /* max number of vertices   */
-#define   		FACE_Nmax	824	/* max number of faces      */
-#define	                SYM_Nmax	1200
+#elif (POLY_Dmax == 4)
+#define POINT_Nmax 700 /* max number of points	    */
+#define VERT_Nmax 64   /* max number of vertices   */
+#define FACE_Nmax 824  /* max number of faces      */
+#define SYM_Nmax 1200
 
 #else
-#define   		POINT_Nmax	2000000 
-#define   		VERT_Nmax	64	/* !! use optimal value !!  */
-#define   		FACE_Nmax	10000	/* max number of faces      */
-#define                 SYM_Nmax        46080   /* symmetry (P_1)^6: 2^6*6! */
-#define			EQUA_Nmax	1280    /* up to 20000 without alloc */
+#define POINT_Nmax 2000000
+#define VERT_Nmax 64    /* !! use optimal value !!  */
+#define FACE_Nmax 10000 /* max number of faces      */
+#define SYM_Nmax 46080  /* symmetry (P_1)^6: 2^6*6! */
+#define EQUA_Nmax 1280  /* up to 20000 without alloc */
 #endif
 
-#ifndef			EQUA_Nmax			/* default setting */
+#ifndef EQUA_Nmax /* default setting */
 constexpr int EQUA_Nmax = VERT_Nmax;
 #endif
 
@@ -89,27 +91,24 @@ Our settings for dimensions less than or equal to 4 are such that they work
 for any reflexive polytope.
 */
 
-#define                 AMBI_Dmax       (5 * POLY_Dmax)	/* default setting */
+#define AMBI_Dmax (5 * POLY_Dmax) /* default setting */
 /*
 If a polytope is determined by a combined weight system it is first realised
 by an embeddeding in an ambient space of dimension (Poly-dim + number of
 weight systems). AMBI_Dmax is the maximal dimension of this ambient space.
 */
 
-
-#define                 FIB_Nmax	3000 /*NOW: 27/5/11 default setting*/
+#define FIB_Nmax 3000 /*NOW: 27/5/11 default setting*/
 /*
-Given a polytope P* it is possible to analyze the IP simplices among its 
-points. These simplices are given in terms of weight relations among points 
+Given a polytope P* it is possible to analyze the IP simplices among its
+points. These simplices are given in terms of weight relations among points
 of P*. FIB_Nmax is the maximal number of allowed relations.
 */
 
-
-#define  CD2F_Nmax               FACE_Nmax
+#define CD2F_Nmax FACE_Nmax
 /*
 Max number of codimension 2 faces.
 */
-
 
 using GL_Long = Long;
 /*
@@ -128,37 +127,53 @@ Ascii-files for input and output. If not given in the parameter list they
 default to stdin and stdout, respectively.
 */
 
-
 /*  ==========         Global typedefs           		==========  */
 
-typedef struct {int n, np; Long x[POINT_Nmax][POLY_Dmax];}   PolyPointList;
+typedef struct {
+  int n, np;
+  Long x[POINT_Nmax][POLY_Dmax];
+} PolyPointList;
 /*
 A list (not necessarily complete) of lattice points of a polytope.
 P.x[i][j] is the j'th coordinate of the i'th lattice point.
 P.n is the dimension of the polytope and P.np the number of points in the list.
 */
 
-typedef struct {int v[VERT_Nmax]; int nv;}                   VertexNumList;
+typedef struct {
+  int v[VERT_Nmax];
+  int nv;
+} VertexNumList;
 /*
 The list of vertices of a polytope, referring to some PolyPointList P.
 The j'th coordinate of the i'th vertex is then given by P.x[V.v[i]][j].
 V.nv is the number of vertices of P.
 */
 
-typedef struct {Long a[POLY_Dmax], c;}                       Equation;
+typedef struct {
+  Long a[POLY_Dmax], c;
+} Equation;
 /*
 This structure determines an equation of the type ax+c=0, explicitly:
 sum_{i=1}^n E.a[i] x_i + E.c = 0.
 */
 
-typedef struct {int ne; Equation e[EQUA_Nmax];}			     EqList;
-typedef struct {int ne; Equation e[EQUA_Nmax];} CEqList;
+typedef struct {
+  int ne;
+  Equation e[EQUA_Nmax];
+} EqList;
+typedef struct {
+  int ne;
+  Equation e[EQUA_Nmax];
+} CEqList;
 /*
 A list of equations; EL.ne is the number of equations in the list.
 */
 
-typedef struct {EqList B; Long W[AMBI_Dmax][AMBI_Dmax], d[AMBI_Dmax]; 
-  int nw, N, z[POLY_Dmax][AMBI_Dmax], m[POLY_Dmax], nz, index;}       CWS;
+typedef struct {
+  EqList B;
+  Long W[AMBI_Dmax][AMBI_Dmax], d[AMBI_Dmax];
+  int nw, N, z[POLY_Dmax][AMBI_Dmax], m[POLY_Dmax], nz, index;
+} CWS;
 /*
 Combined weight system: W[i][j] and d[i] are the j'th weight and the "degree"
 of the i'th weight system, respectively; nw is the number of weight systems,
@@ -174,8 +189,9 @@ The matrix whose entries are the pairings av+c between the vertices v and
 the equations (a,c).
 */
 
-typedef struct {int mp, mv, np, nv, n, pic, cor, h22, h1[POLY_Dmax-1];}
-                                                                     BaHo;
+typedef struct {
+  int mp, mv, np, nv, n, pic, cor, h22, h1[POLY_Dmax - 1];
+} BaHo;
 /*
 This structure is related to Batyrev's formulas for Hodge numbers.
 n     ... dimension of the polytope
@@ -188,32 +204,33 @@ repectively.
 */
 
 typedef struct {
-  Long W[FIB_Nmax][VERT_Nmax]; 
-  int nw, PS, ZS, nv, f[VERT_Nmax],r[VERT_Nmax],nf,nz[FIB_Nmax], n0[FIB_Nmax],
-    Z[FIB_Nmax][VERT_Nmax], M[FIB_Nmax];
+  Long W[FIB_Nmax][VERT_Nmax];
+  int nw, PS, ZS, nv, f[VERT_Nmax], r[VERT_Nmax], nf, nz[FIB_Nmax],
+      n0[FIB_Nmax], Z[FIB_Nmax][VERT_Nmax], M[FIB_Nmax];
   GL_Long G[VERT_Nmax][POLY_Dmax][POLY_Dmax];
   PolyPointList *P;
-}                                                                     FibW;
+} FibW;
 /*
 This list is an extension of the PolyPointList with the combined weight system.
 W[i][j] is the j'th weight; nw is the number of weight systems.
 */
 
-typedef struct{
+typedef struct {
   long n_nonIP, n_IP_nonRef, n_ref, // numbers of WS of certain types
-    max_w, nr_max_w, //maximum weight in the reflexive/non-reflexive cases
-    nr_n_w[MAXLD], n_w[MAXLD]; //numbers of weights of given [ld]
-  int nr_max_mp, nr_max_mv, nr_max_nv, max_mp, max_mv, max_np, max_nv,
-    max_h22, max_h1[POLY_Dmax-1], //max values of certain entries of BH
-    min_chi, max_chi, max_nf[POLY_Dmax+1]; //range for chi, max facet numbers
-}                                                                     C5stats;
-/* 
+      max_w, nr_max_w, // maximum weight in the reflexive/non-reflexive cases
+      nr_n_w[MAXLD], n_w[MAXLD]; // numbers of weights of given [ld]
+  int nr_max_mp, nr_max_mv, nr_max_nv, max_mp, max_mv, max_np, max_nv, max_h22,
+      max_h1[POLY_Dmax - 1], // max values of certain entries of BH
+      min_chi, max_chi,
+      max_nf[POLY_Dmax + 1]; // range for chi, max facet numbers
+} C5stats;
+/*
 statistics on large lists of weight systems, cf. classification of 4fold weights
 */
 
 /*  ==========         I/O functions (from Coord.c)		==========  */
 
-int  Read_CWS_PP(CWS *C, PolyPointList *P);
+int Read_CWS_PP(CWS *C, PolyPointList *P);
 /*
 Reads either a CWS or a PolyPointList.
 If *C is read, the PolyPointList *P determined by *C is calculated, otherwise
@@ -227,18 +244,18 @@ either P->n = #columns and P->np = #lines or vice versa (the result is
 unique because of P->np > P->n).
 */
 
-int  Read_CWS(CWS *_CW, PolyPointList *_P);
+int Read_CWS(CWS *_CW, PolyPointList *_P);
 /*
  Reads CWS input *C, the PolyPointList *P determined by *C is calculated.
 */
 
-int  Read_PP(PolyPointList *_P);
-int  ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index);
-int  IsNextDigit(void);
+int Read_PP(PolyPointList *_P);
+int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index);
+int IsNextDigit(void);
 void Make_CWS_Points(CWS *_C, PolyPointList *_P);
 void Print_CWS_Zinfo(CWS *CW);
 void Sort_PPL(PolyPointList *_P, VertexNumList *_V);
-int  GLZ_Start_Simplex(PolyPointList *_P, VertexNumList *_V, CEqList *_C);
+int GLZ_Start_Simplex(PolyPointList *_P, VertexNumList *_V, CEqList *_C);
 /*
 Reads the PolyPointList input *P
 */
@@ -247,7 +264,7 @@ void Print_PPL(PolyPointList *P, const char *comment);
 void Print_VL(PolyPointList *P, VertexNumList *V, const char *comment);
 void Print_EL(EqList *EL, int *n, int suppress_c, const char *comment);
 void Print_Matrix(Long Matrix[][VERT_Nmax], int n_lines, int n_columns,
-		  const char *comment);
+                  const char *comment);
 /*
 Each of these routines prints a matrix in the format
 #columns #lines  *comment
@@ -296,17 +313,17 @@ Routines for handling the structure C5stats
 
 /*  ==========              From Polynf.c                        ========== */
 
-int  Make_Poly_Sym_NF(PolyPointList *P, VertexNumList *VNL, EqList *EL,
-		      int *SymNum, int V_perm[][VERT_Nmax],
-		      Long NF[POLY_Dmax][VERT_Nmax], int t, int S, int N);
+int Make_Poly_Sym_NF(PolyPointList *P, VertexNumList *VNL, EqList *EL,
+                     int *SymNum, int V_perm[][VERT_Nmax],
+                     Long NF[POLY_Dmax][VERT_Nmax], int t, int S, int N);
 void Poly_Sym(PolyPointList *_P, VertexNumList *_V, EqList *_F, int *sym_num,
               int V_perm[][VERT_Nmax]);
-int  GLZ_Make_Trian_NF(Long X[][VERT_Nmax], int *n, int *nv,
-                       GL_Long G[POLY_Dmax][POLY_Dmax]);
+int GLZ_Make_Trian_NF(Long X[][VERT_Nmax], int *n, int *nv,
+                      GL_Long G[POLY_Dmax][POLY_Dmax]);
 void SL2Z_Make_Poly_UTriang(PolyPointList *P);
 void IP_Fiber_Data(PolyPointList *PD, PolyPointList *AuxP, int nv,
-                   Long G[VERT_Nmax][POLY_Dmax][POLY_Dmax],
-                   int fd[VERT_Nmax], int *nf, int CD);
+                   Long G[VERT_Nmax][POLY_Dmax][POLY_Dmax], int fd[VERT_Nmax],
+                   int *nf, int CD);
 /*
 Given *P, *VNL and *EL, the following objects are determined:
 the number *SymNum of GL(n,Z)-symmetries of the polytope,
@@ -318,8 +335,8 @@ If t/S/N are non-zero, the output of the corresponding options of poly.x
 is displayed.
 */
 
-void IP_Simplex_Decomp(Long CM[][POLY_Dmax], int p, int d,
-        int *nw, Long W[][VERT_Nmax], int Wmax, int codim);
+void IP_Simplex_Decomp(Long CM[][POLY_Dmax], int p, int d, int *nw,
+                       Long W[][VERT_Nmax], int Wmax, int codim);
 /*
 Given the matrix CM of coordinates of p points in Z^d, the list W[i] of *nw
 weight systems corresponding to IP-simplices spanned by the points in CM is
@@ -336,16 +353,17 @@ Realizes the -P,-V,-Z, and fibration options of poly (the results of this
 routine are displayed as output; *P is not modified).
 */
 
-int  Sublattice_Basis(int d, int p, Long *P[],     /* return index=det(D) */
-	Long Z[][VERT_Nmax], Long *M, int *r, Long G[][POLY_Dmax], Long *D);
+int Sublattice_Basis(int d, int p, Long *P[], /* return index=det(D) */
+                     Long Z[][VERT_Nmax], Long *M, int *r, Long G[][POLY_Dmax],
+                     Long *D);
 /*
-Given a vector P[] of pointers at p points in N=Z^d that generate a 
+Given a vector P[] of pointers at p points in N=Z^d that generate a
 (sub)lattice N' of the same dimension d, the following data are determined:
-D[i] with 0 <= i < d  such that the lattice quotient N/N' is the product of 
-cyclic groups Z_{D[i]} with D[i] dividing D[i+1], and a GL(d,Z) matrix G 
-corresponding to a base change P->GxP such that the i'th new coordinate of 
+D[i] with 0 <= i < d  such that the lattice quotient N/N' is the product of
+cyclic groups Z_{D[i]} with D[i] dividing D[i+1], and a GL(d,Z) matrix G
+corresponding to a base change P->GxP such that the i'th new coordinate of
 each of the lattice points is divisible by D[i].
-If p<=VERT_Nmax the program also computes *r coefficient vectors Z[i] for 
+If p<=VERT_Nmax the program also computes *r coefficient vectors Z[i] for
 linear combinations of the points on P that are M[i]-fold multiples of
 primitive lattice vectors, where M[i]=D[d-i] for i<*r.
 If p>VERT_Nmax it is asserted that the index of the lattice quotient is 1.
@@ -357,8 +375,8 @@ A coordinate change is performed that makes the matrix P->x upper triangular,
 with minimal entries above the diagonal.
 */
 
-void Make_ANF(PolyPointList *P, VertexNumList *V, EqList*E, 
-	      Long ANF[][VERT_Nmax]);
+void Make_ANF(PolyPointList *P, VertexNumList *V, EqList *E,
+              Long ANF[][VERT_Nmax]);
 /*
 Given *P, *V and *E, the affine normal form ANF (i.e., a normal form
 that also works for non-reflexive polytopes), is computed.
@@ -372,22 +390,22 @@ If vol is not 0, the return value is 1 if all facets are unimoular
 */
 
 int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
-		 PolyPointList *dP, EqList *dE, int CYorFANO);
+                 PolyPointList *dP, EqList *dE, int CYorFANO);
 /*
 Realizes the -C1 or -C2 options of poly for CYorFANO being 1 or 2, respectively.
 */
 
-int  Fano5d(PolyPointList *, VertexNumList *, EqList *);
+int Fano5d(PolyPointList *, VertexNumList *, EqList *);
 /*
 Realizes the -U5 option of poly.
 */
 
-void Einstein_Metric(CWS *CW,PolyPointList *P,VertexNumList *V,EqList *E);
+void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E);
 /*
 Realizes the -E option of poly.
 */
 
-int  Divisibility_Index(PolyPointList *P, VertexNumList *V);
+int Divisibility_Index(PolyPointList *P, VertexNumList *V);
 /*
 Returns the largest integer g for which *P is a g-fold multiple of some
 other polytope.
@@ -395,19 +413,19 @@ other polytope.
 
 Long LatVol_Barycent(PolyPointList *P, VertexNumList *V, Long *B, Long *N);
 /*
-Given *P and *V, the coordinates of the barycenter of *P are computed (with 
+Given *P and *V, the coordinates of the barycenter of *P are computed (with
 the i'th coordinate as B[i] / *N) and the lattice volume of *P is returned.
 */
 
 void IPs_degD(PolyPointList *P, VertexNumList *V, EqList *E, int l);
 /*
- *P is interpreted as the origin and the first level of a Gorenstein cone. 
-The points of the cone up to level l are computed and displayed together with 
+ *P is interpreted as the origin and the first level of a Gorenstein cone.
+The points of the cone up to level l are computed and displayed together with
 information on the type of face of the cone they represent (option -B# of poly).
 */
 
-void Make_Facet(PolyPointList *P, VertexNumList *V, EqList *E, int e, 
-		Long vertices_of_facet[POLY_Dmax][VERT_Nmax], int *nv_of_facet);
+void Make_Facet(PolyPointList *P, VertexNumList *V, EqList *E, int e,
+                Long vertices_of_facet[POLY_Dmax][VERT_Nmax], int *nv_of_facet);
 /*
 The e'th facet of *P is determined as a (P->n-1)-dimensional polytope:
 *nv_of_facet vertices represented by vertices_of_facet.
@@ -415,7 +433,7 @@ The e'th facet of *P is determined as a (P->n-1)-dimensional polytope:
 
 /*  ==========     General purpose functions from Vertex.c   	==========  */
 
-void swap(int *i,int *j);
+void swap(int *i, int *j);
 /*
 Swaps *i and *j.
 */
@@ -430,13 +448,13 @@ Long Eval_Eq_on_V(Equation *E, Long *V, int n);
 Evaluates E on V, i.e. calculates \sum_{i=0}^{n-1} E->a[i] * V[i] + E->c.
 */
 
-int  Span_Check(EqList *EL, EqList *HL, int *n);
+int Span_Check(EqList *EL, EqList *HL, int *n);
 /*
 Returns 1 if every equation of *HL is contained in *EL and 0 otherwise.
 *n is the dimension.
 */
 
-int  Vec_Greater_Than(Long *X, Long *Y, int n);
+int Vec_Greater_Than(Long *X, Long *Y, int n);
 /*
 Returns 1 if *X > *Y in the sense that X[i] > Y[i] for the first i where
 X[i] and Y[i] differ, returns 0 if *X < *Y and gives an error message if
@@ -485,10 +503,9 @@ Transposes PM into DPM; returns 1 if the dimensions nv, ne are within their
 limits and 0 otherwise.
 */
 
-
 /*  ==========   Polytope analysis functions (from Vertex.c)    ==========  */
 
-int  Find_Equations(PolyPointList *P, VertexNumList *VNL, EqList *EL);
+int Find_Equations(PolyPointList *P, VertexNumList *VNL, EqList *EL);
 /*
 For the polytope determined by P, *VNL and *EL are calculated.
 *VNL is the complete list of vertices of P.
@@ -497,38 +514,37 @@ Find_Equations returns 1 if P has IP property (i.e., it has the
 origin in its interior) and 0 otherwise.
 */
 
-int  IP_Check(PolyPointList *P, VertexNumList *VNL, EqList *EL);
+int IP_Check(PolyPointList *P, VertexNumList *VNL, EqList *EL);
 /*
 Same as Find_Equations, but returns immediately without
 calculating *VNL and *EL if P does not have the IP property.
 */
 
-int  Ref_Check(PolyPointList *P, VertexNumList *VNL, EqList *EL);
+int Ref_Check(PolyPointList *P, VertexNumList *VNL, EqList *EL);
 /*
 Returns 1 if P is reflexive and 0 otherwise.
 Only in the reflexive case *VNL and *EL are calculated.
 */
 
 void Make_Dual_Poly(PolyPointList *P, VertexNumList *VNL, EqList *EL,
-		    PolyPointList *DP);
+                    PolyPointList *DP);
 /*
 Given P, VNL and EL for a reflexive polytope, the complete list *DP
 of lattice points of the dual polytope is determined.
 */
 
-void Complete_Poly(Long VPM[][VERT_Nmax],EqList *E,int nv,PolyPointList *P);
+void Complete_Poly(Long VPM[][VERT_Nmax], EqList *E, int nv, PolyPointList *P);
 /*
 Given the vertex pairing matrix VPM, the EqList *E and the number nv of
 vertices, the complete list of lattice points *P is determined.
 */
 
 void RC_Calc_BaHo(PolyPointList *P, VertexNumList *VNL, EqList *EL,
-		  PolyPointList *DP, BaHo *BH);
+                  PolyPointList *DP, BaHo *BH);
 /*
 Given *P, *VNL, *EL and *DP (points of dual polytope) as input, the elements
 of *BH are calculated. *P must be reflexive; *P and *DP must be complete.
 */
-
 
 /*  ======  typedefs and functions (from Vertex.c) related to INCIs  ====  */
 
@@ -542,12 +558,14 @@ considerably slowed down.
 */
 
 #if (VERT_Nmax <= INT_Nbits)
-typedef		        unsigned int            INCI;
+typedef unsigned int INCI;
 #elif (VERT_Nmax <= LONG_LONG_Nbits)
-typedef		        unsigned long long	INCI;
+typedef unsigned long long INCI;
 #else
-constexpr int I_NUI = ((VERT_Nmax-1)/INT_Nbits+1);
-typedef struct {unsigned int ui[I_NUI];}   INCI;
+constexpr int I_NUI = ((VERT_Nmax - 1) / INT_Nbits + 1);
+typedef struct {
+  unsigned int ui[I_NUI];
+} INCI;
 #endif
 /*
 An INCI encodes the incidence relations between a face and a list of
@@ -559,11 +577,13 @@ array of unsigned integers is used to simulate an integer type of the required
 size.
 */
 
-typedef struct {int nf[POLY_Dmax+1];			  /* #(faces)[dim]  */
- 	INCI v[POLY_Dmax+1][FACE_Nmax]; 		  /*  vertex info   */
- 	INCI f[POLY_Dmax+1][FACE_Nmax]; 		  /* V-on-dual info */
- 	Long nip[POLY_Dmax+1][FACE_Nmax];		   /* #IPs on face  */
- 	Long dip[POLY_Dmax+1][FACE_Nmax];} 	FaceInfo;  /* #IPs on dual  */
+typedef struct {
+  int nf[POLY_Dmax + 1];              /* #(faces)[dim]  */
+  INCI v[POLY_Dmax + 1][FACE_Nmax];   /*  vertex info   */
+  INCI f[POLY_Dmax + 1][FACE_Nmax];   /* V-on-dual info */
+  Long nip[POLY_Dmax + 1][FACE_Nmax]; /* #IPs on face  */
+  Long dip[POLY_Dmax + 1][FACE_Nmax];
+} FaceInfo; /* #IPs on dual  */
 /*
 nf[i] denotes the number of faces of dimension i
    (the number of faces of dimension n-i-1 of the dual polytope).
@@ -574,17 +594,31 @@ f[i][j] and dip[i][j] give the same informations for the dual (n-i-1
 */
 
 #if (VERT_Nmax <= LONG_LONG_Nbits)
-constexpr int INCI_M2(INCI x)     { return x % 2; }              /* value of first bit      */
-constexpr INCI INCI_AND(INCI x, INCI y)  { return x & y; }            /* bitwise logical and     */
-constexpr INCI INCI_OR(INCI x, INCI y)   { return x | y; }            /* bitwise logical or      */
-constexpr INCI INCI_XOR(INCI x, INCI y)  { return x ^ y; }            /* bitwise exclusive or    */
-constexpr bool INCI_EQ(INCI x, INCI y)   { return x == y; }           /* check on equality       */
-constexpr bool INCI_LE(INCI x, INCI y)   { return INCI_EQ(INCI_OR(x,y),y); }/* bitwise less or equal */
-constexpr bool INCI_EQ_0(INCI x)   { return INCI_EQ(x, INCI_0()); }    /* check if all bits = 0   */
-constexpr INCI INCI_0()       { return 0; }                    /* set all bits to 0       */
-constexpr INCI INCI_1()       { return 1; }                    /* set only first bit to 1 */
-constexpr INCI INCI_D2(INCI x)     { return x / 2; }              /* shift by one bit        */
-constexpr INCI INCI_PN(INCI x, Long y)   { return 2 * x + !(y); }       /* shift and set first bit */
+constexpr int INCI_M2(INCI x) { return x % 2; } /* value of first bit      */
+constexpr INCI INCI_AND(INCI x, INCI y) {
+  return x & y;
+} /* bitwise logical and     */
+constexpr INCI INCI_OR(INCI x, INCI y) {
+  return x | y;
+} /* bitwise logical or      */
+constexpr INCI INCI_XOR(INCI x, INCI y) {
+  return x ^ y;
+} /* bitwise exclusive or    */
+constexpr bool INCI_EQ(INCI x, INCI y) {
+  return x == y;
+} /* check on equality       */
+constexpr bool INCI_LE(INCI x, INCI y) {
+  return INCI_EQ(INCI_OR(x, y), y);
+} /* bitwise less or equal */
+constexpr bool INCI_EQ_0(INCI x) {
+  return INCI_EQ(x, INCI_0());
+} /* check if all bits = 0   */
+constexpr INCI INCI_0() { return 0; }            /* set all bits to 0       */
+constexpr INCI INCI_1() { return 1; }            /* set only first bit to 1 */
+constexpr INCI INCI_D2(INCI x) { return x / 2; } /* shift by one bit        */
+constexpr INCI INCI_PN(INCI x, Long y) {
+  return 2 * x + !(y);
+} /* shift and set first bit */
 /*
 For an INCI defined as a single unsigned (long long) integer whose bits are
 regarded as representing incidences, these are useful definitions.
@@ -599,9 +633,9 @@ constexpr int INCI_M2(const INCI &x) { return x.ui[0] % 2; }
 INCI INCI_AND(INCI x, INCI y);
 INCI INCI_OR(INCI x, INCI y);
 INCI INCI_XOR(INCI x, INCI y);
-int  INCI_EQ(INCI x, INCI y);
-int  INCI_LE(INCI x, INCI y);
-int  INCI_EQ_0(INCI x);
+int INCI_EQ(INCI x, INCI y);
+int INCI_LE(INCI x, INCI y);
+int INCI_EQ_0(INCI x);
 INCI INCI_0();
 INCI INCI_1();
 INCI INCI_D2(INCI x);
@@ -612,12 +646,12 @@ If we need more bits than can be represented by a single unsigned long long,
 these routines are designed to simulate the above definitions.
 */
 
-int  INCI_abs(INCI X);
+int INCI_abs(INCI X);
 /*
 Returns the number of bits of X whose value is 1.
 */
 
-int  Print_INCI(INCI X);
+int Print_INCI(INCI X);
 /*
 Prints X as a pattern of 0's and 1's, omitting the 0's after the last 1.
 */
@@ -638,40 +672,36 @@ void Print_FaceInfo(int n, FaceInfo *FI);
 Displays the information contained in the FaceInfo *FI.
 */
 
-int  QuickAnalysis(PolyPointList *_P, BaHo *_BH, FaceInfo *_FI);
+int QuickAnalysis(PolyPointList *_P, BaHo *_BH, FaceInfo *_FI);
 /*
 Fast computation of FaceInfo and Hodge numbers.
 */
 
-
-
 /* ====== Functions used across modules but defined in leaf files ====== */
 
 Long CompareEq(Equation *X, Equation *Y, int n);
-int  IsGoodCEq(Equation *_E, PolyPointList *_P, VertexNumList *_V);
-int  Finish_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F,
-                     CEqList *_CEq, INCI *F_I, INCI *CEq_I);
+int IsGoodCEq(Equation *_E, PolyPointList *_P, VertexNumList *_V);
+int Finish_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F,
+                    CEqList *_CEq, INCI *F_I, INCI *CEq_I);
 void Make_FaceIPs(PolyPointList *_P, VertexNumList *_V, EqList *_E,
                   PolyPointList *_DP, FaceInfo *_I);
 void Eval_BaHo(FaceInfo *_I, BaHo *_BH);
 void QuotZ_2_SublatG(Long Z[][VERT_Nmax], int *zm, Long *M, int *d,
                      Long G[][POLY_Dmax]);
-int  Improve_Coords(PolyPointList *_P, VertexNumList *_V);
+int Improve_Coords(PolyPointList *_P, VertexNumList *_V);
 Long V_to_G_GI(Long *V, int d, Long G[][POLY_Dmax], Long GI[][POLY_Dmax]);
-int  Make_Poly_NF(PolyPointList *_P, VertexNumList *_V, EqList *_E,
-                  Long pNF[POLY_Dmax][VERT_Nmax]);
-int  Init_rVM_VPM(PolyPointList *P, VertexNumList *_V, EqList *_F,
-                  int *d, int *v, int *f,
-                  Long VM[POLY_Dmax][VERT_Nmax],
-                  Long VPM[VERT_Nmax][VERT_Nmax]);
+int Make_Poly_NF(PolyPointList *_P, VertexNumList *_V, EqList *_E,
+                 Long pNF[POLY_Dmax][VERT_Nmax]);
+int Init_rVM_VPM(PolyPointList *P, VertexNumList *_V, EqList *_F, int *d,
+                 int *v, int *f, Long VM[POLY_Dmax][VERT_Nmax],
+                 Long VPM[VERT_Nmax][VERT_Nmax]);
 void Eval_Poly_NF(int *d, int *v, int *f, Long VM[POLY_Dmax][VERT_Nmax],
                   Long VPM[VERT_Nmax][VERT_Nmax],
                   Long pNF[POLY_Dmax][VERT_Nmax], int t);
-int  Make_Lattice_Basis(int d, int p, Long *P[POLY_Dmax],
-                        Long G[][POLY_Dmax], Long *D);
-int  Remove_Identical_Points(PolyPointList *P);
-int  Init_Multiloop(int *N, int *I, int *j, int *J);
-int  Multiloop(int *N,int *I,int *j,int *J);
+int Make_Lattice_Basis(int d, int p, Long *P[POLY_Dmax], Long G[][POLY_Dmax],
+                       Long *D);
+int Remove_Identical_Points(PolyPointList *P);
+int Init_Multiloop(int *N, int *I, int *j, int *J);
+int Multiloop(int *N, int *I, int *j, int *J);
 Long Poly_Point_Count(PolyPointList *P, VertexNumList *V, EqList *E);
-int  VP_2_CWS(Long *V[], int d, int v, CWS *W);
-
+int VP_2_CWS(Long *V[], int d, int v, CWS *W);

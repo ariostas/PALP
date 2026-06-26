@@ -1,49 +1,94 @@
 #include <palp/Global.h>
 #include <palp/Rat.h>
 
-Rat  rI(Long a) 			       		      /*  a -> a/1  */
-{    Rat c; c.N=a; c.D=1; return c; 
+Rat rI(Long a) /*  a -> a/1  */
+{
+  Rat c;
+  c.N = a;
+  c.D = 1;
+  return c;
 }
-Rat  rR(Long a, Long b)					    /* (a,b) -> a/b */
-{    Rat c; Long g=Fgcd(a,b); 
-     if( (c.D=(b/g)) < 0 ) {c.D=-c.D; c.N=-a/g;} else c.N=a/g; return c;
-} 
-Rat  irP(Long i, Rat c)					   /* (int) * (Rat) */
-{    Long g=Fgcd(i,c.D); if(g < 0) g=-g; 
-     c.N *= (i/g); c.D/=g; return c;
-} 
-Rat  rS(Rat a, Rat b)                                            /*  a + b  */
-{    Rat c; Long g=Fgcd(a.D,b.D); 
-     g = Fgcd(c.N=a.N*(b.D/g)+b.N*(a.D/g), c.D=a.D*(b.D/g));
-     if(g < 0) g=-g;
-     c.N/=g; c.D/=g; /* LONG in line above ... */return c;
+Rat rR(Long a, Long b) /* (a,b) -> a/b */
+{
+  Rat c;
+  Long g = Fgcd(a, b);
+  if ((c.D = (b / g)) < 0) {
+    c.D = -c.D;
+    c.N = -a / g;
+  } else
+    c.N = a / g;
+  return c;
 }
-Rat  rD(Rat a, Rat b)                                            /*  a - b  */
-{    Rat c; Long g=Fgcd(a.D,b.D); 
-     g = Fgcd(c.N=a.N*(b.D/g)-b.N*(a.D/g), c.D=a.D*(b.D/g));
-     if(g < 0) g=-g;
-     c.N/=g; c.D/=g; /* LONG in line above ... */return c;
+Rat irP(Long i, Rat c) /* (int) * (Rat) */
+{
+  Long g = Fgcd(i, c.D);
+  if (g < 0)
+    g = -g;
+  c.N *= (i / g);
+  c.D /= g;
+  return c;
 }
-Rat  rP(Rat a, Rat b)                                            /*  a * b  */
-{    Long g=Fgcd(a.N,b.D); Long h=Fgcd(b.N,a.D);
-     Rat c; c.N=(a.N/g)*(b.N/h); 
-     if((c.D=(a.D/h)*(b.D/g)) < 0) {c.D=-c.D; c.N=-c.N;} return c;
+Rat rS(Rat a, Rat b) /*  a + b  */
+{
+  Rat c;
+  Long g = Fgcd(a.D, b.D);
+  g = Fgcd(c.N = a.N * (b.D / g) + b.N * (a.D / g), c.D = a.D * (b.D / g));
+  if (g < 0)
+    g = -g;
+  c.N /= g;
+  c.D /= g; /* LONG in line above ... */
+  return c;
 }
-Rat  rQ(Rat a, Rat b)                                            /*  a / b  */
-{    Long g=NNgcd(a.N,b.N); Long h=Fgcd(b.D,a.D);
-     Rat c; c.N=(a.N/g)*(b.D/h);
-     if((c.D=(a.D/h)*(b.N/g)) < 0) {c.N=-c.N; c.D=-c.D;} return c;
+Rat rD(Rat a, Rat b) /*  a - b  */
+{
+  Rat c;
+  Long g = Fgcd(a.D, b.D);
+  g = Fgcd(c.N = a.N * (b.D / g) - b.N * (a.D / g), c.D = a.D * (b.D / g));
+  if (g < 0)
+    g = -g;
+  c.N /= g;
+  c.D /= g; /* LONG in line above ... */
+  return c;
 }
-int  rC(Rat a, Rat b)          /* Compare = [1 / 0 / -1] iff a [gt/eq/lt] b */
-{    Long g=Fgcd(a.D,b.D);
-     if((g=a.N*(b.D/g)-b.N*(a.D/g))) {if(g>0) return 1; else return -1;} 
-     else return 0;
+Rat rP(Rat a, Rat b) /*  a * b  */
+{
+  Long g = Fgcd(a.N, b.D);
+  Long h = Fgcd(b.N, a.D);
+  Rat c;
+  c.N = (a.N / g) * (b.N / h);
+  if ((c.D = (a.D / h) * (b.D / g)) < 0) {
+    c.D = -c.D;
+    c.N = -c.N;
+  }
+  return c;
 }
-void Rpr(Rat c)					/* write "c.N/c.D" -> outFN */
-{    fprintf(outFILE,"%d/%d",(int) c.N, (int) c.D);
+Rat rQ(Rat a, Rat b) /*  a / b  */
+{
+  Long g = NNgcd(a.N, b.N);
+  Long h = Fgcd(b.D, a.D);
+  Rat c;
+  c.N = (a.N / g) * (b.D / h);
+  if ((c.D = (a.D / h) * (b.N / g)) < 0) {
+    c.N = -c.N;
+    c.D = -c.D;
+  }
+  return c;
+}
+int rC(Rat a, Rat b) /* Compare = [1 / 0 / -1] iff a [gt/eq/lt] b */
+{
+  Long g = Fgcd(a.D, b.D);
+  if ((g = a.N * (b.D / g) - b.N * (a.D / g))) {
+    if (g > 0)
+      return 1;
+    else
+      return -1;
+  } else
+    return 0;
+}
+void Rpr(Rat c) /* write "c.N/c.D" -> outFN */
+{
+  fprintf(outFILE, "%d/%d", (int)c.N, (int)c.D);
 } /*  ==========  	  END of Rational Operations		==========  */
-
-
 
 /*  ==========		(Extended) Greatest Common Divisor	 =========  */
 /*
@@ -53,42 +98,61 @@ void Rpr(Rat c)					/* write "c.N/c.D" -> outFN */
  *	Egcd()  computes the EGCD for two integers
  *	REgcd() recursively computes the EGCD for a number of integers
  */
-Long Fgcd(Long a, Long b)     /* Fast greatest common div */
+Long Fgcd(Long a, Long b) /* Fast greatest common div */
 {
-     while( a %= b ) if ( !(b %= a) ) return a;
-     return  b;
+  while (a %= b)
+    if (!(b %= a))
+      return a;
+  return b;
 }
-Long NNgcd(Long a, Long b)  /* NonNegative gcd handling 0 */
+Long NNgcd(Long a, Long b) /* NonNegative gcd handling 0 */
 {
-     a = (a<0) ? -a:a; b = (b<0) ? -b:b; if (!b) return a;
-     while( a %= b ) if ( !(b %= a) ) return a;
-     return  b;
+  a = (a < 0) ? -a : a;
+  b = (b < 0) ? -b : b;
+  if (!b)
+    return a;
+  while (a %= b)
+    if (!(b %= a))
+      return a;
+  return b;
 }
-/*  ==========	Egcd(a,b,*x,*y)=a *x+b *y;  REgcd(Vin, *dim, Vout) = Vin.Vout; 
- *   
- *   a_i+1=a_i-1 % a_i, a_I+1==0  =>  egcd(a_0,a_1)=a_I;    Vout={x_I,y_I} 
- *   a_i==x_ia_0+y_ia_1a_i+1 and a_i+1=a_i-1 -(a_i-1 /a_i)a_i => 
+/*  ==========	Egcd(a,b,*x,*y)=a *x+b *y;  REgcd(Vin, *dim, Vout) = Vin.Vout;
+ *
+ *   a_i+1=a_i-1 % a_i, a_I+1==0  =>  egcd(a_0,a_1)=a_I;    Vout={x_I,y_I}
+ *   a_i==x_ia_0+y_ia_1a_i+1 and a_i+1=a_i-1 -(a_i-1 /a_i)a_i =>
  *   x_i+1=x_i-1 -(a_i-1 /a_i)x_i with x_0=1; x_1=0;  y_I=(a_I-a_0 x_I)/a_1
  *									    */
-Long Egcd(Long A0, Long A1, Long *Vout0, Long *Vout1)  
-{    Long V0=A0, V1=A1, A2, X0=1, X1=0, X2=0;
-     while((A2 = A0 % A1)) { X2=X0-X1*(A0/A1); A0=A1; A1=A2; X0=X1; X1=X2; }
-     *Vout0=X1, *Vout1=(A1-(V0) * X1)/ (V1); return A1;
+Long Egcd(Long A0, Long A1, Long *Vout0, Long *Vout1) {
+  Long V0 = A0, V1 = A1, A2, X0 = 1, X1 = 0, X2 = 0;
+  while ((A2 = A0 % A1)) {
+    X2 = X0 - X1 * (A0 / A1);
+    A0 = A1;
+    A1 = A2;
+    X0 = X1;
+    X1 = X2;
+  }
+  *Vout0 = X1, *Vout1 = (A1 - (V0)*X1) / (V1);
+  return A1;
 }
-/*   
+/*
  *   g = v0 x0 + ... + v(n-1) x(n-1),	G= A g+ B vn	=>
- *   G = v0 x0 + ... + vn xn		with xn=B, xi*=A, 
+ *   G = v0 x0 + ... + vn xn		with xn=B, xi*=A,
  *									    */
-Long REgcd(Long *Vin, int *_n, Long *Vout)  /*  recursive Egcd(a_1,...,a_n)  */
-{    Long Ain[2], Aout[2], gcd; int N=*_n-1, i;
-     if (*_n==2) return Egcd(*Vin,(Vin[1]),Vout,&(Vout[1]));
-     *Ain=REgcd(Vin,&N,Vout); Ain[1]=Vin[N]; 	gcd=
-	Egcd(*Ain,(Ain[1]),Aout,&(Aout[1]));	Vout[N]=Aout[1]; 
-     for(i=0; i<N; i++) Vout[i] *= (*Aout);
-     return gcd;
+Long REgcd(Long *Vin, int *_n, Long *Vout) /*  recursive Egcd(a_1,...,a_n)  */
+{
+  Long Ain[2], Aout[2], gcd;
+  int N = *_n - 1, i;
+  if (*_n == 2)
+    return Egcd(*Vin, (Vin[1]), Vout, &(Vout[1]));
+  *Ain = REgcd(Vin, &N, Vout);
+  Ain[1] = Vin[N];
+  gcd = Egcd(*Ain, (Ain[1]), Aout, &(Aout[1]));
+  Vout[N] = Aout[1];
+  for (i = 0; i < N; i++)
+    Vout[i] *= (*Aout);
+  return gcd;
 }
 /*  ==========	   END of (Extended) Greatest Common Divisor	 =========  */
-
 
 /*  ==========	 GLZ-matrix=(Egcd, B_1, B_2, ...) E.W=g, B.W=0	 =========  */
 /*
@@ -96,93 +160,179 @@ Long REgcd(Long *Vin, int *_n, Long *Vout)  /*  recursive Egcd(a_1,...,a_n)  */
  *   their diagonal entries are positive if all W[i] are positive.	    *
  *   GLZ has to be an initialized list of pointers. 	 returns gcd(W_i)   *
  *									    */
-Long FloorQ(Long N,Long D)				/*  F <= N/D < F+1  */
-{    Long F; if(D<0) {D=-D; N=-N;} F=N/D; return (F*D>N) ? F-1 : F; 
+Long FloorQ(Long N, Long D) /*  F <= N/D < F+1  */
+{
+  Long F;
+  if (D < 0) {
+    D = -D;
+    N = -N;
+  }
+  F = N / D;
+  return (F * D > N) ? F - 1 : F;
 }
-Long CeilQ(Long N,Long D) { return -FloorQ(-N,D); }
-Long RoundQ(Long N,Long D)
-{    Long F; if(D<0) {D=-D; N=-N;} F=N/D; return F+(2*(N-F*D))/D; 
+Long CeilQ(Long N, Long D) { return -FloorQ(-N, D); }
+Long RoundQ(Long N, Long D) {
+  Long F;
+  if (D < 0) {
+    D = -D;
+    N = -N;
+  }
+  F = N / D;
+  return F + (2 * (N - F * D)) / D;
 }
-Long W_to_GLZ(Long *W, int *d, Long **GLZ)		
-{    int i, j; Long G, *E=*GLZ, *B=GLZ[1]; for(i=0;i<*d;i++) assert(W[i]!=0);
-     for(i=1;i<*d;i++)for(j=0;j<*d;j++)GLZ[i][j]=0;
-     G=Egcd(W[0],W[1],&E[0],&E[1]); B[0]=-W[1]/G; B[1]=W[0]/G;
-     for(i=2;i<*d;i++)                   
-     {  Long a, b, g=Egcd(G,W[i],&a,&b); B=GLZ[i];
-        B[i]= G/g; G=W[i]/g; for(j=0;j<i;j++) B[j]=-E[j]*G;  /* B=Base-Line */
-        for(j=0;j<i;j++) E[j]*=a;
-	E[j]=b;                     /* next Egcd */
-        for(j=i-1;0<j;j--)                         /* I M P R O V E M E N T */
-	{   int n; Long *Y=GLZ[j], rB=RoundQ(B[j],Y[j]), rE=RoundQ(E[j],Y[j]);
-	/*  rB=CeilQ(B[j],Y[j]), rE=CeilQ(E[j],Y[j]);			*/
-	/*  printf(" [%d/%d -> %d] ",(int)B[j],(int)Y[j],(int)rB);
-	    printf(" [%d/%d -> %d] ",(int)E[j],(int)Y[j],(int)rE); 	*/
-            for(n=0;n<=j;n++) { B[n] -= rB*Y[n]; E[n] -= rE*Y[n]; } 
-	}   G=g;
-     } 
-     return G;
+Long W_to_GLZ(Long *W, int *d, Long **GLZ) {
+  int i, j;
+  Long G, *E = *GLZ, *B = GLZ[1];
+  for (i = 0; i < *d; i++)
+    assert(W[i] != 0);
+  for (i = 1; i < *d; i++)
+    for (j = 0; j < *d; j++)
+      GLZ[i][j] = 0;
+  G = Egcd(W[0], W[1], &E[0], &E[1]);
+  B[0] = -W[1] / G;
+  B[1] = W[0] / G;
+  for (i = 2; i < *d; i++) {
+    Long a, b, g = Egcd(G, W[i], &a, &b);
+    B = GLZ[i];
+    B[i] = G / g;
+    G = W[i] / g;
+    for (j = 0; j < i; j++)
+      B[j] = -E[j] * G; /* B=Base-Line */
+    for (j = 0; j < i; j++)
+      E[j] *= a;
+    E[j] = b;                   /* next Egcd */
+    for (j = i - 1; 0 < j; j--) /* I M P R O V E M E N T */
+    {
+      int n;
+      Long *Y = GLZ[j], rB = RoundQ(B[j], Y[j]), rE = RoundQ(E[j], Y[j]);
+      /*  rB=CeilQ(B[j],Y[j]), rE=CeilQ(E[j],Y[j]);			*/
+      /*  printf(" [%d/%d -> %d] ",(int)B[j],(int)Y[j],(int)rB);
+          printf(" [%d/%d -> %d] ",(int)E[j],(int)Y[j],(int)rE); 	*/
+      for (n = 0; n <= j; n++) {
+        B[n] -= rB * Y[n];
+        E[n] -= rE * Y[n];
+      }
+    }
+    G = g;
+  }
+  return G;
 }
 /*   Map Permutations: Do "ArgFun" for all permutations pi of *d elements */
-void Map_Permut(int *d, int *pi, int *pinv, ARG_FUN ArgFun, void *AuxPtr)
-{    int i, j, n_rem_perm, n_perm=1, a, b, perm_j;
-     for (i=1;i<=*d;i++) n_perm*=i;
-     for (i=0;i<n_perm;i++)
-     {	b=i; n_rem_perm=n_perm; for (j=0;j<*d;j++) pinv[j]=-1;
-	for (j=*d;j>0;j--)
-	{   n_rem_perm/=j; a=b/n_rem_perm; b=b%n_rem_perm; perm_j=*d;
-	    while (a>=0) { perm_j--; if (pinv[perm_j]<0) a--;}
-	    pi[j-1]=perm_j; pinv[perm_j]=j-1;
-	}   (ArgFun)(d,pi,pinv,AuxPtr);
-     }
+void Map_Permut(int *d, int *pi, int *pinv, ARG_FUN ArgFun, void *AuxPtr) {
+  int i, j, n_rem_perm, n_perm = 1, a, b, perm_j;
+  for (i = 1; i <= *d; i++)
+    n_perm *= i;
+  for (i = 0; i < n_perm; i++) {
+    b = i;
+    n_rem_perm = n_perm;
+    for (j = 0; j < *d; j++)
+      pinv[j] = -1;
+    for (j = *d; j > 0; j--) {
+      n_rem_perm /= j;
+      a = b / n_rem_perm;
+      b = b % n_rem_perm;
+      perm_j = *d;
+      while (a >= 0) {
+        perm_j--;
+        if (pinv[perm_j] < 0)
+          a--;
+      }
+      pi[j - 1] = perm_j;
+      pinv[perm_j] = j - 1;
+    }
+    (ArgFun)(d, pi, pinv, AuxPtr);
+  }
 }
 /*  ==========	   END of GLZ-matrix=(Egcd, B_1, B_2, ...)	 =========  */
 
-
-
-
-LRat  LrI(LLong a) 			       		      /*  a -> a/1  */
-{    LRat c; c.N=a; c.D=1; return c; 
+LRat LrI(LLong a) /*  a -> a/1  */
+{
+  LRat c;
+  c.N = a;
+  c.D = 1;
+  return c;
 }
-LRat  LrR(LLong a, LLong b)					    /* (a,b) -> a/b */
-{    LRat c; LLong g=LFgcd(a,b); 
-     if( (c.D=(b/g)) < 0 ) {c.D=-c.D; c.N=-a/g;} else c.N=a/g; return c;
-} 
-LRat  LirP(LLong i, LRat c)					   /* (int) * (LRat) */
-{    LLong g=LFgcd(i,c.D); if(g < 0) g=-g; 
-     c.N *= (i/g); c.D/=g; return c;
-} 
-LRat  LrS(LRat a, LRat b)                                            /*  a + b  */
-{    LRat c; LLong g=LFgcd(a.D,b.D); 
-     g = LFgcd(c.N=a.N*(b.D/g)+b.N*(a.D/g), c.D=a.D*(b.D/g));
-     if(g < 0) g=-g;
-     c.N/=g; c.D/=g; /* LLong in line above ... */return c;
+LRat LrR(LLong a, LLong b) /* (a,b) -> a/b */
+{
+  LRat c;
+  LLong g = LFgcd(a, b);
+  if ((c.D = (b / g)) < 0) {
+    c.D = -c.D;
+    c.N = -a / g;
+  } else
+    c.N = a / g;
+  return c;
 }
-LRat  LrD(LRat a, LRat b)                                            /*  a - b  */
-{    LRat c; LLong g=LFgcd(a.D,b.D); 
-     g = LFgcd(c.N=a.N*(b.D/g)-b.N*(a.D/g), c.D=a.D*(b.D/g));
-     if(g < 0) g=-g;
-     c.N/=g; c.D/=g; /* LLong in line above ... */return c;
+LRat LirP(LLong i, LRat c) /* (int) * (LRat) */
+{
+  LLong g = LFgcd(i, c.D);
+  if (g < 0)
+    g = -g;
+  c.N *= (i / g);
+  c.D /= g;
+  return c;
 }
-LRat  LrP(LRat a, LRat b)                                            /*  a * b  */
-{    LLong g=LFgcd(a.N,b.D); LLong h=LFgcd(b.N,a.D);
-     LRat c; c.N=(a.N/g)*(b.N/h); 
-     if((c.D=(a.D/h)*(b.D/g)) < 0) {c.D=-c.D; c.N=-c.N;} return c;
+LRat LrS(LRat a, LRat b) /*  a + b  */
+{
+  LRat c;
+  LLong g = LFgcd(a.D, b.D);
+  g = LFgcd(c.N = a.N * (b.D / g) + b.N * (a.D / g), c.D = a.D * (b.D / g));
+  if (g < 0)
+    g = -g;
+  c.N /= g;
+  c.D /= g; /* LLong in line above ... */
+  return c;
 }
-LRat  LrQ(LRat a, LRat b)                                            /*  a / b  */
-{    LLong g=LNNgcd(a.N,b.N); LLong h=LFgcd(b.D,a.D);
-     LRat c; c.N=(a.N/g)*(b.D/h);
-     if((c.D=(a.D/h)*(b.N/g)) < 0) {c.N=-c.N; c.D=-c.D;} return c;
+LRat LrD(LRat a, LRat b) /*  a - b  */
+{
+  LRat c;
+  LLong g = LFgcd(a.D, b.D);
+  g = LFgcd(c.N = a.N * (b.D / g) - b.N * (a.D / g), c.D = a.D * (b.D / g));
+  if (g < 0)
+    g = -g;
+  c.N /= g;
+  c.D /= g; /* LLong in line above ... */
+  return c;
 }
-int  LrC(LRat a, LRat b)          /* Compare = [1 / 0 / -1] iff a [gt/eq/lt] b */
-{    LLong g=LFgcd(a.D,b.D);
-     if((g=a.N*(b.D/g)-b.N*(a.D/g))) {if(g>0) return 1; else return -1;} 
-     else return 0;
+LRat LrP(LRat a, LRat b) /*  a * b  */
+{
+  LLong g = LFgcd(a.N, b.D);
+  LLong h = LFgcd(b.N, a.D);
+  LRat c;
+  c.N = (a.N / g) * (b.N / h);
+  if ((c.D = (a.D / h) * (b.D / g)) < 0) {
+    c.D = -c.D;
+    c.N = -c.N;
+  }
+  return c;
 }
-void LRpr(LRat c)					/* write "c.N/c.D" -> outFN */
-{    fprintf(outFILE,"%lld/%lld",(LLong) c.N, (LLong) c.D);
+LRat LrQ(LRat a, LRat b) /*  a / b  */
+{
+  LLong g = LNNgcd(a.N, b.N);
+  LLong h = LFgcd(b.D, a.D);
+  LRat c;
+  c.N = (a.N / g) * (b.D / h);
+  if ((c.D = (a.D / h) * (b.N / g)) < 0) {
+    c.N = -c.N;
+    c.D = -c.D;
+  }
+  return c;
+}
+int LrC(LRat a, LRat b) /* Compare = [1 / 0 / -1] iff a [gt/eq/lt] b */
+{
+  LLong g = LFgcd(a.D, b.D);
+  if ((g = a.N * (b.D / g) - b.N * (a.D / g))) {
+    if (g > 0)
+      return 1;
+    else
+      return -1;
+  } else
+    return 0;
+}
+void LRpr(LRat c) /* write "c.N/c.D" -> outFN */
+{
+  fprintf(outFILE, "%lld/%lld", (LLong)c.N, (LLong)c.D);
 } /*  ==========  	  END of LRational OpeLRations		==========  */
-
-
 
 /*  ==========		(Extended) Greatest Common Divisor	 =========  */
 /*
@@ -192,38 +342,59 @@ void LRpr(LRat c)					/* write "c.N/c.D" -> outFN */
  *	LEgcd()  computes the LEgcd for two integers
  *	LREgcd() recursively computes the LEgcd for a number of integers
  */
-LLong LFgcd(LLong a, LLong b)     /* Fast greatest common div */
+LLong LFgcd(LLong a, LLong b) /* Fast greatest common div */
 {
-     while( a %= b ) if ( !(b %= a) ) return a;
-     return  b;
+  while (a %= b)
+    if (!(b %= a))
+      return a;
+  return b;
 }
-LLong LNNgcd(LLong a, LLong b)  /* NonNegative gcd handling 0 */
+LLong LNNgcd(LLong a, LLong b) /* NonNegative gcd handling 0 */
 {
-     a = (a<0) ? -a:a; b = (b<0) ? -b:b; if (!b) return a;
-     while( a %= b ) if ( !(b %= a) ) return a;
-     return  b;
+  a = (a < 0) ? -a : a;
+  b = (b < 0) ? -b : b;
+  if (!b)
+    return a;
+  while (a %= b)
+    if (!(b %= a))
+      return a;
+  return b;
 }
 /*  ==========	LEgcd(a,b,*x,*y)=a *x+b *y; LREgcd(Vin, *dim, Vout) = Vin.Vout;
- *   
- *   a_i+1=a_i-1 % a_i, a_I+1==0  =>  LEgcd(a_0,a_1)=a_I;    Vout={x_I,y_I} 
- *   a_i==x_ia_0+y_ia_1a_i+1 and a_i+1=a_i-1 -(a_i-1 /a_i)a_i => 
+ *
+ *   a_i+1=a_i-1 % a_i, a_I+1==0  =>  LEgcd(a_0,a_1)=a_I;    Vout={x_I,y_I}
+ *   a_i==x_ia_0+y_ia_1a_i+1 and a_i+1=a_i-1 -(a_i-1 /a_i)a_i =>
  *   x_i+1=x_i-1 -(a_i-1 /a_i)x_i with x_0=1; x_1=0;  y_I=(a_I-a_0 x_I)/a_1
  *									    */
-LLong LEgcd(LLong A0, LLong A1, LLong *Vout0, LLong *Vout1)  
-{    LLong V0=A0, V1=A1, A2, X0=1, X1=0, X2=0;
-     while((A2 = A0 % A1)) { X2=X0-X1*(A0/A1); A0=A1; A1=A2; X0=X1; X1=X2; }
-     *Vout0=X1, *Vout1=(A1-(V0) * X1)/ (V1); return A1;
+LLong LEgcd(LLong A0, LLong A1, LLong *Vout0, LLong *Vout1) {
+  LLong V0 = A0, V1 = A1, A2, X0 = 1, X1 = 0, X2 = 0;
+  while ((A2 = A0 % A1)) {
+    X2 = X0 - X1 * (A0 / A1);
+    A0 = A1;
+    A1 = A2;
+    X0 = X1;
+    X1 = X2;
+  }
+  *Vout0 = X1, *Vout1 = (A1 - (V0)*X1) / (V1);
+  return A1;
 }
-/*   
+/*
  *   g = v0 x0 + ... + v(n-1) x(n-1),	G= A g+ B vn	=>
- *   G = v0 x0 + ... + vn xn		with xn=B, xi*=A, 
+ *   G = v0 x0 + ... + vn xn		with xn=B, xi*=A,
  *									    */
-LLong LREgcd(LLong *Vin, int *_n, LLong *Vout)  /*  recursive LEgcd(a_1,...,a_n)  */
-{    LLong Ain[2], Aout[2], gcd; int N=*_n-1, i;
-     if (*_n==2) return LEgcd(*Vin,(Vin[1]),Vout,&(Vout[1]));
-     *Ain=LREgcd(Vin,&N,Vout); Ain[1]=Vin[N]; 	gcd=
-	LEgcd(*Ain,(Ain[1]),Aout,&(Aout[1]));	Vout[N]=Aout[1]; 
-     for(i=0; i<N; i++) Vout[i] *= (*Aout);
-     return gcd;
+LLong LREgcd(LLong *Vin, int *_n,
+             LLong *Vout) /*  recursive LEgcd(a_1,...,a_n)  */
+{
+  LLong Ain[2], Aout[2], gcd;
+  int N = *_n - 1, i;
+  if (*_n == 2)
+    return LEgcd(*Vin, (Vin[1]), Vout, &(Vout[1]));
+  *Ain = LREgcd(Vin, &N, Vout);
+  Ain[1] = Vin[N];
+  gcd = LEgcd(*Ain, (Ain[1]), Aout, &(Aout[1]));
+  Vout[N] = Aout[1];
+  for (i = 0; i < N; i++)
+    Vout[i] *= (*Aout);
+  return gcd;
 }
 /*  ==========	   END of (Extended) Greatest Common Divisor	 =========  */
