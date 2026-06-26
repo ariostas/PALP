@@ -4,8 +4,8 @@
 #include <memory>
 #include <vector>
 
-#define MAX_BAD_EQ	(POLY_Dmax>5)	/* previously 6; needed for nef !? */
 namespace {
+  constexpr bool MAX_BAD_EQ = (POLY_Dmax > 5);  /* previously 6; needed for nef !? */
   constexpr bool SHOW_NEW_CEq = false;          /* (POLY_Dmax>12) tracks polytope analysis */
 }
 
@@ -502,10 +502,9 @@ void Make_New_CEqs(PolyPointList *_P, VertexNumList *_V, CEqList *_C,
 }
 
 
-#if	MAX_BAD_EQ
-
 int  IP_Search_Bad_Eq(CEqList *_C, EqList *_F, INCI *CEq_I, INCI *F_I,
 	       PolyPointList *_P, int *_IP){   /* return 0 :: no bad eq. */
+  if constexpr (MAX_BAD_EQ) {
   while(_C->ne--)  {	
     int j, M=_C->ne; 	/* INCI_LmR INCI_lex_GT */
     for(j=0;j<_C->ne;j++) if(INCI_lex_GT(&CEq_I[j],&CEq_I[M])) M=j;
@@ -519,11 +518,22 @@ int  IP_Search_Bad_Eq(CEqList *_C, EqList *_F, INCI *CEq_I, INCI *F_I,
     /* printf("#Feq=%d  #Ceq=%d\n",_F->ne,_C->ne); fflush(stdout); */
     _F->e[_F->ne]=_C->e[M]; F_I[_F->ne++]=CEq_I[M];
     if(M<_C->ne) {_C->e[M]=_C->e[_C->ne]; CEq_I[M]=CEq_I[_C->ne];}    }
+  } else {
+  while(_C->ne--)  {	
+    int j; 
+    for(j=0;j<_P->np;j++)			
+      if(Eval_Eq_on_V(&(_C->e[_C->ne]),_P->x[j],_P->n) < 0) return ++_C->ne;
+    if(_C->e[_C->ne].c < 1) { *_IP=0; return 1;}
+    assert(_F->ne<EQUA_Nmax);
+    _F->e[_F->ne]=_C->e[_C->ne];
+    F_I[_F->ne++]=CEq_I[_C->ne];}
+  }
   return 0;
 }
 
 int  FE_Search_Bad_Eq(CEqList *_C, EqList *_F, INCI *CEq_I, INCI *F_I,
 	       PolyPointList *_P, int *_IP){   /* return 0 :: no bad eq. */
+  if constexpr (MAX_BAD_EQ) {
   while(_C->ne--)  {	
     int j, M=_C->ne; 	/* INCI_LmR INCI_lex_GT */
     for(j=0;j<_C->ne;j++) if(INCI_lex_GT(&CEq_I[j],&CEq_I[M])) M=j;
@@ -538,26 +548,7 @@ int  FE_Search_Bad_Eq(CEqList *_C, EqList *_F, INCI *CEq_I, INCI *F_I,
     _F->e[_F->ne]=_C->e[M]; F_I[_F->ne++]=CEq_I[M];
     if(M<_C->ne) {_C->e[M]=_C->e[_C->ne]; CEq_I[M]=CEq_I[_C->ne];}
     }
-  return 0;
-}
-
-#else
-
-int  IP_Search_Bad_Eq(CEqList *_C, EqList *_F, INCI *CEq_I, INCI *F_I,
-	       PolyPointList *_P, int *_IP){   /* return 0 :: no bad eq. */
-  while(_C->ne--)  {	
-    int j; 
-    for(j=0;j<_P->np;j++)			
-      if(Eval_Eq_on_V(&(_C->e[_C->ne]),_P->x[j],_P->n) < 0) return ++_C->ne;
-    if(_C->e[_C->ne].c < 1) { *_IP=0; return 1;}
-    assert(_F->ne<EQUA_Nmax);
-    _F->e[_F->ne]=_C->e[_C->ne];
-    F_I[_F->ne++]=CEq_I[_C->ne];}
-  return 0;
-}
-
-int  FE_Search_Bad_Eq(CEqList *_C, EqList *_F, INCI *CEq_I, INCI *F_I,
-	       PolyPointList *_P, int *_IP){   /* return 0 :: no bad eq. */
+  } else {
   while(_C->ne--)  {	
     int j; 
     for(j=0;j<_P->np;j++)			
@@ -566,10 +557,9 @@ int  FE_Search_Bad_Eq(CEqList *_C, EqList *_F, INCI *CEq_I, INCI *F_I,
     assert(_F->ne<EQUA_Nmax);
     _F->e[_F->ne]=_C->e[_C->ne];
     F_I[_F->ne++]=CEq_I[_C->ne];}
+  }
   return 0;
 }
-
-#endif
 
 int  REF_Search_Bad_Eq(CEqList *_C, EqList *_F, INCI *CEq_I, INCI *F_I,
 	       PolyPointList *_P, int *_REF){   /* return 0 :: no bad eq. */
