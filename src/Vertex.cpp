@@ -1,6 +1,7 @@
 #include <palp/Global.h>
 #include <palp/Rat.h>
 
+#include <array>
 #include <memory>
 #include <vector>
 
@@ -584,8 +585,8 @@ int  Find_Equations(PolyPointList *_P, VertexNumList *_V, EqList *_F){
   /* return: IP, finds Vertices and Equations for _P even if not IP */
   int i; 
   auto CEq = std::make_unique<CEqList>();
-  std::vector<INCI> CEq_I(CEQ_Nmax);
-  std::vector<INCI> F_I(EQUA_Nmax);
+  std::array<INCI, CEQ_Nmax> CEq_I;
+  std::array<INCI, EQUA_Nmax> F_I;
   CEq->ne=0;
   if (GLZ_Start_Simplex(_P, _V, CEq.get())) {
     _F->ne=CEq->ne; 
@@ -613,8 +614,8 @@ int  Finish_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F,
 int  IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F){
   int i; 
   auto CEq = std::make_unique<CEqList>();
-  std::vector<INCI> CEq_I(CEQ_Nmax);
-  std::vector<INCI> F_I(EQUA_Nmax);
+  std::array<INCI, CEQ_Nmax> CEq_I;
+  std::array<INCI, EQUA_Nmax> F_I;
   if (GLZ_Start_Simplex(_P, _V, CEq.get())) {
     return 0;}
   for (i=0;i<CEq->ne;i++) 
@@ -639,8 +640,8 @@ int  Finish_REF_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F,
 int  Ref_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F){
   int i; 
   auto CEq = std::make_unique<CEqList>();
-  std::vector<INCI> CEq_I(CEQ_Nmax);
-  std::vector<INCI> F_I(EQUA_Nmax);
+  std::array<INCI, CEQ_Nmax> CEq_I;
+  std::array<INCI, EQUA_Nmax> F_I;
   if (GLZ_Start_Simplex(_P, _V, CEq.get())) {
     return 0;}
   for (i=0;i<CEq->ne;i++) CEq_I[i]=Eq_To_INCI(&(CEq->e[i]),_P,_V);

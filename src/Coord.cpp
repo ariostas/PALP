@@ -132,8 +132,8 @@ int  ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index)
      codim > 1, index = 1: _P reflexive, CICY with codimension codim
      codim = 1, index > 1: _P a Gorenstein polytope with index index, 
                            determines a reflexive Gorenstein cone       */
-{    int i, j, FilterFlag=(inFILE==NULL); 
-     std::vector<int> IN(AMBI_Dmax*(AMBI_Dmax+1)); int S;
+{    int i, j, FilterFlag=(inFILE==NULL);
+     std::array<int, AMBI_Dmax*(AMBI_Dmax+1)> IN; int S;
      static int InputOK;
      _CW->nw=_CW->N=_CW->nz=0;
      _CW->index = index;
@@ -237,7 +237,7 @@ int  Read_CWS_PP(CWS *_CW, PolyPointList *_P){
 
 int  Read_PP(PolyPointList *_P)
 {    int i, j, FilterFlag=(inFILE==NULL);
-     std::vector<int> IN(AMBI_Dmax*(AMBI_Dmax+1));
+     std::array<int, AMBI_Dmax*(AMBI_Dmax+1)> IN;
      static int InputOK;
      /* _CW->nw=_CW->N=_CW->nz=0; */
 
@@ -294,7 +294,7 @@ int  Read_PP(PolyPointList *_P)
 
 int  Read_CWS(CWS *_CW, PolyPointList *_P)
 {    int i, j, FilterFlag=(inFILE==NULL);
-     std::vector<int> IN(AMBI_Dmax*(AMBI_Dmax+1)); int S;
+     std::array<int, AMBI_Dmax*(AMBI_Dmax+1)> IN; int S;
      static int InputOK;
      _CW->nw=_CW->N=_CW->nz=0;
      _CW->index = 1;
