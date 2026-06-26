@@ -11,14 +11,18 @@
 #include <palp/Rat.h>
 #include <palp/LG.h>
 
+#include <array>
+#include <memory>
+#include <vector>
+
 namespace {
   constexpr bool write_cws = true;  /* output CWS data in nef Hodge output */
 }
 
 /*  ==========            l o c a l  T Y P E D E F s            ==========  */
 
-typedef struct { Long x[AMBI_Dmax][AMBI_Dmax]; int n, N; }   CWLatticeBasis;
-typedef struct { Long P[POINT_Nmax]; Long n; }               Pstat;
+using CWLatticeBasis = struct { Long x[AMBI_Dmax][AMBI_Dmax]; int n, N; };
+struct Pstat { Long P[POINT_Nmax]; Long n; };
 
 /*  ==========          l o c a l  P R O T O T Y P E s          ==========  */
 
@@ -48,6 +52,8 @@ void Die(char *);
 void Print_Nefinfo(PartList *_PTL, /* Flags *_F,*/ time_t *_Tstart, clock_t *_Cstart);
 //=== NOW FINE ===//
 
+/* Global FILE pointers are referenced from the library code; kept global for
+   now while the migration is in progress (see ISSUES.md #40). */
 FILE *inFILE, *outFILE;
 
 namespace {
@@ -120,14 +126,14 @@ int main(int narg, char *fn[])
     EqList *_E;
     PolyPointList *_P;
 
-    _P = (PolyPointList *) malloc(sizeof(PolyPointList));
-    if (_P == NULL) Die("Unable to allocate space for _P");
-    _V = (VertexNumList *) malloc(sizeof(VertexNumList));
-    if (_V == NULL) Die("Unable to alloc space for VertexNumList _V");
-    _E = (EqList *) malloc(sizeof(EqList));
-    if (_E == NULL) Die("Unable to alloc space for EqList _E");
-    _PS = (Pstat *) malloc(sizeof(Pstat));
-    if (_PS == NULL) Die("Unable to alloc space for Pstat _PS");
+    auto _P_up = std::make_unique<PolyPointList>();
+    _P = _P_up.get();
+    auto _V_up = std::make_unique<VertexNumList>();
+    _V = _V_up.get();
+    auto _E_up = std::make_unique<EqList>();
+    _E = _E_up.get();
+    auto _PS_up = std::make_unique<Pstat>();
+    _PS = _PS_up.get();
  
     F.p = 0;
     F.Lv = 0;
@@ -266,8 +272,9 @@ int main(int narg, char *fn[])
       if (F.G) AnalyseGorensteinCone(&CW,_P,_V,_E,&codim,&F);
       else if (Ref_Check(_P, _V, _E)){
 	int nv=_V->nv, ne=_E->ne;
-	Long PM[EQUA_Nmax][VERT_Nmax];
-     
+	std::vector<std::array<Long, VERT_Nmax>> PM_vec(EQUA_Nmax);
+	Long (*PM)[VERT_Nmax] = reinterpret_cast<Long (*)[VERT_Nmax]>(PM_vec.data());
+
 	Make_VEPM(_P,_V,_E, PM);
 	Complete_Poly(PM,_E,_V->nv,_P);
 	Find_Equations(_P,_V,_E);
@@ -297,7 +304,6 @@ int main(int narg, char *fn[])
     if (F.VP){
       assert(VPmax < POINT_Nmax); assert(VPmax >= VPmin); 
       Print_Pstat(_PS, N, VPmax, VPmin);    }
-    free(_E); free(_V); free(_P); free(_PS);
     return 0;
 }
 
@@ -379,32 +385,30 @@ void Mink_WPCICY(AmbiPointList * _AP_1, AmbiPointList * _AP_2,
 		 AmbiPointList * _AP)
 {
     int l;
-    Long *_x, *_B_num, *_c_num, *_c_less, n = 0, N = 0, Num,
+    Long n = 0, N = 0, Num,
 	num, P_max, p_max, j, k, m;
     DYN_PPL B;
 
     P_max = _AP_1->np * _AP_2->np;
     p_max = ((Long) IntSqrt(P_max));
 
-    _x = (Long *) calloc(_AP_1->N, sizeof(Long));
-    B.L = (Vector *) calloc(P_max, sizeof(Vector));
-    _B_num = (Long *) calloc(P_max, sizeof(Long));
-    _c_num = (Long *) calloc(p_max, sizeof(Long));
-    _c_less = (Long *) calloc(p_max, sizeof(Long));
-
-    assert((B.L != NULL) && (_B_num != NULL) && (_c_num != NULL) &&
-	   (_c_less != NULL) && (_x != NULL));
+    std::vector<Long> _x(_AP_1->N);
+    std::vector<Vector> B_L(P_max);
+    B.L = B_L.data();
+    std::vector<Long> _B_num(P_max);
+    std::vector<Long> _c_num(p_max);
+    std::vector<Long> _c_less(p_max);
 
     B.n = _AP_1->N; B.NP_max = P_max;
     for (j = 0; j < _AP_1->np; j++)
 	for (k = 0; k < _AP_2->np; k++) {
 	    if (n == p_max)
-		Make_Sort(&N, &n, _B_num, _c_num, _c_less);
+		Make_Sort(&N, &n, _B_num.data(), _c_num.data(), _c_less.data());
 	    for (l = 0; l < _AP_1->N; l++)
 		_x[l] = _AP_1->x[j][l] + _AP_2->x[k][l];
-	    Num = Make_Bi_section(&B, _B_num, &N, _x);
+	    Num = Make_Bi_section(&B, _B_num.data(), &N, _x.data());
 	    if (Num >= 0) {
-		num = Make_Bi_section(&B, _c_num, &n, _x);
+		num = Make_Bi_section(&B, _c_num.data(), &n, _x.data());
 		if (num >= 0) {
 		    assert((n + N) < P_max);
 		    for (l = 0; l < _AP_1->N; l++)
@@ -426,42 +430,31 @@ void Mink_WPCICY(AmbiPointList * _AP_1, AmbiPointList * _AP_2,
     for (j = 0; j < (N + n); j++)
 	for (l = 0; l < _AP_1->N; l++)
 	    _AP->x[j][l] = B.L[j].x[l];
-
-    free(_x);
-    free(B.L);
-    free(_B_num);
-    free(_c_num);
-    free(_c_less);
 }
 
 void Make_Poly_WPCICY(Weight * _W, int *_D, PolyPointList * _PP)
 {
     AmbiLatticeBasis B;
 
-    AmbiPointList *_AP_1 = (AmbiPointList *) malloc(sizeof(AmbiPointList));
-    AmbiPointList *_AP_2 = (AmbiPointList *) malloc(sizeof(AmbiPointList));
-    AmbiPointList *_AP = (AmbiPointList *) malloc(sizeof(AmbiPointList));
-    assert((_AP_1 != NULL) && (_AP_2 != NULL) && (_AP != NULL));
-
+    auto _AP_1 = std::make_unique<AmbiPointList>();
+    auto _AP_2 = std::make_unique<AmbiPointList>();
+    auto _AP   = std::make_unique<AmbiPointList>();
 
     WeightLatticeBasis(_W, &B);
 
     _W->d = _D[0];
-    WeightMakePoints(_W, _AP_1);
+    WeightMakePoints(_W, _AP_1.get());
     assert(POINT_Nmax >= _AP_1->np);
 
     _W->d = _D[1];
-    WeightMakePoints(_W, _AP_2);
+    WeightMakePoints(_W, _AP_2.get());
     assert(POINT_Nmax >= _AP_2->np);
 
     _W->d += _D[0];
 
-    Mink_WPCICY(_AP_1, _AP_2, _AP);
-    ChangeToTrianBasis(_AP, &B, _PP);
+    Mink_WPCICY(_AP_1.get(), _AP_2.get(), _AP.get());
+    ChangeToTrianBasis(_AP.get(), &B, _PP);
 
-    free(_AP);
-    free(_AP_1);
-    free(_AP_2);
     return;
 }
 
@@ -481,7 +474,8 @@ int Read_WPCICY(Weight * _W, int *_D)
      /* read "d" and "w_i" till sum=d or non-digit */
 {
     char c;
-    int long nl, sum, FilterFlag = (inFILE == NULL);
+    long nl, sum;
+    int FilterFlag = (inFILE == NULL);
     if (inFILE == stdin)
 	printf("type degrees and weights [d  w1 w2 ... wk d=d_1 d_2]: ");
     else if (FilterFlag) inFILE = stdin;
