@@ -14,11 +14,15 @@ constexpr int NUC_Nmax = 256;
  *	-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE			     *
  *	moreover, fseek and ftell have to be replaced by fseeko and ftello   */
 #ifdef	_LARGEFILE_SOURCE
-#define FTELL ftello
-#define FSEEK fseeko
+inline off_t FTELL(FILE *stream) { return ftello(stream); }
+inline int FSEEK(FILE *stream, off_t offset, int whence) {
+  return fseeko(stream, offset, whence);
+}
 #else
-#define FTELL ftell
-#define FSEEK fseek
+inline long FTELL(FILE *stream) { return ftell(stream); }
+inline int FSEEK(FILE *stream, long offset, int whence) {
+  return fseek(stream, offset, whence);
+}
 #endif
 
 /*	Target dimensions: 2^32 polytopes (unsigned!) ... 80GB/DB 	*/

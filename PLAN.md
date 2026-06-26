@@ -428,7 +428,8 @@ Files already converted:
   `MOVE_SAVE_FILE` block removed.
 - `include/palp/Global.h`: `GL_Long`, `MAXLD`, `INT_Nbits`,
   `LONG_LONG_Nbits`, `I_NUI`, all single-integer `INCI_*` bit helpers,
-  `EQUA_Nmax` fallback, and `CEQ_Nmax`.
+  `EQUA_Nmax` fallback, `CEQ_Nmax`, and the large-`INCI` branch of
+  `INCI_M2`.
 - `include/palp/Nef.h`: `Nef_Max`, `NP_Max`, `MAXSTRING`, `Pos_Max`,
   `FIB_POINT_Nmax` converted to `constexpr`. `W_Nmax` remains a macro
   because both `Nef.h` and `LG.h` define it for array sizes.
@@ -446,9 +447,15 @@ Still to convert in `.cpp` files:
   because `Wperm_to_GLZ`/`CWS_to_PermCWS` are declared in prototypes.
 - `src/LG.cpp`: `COEFF_Nmax` depends on local variables and is used in array
   sizes; keep as macro for now.
-- `src/MoriCone.cpp`: many local `Inci64_*` macros and geometric helper macros
-  (`BZangle`, `SameRayBZ`, etc.) are performance-critical inline helpers;
-  convert to `constexpr inline` functions.
+- `src/MoriCone.cpp`: the local geometric helper macros `BZangle`,
+  `SameRayBZ`, `BZR`, `BZRx`, `BZRE` capture many local variables from the
+  enclosing functions and are used in many contexts; intentionally left as
+  expression macros to avoid large risky refactor.
+- `src/Subadd.cpp`: the `#ifdef` feature flags `TEST_UCnf`,
+  `ADD_LIST_LENGTH`, `INCREMENTAL_TIME`, `INCREMENTAL_WRITE`,
+  `ACCEL_PEntComp`, `USE_UNIT_ENCODE` are all currently enabled and deeply
+  interleaved with function bodies. Converting them to `if constexpr`
+  requires careful untangling and is deferred.
 - `src/lgotwist.cpp`: standalone; lower priority.
 
 Still to convert in headers:
