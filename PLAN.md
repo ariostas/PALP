@@ -288,16 +288,15 @@ This is the highest-risk step. Take extra care.
 - [ ] Replace `exit(0)` / `exit(1)` with `palp::die()`. *Deferred to Phase 5*.
 - **Verify**: build + run all `tests/7.*` scripts.
 
-- [ ] #### Step 3.4 — `SingularInput.c` → `SingularInput.cpp` (~591 lines)
+- [x] #### Step 3.4 — `SingularInput.c` → `SingularInput.cpp` (~591 lines)
 
 - [x] Rename `SingularInput.c` → `SingularInput.cpp`.
-- [ ] Replace `char filename[20]` with `std::string`.
-- [ ] Replace `char string[maxline]` VLA with `std::vector<char>`.
-- [ ] Add `malloc` NULL check for `he` (ISSUES.md #10).
-- [ ] Keep `system()` call but add note (ISSUES.md #11); in migration phase, just
-  ensure the command string is properly constructed.
-- [ ] Replace `mkstemp` usage: keep as-is (it's the right function) or use C++17
-  `std::filesystem::temp_directory_path()` for the directory.
+- [x] Replaced `char filename[20]` with `const std::string &`.
+- [x] Replaced `char string[maxline]` VLA with `std::vector<char>`.
+- [x] Converted `he` to `std::vector<int>` (replaced malloc/free).
+- [x] Converted `SFname` / `SingularCall` `malloc`/`snprintf` to `std::string`.
+- [x] Kept `mkstemp` usage as-is (proper POSIX API).
+- [x] Kept `system()` call; noted in ISSUES.md #11.
 - **Verify**: build + run all `tests/7.*` scripts.
 
 - [ ] #### Step 3.5 — `Subpoly.c` → `Subpoly.cpp` (~1614 lines)

@@ -17,6 +17,9 @@
 #include <palp/Global.h>
 #include <palp/Mori.h>
 
+#include <string>
+#include <vector>
+
 namespace {
   /***  local for Singularinput.c ***/
   constexpr const char* DijkEQ = "->";       /* Useful for Mathematica rules: "->" */
@@ -30,35 +33,36 @@ namespace {
 
 /*=========================================================*/
 
-int Read_HyperSurf(int *he, int divclassnr, int maxline, char filename[20], MORI_Flags *_Flag){
+int Read_HyperSurf(int *he, int divclassnr, int maxline,
+                   const std::string &filename, MORI_Flags *_Flag){
 
     FILE *stream;
-    
+
     int i;
-    char string[maxline];
-    char delims[] = " ";
+    std::vector<char> string(maxline);
+    const char delims[] = " ";
     char *result = NULL;
-	
-	if(_Flag->Read_HyperSurfCounter==0){	
-    		if( (stream = fopen(filename, "w")) == NULL) {
+
+	if(_Flag->Read_HyperSurfCounter==0){
+    		if( (stream = fopen(filename.c_str(), "w")) == NULL) {
         		printf("Error: cannot open file!\n");
             		exit(1);
         	}     
  
-		fgets(string, sizeof string, stdin);
-		fprintf(stream, "%s\n", string);
+		fgets(string.data(), string.size(), stdin);
+		fprintf(stream, "%s\n", string.data());
 	}
 	
 	if(_Flag->Read_HyperSurfCounter != 0){
-		if( (stream = fopen(filename,"r")) == NULL) {
+		if( (stream = fopen(filename.c_str(),"r")) == NULL) {
 			printf("Error: cannot read file!\n");
 			exit(1);	
 		}
-		fgets(string, maxline ,stream);
+		fgets(string.data(), maxline, stream);
 	}	
 
         i=0;
-        result = strtok( string, delims );
+        result = strtok( string.data(), delims );
         while( result != NULL ) { 
             he[i] = atoi(result); 
             i++;
@@ -80,24 +84,19 @@ void HyperSurfSingular(PolyPointList *P,triang *T, triang *SR ,MORI_Flags *_Flag
   const char *D=T_DIV,*B=DIVclassBase;
 
   /* Put temporary files in $TMPDIR if it is set */
-  char* tmpdir = getenv("TMPDIR");
+  const char* tmpdir = getenv("TMPDIR");
   if (tmpdir == NULL) {
     tmpdir = "/tmp";
   }
 
   /* Add one to ensure room for the null byte at the end */
-  size_t template_size = strlen(tmpdir) + strlen("/SFnameXXXXXX") + 1;
-  char* SFname = (char*)malloc(template_size);
-  snprintf(SFname, template_size, "%s/SFnameXXXXXX", tmpdir);
+  std::string SFname = std::string(tmpdir) + "/SFnameXXXXXX";
 
-  int SF = mkstemp(SFname);
+  int SF = mkstemp(SFname.data());
   assert(-1 != SF);
 
-  /* Construct the singular command. In this case, template_size is
-     already padded by 1 byte (see above). */
-  size_t singular_cmd_size = strlen("Singular -q < ") + template_size;
-  char* SingularCall = (char*)malloc(singular_cmd_size);
-  snprintf(SingularCall, singular_cmd_size, "Singular -q < %s", SFname);
+  /* Construct the singular command. */
+  std::string SingularCall = std::string("Singular -q < ") + SFname;
 
   dprintf(SF,"LIB \"general.lib\";\n");
   dprintf(SF,"option(noredefine);\n");
@@ -153,13 +152,9 @@ void HyperSurfSingular(PolyPointList *P,triang *T, triang *SR ,MORI_Flags *_Flag
 		  printf("Type the %d (integer) entries for the hypersurface class:\n", divclassnr);
 
 
- 	int *he, i;
-        he=(int *)malloc(divclassnr*sizeof(int));         
-	
-	for(i=0;i<divclassnr;i++)        
-		he[i]=0;
+        std::vector<int> he(divclassnr);
 
-	int control = Read_HyperSurf(he, divclassnr, 5*divclassnr ,"HEInput.txt", _Flag);
+	int control = Read_HyperSurf(he.data(), divclassnr, 5*divclassnr ,"HEInput.txt", _Flag);
 	
 if(_Flag->Read_HyperSurfCounter==0){
          if(control != divclassnr)
@@ -200,7 +195,7 @@ if(_Flag->Read_HyperSurfCounter==0){
 	
 //	_Flag->Read_HyperSurfCounter++;
 	
-	  free(he); fflush(0);
+	  fflush(0);
 
   }
 
@@ -561,10 +556,8 @@ if(_Flag->Read_HyperSurfCounter==0){
   dprintf(SF,"quit;\n");
   close(SF);
 
-  if( system(SingularCall) ) {puts("Check Singular installation");exit(1);}
-  remove(SFname);
-  free(SFname);
-  free(SingularCall);
+  if( system(SingularCall.c_str()) ) {puts("Check Singular installation");exit(1);}
+  remove(SFname.c_str());
 }
 
 
