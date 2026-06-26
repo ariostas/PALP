@@ -117,7 +117,7 @@ int Choose(int n, int k, int *C){int x;
  */
 /*---QUICK-FIX----------------------------------------------------------------*/
 
-void DivClassBasis(int SF,PolyPointList *P,int v,char *D,char *B){
+void DivClassBasis(int SF,PolyPointList *P,int v,const char *D,const char *B){
   Long cdiv=0, sv, nok, *X[POLY_Dmax]; int d=P->n, C[VERT_Nmax];
   nok=Init_Choose(v,d,C);
   do { int c, CC[VERT_Nmax];

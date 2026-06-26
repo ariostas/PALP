@@ -96,7 +96,7 @@ void StanleyReisner(triang *SR,triang *T);
 Determine and print the SR ideal.
 */
 
-void DivClassBasis(int SF,PolyPointList *P,int v,char *D,char *B);
+void DivClassBasis(int SF,PolyPointList *P,int v,const char *D,const char *B);
 /*
 Find basis for divisor classes, i.e. integral basis of intersection ring.
 Simply trying to find toric divisors that span the lattice of DivClasses i.e. find

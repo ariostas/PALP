@@ -17,34 +17,18 @@
 #include <palp/Global.h>
 #include <palp/Mori.h>
 
-/* ======================================================== */
-/* =========            D E F I N I T I O N s     ========= */
+namespace {
+  /***  local for Singularinput.c ***/
+  constexpr const char* DijkEQ = "->";       /* Useful for Mathematica rules: "->" */
+  constexpr const char* T_DIV = "d";        /* Toric divisors */
+  constexpr const char* DIVclassBase = "J"; /* Basis of the divisor classes */
 
-/***  local for Singularinput.c ***/
-#define DijkEQ                  "->"	/* Useful for Mathematica rules: "->" */
-#define	T_DIV                   "d"	    /* Toric divisors */
-#define DIVclassBase            "J"	    /* Basis of the divisor classes */
-
-/* diagnostic stuff */
-#define TEST_PRINT_SINGULAR_IO  (0)     /* IO of SINGULAR */
-
-#define NORM_SIMP_NUM           (0)
+  /* diagnostic stuff */
+  constexpr bool TEST_PRINT_SINGULAR_IO = false;  /* IO of SINGULAR */
+  constexpr bool NORM_SIMP_NUM = false;
+}
 
 /*=========================================================*/
-
-#if (TEST_PRINT_SINGULAR_IO)
-void CatFile(char *fn){
-  char* CAT = (char*)malloc(30 + strlen(fn));
-  strcpy(CAT,"cat ");
-  strcat(CAT,fn);
-  printf("======= FILE content of %s:\n",fn);
-  fflush(0);
-  assert(0==system(CAT));
-  printf("====== End of FILE content of %s\n\n",fn);
-  fflush(0);
-  free(CAT);
-}
-#endif
 
 int Read_HyperSurf(int *he, int divclassnr, int maxline, char filename[20], MORI_Flags *_Flag){
 
@@ -93,7 +77,7 @@ void HyperSurfSingular(PolyPointList *P,triang *T, triang *SR ,MORI_Flags *_Flag
   int TORDIM=P->n;
   int CODIM=1;
   int DIM=TORDIM-CODIM;
-  char *D=T_DIV,*B=DIVclassBase;
+  const char *D=T_DIV,*B=DIVclassBase;
 
   /* Put temporary files in $TMPDIR if it is set */
   char* tmpdir = getenv("TMPDIR");
@@ -228,7 +212,7 @@ if(_Flag->Read_HyperSurfCounter==0){
   }
 
   dprintf(SF,"number vol=");{
-	  int NN=NORM_SIMP_NUM;          // NORMALIZATION
+	  int NN = NORM_SIMP_NUM;          // NORMALIZATION
 	  Long *X[POLY_Dmax], Vijkl;
 	  int x[POLY_Dmax], n=0; i=j=0;
 	  if((NN<0)||(NN > T->n)) NN=0;
@@ -576,10 +560,6 @@ if(_Flag->Read_HyperSurfCounter==0){
 
   dprintf(SF,"quit;\n");
   close(SF);
-
-#if (TEST_PRINT_SINGULAR_IO)
-				CatFile(SFname);
-#endif
 
   if( system(SingularCall) ) {puts("Check Singular installation");exit(1);}
   remove(SFname);
