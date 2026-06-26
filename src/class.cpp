@@ -18,10 +18,14 @@
 #include <palp/Global.h>
 #include <palp/Subpoly.h>
 
+#include <memory>
+
 #if ( POLY_Dmax * POINT_Nmax  > 83400000 )
 #error		decrease POLY_Dmax or/and POINT_Nmax for compiling class
 #endif
 
+/* Global FILE pointers are referenced from the library code; kept global for
+   now while the migration is in progress (see ISSUES.md #40). */
 FILE *inFILE, *outFILE;
 
 void PrintExtOptions(void){puts("Extended/experimental options:");
@@ -221,7 +225,9 @@ puts(
 "Type one of [m,p,d,r,o,s,c,M,a,b,H] for help on options,");
 printf(
 "`g' for general help, `I' for general information on I/O or `e' to exit: ");
-scanf("%s",&hc);
+{ char buf[2];
+  if (scanf("%1s", buf) == 1) hc = buf[0];
+  else hc = 'e'; }
 puts("");
 }
 }
@@ -230,14 +236,16 @@ puts("");
 int  main (int narg, char* fn[])
 { int n=0, FilterFlag=0, oFlag=0, cFlag=0, rFlag=0, abFlag=0, kFlag=0,
     vf=2, vt=VERT_Nmax-1;
-  char Blank=0, *dbin=&Blank, *dbsub=&Blank, *dbout=dbin, *x_string=&Blank,
+  char empty[1] = {0};
+  char *dbin=empty, *dbsub=empty, *dbout=dbin, *x_string=empty,
     *polyi=dbin, *polya=dbin, *polys=dbin, *polyo=dbin, mFlag=0, HFlag=0,
-    sFlag=0; static CWS W; PolyPointList *_P;
+    sFlag=0; static CWS W; std::unique_ptr<PolyPointList> _P_up;
+  PolyPointList *_P;
   if(narg==1) {
     printf("For help type `%s -h'\n", fn[0]);
     exit(0);}
-  _P = (PolyPointList *) malloc(sizeof (PolyPointList));
-  if(_P==NULL) {puts("Unable to allocate space for _P"); exit(0);}
+  _P_up = std::make_unique<PolyPointList>();
+  _P = _P_up.get();
 
   while(narg > ++n)
     if(fn[n][0]!='-') break;
