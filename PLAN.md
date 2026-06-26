@@ -260,15 +260,18 @@ This is the highest-risk step. Take extra care.
   `std::unique_ptr`/`std::vector`.
 - **Verify**: build + run all `tests/6.*` scripts (nef uses E_Poly).
 
-- [~] #### Step 3.2 — `Nefpart.c` → `Nefpart.cpp` (~837 lines)
+- [x] #### Step 3.2 — `Nefpart.c` → `Nefpart.cpp` (~837 lines)
 
 - [x] Rename `Nefpart.c` → `Nefpart.cpp`.
-- [ ] Remove `scanf("%c", &c)` interactive debug pause (ISSUES.md #38) or gate
-  behind `#ifndef NDEBUG`.
-- [ ] Replace bubble sort (`Bubble_PTL`) with `std::sort` — verify identical
-  ordering (the sort key is the partition string; `std::sort` with a custom
-  comparator must produce the same order).
-- [ ] Replace `calloc`/`malloc` with `std::vector`.
+- [x] Remove `scanf("%c", &c)` interactive debug pause (ISSUES.md #38) by gating
+  the `_F->Test` block behind `#ifndef NDEBUG` and checking the `scanf` return
+  value.
+- [x] Replace bubble sort (`Bubble_PTL`) with `std::sort` using a custom
+  comparator that calls `COMP_S`; all tests pass, confirming identical
+  ordering.
+- [x] Replace `calloc`/`malloc` with `std::unique_ptr`/`std::vector` in
+  `Dir_Product`, `REC_Dir_Product`, `Remove_Sym`, `Check_Convexity`, and
+  `part_nef`.
 - **Verify**: build + run all `tests/6.*` scripts.
 
 - [ ] #### Step 3.3 — `MoriCone.c` → `MoriCone.cpp` (~1792 lines)
