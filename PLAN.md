@@ -165,18 +165,7 @@ This is the highest-risk step. Take extra care.
   (inside `Add_Mono_2_Poly` debug block) remain in compile-time-disabled debug
   code; documented as harmless (ISSUES.md #15).
 
-- [ ] #### Step 1.6 — `Nefpart.c` → `Nefpart.cpp` (~837 lines)
 
-- [x] Rename `Nefpart.c` → `Nefpart.cpp`.
-- [ ] Remove `scanf("%c", &c)` interactive debug pause (ISSUES.md #38) or gate
-  behind `#ifndef NDEBUG`.
-- [ ] Replace bubble sort (`Bubble_PTL`) with `std::sort` — verify identical
-  ordering (the sort key is the partition string; `std::sort` with a custom
-  comparator must produce the same order).
-- [ ] Replace `calloc`/`malloc` with `std::vector`.
-- **Verify**: build + run all `tests/6.*` scripts.
-
----
 
 ### Phase 2 — Driver programs (depend on Phase 1 libraries)
 
@@ -271,7 +260,7 @@ This is the highest-risk step. Take extra care.
   `std::unique_ptr`/`std::vector`.
 - **Verify**: build + run all `tests/6.*` scripts (nef uses E_Poly).
 
-- [ ] #### Step 3.2 — `Nefpart.c` → `Nefpart.cpp` (~837 lines)
+- [~] #### Step 3.2 — `Nefpart.c` → `Nefpart.cpp` (~837 lines)
 
 - [x] Rename `Nefpart.c` → `Nefpart.cpp`.
 - [ ] Remove `scanf("%c", &c)` interactive debug pause (ISSUES.md #38) or gate
