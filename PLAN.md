@@ -180,16 +180,17 @@ This is the highest-risk step. Take extra care.
 
 ### Phase 2 — Driver programs (depend on Phase 1 libraries)
 
-- [ ] #### Step 2.1 — `poly.c` → `poly.cpp`
+- [x] #### Step 2.1 — `poly.c` → `poly.cpp`
 
 - [x] Rename `poly.c` → `poly.cpp`.
-- [ ] Replace `malloc` for large compile-time-sized structs (`CWS`, `EqList`,
-  `PolyPointList`, `PairMat`, `FaceInfo`) with `std::make_unique` or stack
-  allocation (they are fixed-size).
-- [ ] Replace `FILE *inFILE, *outFILE` global definitions: keep as global for now
-  (the libraries extern-reference them), but add a comment that this is
-  temporary (ISSUES.md #40).
-- [ ] Replace `VPermList *VP = (VPermList*) malloc(...)` with `std::make_unique`.
+- [x] Replace `malloc` for large compile-time-sized structs (`CWS`, `EqList`,
+  `PolyPointList`) with `std::unique_ptr`. `PairMat` remains a raw heap
+  allocation because it is a C-style 2D array typedef and is not directly
+  supported by `std::unique_ptr` without a custom deleter.
+- [x] Add a comment that `FILE *inFILE, *outFILE` are temporary globals
+  (ISSUES.md #40).
+- [x] Replace `VPermList *VP = (VPermList*) malloc(...)` with
+  `std::make_unique<VPermList>`.
 - Keep `printf`/`fprintf` as-is for exact output format preservation.
 - **Verify**: build + run ALL `tests/2.*` and `tests/3.*` scripts.
 
