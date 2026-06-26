@@ -63,7 +63,7 @@ void  PrintCWSUsage(char *c){
   exit(0);
 }
 
-void Die(char *comment){ printf("\n%s\n",comment); exit(0);}
+[[noreturn]] void Die(const char *comment){ printf("\n%s\n",comment); exit(0);}
 
 int Read_Weight(Weight *);
 

@@ -351,7 +351,7 @@ void PRINT_Fibrations(VertexNumList *_V, PolyPointList *_P, Flags *_F
 
 /*   ===============	End of FIBRATIONS	        ===================  */
 
-void Die(char *comment){
+[[noreturn]] void Die(const char *comment){
   printf("\n%s\n",comment); exit(0);
 }
 
@@ -672,7 +672,7 @@ void Output(PolyPointList * _P, /* PolyPointList * _DP,*/
 	    int *_codim, FILE *outFILE, Flags * _F, int *_D, LInfo *_L)
 {
   int i, j, k, m, chi = 0, D = (_P_D->n + 1), dim = (_P->n - *_codim);
-  int h[POLY_Dmax][POLY_Dmax] = {{0}, {0}}, S[VERT_Nmax];
+  int h[POLY_Dmax][POLY_Dmax] = {}, S[VERT_Nmax];
   
   
   m = Max_S(_PTL, _n);
@@ -1112,7 +1112,7 @@ Poset Int_Pos(int i, Interval_List * _IL, Poset_Element_List * _PEL)
 
 void M_To_B(BPoly *_BP,  BPoly *_MP, int d, int rho){
 
-  int M[Pos_Max][Pos_Max] = {{0}, {0}}, i, u, v;
+  int M[Pos_Max][Pos_Max] = {}, i, u, v;
 
   if(rho == 0)
     M[0][0] = 1;
@@ -1137,7 +1137,7 @@ void M_To_B(BPoly *_BP,  BPoly *_MP, int d, int rho){
 
 void N_To_B(BPoly *_BP,  BPoly *_NP, int d, int rho){
 
-  int N[Pos_Max][Pos_Max] = {{0}, {0}}, i, u, v;
+  int N[Pos_Max][Pos_Max] = {}, i, u, v;
 
   if(rho == 0)
     N[0][0] = 1;
@@ -1406,7 +1406,7 @@ void AnalyseGorensteinCone(CWS *_CW,  PolyPointList *_P, VertexNumList *_V,
   clock_t Cstart;
   EPoly EP;
   int i, j, k, dim = _P->n - (*_codim * 2) + 1, chi, r=1;
-  int h[POLY_Dmax][POLY_Dmax] = {{0}, {0}};
+  int h[POLY_Dmax][POLY_Dmax] = {};
   PolyPointList *_P_D = (PolyPointList *) malloc(sizeof(PolyPointList));
   VertexNumList *_V_D = (VertexNumList *) malloc(sizeof(VertexNumList));
   EqList *_E_D =  (EqList *) malloc(sizeof(EqList));

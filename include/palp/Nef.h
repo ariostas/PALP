@@ -115,7 +115,7 @@ int  IsDigit(char);
 
 int  IntSqrt(int q);
 
-void Die(char *);
+[[noreturn]] void Die(const char *);
 
 void Print_CWS_Zinfo(CWS *);
 

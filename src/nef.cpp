@@ -46,7 +46,7 @@ void Print_VP(PolyPointList *, VertexNumList *, int, int, Pstat *);
 
 void Print_Pstat(Pstat *, int, int, int);
 
-void Die(char *);
+[[noreturn]] void Die(const char *);
 
 //=== NOW INIZIO ===//
 void Print_Nefinfo(PartList *_PTL, /* Flags *_F,*/ time_t *_Tstart, clock_t *_Cstart);
