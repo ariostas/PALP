@@ -34,12 +34,15 @@ namespace {
   using SL_Long = LLong;                  /* has same problems as REgcd */
 }
 
-#define SMOOTH			(1)	/* print only regular simplicial */
-#define NON_REF			(1)	/* allow non-reflexive input */
-#define BARY_PRINT		(1)	/* print if BARY_ZERO */
-#define	ZEROSUM_PRINT		(1)	/* 1::Psum  2::kPsum  */
+namespace {
+  constexpr bool SMOOTH = true;        /* print only regular simplicial */
+  constexpr bool NON_REF = true;       /* allow non-reflexive input */
+  constexpr bool BARY_PRINT = true;    /* print if BARY_ZERO */
+  constexpr int ZEROSUM_PRINT = 1;     /* 1::Psum  2::kPsum  */
+  constexpr int KP_PRINT = 3;          /* print if sum kP !=0 at this k */
+}
+
 #define KP_VALUE		((P->n+1)/2)   /* (P->n+1)/2 is sufficient */
-#define KP_PRINT		(3)	/* print if  sum kP !=0  at this k */
 #define KP_EXIT			((P->n+1)/2)   /* exit if !=0 above this k */
 
 #if	(POLY_Dmax < 5)
