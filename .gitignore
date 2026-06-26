@@ -6,6 +6,7 @@
 
 # CMake files
 build
+build-*
 install
 *.cmake
 CMakeCache.txt

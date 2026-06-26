@@ -14,6 +14,8 @@
 #include <palp/Global.h>
 #include <palp/LG.h>
 
+#include <memory>
+
 namespace {
   constexpr int OSL = 42;  /* opt_string's length */
 }
@@ -86,23 +88,28 @@ int main (int narg, char* fn[]){
   int n=0, k, FilterFlag=0, lg=0, s=0, i=0, m=0, p=0, v=0, e=0, d=0, t=0, z=0,
     S=0, N=0, I=0, r=0, nc=0, g=0, D=0, IP, R, Tr, T=0, PS=0, VS=0, CD=0, ZS=1,
     A=0, B=0, G=0, F=0, U=0, dd=0, Einstein=0, o=0, q=0, Q=0;
-  char c; 
-  CWS *CW=(CWS *) malloc(sizeof(CWS));
+  char c;
+  auto CW_up = std::make_unique<CWS>();
+  CWS *CW = CW_up.get();
   Weight W;
   VertexNumList V;
-  EqList *E = (EqList *) malloc(sizeof(EqList));
-  EqList *DE = (EqList *) malloc(sizeof(EqList));
+  auto E_up = std::make_unique<EqList>();
+  EqList *E = E_up.get();
+  auto DE_up = std::make_unique<EqList>();
+  EqList *DE = DE_up.get();
   BaHo BH;
-  VaHo VH; 
-  PolyPointList *_P = (PolyPointList *) malloc(sizeof(PolyPointList)),
-               *_DP = (PolyPointList *) malloc(sizeof(PolyPointList));
-  FaceInfo *FI=NULL;
+  VaHo VH;
+  auto _P_up = std::make_unique<PolyPointList>();
+  PolyPointList *_P = _P_up.get();
+  auto _DP_up = std::make_unique<PolyPointList>();
+  PolyPointList *_DP = _DP_up.get();
+  std::unique_ptr<FaceInfo> FI_up;
+  FaceInfo *FI = nullptr;
   PairMat *PM = (PairMat *) malloc(sizeof(PairMat)),
          *DPM = (PairMat *) malloc(sizeof(PairMat));
   C5stats C5S;
 
-  if((CW==NULL)||(E==NULL)||(_P==NULL)||(DE==NULL)||(_DP==NULL)
-	||(PM==NULL)||(DPM==NULL)) {
+  if((PM==NULL)||(DPM==NULL)) {
     puts("Allocation failure: Reduce dimensions!"); exit(0);}
   CW->nw=0;
 
@@ -164,8 +171,8 @@ int main (int narg, char* fn[]){
     else outFILE=stdout;     }	
   if(U) {dd=CD; CD=0; if((U==2)||(dd==5)) nc=0;}
   if(i){
-    FI=(FaceInfo *) malloc(sizeof(FaceInfo));
-    if (FI==NULL) {puts("Unable to allocate space for FaceInfo FI"); exit(0);}}
+    FI_up = std::make_unique<FaceInfo>();
+    FI = FI_up.get();}
   if(Q) Initialize_C5S(&C5S, POLY_Dmax); // Initialize statistics
   if(Einstein) Einstein_Metric(CW,_P,&V,E);
   while(lg ? Read_W_PP(&W,_P) : Read_CWS_PP(CW,_P)) {
@@ -228,10 +235,10 @@ int main (int narg, char* fn[]){
     if(d&&(_DP->np>E->ne)) Print_PPL(_DP, "Points of P-dual");
     if(S||N||t){
       int SymNum /*, VPMSymNum*/; Long NF[POLY_Dmax][VERT_Nmax]; 
-      VPermList *VP = (VPermList*) malloc(sizeof(VPermList)); 
-      assert(VP!=NULL);
-      /* VPMSymNum=*/ Make_Poly_Sym_NF(_P, &V, E, &SymNum, VP->p, NF, t, S, N);
-      free(VP);}
+      VPermList *VP;
+      auto VP_up = std::make_unique<VPermList>();
+      VP = VP_up.get();
+      /* VPMSymNum=*/ Make_Poly_Sym_NF(_P, &V, E, &SymNum, VP->p, NF, t, S, N);}
     if(R&&(PS||VS||CD)) IP_Simplices(_DP, (!D)*E->ne, PS*ZS, VS*ZS, CD);
     if(G) {
       char divi[99]; Long g=Divisibility_Index(_P,&V); 
