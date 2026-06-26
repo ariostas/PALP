@@ -65,7 +65,7 @@ namespace {
 using PERM = struct {int C[VERT_Nmax], L[VERT_Nmax], s;};
 using vNF  = struct {int nv, nf, ns;};
 
-#define	Fputs(S)	{fputs(S,outFILE);fputs("\n",outFILE);}
+inline void Fputs(const char *S) { fputs(S,outFILE); fputs("\n",outFILE); }
 
 /*   ------	some useful routines	------ */
 
