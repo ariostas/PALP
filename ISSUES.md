@@ -103,13 +103,15 @@ names and descriptions should remain locatable.
   are never freed — memory leak on every input iteration of the `while` loop.
   The program returns 0 at the end without freeing anything.
 
-### 10. Huge struct never freed in `RgcWeights`
-- **File**: `cws.c`
-- **Line**: 380
+### 10. Huge struct never freed in `RgcWeights` — RESOLVED by migration
+- **File**: `cws.cpp`
+- **Line**: 530
 - **Severity**: High
-- **Description**: `RgcWeights` allocates `RgcClassData *X` which contains
-  `Equation wli[WDIM]` where `WDIM = 800000`. This is a massive allocation that
-  is never freed.
+- **Description**: `RgcWeights` allocated `RgcClassData *X` which contains
+  `Equation wli[WDIM]` where `WDIM = 800000`. This was a massive allocation that
+  was never freed. During migration it was replaced by
+  `std::unique_ptr<RgcClassData>`, so the memory is now released automatically.
+  No separate Phase 5 fix is needed.
 
 ### 11. Missing NULL check on `malloc`
 - **File**: `SingularInput.c`

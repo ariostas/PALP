@@ -200,6 +200,11 @@ This is the highest-risk step. Take extra care.
 - [x] Replace `atoi("3")` / `atoi("4")` pointless conversions with direct
   integer literals.
 - [x] Convert `PRINT_CWS` `PolyPointList` allocations to `std::unique_ptr`.
+- [x] Replace all remaining `malloc`/`free` pairs in `cws.cpp` with stack
+  variables, `std::vector`, or `std::unique_ptr`. Keep huge dimension-sensitive
+  buffers (`RgcClassData`, `WSaux`, and `PolyPointList` in some paths) on the
+  heap via `std::unique_ptr` to avoid stack overflow while still removing manual
+  memory management.
 - **Verify**: build + run all `tests/4.*` scripts.
 
 - [x] #### Step 2.3 — `class.c` → `class.cpp`
@@ -539,7 +544,8 @@ suite. See `ISSUES.md` for the full list. Apply in order of severity.
 #### Step 5.3 — Fix memory leaks
 
 - [ ] `mori.cpp`: free all allocations (ISSUES.md #8).
-- [ ] `cws.cpp` `RgcWeights`: free `X` (ISSUES.md #9).
+- [x] `cws.cpp` `RgcWeights`: `RgcClassData *X` is now a
+  `std::unique_ptr<RgcClassData>`, so it is freed automatically.
 - [ ] `Polynf.cpp` `Eval_Poly_NF`/`Fano5d`: free on error paths (ISSUES.md #12, #13).
 - [ ] Run ASAN build to verify zero leaks.
 

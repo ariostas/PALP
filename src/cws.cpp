@@ -4,6 +4,7 @@
 
 #include <array>
 #include <memory>
+#include <utility>
 
 namespace {
 constexpr bool Only_IP_CWS = true;
@@ -485,20 +486,19 @@ void AddPointToPoly(Long *y, PolyPointList *P) {
 
 int WsIpCheck(Equation *q, int d) {
   int k, l;
-  PolyPointList *P = (PolyPointList *)malloc(sizeof(PolyPointList));
-  assert(P != NULL);
+  PolyPointList P;
   VertexNumList V;
   EqList E;
   Long y[POLY_Dmax];
   Long yq[POLY_Dmax];
-  P->n = d;
-  P->np = 0;
+  P.n = d;
+  P.np = 0;
   for (k = 0; k < d; k++) {
     y[k] = 0;
     yq[k] = 0;
   }
   k = d - 1;
-  AddPointToPoly(y, P);
+  AddPointToPoly(y, &P);
   y[k] = -1; /* starting point just outside                       */
   yq[k] = -q->a[k];
   while (k >= 0) {
@@ -507,38 +507,30 @@ int WsIpCheck(Equation *q, int d) {
     for (l = k + 1; l < d; l++)
       yq[l] = yq[k];
     if (yq[k] == -q->c)
-      AddPointToPoly(y, P);
+      AddPointToPoly(y, &P);
     for (k = d - 1; (k >= 0 ? (yq[k] + q->a[k] > -q->c) : 0); k--)
       y[k] = 0;
   }
   /* sets k to the highest value where y[k] didn't exceed max value;
      resets the following max values to min values                 */
-  if (P->np <= d) {
-    free(P);
+  if (P.np <= d)
     return 0;
-  }
-  Find_Equations(P, &V, &E);
-  if (E.ne < d) {
-    free(P);
+  Find_Equations(&P, &V, &E);
+  if (E.ne < d)
     return 0;
-  }
   for (k = 0; k < d; k++)
     y[k] = 1;
   for (k = 0; k < E.ne; k++)
     if (Eval_Eq_on_V(&(E.e[k]), y, d) <= 0)
-      if (!E.e[k].c) {
-        free(P);
+      if (!E.e[k].c)
         return 0;
-      }
-  k = P->np - 1;
-  free(P);
-  return k;
+  return P.np - 1;
 }
 
 void RgcWeights(int narg, char *fn[]) {
   int i, j, d, n = 1, r2 = 2;
   char *c = &fn[1][2];
-  RgcClassData *X = (RgcClassData *)malloc(sizeof(RgcClassData));
+  auto X = std::make_unique<RgcClassData>();
   if (narg > 2)
     if (c[0] == 0)
       c = fn[++n];
@@ -564,7 +556,7 @@ void RgcWeights(int narg, char *fn[]) {
   X->winum = 0;
   X->candnum = 0;
   X->allow11 = 0;
-  RecConstructRgcWeights(0, X);
+  RecConstructRgcWeights(0, X.get());
   if (X->wnum <= WDIM) {
     for (i = 0; i < X->wnum; i++) {
       j = WsIpCheck(&X->wli[i], d);
@@ -717,8 +709,7 @@ void Npoly2cws(int narg, char *fn[]) {
   VertexNumList V;
   Long *X[VERT_Nmax];
   FILE *OF;
-  PolyPointList *P = (PolyPointList *)malloc(sizeof(PolyPointList));
-  assert(P != NULL);
+  auto P = std::make_unique<PolyPointList>();
   assert(!strcmp(fn[1], "-N"));
   inFILE = stdin;
   outFILE = stdout;
@@ -736,10 +727,10 @@ void Npoly2cws(int narg, char *fn[]) {
     }
   }
   OF = outFILE;
-  while (Read_CWS_PP(&W, P)) {
+  while (Read_CWS_PP(&W, P.get())) {
     if (W.N)
       Die("Only PPL-input in Npoly2cws!");
-    if (!IP_Check(P, &V, &E))
+    if (!IP_Check(P.get(), &V, &E))
       Die("Not IP!");
     Sort_VL(&V);
     for (n = 0; n < V.nv; n++)
@@ -749,7 +740,7 @@ void Npoly2cws(int narg, char *fn[]) {
       fprintf(outFILE, "\n");
     } else {
       outFILE = stderr;
-      Print_PPL(P, "CWS not found");
+      Print_PPL(P.get(), "CWS not found");
       outFILE = OF;
     }
   }
@@ -1029,14 +1020,13 @@ void makesubsets(WSaux *X) {
 void WRITE_Weight(Weight *_W);
 void Make_34_Weights(int d, int tFlag) {
   int i, Info = 0;
-  WSaux *X = (WSaux *)malloc(sizeof(WSaux));
-  PolyPointList *P = (PolyPointList *)malloc(sizeof(PolyPointList));
-  assert(P != NULL);
-  assert(X != NULL);
+  auto X = std::make_unique<WSaux>();
+  auto P = std::make_unique<PolyPointList>();
+  PolyPointList *P_ptr = P.get();
   X->wnum = 1;
   X->N = d + 1;
   assert(d <= 4);
-  makesubsets(X);
+  makesubsets(X.get());
   for (i = 0; i < X->N; i++)
     X->points[0][i] = 1;
   X->wli[0].n[X->N] = X->N;
@@ -1046,7 +1036,7 @@ void Make_34_Weights(int d, int tFlag) {
     X->points[1][0] = 4;
     for (i = 1; i < X->N; i++)
       X->points[1][i] = 0;
-    createweights(X, 2);
+    createweights(X.get(), 2);
     if (Info) {
       printf("Did (4,0,0,0,0)\n");
       fflush(0);
@@ -1055,7 +1045,7 @@ void Make_34_Weights(int d, int tFlag) {
     X->points[1][1] = 1;
     for (i = 2; i < X->N; i++)
       X->points[1][i] = 0;
-    createweights(X, 2);
+    createweights(X.get(), 2);
     if (Info) {
       printf("Did (3,1,0,0,0)\n");
       fflush(0);
@@ -1064,7 +1054,7 @@ void Make_34_Weights(int d, int tFlag) {
     X->points[1][1] = 2;
     for (i = 2; i < X->N; i++)
       X->points[1][i] = 0;
-    createweights(X, 2);
+    createweights(X.get(), 2);
     if (Info) {
       printf("Did (2,2,0,0,0)\n");
       fflush(0);
@@ -1074,7 +1064,7 @@ void Make_34_Weights(int d, int tFlag) {
     X->points[1][2] = 1;
     for (i = 3; i < X->N; i++)
       X->points[1][i] = 0;
-    createweights(X, 2);
+    createweights(X.get(), 2);
     if (Info) {
       printf("Did (2,1,1,0,0)\n");
       fflush(0);
@@ -1084,7 +1074,7 @@ void Make_34_Weights(int d, int tFlag) {
     X->points[1][0] = 3;
     for (i = 1; i < X->N; i++)
       X->points[1][i] = 0;
-    createweights(X, 2);
+    createweights(X.get(), 2);
     if (Info) {
       printf("Did (3,0,0,0,0)\n");
       fflush(0);
@@ -1093,7 +1083,7 @@ void Make_34_Weights(int d, int tFlag) {
     X->points[1][1] = 1;
     for (i = 2; i < X->N; i++)
       X->points[1][i] = 0;
-    createweights(X, 2);
+    createweights(X.get(), 2);
     if (Info) {
       printf("Did (2,1,0,0,0)\n");
       fflush(0);
@@ -1102,7 +1092,7 @@ void Make_34_Weights(int d, int tFlag) {
   X->points[1][0] = 2;
   for (i = 1; i < X->N; i++)
     X->points[1][i] = 0;
-  createweights(X, 2);
+  createweights(X.get(), 2);
   if (Info) {
     printf("Did (2,0,0,0,0)\n");
     fflush(0);
@@ -1117,8 +1107,8 @@ void Make_34_Weights(int d, int tFlag) {
     for (j = 0; j < X->N; j++)
       W.w[j] = X->wli[i].n[j];
     W.M = 0;
-    Make_Poly_Points(&W, P);
-    if (Ref_Check(P, &V, &E)) {
+    Make_Poly_Points(&W, P_ptr);
+    if (Ref_Check(P_ptr, &V, &E)) {
       int t = Trans_Check(W);
       char c[5] = "  rt";
       if (t || !tFlag) {
@@ -1131,9 +1121,8 @@ void Make_34_Weights(int d, int tFlag) {
     }
   }
   fprintf(outFILE, "  #=%d  #cand=%d\n", Info, X->wnum);
-  free(X);
 }
-/*  ==========       End of  ALL  IP  WEIGHTS  in  d <= 4    	==========  */
+/*  ==========       End of  ALL  IP  WEIGHTS  in  d <= 4     	==========  */
 /*  ==========  	      MAKE WEIGHTS d>4:                	==========  */
 
 void WRITE_Weight(Weight *_W) {
@@ -1195,15 +1184,14 @@ void Rec_IpWeights(Weight *W, PolyPointList *P, int g, int sum, int *npp,
 void MakeIpWeights(int N, int from_d, int to_d, int *rFlag, int *tFlag) {
   int npp = 0, nrp = 0;
   Weight W;
-  PolyPointList *P = (PolyPointList *)malloc(sizeof(PolyPointList));
+  auto P = std::make_unique<PolyPointList>();
   assert((N <= W_Nmax) && (N < POLY_Dmax + 2));
-  assert(P != NULL);
   W.N = N;
   W.M = 0;
   for (W.d = from_d; W.d <= to_d; W.d++)
     for (W.w[N - 1] = W.d / 2; W.d <= N * W.w[N - 1]; W.w[N - 1]--)
-      Rec_IpWeights(&W, P, Fgcd(W.d, W.w[W.N - 1]), W.d - W.w[W.N - 1], &npp,
-                    &nrp, N - 2, rFlag, tFlag);
+      Rec_IpWeights(&W, P.get(), Fgcd(W.d, W.w[W.N - 1]), W.d - W.w[W.N - 1],
+                    &npp, &nrp, N - 2, rFlag, tFlag);
   if (*rFlag)
     fprintf(outFILE, "#primepartitions=%d #refpolys=%d\n", npp, nrp);
   if (*tFlag)
@@ -2362,25 +2350,15 @@ void Make_IP_CWS(int narg, char *fn[]) {
 void IP_Poly_Data(int narg, char *fn[]) {
   int r = 1, i, n = 0, p = 0, d = 0;
   CWS CW;
-  PolyPointList *_P, *_DP;
-  VertexNumList *_V;
-  EqList *_E;
+  auto _P = std::make_unique<PolyPointList>();
+  auto _DP = std::make_unique<PolyPointList>();
+  VertexNumList _V_obj;
+  EqList _E_obj;
+  VertexNumList *_V = &_V_obj;
+  EqList *_E = &_E_obj;
 
   inFILE = stdin;
   outFILE = stdout; /*puts("IP_Poly_Data: to be done");*/
-
-  _P = (PolyPointList *)malloc(sizeof(PolyPointList));
-  if (_P == NULL)
-    Die("Unable to allocate space for _P");
-  _DP = (PolyPointList *)malloc(sizeof(PolyPointList));
-  if (_DP == NULL)
-    Die("Unable to allocate space for _DP");
-  _V = (VertexNumList *)malloc(sizeof(VertexNumList));
-  if (_V == NULL)
-    Die("Unable to alloc space for VertexNumList _V");
-  _E = (EqList *)malloc(sizeof(EqList));
-  if (_E == NULL)
-    Die("Unable to alloc space for EqList _E");
 
   while ((narg > ++n) && (fn[n][0] == '-')) {
     if (fn[n][1] == 'i') {
@@ -2405,14 +2383,14 @@ void IP_Poly_Data(int narg, char *fn[]) {
       exit(0);
     }
   }
-  while (Read_CWS_PP(&CW, _P))
-    if (IP_Check(_P, _V, _E)) {
+  while (Read_CWS_PP(&CW, _P.get()))
+    if (IP_Check(_P.get(), _V, _E)) {
       r = 1;
       i = -1;
       while (r && (++i < _E->ne))
         if (_E->e[i].c != 1)
           r = 0;
-      Make_Dual_Poly(_P, _V, _E, _DP);
+      Make_Dual_Poly(_P.get(), _V, _E, _DP.get());
       if ((!p) && (!d)) {
         Print_CWS(&CW);
         fprintf(outFILE, " M:%d %d", _P->np, _V->nv);
@@ -2422,10 +2400,10 @@ void IP_Poly_Data(int narg, char *fn[]) {
           fprintf(outFILE, " F:%d N:%d", _E->ne, _DP->np);
       }
       if (p)
-        Print_PPL(_P, "");
+        Print_PPL(_P.get(), "");
       if (d)
-        Print_PPL(_DP, "");
-      assert(IP_Check(_DP, _V, _E));
+        Print_PPL(_DP.get(), "");
+      assert(IP_Check(_DP.get(), _V, _E));
       fprintf(outFILE, "\n");
     }
 }
@@ -2438,25 +2416,15 @@ int Remove_Identical_Points(PolyPointList *);
 int ConvHull(PolyPointList *P1, PolyPointList *P2, PolyPointList *P,
              VertexNumList *V1, int x) {
   int i, j;
-  VertexNumList *V2;
-  EqList *E1, *E2;
+  VertexNumList V2;
+  EqList E1, E2;
 
-  E1 = (EqList *)malloc(sizeof(EqList));
-  if (E1 == NULL)
-    Die("Unable to alloc space for EqList E1");
-  E2 = (EqList *)malloc(sizeof(EqList));
-  if (E2 == NULL)
-    Die("Unable to alloc space for EqList E2");
-  V2 = (VertexNumList *)malloc(sizeof(VertexNumList));
-  if (V2 == NULL)
-    Die("Unable to alloc space for VertexNumList V2");
+  Find_Equations(P1, V1, &E1);
+  Find_Equations(P2, &V2, &E2);
 
-  Find_Equations(P1, V1, E1);
-  Find_Equations(P2, V2, E2);
-
-  if ((V1->nv + V2->nv) > VERT_Nmax)
+  if ((V1->nv + V2.nv) > VERT_Nmax)
     Die("increase VERT_Nmax!");
-  if ((V1->nv + V2->nv) > POINT_Nmax)
+  if ((V1->nv + V2.nv) > POINT_Nmax)
     Die("increase POINT_Nmax!");
   if ((P1->n + x) > POLY_Dmax)
     Die("increase POLY_Dmax!");
@@ -2470,46 +2438,28 @@ int ConvHull(PolyPointList *P1, PolyPointList *P2, PolyPointList *P,
     for (j = 0; j < P1->n; j++)
       P->x[i][j] = P1->x[V1->v[i]][j];
   }
-  for (i = 0; i < V2->nv; i++) {
+  for (i = 0; i < V2.nv; i++) {
     for (j = 0; j < x; j++)
       P->x[P->np][j] = 0;
     for (j = 0; j < P2->n; j++)
-      P->x[P->np][x + j] = P2->x[V2->v[i]][j];
+      P->x[P->np][x + j] = P2->x[V2.v[i]][j];
     P->np++;
   }
   P->n = P2->n + x;
   if (x == 0)
     Remove_Identical_Points(P);
-  i = Find_Equations(P, V1, E1);
+  i = Find_Equations(P, V1, &E1);
   Sort_VL(V1);
-  free(E1);
-  free(E2);
-  free(V2);
   return i;
 }
 void Conv(int narg, char *fn[]) {
   FILE *INFILE[2];
   int n = 0, x = 0, nF = 2, i;
   char *infile[2] = {NULL}, *outfile = NULL, *a;
-  PolyPointList *P[2], *PP;
-  CWS *CW[2];
-  VertexNumList *V;
-
-  V = (VertexNumList *)malloc(sizeof(VertexNumList));
-  if (V == NULL)
-    Die("Unable to alloc space for VertexNumList V");
-  PP = (PolyPointList *)malloc(sizeof(PolyPointList));
-  if (PP == NULL)
-    Die("Unable to allocate space for PolyPointList");
-
-  for (i = 0; i < nF; i++) {
-    P[i] = (PolyPointList *)malloc(sizeof(PolyPointList));
-    if (P[i] == NULL)
-      Die("Unable to allocate space for PolyPointList");
-    CW[i] = (CWS *)malloc(sizeof(CWS));
-    if (CW[i] == NULL)
-      Die("Unable to allocate space for CWS");
-  }
+  PolyPointList P[2];
+  PolyPointList PP;
+  CWS CW[2];
+  VertexNumList V;
 
   while ((narg > ++n) && (fn[n][0] == '-')) {
     if (fn[n][1] == 'p') {
@@ -2540,18 +2490,12 @@ void Conv(int narg, char *fn[]) {
     printf("\nUnable to open file %s for write\n", fn[n]);
     exit(0);
   }
-  while (READ_CWS_PP(CW[0], P[0], INFILE[0])) {
-    while (READ_CWS_PP(CW[1], P[1], INFILE[1]))
-      if (ConvHull(P[0], P[1], PP, V, (P[0]->n - x)))
-        Print_VL(PP, V, "Vertices of P");
+  while (READ_CWS_PP(&CW[0], &P[0], INFILE[0])) {
+    while (READ_CWS_PP(&CW[1], &P[1], INFILE[1]))
+      if (ConvHull(&P[0], &P[1], &PP, &V, (P[0].n - x)))
+        Print_VL(&PP, &V, "Vertices of P");
     rewind(INFILE[1]);
   }
-  for (i = 0; i < nF; i++) {
-    free(P[i]);
-    free(CW[i]);
-  }
-  free(PP);
-  free(V);
 }
 /*  ==========  	      END of Convex Hull		==========  */
 
@@ -2624,11 +2568,9 @@ Long W_Point_Count(Weight *W, PolyPointList *P, VertexNumList *V, EqList *E) {
 void SimplexPointCount(int narg, char *fn[]) {
   Weight W;
   VertexNumList V;
-  EqList *E = (EqList *)malloc(sizeof(EqList));
+  EqList E;
   int L;
-  PolyPointList *P = (PolyPointList *)malloc(sizeof(PolyPointList));
-  if ((E == NULL) || (P == NULL))
-    Die("Unable to allocate space for E or P");
+  PolyPointList P{};
   assert(narg > 1);
   if (fn[1][2] == 'f')
     inFILE = NULL;
@@ -2636,7 +2578,7 @@ void SimplexPointCount(int narg, char *fn[]) {
   L = (fn[1][1] == 'L');
   while (Read_Weight(&W)) {
     int n;
-    Long np = L ? L_Point_Count(&W, P, &V, E) : W_Point_Count(&W, P, &V, E);
+    Long np = L ? L_Point_Count(&W, &P, &V, &E) : W_Point_Count(&W, &P, &V, &E);
     if (np <= SIMPLEX_POINT_Nmax) {
       printf("%d", W.d);
       for (n = 0; n < W.N; n++)
@@ -2645,6 +2587,4 @@ void SimplexPointCount(int narg, char *fn[]) {
       fflush(0);
     }
   }
-  free(P);
-  free(E);
 }
