@@ -240,12 +240,14 @@ This is the highest-risk step. Take extra care.
 - [x] Add comment documenting `FILE *inFILE, *outFILE` globals (ISSUES.md #40).
 - **Verify**: build + run all `tests/6.*` scripts.
 
-- [ ] #### Step 2.5 — `mori.c` → `mori.cpp`
+- [x] #### Step 2.5 — `mori.c` → `mori.cpp`
 
 - [x] Rename `mori.c` → `mori.cpp`.
-- [ ] Replace all `malloc` calls with `std::make_unique` or stack allocation.
-  Fix the memory leaks (ISSUES.md #8) by ensuring RAII cleanup.
-- [ ] Keep `FILE *inFILE, *outFILE` global definition here (mori.x defines them).
+- [x] Replace `CWS`, `EqList`, and `PolyPointList` allocations with
+  `std::unique_ptr`. `PairMat` remains a raw heap allocation because it is a
+  C-style 2D array typedef.
+- [x] Keep `FILE *inFILE, *outFILE` global definition here (mori.x defines
+  them), with a comment referencing ISSUES.md #40.
 - **Verify**: build + run all `tests/7.*` scripts.
 
 ---
