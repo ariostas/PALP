@@ -473,22 +473,16 @@ Still to convert in headers:
 - `include/palp/Global.h`: the large-`VERT_Nmax` `INCI_*` branch is not
   currently compiled (`VERT_Nmax <= 64`) and can be converted later.
 
-### Step 4.5 — Use `std::array` for fixed-size local buffers (pending)
+### Step 4.5 — Use `std::array` for fixed-size local buffers (done)
 
-Some migration changes introduced `std::vector` where the size is actually
-known at compile time. Once the `#define` constants they depend on become
-`constexpr` (or where they already are), these local buffers should be
-replaced with `std::array` to avoid heap allocation and express the fixed-size
-intent:
-
-- `src/Coord.cpp`: `std::vector<int> IN(AMBI_Dmax*(AMBI_Dmax+1))` in
-  `ReadCwsPp`, `Read_PP`, and `Read_CWS`.
-- `src/Vertex.cpp`: `std::vector<INCI> CEq_I(CEQ_Nmax)` and
+- [x] `src/Coord.cpp`: converted `std::vector<int> IN(AMBI_Dmax*(AMBI_Dmax+1))`
+  in `ReadCwsPp`, `Read_PP`, and `Read_CWS` to
+  `std::array<int, AMBI_Dmax*(AMBI_Dmax+1)>`.
+- [x] `src/Vertex.cpp`: converted `std::vector<INCI> CEq_I(CEQ_Nmax)` and
   `std::vector<INCI> F_I(EQUA_Nmax)` in `Finish_IP_Check`,
-  `Find_Equations`, and `IP_Check`.
-
-`PoCoLi` in `include/palp/LG.h` should remain `std::vector` because its size
-is determined at runtime by the Poincaré polynomial being computed.
+  `Find_Equations`, and `IP_Check` to `std::array`.
+- [x] `PoCoLi` in `include/palp/LG.h` remains `std::vector` because its size is
+  runtime-dependent.
 
 ---
 
