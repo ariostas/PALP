@@ -2,14 +2,14 @@
 #include <palp/Subpoly.h>
 #include <palp/Rat.h>
 
-#define  subl_int                LLong
-#define  UnAided_IP_CHECK        (POLY_Dmax>4)
-#define  SIMPLE_CTH	         (0)
-#define	 INCOMPLETE_SL_REDUCTION (0)
-#define  TEST_Aided_IP_CHECK     (0)
+using subl_int = LLong;
+constexpr bool UnAided_IP_Check = (POLY_Dmax > 4);
+constexpr bool SIMPLE_CTH = false;
+constexpr bool INCOMPLETE_SL_REDUCTION = false;
+constexpr bool TEST_Aided_IP_Check = false;
 
-#define  IMPROVE_SL_COORD	(0)	      /* 0=no  1=SL(old)  2=GL(new) */
-#define  IMPROVE_SL_REGCD	(0)
+constexpr int IMPROVE_SL_COORD = 0;   /* 0=no  1=SL(old)  2=GL(new) */
+
 
 typedef struct {int nk, k[VERT_Nmax];} KeepList;
 
@@ -316,13 +316,13 @@ int  Aided_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     CEq.ne=n_Hole_Faces;   }
 
   else {
-    CEq.ne=0; 
-#if SIMPLE_CTH
-    FE_Close_the_Hole(_P,_V,_E,&CEq,n_old_v,CEq_INCI,Hole_Verts);}
-#else
-    Close_the_Hole(_P,_V,_E,&CEq,old_ne,n_old_v,n_Hole_Faces,
-		   E_INCI, CEq_INCI, Hole_Verts, Hole_Faces);}
-#endif
+    CEq.ne=0;
+    if constexpr (SIMPLE_CTH)
+      FE_Close_the_Hole(_P,_V,_E,&CEq,n_old_v,CEq_INCI,Hole_Verts);
+    else
+      Close_the_Hole(_P,_V,_E,&CEq,old_ne,n_old_v,n_Hole_Faces,
+		     E_INCI, CEq_INCI, Hole_Verts, Hole_Faces);
+  }
 
   /*Print_PPL(_P);
   Print_VL(_P,_V,"Verts:"); 
@@ -412,11 +412,10 @@ void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 
   _NFL->nIP++;
 
-#if UnAided_IP_CHECK
-  IP=IP_Check(red_P,&red_V,new_E);
-#else
-  IP=Aided_IP_Check(red_P,&red_V,new_E,n_irrel,_V->nv-1);
-#endif
+  if constexpr (UnAided_IP_Check)
+    IP=IP_Check(red_P,&red_V,new_E);
+  else
+    IP=Aided_IP_Check(red_P,&red_V,new_E,n_irrel,_V->nv-1);
 
   /* puts("After AIP (in D&K):");
   Print_VL(red_P,&red_V);
@@ -427,29 +426,27 @@ void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   if(IP){
 
     VertexNumList new_V;
-#if TEST_Aided_IP_CHECK
     VertexNumList test_V;
     EqList test_E;
-#endif
 
     /* Create new_V from red_V */
     new_V.nv=red_V.nv;
-    for (i=0;i<red_V.nv;i++) if((new_V.v[i]=new2old[red_V.v[i]])==_P->np-1) 
+    for (i=0;i<red_V.nv;i++) if((new_V.v[i]=new2old[red_V.v[i]])==_P->np-1)
       new_V.v[i]=_V->v[drop_num];
 
     /* Drop the vertex _V->v[drop_num]: */
     _P->np--;
-    for (j=0;j<_P->n;j++) _P->x[_V->v[drop_num]][j]=_P->x[_P->np][j]; 
+    for (j=0;j<_P->n;j++) _P->x[_V->v[drop_num]][j]=_P->x[_P->np][j];
     j=kept(_P->np,_KL);
     if (j>=0) _KL->k[j]=_V->v[drop_num];
 
-#if TEST_Aided_IP_CHECK
-  if(!IP_Check(_P,&test_V,&test_E)||(test_V.nv!=red_V.nv)||
+  if constexpr (TEST_Aided_IP_Check)
+    if(!IP_Check(_P,&test_V,&test_E)||(test_V.nv!=red_V.nv)||
       (test_E.ne!=new_E->ne)){
     int k;
     fprintf(outFILE,"_V: ");
     for (i=0;i<_V->nv;i++) fprintf(outFILE,"%d ",_V->v[i]);
-    fprintf(outFILE,"\n"); 
+    fprintf(outFILE,"\n");
     fprintf(outFILE,"_E:\n");
     for (i=0;i<_E->ne;i++){
       for (k=0;k<_P->n;k++) fprintf(outFILE,"%d ", (int) _E->e[i].a[k]);
@@ -465,7 +462,7 @@ void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 
     fprintf(outFILE,"red_V: ");
     for (i=0;i<red_V.nv;i++) fprintf(outFILE,"%d ",red_V.v[i]);
-    fprintf(outFILE,"\n"); 
+    fprintf(outFILE,"\n");
     fprintf(outFILE,"new_E:\n");
     for (i=0;i<new_E->ne;i++){
       for (k=0;k<_P->n;k++) fprintf(outFILE,"%d ", (int) new_E->e[i].a[k]);
@@ -478,15 +475,14 @@ void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 
     fprintf(outFILE,"test_V: ");
     for (i=0;i<test_V.nv;i++) fprintf(outFILE,"%d ",test_V.v[i]);
-    fprintf(outFILE,"\n"); 
+    fprintf(outFILE,"\n");
     fprintf(outFILE,"test_E:\n");
     for (i=0;i<test_E.ne;i++){
       for (k=0;k<_P->n;k++) fprintf(outFILE,"%d ", (int) test_E.e[i].a[k]);
       fprintf(outFILE," %d\n", (int) test_E.e[i].c);}
     fprintf(outFILE,"\n");
 
-    exit(0);} 
-#endif
+    exit(0);}
 
     Make_All_Subpolys(_P, new_E, &new_V, _KL, _NFL);
     
@@ -698,11 +694,10 @@ void Reduce_Poly(PolyPointList *_P, EqList *_E, KeepList *_KL,
     for (j=0;j<_P->n;j++) fprintf(outFILE,"%d ",(int) RedVec[j]);
     fprintf(outFILE,"\n"); 
     puts("WARNING: INCOMPLETE SL REDUCTION"); fflush(stdout);
-#if	INCOMPLETE_SL_REDUCTION
-    free(new_P); return;
-#else
-    exit(0);
-#endif
+    if constexpr (INCOMPLETE_SL_REDUCTION) {
+      free(new_P); return;
+    } else
+      exit(0);
   }
 
   if(!IP_Check(new_P,&V,_E)) {

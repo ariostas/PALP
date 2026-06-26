@@ -401,30 +401,44 @@ Files already converted:
   `TEST_PRINT_SINGULAR_IO`, `NORM_SIMP_NUM`, plus `const` correctness for
   `DivClassBasis` string arguments.
 - `src/Vertex.cpp`: `SHOW_NEW_CEq`, `LLong_EEV`, `TEST_EEV`,
-  `VERT_WITH_MAX_DISTANCE`, `LONG_EQ_FIRST`, `TEST_GLZ_EQ`. `MAX_BAD_EQ`
-  remains a macro because it is used in `#if`.
+  `VERT_WITH_MAX_DISTANCE`, `LONG_EQ_FIRST`, `TEST_GLZ_EQ`, `MAX_BAD_EQ`
+  (converted to `constexpr bool` together with its `#if` block).
 - `src/Subdb.cpp`: `SUBTRACT_H_FROM_SL`, `Hod_Dif_max`, `Hod_Min_max`, all
   local `TEST`/`TEST_OUT` toggles.
 - `src/Polynf.cpp`: `SORT_CWS`, `FIB_PERM`, `SSR_PRINT`,
   `ALL_FANOS_BUT_INEFFICIENT`, `FANO_CONIFOLD`, `SL_Long`, `KPF`,
   `RelativeSimplexVolume`, `No_OLD_FACE_LIST`, `SQnum_Max`, `TESTfano`,
-  `FanoProjNPmax`, `FPcirNmax`, `PrintFanoProjCand`, `INCIbits`, and `Fputs`
-  to an inline function. Active preprocessor-dependent flags (`SMOOTH`,
-  `NON_REF`, `SHOW_NFX_LIMIT`, `NFX_Limit`, etc.) remain as macros.
+  `FanoProjNPmax`, `FPcirNmax`, `PrintFanoProjCand`, `INCIbits`, `Fputs`
+  to an inline function, `SMOOTH`, `NON_REF`, `BARY_PRINT`,
+  `ZEROSUM_PRINT`, `KP_PRINT`, `SHOW_NFX_LIMIT`. Active
+  preprocessor-dependent flags whose values are used for array sizes
+  (`NFX_Limit`, `X_Limit`, `VPM_Limit`) and `KP_VALUE`/`KP_EXIT` remain
+  as macros.
 - `src/LG.cpp`: `SHOW_b01_TWIST`, `Tout`, `DET_WARN_ONLY`,
-  `ABBREV_POLY_PRINT`, `NO_COORD_IMPROVEMENT`, `TEST_LG`, `TEST_PP`,
-  `TEST_PD`, `StandardOutput`.
+  `ABBREV_POLY_PRINT`, `NO_COORD_IMPROVEMENT` (kept as macro to keep dead
+  blocks disabled), `TEST_LG`, `TEST_PP`, `TEST_PD`, `StandardOutput`.
 - `src/E_Poly.cpp` / `src/nef.cpp`: `WRITE_CWS` replaced with local
   `constexpr bool write_cws`; macro removed from `include/palp/Nef.h`.
 - `src/poly.cpp` / `src/nef.cpp`: `OSL`.
 - `src/MoriCone.cpp`: `ANfan`, `ANtri`, `Inci64_AND`, `Inci64_EQ`,
   `Inci64_0`, `Inci64_1`, `Inci64_EQ_0`, `Inci64_OR`, `Inci64_PN`,
   `Inci64_D2`, `Inci64_M2`, plus fix of `assert(++m<binco)` side-effect bug.
+- `src/Subadd.cpp`: compression constants `UCM`, `USM`, `Nint_XLong`, `NX`,
+  `UNIT_OFF`, `LL_BASE`, and `MirTest` to an inline function. Dead
+  `MOVE_SAVE_FILE` block removed.
 - `include/palp/Global.h`: `GL_Long`, `MAXLD`, `INT_Nbits`,
-  `LONG_LONG_Nbits`, `I_NUI`, and all single-integer `INCI_*` bit helpers.
+  `LONG_LONG_Nbits`, `I_NUI`, all single-integer `INCI_*` bit helpers,
+  `EQUA_Nmax` fallback, and `CEQ_Nmax`.
 - `include/palp/Nef.h`: `Nef_Max`, `NP_Max`, `MAXSTRING`, `Pos_Max`,
   `FIB_POINT_Nmax` converted to `constexpr`. `W_Nmax` remains a macro
   because both `Nef.h` and `LG.h` define it for array sizes.
+- `include/palp/LG.h`: `Pint`.
+- `include/palp/Subpoly.h`: `NUC_Nmax`, `MAX_REC_DEPTH`, `Along`, `UPint`,
+  `FORCE_SAVE_TIME`, `GOOD_SAVE_TIME`, `WRITE_DIM`, `MIN_NEW`,
+  `MIN_W_SAVE_TIME`, `WATCHREF`, `SAVE_INC`, `CperR_MAX`, `BASE_MAX`,
+  `BLOCK_LENGTH`, `subl_int`, `NB_MAX`, `SL_Nmax`, `File_Ext_NCmax`,
+  `SAVE_FILE_EXT`; preprocessor consistency check replaced with
+  `static_assert`.
 
 Still to convert in `.cpp` files:
 - `src/Coord.cpp`: `NO_COORD_IMPROVEMENT` is defined, so all
@@ -440,7 +454,8 @@ Still to convert in `.cpp` files:
 Still to convert in headers:
 - `include/palp/Global.h`: `POLY_Dmax`, `POINT_Nmax`, `VERT_Nmax`,
   `FACE_Nmax`, `SYM_Nmax`, `EQUA_Nmax`, `AMBI_Dmax`, `FIB_Nmax`,
-  `CD2F_Nmax` remain compile-time sizing macros.
+  `CD2F_Nmax` remain compile-time sizing macros; `MULTIPLYING` also
+  remains because it controls a global `#if` branch.
 - `include/palp/LG.h`: `WZinput` (used in `#if`), `W_Nmax`.
 - `include/palp/Nef.h`: `W_Nmax`.
 - `include/palp/Subpoly.h`: `USE_TMP_DIR` (used in `#if`), `FTELL`/`FSEEK`
