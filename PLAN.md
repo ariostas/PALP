@@ -469,9 +469,26 @@ Still to convert in headers:
 - `include/palp/Nef.h`: `W_Nmax`.
 - `include/palp/Subpoly.h`: `USE_TMP_DIR` (used in `#if`). `FTELL`/`FSEEK`
   are now inline wrapper functions.
-- `include/palp/Rat.h`: `ARG_FUN` (used as a parameter declaration).
+- `include/palp/Rat.h`: `ARG_FUN` converted to a `using` alias.
 - `include/palp/Global.h`: the large-`VERT_Nmax` `INCI_*` branch is not
   currently compiled (`VERT_Nmax <= 64`) and can be converted later.
+
+### Step 4.5 — Use `std::array` for fixed-size local buffers (pending)
+
+Some migration changes introduced `std::vector` where the size is actually
+known at compile time. Once the `#define` constants they depend on become
+`constexpr` (or where they already are), these local buffers should be
+replaced with `std::array` to avoid heap allocation and express the fixed-size
+intent:
+
+- `src/Coord.cpp`: `std::vector<int> IN(AMBI_Dmax*(AMBI_Dmax+1))` in
+  `ReadCwsPp`, `Read_PP`, and `Read_CWS`.
+- `src/Vertex.cpp`: `std::vector<INCI> CEq_I(CEQ_Nmax)` and
+  `std::vector<INCI> F_I(EQUA_Nmax)` in `Finish_IP_Check`,
+  `Find_Equations`, and `IP_Check`.
+
+`PoCoLi` in `include/palp/LG.h` should remain `std::vector` because its size
+is determined at runtime by the Poincaré polynomial being computed.
 
 ---
 
