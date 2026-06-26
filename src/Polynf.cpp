@@ -419,16 +419,14 @@ void Eval_Poly_NF(int *d, int *v, int *f, Long VM[POLY_Dmax][VERT_Nmax],
                   Long VPM[VERT_Nmax][VERT_Nmax],        /* in */
                   Long pNF[POLY_Dmax][VERT_Nmax], int t) /* out */
 {
-  PERM *CL = (PERM *)malloc((SYM_Nmax + 1) * sizeof(PERM));
+  auto CL = std::make_unique<PERM[]>(SYM_Nmax + 1);
   auto VPM_NF = std::make_unique<Long[][VERT_Nmax]>(VERT_Nmax);
   int ns;
-  assert(CL != NULL);
-  Make_VPM_NF(v, f, VPM, CL, &ns, VPM_NF.get());
+  Make_VPM_NF(v, f, VPM, CL.get(), &ns, VPM_NF.get());
   if (t)
     Print_vNF(v, f, VPM, VPM_NF.get());
-  New_pNF_Order(v, f, CL, &ns, VPM_NF.get());
-  Aux_pNF_from_vNF(CL, &ns, v, d, VM, pNF, &t);
-  free(CL);
+  New_pNF_Order(v, f, CL.get(), &ns, VPM_NF.get());
+  Aux_pNF_from_vNF(CL.get(), &ns, v, d, VM, pNF, &t);
 #ifdef WARN_BIG_NS
 #ifdef SHOW_BIG_NS
   if (SHOW_BIG_NS <= ns) {
@@ -875,7 +873,7 @@ int Make_Poly_Sym_NF(PolyPointList *_P, VertexNumList *_V, EqList *_F,
                      int *SymNum, int V_perm[][VERT_Nmax],
                      Long NF[POLY_Dmax][VERT_Nmax], int traced, int S, int N) {
   int i, j, ns, t = -1, *d = &_P->n, *v = &_V->nv, *f = &_F->ne, *C;
-  PERM *CL = (PERM *)malloc(sizeof(PERM) * (SYM_Nmax + 1));
+  auto CL = std::make_unique<PERM[]>(SYM_Nmax + 1);
   Long VM[POLY_Dmax][VERT_Nmax];
   auto VPM = std::make_unique<Long[][VERT_Nmax]>(VERT_Nmax);
   auto VPM_NF = std::make_unique<Long[][VERT_Nmax]>(VERT_Nmax);
@@ -883,9 +881,9 @@ int Make_Poly_Sym_NF(PolyPointList *_P, VertexNumList *_V, EqList *_F,
   Init_rVM_VPM(_P, _V, _F, d, v, f, VM, VPM.get());
   if (traced)
     Eval_Poly_NF(&_P->n, &_V->nv, &_F->ne, VM, VPM.get(), NF, 1);
-  Make_VPM_NF(v, f, VPM.get(), CL, &ns, VPM_NF.get());
-  New_pNF_Order(v, f, CL, &ns, VPM_NF.get());
-  Aux_pNF_from_vNF(CL, &ns, v, d, VM, NF, &t);
+  Make_VPM_NF(v, f, VPM.get(), CL.get(), &ns, VPM_NF.get());
+  New_pNF_Order(v, f, CL.get(), &ns, VPM_NF.get());
+  Aux_pNF_from_vNF(CL.get(), &ns, v, d, VM, NF, &t);
   *SymNum = -t;
   i = 0;
   while (0 == CL[i].s)
@@ -926,7 +924,6 @@ int Make_Poly_Sym_NF(PolyPointList *_P, VertexNumList *_V, EqList *_F,
       }
     Print_Matrix(NF, _P->n, _V->nv, c);
   }
-  free(CL);
   return ns;
 }
 void Aux_NF_Coord(PolyPointList *_P, Long VM[POLY_Dmax][VERT_Nmax], int *C,
@@ -954,21 +951,20 @@ void Aux_NF_Coord(PolyPointList *_P, Long VM[POLY_Dmax][VERT_Nmax], int *C,
 void NF_Coordinates(PolyPointList *_P, VertexNumList *_V, EqList *_F)
 /* needs converted EqList !! */
 {
-  PERM *CL;
+  auto CL = std::make_unique<PERM[]>(SYM_Nmax + 1);
   Long VM[POLY_Dmax][VERT_Nmax];
   auto VPM = std::make_unique<Long[][VERT_Nmax]>(VERT_Nmax);
   int ns;
-  CL = (PERM *)malloc((SYM_Nmax + 1) * sizeof(PERM));
-  assert(CL != NULL);
   Init_rVM_VPM(_P, _V, _F, &_P->n, &_V->nv, &_F->ne, VM,
                VPM.get()); /* make VPM */
   {
     auto VPM_NF = std::make_unique<Long[][VERT_Nmax]>(VERT_Nmax);
-    Make_VPM_NF(&_V->nv, &_F->ne, VPM.get(), CL, &ns,
-                VPM_NF.get());                              /* get PERM */
-    New_pNF_Order(&_V->nv, &_F->ne, CL, &ns, VPM_NF.get()); /* improve PERM */
+    Make_VPM_NF(&_V->nv, &_F->ne, VPM.get(), CL.get(), &ns,
+                VPM_NF.get()); /* get PERM */
+    New_pNF_Order(&_V->nv, &_F->ne, CL.get(), &ns,
+                  VPM_NF.get()); /* improve PERM */
   }
-  Aux_NF_Coord(_P, VM, CL->C, &_P->n, &_P->np, &_V->nv); /* improve _P */
+  Aux_NF_Coord(_P, VM, CL[0].C, &_P->n, &_P->np, &_V->nv); /* improve _P */
   {
     int f = _F->ne;
     VertexNumList V; /* EqList in new basis */
@@ -981,7 +977,6 @@ void NF_Coordinates(PolyPointList *_P, VertexNumList *_V, EqList *_F)
       exit(0);
     }
   }
-  free(CL);
 }
 int Improve_Coords(PolyPointList *_P, VertexNumList *_V) {
   SL_Long S[POLY_Dmax][POLY_Dmax], X[POLY_Dmax];
@@ -1379,18 +1374,17 @@ typedef struct {
 } VPerm;
 int InvariantSubspace(PolyPointList *P, VertexNumList *V, EqList *E) {
   int i, v, r = 0, p = 0, pri, EVsn, sn;
-  VPerm *VP = (VPerm *)malloc(sizeof(VPerm));
+  VPerm VP;
   Long NF[POLY_Dmax][VERT_Nmax];
   VMat Inv;
-  assert(NULL != VP);
-  EVsn = Make_Poly_Sym_NF(P, V, E, &sn, VP->p, NF, 0, 0, 0);
+  EVsn = Make_Poly_Sym_NF(P, V, E, &sn, VP.p, NF, 0, 0, 0);
   for (v = 0; v < V->nv; v++) {
     Long X[POLY_Dmax], g = 0;
     for (i = 0; i < P->n; i++) {
       int s;
       X[i] = 0;
       for (s = 0; s < sn; s++)
-        X[i] += P->x[V->v[VP->p[s][v]]][i];
+        X[i] += P->x[V->v[VP.p[s][v]]][i];
       if (X[i])
         g = g ? NNgcd(g, X[i]) : X[i];
     }
@@ -1433,7 +1427,6 @@ int InvariantSubspace(PolyPointList *P, VertexNumList *V, EqList *E) {
     }
   } else if (pri)
     fprintf(outFILE, "symmetric\n");
-  free(VP);
   if (pri) {
     for (v = 0; v < V->nv; v++)
       for (i = 0; i < P->n; i++)
@@ -1595,7 +1588,7 @@ Long Aux_Vol_Barycent(PolyPointList *A, VertexNumList *V, EqList *E, Long *_B,
 
 Long LatVol_Barycent(PolyPointList *P, VertexNumList *V, /* bary=B/N */
                      Long *B, Long *N) {
-  PolyPointList *A = (PolyPointList *)malloc(sizeof(PolyPointList));
+  auto A = std::make_unique<PolyPointList>();
   int i, j;
   VertexNumList aV;
   EqList aE, *e = &aE;
@@ -1605,8 +1598,7 @@ Long LatVol_Barycent(PolyPointList *P, VertexNumList *V, /* bary=B/N */
   for (i = 0; i < V->nv; i++)
     for (j = 0; j < P->n; j++)
       A->x[i][j] = P->x[V->v[i]][j];
-  vol = Aux_Vol_Barycent(A, &aV, e, B, N);
-  free(A);
+  vol = Aux_Vol_Barycent(A.get(), &aV, e, B, N);
   if constexpr (TEST_OUT) {
     Print_PPL(P, "result for:");
     printf("vol=%d, B=", vol);
@@ -1701,12 +1693,14 @@ Long VxV(Long *X, Long *Y, int d) {
   return z;
 }
 Long V_to_GLZ(Long *V, Matrix G) { /* V may contain NULLs, return gcd */
-  int i, j, d = G.v, p = 0, z = 0, *P,
-            *Z = (int *)malloc(d * (2 * sizeof(int) + sizeof(Long)));
-  Long g, *W;
-  assert(Z != NULL);
-  P = &Z[d];
-  W = (Long *)&P[d];
+  int i, j, d = G.v, p = 0, z = 0;
+  size_t bytes = d * (2 * sizeof(int) + sizeof(Long));
+  size_t longs = (bytes + sizeof(Long) - 1) / sizeof(Long);
+  auto buf = std::make_unique<Long[]>(longs);
+  int *Z = reinterpret_cast<int *>(buf.get());
+  int *P = &Z[d];
+  Long *W = reinterpret_cast<Long *>(&P[d]);
+  Long g;
   for (i = 0; i < d; i++)
     if (V[i]) {
       W[p] = V[(P[p] = i)];
@@ -1749,7 +1743,6 @@ Long V_to_GLZ(Long *V, Matrix G) { /* V may contain NULLs, return gcd */
     g = -g;
   for (j = 0; j < d; j++)
     assert(VxV(V, G.x[j], d) == ((j == 0) * g));
-  free(Z);
   return g;
 }
 void Aux_G_2_BxG(Matrix G, Matrix B) { /* don't use INV_GLZ::infinite loop */
@@ -1780,10 +1773,9 @@ void Aux_MinNonNeg_UT(Matrix M, Matrix G, int c, int r, int d, Long D) {
 int Make_G_for_GxMT_UT(Matrix M, Matrix G) { /* GxM upper trian, return rank */
   int i, j, r = 0, v = M.v, d = M.d;
   Matrix B;
-  Long *V = (Long *)malloc(d * sizeof(Long));
+  auto V = std::make_unique<Long[]>(d);
   assert(G.v == d);
   assert(G.d == d);
-  assert(V != NULL);
   Init_Matrix(&B, d, d);
   for (i = 0; i < d; i++)
     for (j = 0; j < d; j++)
@@ -1801,11 +1793,10 @@ int Make_G_for_GxMT_UT(Matrix M, Matrix G) { /* GxM upper trian, return rank */
         Aux_G_2_BxG(G, B);
         Aux_MinNonNeg_UT(M, G, i, r, d, D);
       } else
-        V_to_GLZ(V, G);
+        V_to_GLZ(V.get(), G);
       r++;
     }
   }
-  free(V);
   Free_Matrix(&B);
   return r;
 }
