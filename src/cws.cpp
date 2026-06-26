@@ -778,13 +778,13 @@ void MakeMoonWeights(int N, int from_d, int to_d){
 
 
 	/* ----------   LG/transversal stuff  ------------ */
-#define  ALLOWHALF	(1)		      /* i.e. trivial LG potentials */
-#define  CHAT		(0)			/* 3 ... for positive c_1 */
-#define  TWDIM  16384      /* 16384  8192  4096  dimension of weight-buffer */
-#define  mod(a,b)  ((a)%(b))
+namespace {
+  constexpr bool ALLOWHALF = true;       /* i.e. trivial LG potentials */
+  constexpr bool CHAT = false;           /* 3 ... for positive c_1 */
+}
 
 typedef int T_weight[AMBI_Dmax+2];			/* NM::AMBI_Dmax */
-typedef struct {int n,d,wnum,jmax;T_weight wei, wli[TWDIM];} 	T_aux;
+typedef struct {int n,d,wnum,jmax;T_weight wei, wli[TWDIM];}	T_aux;
 
 void T_Chon(int,int,int,int,T_aux*); /* i, {-fermat,0=closed,+open}, nmax, g */
 void T_Addweight(T_weight,T_aux *X);
@@ -793,12 +793,10 @@ int PPT_Check(T_weight nli,T_aux *X);
 void Make_Trans_Weights(int n,int dmin,int dmax /*,int rFlag */)
 {    int i,j,inc=1; T_aux X; X.n=n; X.wnum=0;
      outFILE=stdout; assert(n<=AMBI_Dmax); X.wei[0]=n;
-     if(CHAT){ assert(CHAT==3); if(!(n%2)) {inc++; dmin+=(dmin%2);}}
-      for(X.d=dmin;X.d<=dmax;X.d+=inc) 
+      for(X.d=dmin;X.d<=dmax;X.d+=inc)
       { X.wei[n+1]=X.d; X.wnum=0;
-	if(ALLOWHALF) X.jmax=X.d/2; else X.jmax=(X.d-1)/2; 
-	if(CHAT) T_Chon(1,-1,(X.d*(n- CHAT))/2-n+1,X.d,&X);  
-	else T_Chon(1,-1, X.d -n+1,X.d,&X);
+	if(ALLOWHALF) X.jmax=X.d/2; else X.jmax=(X.d-1)/2;
+	T_Chon(1,-1, X.d -n+1,X.d,&X);
         for(i=0;i<X.wnum;i++) 
         {   Weight W; W.N=n; W.d=X.d; for(j=0;j<n;j++) W.w[j]=X.wli[i][j+1];
             W.M=0; if(Trans_Check(W)) Write_Weight(&W);       
