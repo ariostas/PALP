@@ -17,23 +17,30 @@ namespace {
 
 
 
-#define	SORT_CWS	(0)
-#define FIB_PERM	(27)		    /* print permutation for p<=# */
+namespace {
+  constexpr int SORT_CWS = 0;
+  constexpr int FIB_PERM = 27;          /* print permutation for p<=# */
+
+  // constexpr bool SMOOTH = true;        /* print only regular simplicial */
+  // constexpr bool NON_REF = true;       /* allow non-reflexive input */
+  constexpr int SSR_PRINT = 0;            /* SemiSimpleRoots, 2: also noFIPs */
+  // constexpr bool BARY_PRINT = true;    /* print if BARY_ZERO */
+  // constexpr int ZEROSUM_PRINT = 1;     /* 1::Psum  2::kPsum  */
+  // KP_VALUE, KP_EXIT depend on P; keep as macros below
+  // constexpr int KP_PRINT = 3;
+
+  constexpr bool ALL_FANOS_BUT_INEFFICIENT = false;
+
+  using SL_Long = LLong;                  /* has same problems as REgcd */
+}
 
 #define SMOOTH			(1)	/* print only regular simplicial */
 #define NON_REF			(1)	/* allow non-reflexive input */
-#define SSR_PRINT		(0)	/* SemiSimpleRoots, 2: also noFIPs */
 #define BARY_PRINT		(1)	/* print if BARY_ZERO */
 #define	ZEROSUM_PRINT		(1)	/* 1::Psum  2::kPsum  */
 #define KP_VALUE		((P->n+1)/2)   /* (P->n+1)/2 is sufficient */
 #define KP_PRINT		(3)	/* print if  sum kP !=0  at this k */
 #define KP_EXIT			((P->n+1)/2)   /* exit if !=0 above this k */
-
-#undef	OLD_IPS
-
-#define     ALL_FANOS_BUT_INEFFICIENT         (0)
-
-#define SL_Long		LLong		    /* has same problems as REgcd */
 
 #if	(POLY_Dmax < 5)
 
@@ -51,11 +58,7 @@ namespace {
 
 /*   ------	some flags for testing	------ */
 
-#define TEST_GLZ_VS_SL	(0)		/* exit on difference: GL vs. SL */
 #define SHOW_NFX_LIMIT	(1)		/* exit on NFX_LIMIT violation */
-
-#undef  WARN_BIG_NS			/* [1152] ...  1152 = sym(24-cell)  */
-#undef	SHOW_BIG_NS			/* [1153] ...  printf VPM and exit  */
 
 /*   ------  local typedefs and headers	------ */
 
@@ -98,16 +101,7 @@ int  Make_Poly_NF(PolyPointList *_P, VertexNumList *_V, EqList *_F,
 
 int  Aux_Make_Poly_NF(Long X[][VERT_Nmax], int *n, int *nv)
 {    GL_Long G[POLY_Dmax][POLY_Dmax];
-#if	(TEST_GLZ_VS_SL)
-     int i,j,x; SL_Long S[POLY_Dmax][POLY_Dmax];Long XS[POLY_Dmax][VERT_Nmax];
-     for(i=0;i<*n;i++)for(j=0;j<*nv;j++)XS[i][j]=X[i][j];
-     x=GLZ_Make_Trian_NF(X,n,nv,G); SL2Z_Make_Poly_NF(XS,n,nv,S);
-     for(i=0;i<*n;i++)for(j=0;j<*n;j++)  assert( S[i][j]==G[i][j]);}
-     for(i=0;i<*n;i++)for(j=0;j<*nv;j++) assert(XS[i][j]==X[i][j]);
-	return x;
-#else
-	return GLZ_Make_Trian_NF(X,n,nv,G);
-#endif
+     return GLZ_Make_Trian_NF(X,n,nv,G);
 }
 int  SL2Z_Aux_Make_Poly_NF(Long X[][VERT_Nmax], int *n, int *nv)
 {    SL_Long S[POLY_Dmax][POLY_Dmax];
@@ -995,7 +989,9 @@ void Circuit(int d,Long **P,Long *C){/* find C[d+1] with C.P=0 for P[d+1][d] */
   for(i=0;i<T.d;i++) C[i]=G.x[T.v][i];
   Free_Matrix(&G); Free_Matrix(&T);}
 
-#define	KPF	1
+namespace {
+  constexpr int KPF = 1;
+}
 			
 /*   check simplicial; if(vol) check FANO, i.e. vol==1 
  */
@@ -1017,7 +1013,6 @@ int  SimpUnimod_M(PolyPointList *P,VertexNumList *V,EqList *E,int vol)
 	if(vol) if(1!=(i=SimplexVolume(Y,d))) return 0;	       /* unimodular */
      }	return 1;
 }
-#define RelativeSimplexVolume	LinRelSimplexVolume
 int  AffRelSimplexVolume(Long *X[POLY_Dmax],int v,int d) /* S-dim=v<=dim */
 {    int i,j,k,r=0,det=1; GL_Long B[POLY_Dmax][POLY_Dmax], *b[POLY_Dmax],
         Y[POLY_Dmax][POLY_Dmax],       G[POLY_Dmax][POLY_Dmax], *g[POLY_Dmax]; 
@@ -1081,8 +1076,9 @@ void PrintFanoVert(PolyPointList *P, VertexNumList *V)
 void Make_FaceIPs(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 		  PolyPointList *_DP, FaceInfo *_I);
 void Eval_BaHo(FaceInfo *_I, BaHo *_BH);
-#define No_OLD_FACE_LIST
-#define SQnum_Max	64		/* assume el(0)=min, el::++-- */
+namespace {
+  constexpr int SQnum_Max = 64;           /* assume el(0)=min, el::++-- */
+}
 int  Add_Square_To_Rel(int el[4],int r,int v,Long rel[SQnum_Max][VERT_Nmax],
 	int C[SQnum_Max])
 {    int i,j,l,c=el[0]; Long N[VERT_Nmax];
@@ -1152,8 +1148,9 @@ int  Obstructed_Conifold_Deformations(int S[SQnum_Max][4], int M[SQnum_Max],
      }	return bad;
 }
 
-#define FANO_CONIFOLD	(0)       	/* default: 0=CY-conifold, 1=FANO */  
-					/* 2-faces basic squar OR vol=1  */
+namespace {
+  constexpr bool FANO_CONIFOLD = false;   /* default: 0=CY-conifold, 1=FANO */
+}					/* 2-faces basic squar OR vol=1  */
 int  ConifoldSing(PolyPointList *P,VertexNumList *V,EqList *E,
 	PolyPointList *dP,EqList *dE,int divby)
 {    int i,j, nf=0, nsq=0, ndpt=0, rk=0,CF,/* #cd2face #squares #double-pts.*/
@@ -1161,7 +1158,7 @@ int  ConifoldSing(PolyPointList *P,VertexNumList *V,EqList *E,
      static int npol,nosq,five,nonbasic,ncon,fano; INCI *FInc; 
      int PIC, S[SQnum_Max][4], M[SQnum_Max];
      FaceInfo *_FI=(FaceInfo *) malloc(sizeof(FaceInfo)); assert(P->n==4);
-     if(divby==0){if(FANO_CONIFOLD) divby=2; else divby=1;} /* set default */
+     if(divby==0){ if constexpr (FANO_CONIFOLD) divby=2; else divby=1; } /* set default */
      assert(divby/100<=2); 	if(divby>99) {PIC=divby%100; CF=divby/100;}
      else if (divby>9) {PIC=divby%10; CF=divby/10;} else {PIC=0;CF=divby;}
 /*
@@ -1172,9 +1169,6 @@ int  ConifoldSing(PolyPointList *P,VertexNumList *V,EqList *E,
      if(_FI==NULL) {printf("ConifoldSing: Unable to allocate _FI\n"); exit(0);}
      Make_Incidence(P, V, E, _FI); npol++;
      nf=_FI->nf[1]; FInc=_FI->f[1]; /* cd2-faces of dP :: edge of P :: */
-#ifdef OLD_FACE_LIST
-	assert(nF==nf);
-#endif
      Make_FaceIPs(P,V,E,dP,_FI); 
      for(j=0;j<nf;j++){int e=0, el[4], sq=0; Long *X[POLY_Dmax];
 	INCI I=FInc[j]; int f=INCI_abs(I); if(f<3){Print_EL(E,&dP->n,0,"E");
@@ -1198,7 +1192,7 @@ int  ConifoldSing(PolyPointList *P,VertexNumList *V,EqList *E,
 	{int l;for(l=0;l<e;l++){printf("X[%d]=",l);for(i=0;i<P->n;i++)
 	    printf("%3ld ",X[l][i]);printf(" j=%d fn=%d\n",j, nf);}}
 #endif
-        if(1<RelativeSimplexVolume(X,3,P->n)){nonbasic++;free(_FI);return 0;}
+        if(1<LinRelSimplexVolume(X,3,P->n)){nonbasic++;free(_FI);return 0;}
 	if(e==4){int mul=0,vv[2]; INCI ID=_FI->v[1][j];		i=el[3]; 
 	    if(sq==2) el[3]=el[0]; else if(sq==3) {el[3]=el[1]; el[1]=el[0];}
 	    else if(sq==1) {el[3]=el[1];el[1]=el[2];el[2]=el[0];}
@@ -2366,9 +2360,7 @@ if constexpr (TEST_OUT) {
      for(i=0;i<r;i++){for(j=0;j<v;j++)CW->z[i][j]=Z[i][j];CW->m[i]=M[i];}
      /* for(i=0;i<r;i++)assert(Phase(Z[i],v)%CW->m[i]==0); */
      CW->N=v; CW->nz=r;
-#if  (SORT_CWS)
-	Sort_CWS(CW); 
-#endif
+
      return 1;
 }
 
@@ -2599,12 +2591,14 @@ Long Poly_Point_Count(PolyPointList *P,VertexNumList *V,EqList *E)
 }
 
 
-#define	TESTfano		 0
-#define	FanoProjNPmax		14
-#define FPcirNmax		15
-#define PrintFanoProjCand	 1		/* 			 */
+namespace {
+  constexpr bool TESTfano = false;
+  constexpr int FanoProjNPmax = 14;
+  constexpr int FPcirNmax = 15;
+  constexpr bool PrintFanoProjCand = true;
 
-#define INCIbits		unsigned long long
+  using INCIbits = unsigned long long;
+}
 int getNI(int N,INCIbits I){return (I>>N)%2;}		/* read INCIDENCE */
 
 int Make_Fano5d(PolyPointList *,int *,EqList *,
@@ -2736,9 +2730,9 @@ int TempVecUpdate0(int tempvec[], int l, int* atotal_zeiger, int limitwert,
 /* Hier ist l Laenge von tempvec, atotal_zeiger zeigt auf atotal=Summe der 
    Eintraege, und limitwert max. Summe */
 
-  #if (ALL_FANOS_BUT_INEFFICIENT)
+  if constexpr (ALL_FANOS_BUT_INEFFICIENT) {
     singlelimit++;
-  #endif
+  }
 
   int akt=l-1; /* akt. Index, der erhoeht werden soll */
 
@@ -2768,9 +2762,9 @@ int TempVecUpdate1(int tempvec[], int l, int* atotal_zeiger, int limitwert,
 /* Hier ist l Laenge von tempvec, atotal_zeiger zeigt auf atotal=Summe der 
    Eintraege (inkl. DP), limitwert max. Summe, dpindex Index von DP */
 
-  #if (ALL_FANOS_BUT_INEFFICIENT)
+  if constexpr (ALL_FANOS_BUT_INEFFICIENT) {
     singlelimit++;
-  #endif
+  }
 
   int akt=l-1;/*akt. Index, beginnt hinten*/
 
@@ -2827,9 +2821,9 @@ int CCtest(PolyPointList *P, int d, int np, int nc,
 					int CC[FPcirNmax][FanoProjNPmax]){
   int i,j,temp;
 
-  #if (ALL_FANOS_BUT_INEFFICIENT)
+  if constexpr (ALL_FANOS_BUT_INEFFICIENT) {
    return 1;
-  #else
+  } else {
 
   for(i=0;i<nc;i++)/*Ueber alle Circuits laufen*/
     {
@@ -2858,8 +2852,7 @@ int CCtest(PolyPointList *P, int d, int np, int nc,
       }
     }
   return 1;
-
-  #endif
+  }
 }
 
 /* Bestimmt alle Moeglichkeiten fuer Fanos, gibt Anzahl zurueck */
@@ -3036,13 +3029,17 @@ int Make_Fano5d(PolyPointList *P,int *Dpt,EqList *E,	    /* nc=#Circuits */
 							Gitterpunkte von P*/
 
 
-  #if (ALL_FANOS_BUT_INEFFICIENT)
+  if constexpr (ALL_FANOS_BUT_INEFFICIENT) {
      int maxVnumber=3*P->n;
-  #else
+  } else {
      int maxVnumber=3*P->n-1;
      /* Reicht da jede n-dim. Fano <= 3n-1 Ecken hat; mit 
-	genau einer bekannten Ausnahme mit 3n Ecken, falls n gerade ist */
-  #endif
+\tgenau einer bekannten Ausnahme mit 3n Ecken, falls n gerade ist */
+  }
+
+  int maxVnumber;  /* unify declarations: both branches set it */
+  if constexpr (ALL_FANOS_BUT_INEFFICIENT) maxVnumber=3*P->n;
+  else maxVnumber=3*P->n-1;
 
   /*Circuits sind (bei np=6) entweder von Form 1 0 0 1 -2 Schluss 0 (np=6) 
 				oder 1 -1 1 0 -1 Schluss 1*/
