@@ -209,15 +209,18 @@ This is the highest-risk step. Take extra care.
 - [x] Convert `PRINT_CWS` `PolyPointList` allocations to `std::unique_ptr`.
 - **Verify**: build + run all `tests/4.*` scripts.
 
-- [ ] #### Step 2.3 — `class.c` → `class.cpp`
+- [x] #### Step 2.3 — `class.c` → `class.cpp`
 
 - [x] Rename `class.c` → `class.cpp`.
-- [ ] Replace `char Blank=0` pointer-to-empty-string hack with `std::string` and
-  `.c_str()` where needed. Careful: many functions take `char*` — keep
-  `.c_str()` pointers valid for the duration of use.
-- [ ] Replace `scanf("%s", &hc)` interactive help with a bounded read
-  (`std::cin >> hc` or `scanf` with length check).
-- [ ] Keep `FILE *inFILE, *outFILE` global definition here (class.x defines them).
+- [x] Replace `char Blank=0` pointer-to-empty-string hack with a named
+  one-character null-terminated array `char empty[1] = {0};` and use it as
+  the default for all `char*` option strings. The called functions only read
+  these strings and do not modify them.
+- [x] Replace `scanf("%s", &hc)` interactive help with a bounded read:
+  `char buf[2]; if (scanf("%1s", buf) == 1) hc = buf[0]; else hc = 'e';`.
+- [x] Keep `FILE *inFILE, *outFILE` global definition here (class.x defines
+  them), with a comment referencing ISSUES.md #40.
+- [x] Convert `_P` allocation from `malloc` to `std::unique_ptr`.
 - **Verify**: build + run any class-related tests (check if class tests exist
   in `tests/`; if not, create a basic smoke test).
 
