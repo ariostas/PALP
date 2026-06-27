@@ -85,23 +85,22 @@ cmake --build build/ubsan && ctest --test-dir build/ubsan
 #### Step 3.1 — `E_Poly.cpp` (partial)
 
 - [x] Renamed, removed local `min`/`max` macros, fixed partial array init, modernized `Die()`, converted all local `malloc`/`calloc` to RAII.
-- [ ] Convert `DYN_PPL.L` (`Vector *` with `realloc`) to `std::vector` growth.
-  - *Deferred*: requires changing the `DYN_PPL` struct in `Nef.h` and updating all call sites in `E_Poly.cpp` and `nef.cpp`.
+- [x] Convert `DYN_PPL.L` (`Vector *` with `realloc`) to `std::vector` growth.
 
 #### Step 3.3 — `MoriCone.cpp` (partial)
 
 - [x] Renamed, fixed `assert(++m < binco)` side-effect bug, converted safe heap allocations.
-- [ ] Replace `Inci64_*` macros with `constexpr` inline functions (performance-critical bit ops).
-- [ ] Remove stray `printf` debug output inside `#if TRACE_TRIANGULATION` blocks.
+- [x] Replace `Inci64_*` macros with `constexpr` inline functions (performance-critical bit ops).
+- [x] Remove stray `printf` debug output inside `#if TRACE_TRIANGULATION` blocks.
 - [ ] Replace `exit(0)`/`exit(1)` with `palp::die()` (deferred to Phase 5).
 
 #### Step 3.6 — `Subadd.cpp`
 
 - [x] Renamed, compression constants modernized, dead `MOVE_SAVE_FILE` block removed.
-- [ ] Replace `fscanf(F, "%c%c%c%c", &A, &B, &C, &D)` with `fread` for binary I/O.
-- [ ] Replace `unsigned char auxUC[POLY_Dmax*VERT_Nmax]` VLA with `std::vector`.
-- [ ] Replace `NF_List *AuxNFLptr = NULL` global with explicit parameter passing or document.
-- [ ] Replace `fgetUI`/`fputUI` with `fread`/`fwrite`-based versions.
+- [x] Replace `fscanf(F, "%c%c%c%c", &A, &B, &C, &D)` with `fread` for binary I/O.
+- [x] Replace `unsigned char auxUC[POLY_Dmax*VERT_Nmax]` VLA with `std::vector`.
+- [x] Replace `NF_List *AuxNFLptr = NULL` global with explicit parameter passing.
+- [x] Replace `fgetUI`/`fputUI` with `fread`/`fwrite`-based versions.
 
 ### Phase 4 — Standalone & cleanup
 
