@@ -8,57 +8,60 @@
 -9 9 0 3
 */
 
-#include <stdio.h>
-#include <string.h>
-#ifdef __MSDOS__
-#define NM 9 /*13*/      /*  maximum number of fields               */
-#define WM 1024 /*8192*/ /*  maximum number of words             */
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
+constexpr int NM = 13;   /*  maximum number of fields               */
+constexpr int NS = 14;   /*  maximum number of generators           */
+constexpr int WM = 8192; /*  maximum number of words             */
                          /*  (a word is binary code for a subset of X_i) */
-#define NS 10 /*14*/     /*  maximum number of generators           */
-#define HODDIM 500
-#else
-#define NM 13   /*  maximum number of fields               */
-#define NS 14   /*  maximum number of generators           */
-#define WM 8192 /*  maximum number of words             */
-#define HODDIM 4000
-#endif
-#define NPN 1000
-#define NP 10       /*  maximum number of prime factors        */
-#define LONGOUT (0) /*  (1) for long output, otherwise (0)     */
-#define ONLYINV (0) /*  (1) iff only invertibles are computed  */
-#define MAXPN 512   /* maximum number of pointers at one point */
-#define SAFER (1)   /* SAFER=1 ==> b01 with rat, less danger of overflow */
-#define ADDZD (0)   /* ADDZD = 1 (0) iff Z_d is (not) to be added */
+constexpr int HODDIM = 4000;
+
+constexpr int NPN = 1000;
+constexpr int NP = 10;     /*  maximum number of prime factors        */
+constexpr int LONGOUT = 0; /*  (1) for long output, otherwise (0)     */
+constexpr int ONLYINV = 0; /*  (1) iff only invertibles are computed  */
+constexpr int MAXPN = 512; /* maximum number of pointers at one point */
+constexpr int SAFER = 1; /* SAFER=1 ==> b01 with rat, less danger of overflow */
+constexpr int ADDZD = 0; /* ADDZD = 1 (0) iff Z_d is (not) to be added */
 int mask[] = {1,   2,   4,    8,    16,   32,   64,   128,
               256, 512, 1024, 2048, 4096, 8192, 16384};
 int interb01(); /* ...  interface to "mhodge" conventions   */
 
-FILE *infi, *outfi;
-int stdi = 0, bugcount = 0, invertible;
-/* stdi=1 if called without "infile"  (see: main, readline) */
+struct LgoTwistContext {
+  FILE *infi = stdin;
+  FILE *outfi = stdout;
+  int stdi = 1;
+  int bugcount = 0;
+  int invertible = 0;
+};
+
+LgoTwistContext ctx;
+
+/* ctx.stdi=1 if called without "infile"  (see: main, readline) */
 
 /*  ======================================================================  */
 /*  ==========             integer and rational stuff           ==========  */
 /*  ======================================================================  */
 /*  ==========     rat.h   (header -> #include "rat.h")         ==========  */
 /*  ======================================================================  */
-#define lint long
-#define sint int
-#define mod(a, b) ((a) % (b)) /* ((a)-(b)*((a)/(b))) */
-#define MOD(a, b) ((b) ? mod(a, b) : (a))
-#define min(a, b) (((a) < (b)) ? (a) : (b))
-#define max(a, b) (((a) > (b)) ? (a) : (b))
-#define lcm(a, b) ((a) * (b) / gcd((a), (b)))
-#define plcm(a, b) (a) * ((b) / pgcd(a, b))
-#define abs(a) (((a) < 0) ? (-(a)) : (a))
+long gcd(long a, long b);
 
-lint gcd(lint a, lint b); /* modulus of greatest common div.; gcd(0,n)=|n| */
+namespace {
+long Mod(long a, long b) { return b ? a % b : a; }
+long Min(long a, long b) { return a < b ? a : b; }
+long Max(long a, long b) { return a > b ? a : b; }
+long Abs(long a) { return a < 0 ? -a : a; }
+long Lcm(long a, long b) { return a * (b / gcd(a, b)); }
+} // namespace
+
 typedef struct {
-  lint num;
-  lint den;
+  long num;
+  long den;
 } rat;
-rat rI(lint a);          /*  conversion  lint -> rat  */
-rat rR(lint a, lint b);  /*  conversion  a/b  -> rat  */
+rat rI(long a);          /*  conversion  long -> rat  */
+rat rR(long a, long b);  /*  conversion  a/b  -> rat  */
 rat rS(rat a, rat b);    /*  a + b  */
 rat rD(rat a, rat b);    /*  a - b  */
 rat rP(rat a, rat b);    /*  a * b  */
@@ -69,15 +72,15 @@ void iS(rat *a, int *b); /*  fast sum: add int  *b  to rat  *a  */
 /*  ========== rat.c (source code: cc -c rat.c generates rat.o) ==========  */
 /*  ========== cc -o prog prog.c rat.o   incl. obj. code rat.o  ==========  */
 /*  #include "rat.h"      ================================================  */
-rat rI(register lint a) {
+rat rI(long a) {
   rat c;
   c.num = a;
   c.den = 1;
   return c;
 } /*  a/1  */
-rat rR(register lint a, register lint b) /*  a/b  */
+rat rR(long a, long b) /*  a/b  */
 {
-  register lint g = gcd(a, b);
+  long g = gcd(a, b);
   rat c;
   g = (b < 0) ? -g : g;
   c.num = a / g;
@@ -86,8 +89,8 @@ rat rR(register lint a, register lint b) /*  a/b  */
 }
 rat rS(rat a, rat b) /*  a + b  */
 {
-  register rat c;
-  register lint g = gcd(a.den, b.den);
+  rat c;
+  long g = gcd(a.den, b.den);
   g = gcd(c.den = a.den * (b.den / g),
           c.num = a.num * (b.den / g) + b.num * (a.den / g));
   c.num /= g;
@@ -96,35 +99,35 @@ rat rS(rat a, rat b) /*  a + b  */
 }
 rat rD(rat a, rat b) /*  a - b  */
 {
-  register rat c;
-  register lint g = gcd(a.den, b.den);
+  rat c;
+  long g = gcd(a.den, b.den);
   g = gcd(c.den = a.den * (b.den / g),
           c.num = a.num * (b.den / g) - b.num * (a.den / g));
   c.num /= g;
   c.den /= g;
   return c;
-  /**      register rat c; register lint g=gcd(c.num=a.num*b.den-b.num*a.den,
+  /**      rat c; long g=gcd(c.num=a.num*b.den-b.num*a.den,
         c.den=a.den*b.den);      c.num/=g; c.den/=g; return c; */
 }
 rat rP(rat a, rat b) /*  a * b  */
 {
-  register lint g = gcd(a.num, b.den);
-  register lint h = gcd(b.num, a.den);
-  register rat c;
+  long g = gcd(a.num, b.den);
+  long h = gcd(b.num, a.den);
+  rat c;
   c.num = (a.num / g) * (b.num / h);
   c.den = (a.den / h) * (b.den / g);
   return c;
 }
 rat rQ(rat a, rat b) /*  a / b  */
 {
-  register lint g = gcd(a.num, b.num);
-  register lint h = gcd(b.den, a.den);
-  register rat c;
+  long g = gcd(a.num, b.num);
+  long h = gcd(b.den, a.den);
+  rat c;
   c.num = (a.num / g) * (b.den / h);
   c.den = (a.den / h) * (b.num / g);
 #ifdef TEST
   if (!c.den)
-    fprintf(outfi, "warning: vanishing denominator in rQ in %s!\n", infun);
+    fprintf(ctx.outfi, "warning: vanishing denominator in rQ in %s!\n", infun);
 #endif
   if (c.den < 0) {
     c.num = -c.num;
@@ -132,7 +135,7 @@ rat rQ(rat a, rat b) /*  a / b  */
   }
   return c;
 }
-lint gcd(register lint a, register lint b) {
+long gcd(long a, long b) {
   a = (a < 0) ? -a : a;
   b = (b < 0) ? -b : b;
   if (!a)
@@ -140,23 +143,23 @@ lint gcd(register lint a, register lint b) {
   if (!b)
     return a;
   {
-    register lint c;
-    while (c = mod(a, b)) {
+    long c;
+    while (c = Mod(a, b)) {
       a = b;
       b = c;
     }
     return b;
   }
 }
-lint argint(char *s) /* string to integer */
+long argint(char *s) /* string to integer */
 {
-  lint d = (*s) - '0';
-  sint i = 1;
+  long d = (*s) - '0';
+  int i = 1;
   while (s[i])
     d = 10 * d + s[i++] - '0';
   return d;
 }
-void prat(rat a) { fprintf(outfi, "%ld/%ld ", a.num, a.den); }
+void prat(rat a) { fprintf(ctx.outfi, "%ld/%ld ", a.num, a.den); }
 /*  ======================================================================  */
 /*  ==========          end of integer and rational stuff       ==========  */
 /*  ======================================================================  */
@@ -165,22 +168,22 @@ void prat(rat a) { fprintf(outfi, "%ld/%ld ", a.num, a.den); }
 /*     Construction of the maximal abelian symmetry                         */
 /****************************************************************************/
 
-typedef sint spectrum[3]; /*  b01 change  */
-typedef sint pointlist[NM + 1];
-typedef lint symlist[NS];
-typedef sint primelist[NP];
-typedef sint prsymlist[NS][NP];
+typedef int spectrum[3]; /*  b01 change  */
+typedef int pointlist[NM + 1];
+typedef long symlist[NS];
+typedef int primelist[NP];
+typedef int prsymlist[NS][NP];
 typedef symlist symsymlist[NS];
-typedef lint sympointlist[NM + 1][NS];
-typedef sint prsympointlist[NM + 1][NS][NP];
-typedef sint prsymsymlist[NS][NS][NP];
-typedef lint worte[WM + 1][3];
+typedef long sympointlist[NM + 1][NS];
+typedef int prsympointlist[NM + 1][NS][NP];
+typedef int prsymsymlist[NS][NS][NP];
+typedef long worte[WM + 1][3];
 
-lint lcmd, specnum, symnum, totsymnum = 0, totspecnum = 0, maxsymnum = 0,
+long lcmd, specnum, symnum, totsymnum = 0, totspecnum = 0, maxsymnum = 0,
                             maxspecnum = 0, modelnum = 0;
 /* lcmd = least common multiple of the orders of the generators of the
       maximal group                                                 */
-sint n, norig, ns, npr, addsyms, evenn, oddd, over = 1, D; /* D=sum(1-2q_i) */
+int n, norig, ns, npr, addsyms, evenn, oddd, over = 1, D; /* D=sum(1-2q_i) */
 /* n = number of points X_i;                                    */
 /* ns = number of phase symmetries, ns<NS                       */
 /* npr = number of prime numbers involved, npr<NP               */
@@ -210,35 +213,35 @@ typedef struct {
 } skelet; /* p: pointer; a: exponent */
 typedef struct {
   int p[NPN], m[NPN];
-} prili; /* p[0]=#(primes); m[0]=max mult.*/
+} prili; /* p[0]=#(primes); m[0]=Max mult.*/
 
 int readline(skelet *); /* reads: "string[#+1] exp_0 ... exp_# ... \n" */
 void analy(skelet); /* calculate: order of evaluation; loops; pointed at by;*/
-prili pmax; /* global var. for prime decomposistion of lcm of group orders */
+prili pmax; /* global var. for prime decomposistion of Lcm of group orders */
 void printpri(prili);
 
 int readline(skelet *s) /* reads: "string[#+1] exp_0 ... exp_# ... \n" */
 {
   int i;
   s->N = 0;
-  if (stdi)
+  if (ctx.stdi)
     printf("skeleton? ");
-  while (' ' != (i = fgetc(infi)))
+  while (' ' != (i = fgetc(ctx.infi)))
     if (i == EOF)
       return 0;
     else
       s->p[s->N++] = i - '0';
   for (i = 0; i < (s->N); i++)
-    fscanf(infi, "%d", &s->a[i]);
+    fscanf(ctx.infi, "%d", &s->a[i]);
   n = (*s).N;
-  while (fgetc(infi) - '\n')
+  while (fgetc(ctx.infi) - '\n')
     ;
   return 1;
 }
 
-long pgcd(register long a, register long b) {
-  register long c;
-  while (c = mod(a, b)) {
+long pgcd(long a, long b) {
+  long c;
+  while (c = Mod(a, b)) {
     a = b;
     b = c;
   }
@@ -261,19 +264,19 @@ int prime[] = {2,   3,   5,   7,   11,  13,  17,  19,  23,  29,  31,  37,  41,
 
 void printpri(prili li) {
   int i;
-  fprintf(outfi, "\nlist of primes:\n");
+  fprintf(ctx.outfi, "\nlist of primes:\n");
   for (i = 1; i <= *li.p; i++) {
-    fprintf(outfi, "%d,", li.p[i]);
-    if (!mod(i, 20))
-      fprintf(outfi, "\n");
+    fprintf(ctx.outfi, "%d,", li.p[i]);
+    if (!Mod(i, 20))
+      fprintf(ctx.outfi, "\n");
   }
-  fprintf(outfi, "\nmaximal multiplicities (in one generator):\n");
+  fprintf(ctx.outfi, "\nmaximal multiplicities (in one generator):\n");
   for (i = 1; i <= *li.p; i++) {
-    fprintf(outfi, "(%d,%d) ", li.p[i], li.m[i]);
-    if (!mod(i, 10))
-      fprintf(outfi, "\n");
+    fprintf(ctx.outfi, "(%d,%d) ", li.p[i], li.m[i]);
+    if (!Mod(i, 10))
+      fprintf(ctx.outfi, "\n");
   }
-  fprintf(outfi, "\n");
+  fprintf(ctx.outfi, "\n");
 }
 
 prili prideco(long x) {
@@ -289,7 +292,7 @@ prili prideco(long x) {
     }
     if (l.m[*l.p]) {
       l.p[*l.p] = p;
-      *l.m = max(*l.m, l.m[*l.p]);
+      *l.m = Max(*l.m, l.m[*l.p]);
       l.m[++(*l.p)] = 0;
     }
   }
@@ -302,11 +305,11 @@ prili prideco(long x) {
   return l;
 }
 
-void maxpri(prili pn) /* pmax = prime decomposistion of lcm of group orders */
+void maxpri(prili pn) /* pmax = prime decomposistion of Lcm of group orders */
 {
   int i = 1, j = 1, n = 1;
   prili po = pmax;
-  *pmax.m = max(*po.m, *pn.m);
+  *pmax.m = Max(*po.m, *pn.m);
   po.p[*po.p + 1] = pn.p[*pn.p + 1] = po.p[*po.p] + pn.p[*pn.p] + 1;
   if (*po.p) {
     while ((i <= *po.p) || (j <= *pn.p)) {
@@ -317,7 +320,7 @@ void maxpri(prili pn) /* pmax = prime decomposistion of lcm of group orders */
         pmax.p[n] = pn.p[j];
         pmax.m[n] = pn.m[j++];
       } else {
-        pmax.m[n] = max(po.m[i], pn.m[j]);
+        pmax.m[n] = Max(po.m[i], pn.m[j]);
         pmax.p[n] = po.p[i++];
         j++;
       }
@@ -334,7 +337,7 @@ void maxpri(prili pn) /* pmax = prime decomposistion of lcm of group orders */
  *   the remaining variables are on "ord[1],...,ord[*ord]" such that all    *
  *   pointers go from right to left (or from ord to lo, of course).         *
  *   inv[k][1],...,inv[k][*inv[k]] are all variables pointing at k.         */
-/*   Now go thru ord from right to left and calculate lcm=prod(t) with t_k  *
+/*   Now go thru ord from right to left and calculate Lcm=prod(t) with t_k  *
  *   dividing the corresponding exponent s.a[], divide the orders of the    *
  *   groups corresponding to inv[] by t_k and evaluate the new generator    */
 /*   finally repeat this for the loop of i and evaluate its symm.-generator */
@@ -355,12 +358,12 @@ void analy(skelet s) {
     if (s.p[i] != i) {
       inv[s.p[i]][++(*inv[s.p[i]])] = i;
     }
-  invertible = 1;
-  for (i = 0; (i < s.N) && invertible; i++)
+  ctx.invertible = 1;
+  for (i = 0; (i < s.N) && ctx.invertible; i++)
     if (*inv[i] > 1)
-      invertible = 0;
+      ctx.invertible = 0;
   for (i = 0; i < s.N;
-       i++) { /* find j in comp. of i: j==i iff min.loop memb.: */
+       i++) { /* find j in comp. of i: j==i iff Min.loop memb.: */
     n = s.N;
     j = s.p[i];
     while ((--n) && (j > i))
@@ -401,26 +404,26 @@ void analy(skelet s) {
         int *nt = inv[ord[n]]; /* nt points at the vector of ptrs. at ord[n] */
         if (*nt) {
           prili pli;
-          long tli[NM], lcm = *ph[nt[1]];
+          long tli[NM], Lcm = *ph[nt[1]];
           tli[1] = 1;
           for (j = 2; j <= *nt; j++) {
             tli[j] = 1;
-            lcm *= *ph[nt[j]] / pgcd(lcm, *ph[nt[j]]);
+            Lcm *= *ph[nt[j]] / pgcd(Lcm, *ph[nt[j]]);
           }
-          pli = prideco(lcm);
+          pli = prideco(Lcm);
           for (j = 1; j <= *pli.p; j++) {
             int po = pli.p[j];
             m = 0;
             while (++m < pli.m[j])
               po *= pli.p[j];
-            for (m = 1; mod(*ph[nt[m]], po); m++)
+            for (m = 1; Mod(*ph[nt[m]], po); m++)
               ;
             tli[m] *= po;
           } /* choose t_m */
-          *ph[ord[n]] = s.a[ord[n]] * lcm; /* assign order to new generator */
-          ph[ord[n]][ord[n] + 1] = lcm;
+          *ph[ord[n]] = s.a[ord[n]] * Lcm; /* assign order to new generator */
+          ph[ord[n]][ord[n] + 1] = Lcm;
           for (m = 1; m <= *nt; m++) {
-            long fac = lcm / (*ph[nt[m]]);
+            long fac = Lcm / (*ph[nt[m]]);
             for (j = n + 1; j <= *ord; j++)
               ph[ord[n]][ord[j] + 1] -= fac * ph[nt[m]][ord[j] + 1];
           }
@@ -436,7 +439,7 @@ void analy(skelet s) {
       /*   remember that ord[1],...,ord[lopo] point at the loop */
       if (*lo > 1) {
         prili pli;
-        long P = s.a[lo[*lo]], b[NM + 1], tli[NM], lcm;
+        long P = s.a[lo[*lo]], b[NM + 1], tli[NM], Lcm;
         b[1] = 1;
         for (j = 1; j < *lo; ++j)
           b[j + 1] = -b[j] * s.a[lo[j]];
@@ -444,22 +447,22 @@ void analy(skelet s) {
         if ((++P) < 0)
           P = -P;
         den[i] = P; /* P = prod(exp(j)) +/- 1 */
-        lcm = 1;    /*  nt[*nt] -> ord[lopo]  */
+        Lcm = 1;    /*  nt[*nt] -> ord[lopo]  */
         for (j = 0; (j++) < lopo; tli[j] = 1)
-          lcm *= *ph[ord[j]] / pgcd(lcm, *ph[ord[j]]);
-        pli = prideco(lcm);
+          Lcm *= *ph[ord[j]] / pgcd(Lcm, *ph[ord[j]]);
+        pli = prideco(Lcm);
         for (j = 1; j <= *pli.p; j++) {
           int po = pli.p[j];
           m = 0;
           while (++m < pli.m[j])
             po *= pli.p[j];
-          for (m = 1; mod(*ph[ord[m]], po); m++)
+          for (m = 1; Mod(*ph[ord[m]], po); m++)
             ;
           tli[m] *= po;
         } /* choose t_m */
-        *ph[i] = P * lcm; /* assign order to new generator */
+        *ph[i] = P * Lcm; /* assign order to new generator */
         for (n = 1; n <= *lo; n++)
-          ph[i][lo[n] + 1] = b[n] * lcm;
+          ph[i][lo[n] + 1] = b[n] * Lcm;
         for (n = 1; n <= lopo; n++) {
           long fac = 1;
           while (lo[fac] != s.p[ord[n]]) {
@@ -467,11 +470,11 @@ void analy(skelet s) {
           /* if(fac>NM) {printf("infinit loop(1): fac=%d ",fac);return;} ...
            * debug */}
           fac = b[fac];
-          while (pgcd(abs(fac), *ph[ord[n]]) > 1) {
+          while (pgcd(Abs(fac), *ph[ord[n]]) > 1) {
             fac -= P;
-          /* if(abs(fac/P)>NM) {printf("infinit loop(2): fac=%d
+          /* if(Abs(fac/P)>NM) {printf("infinit loop(2): fac=%d
            * ",fac);return;} debug*/}
-          fac *= lcm / (*ph[ord[n]]);
+          fac *= Lcm / (*ph[ord[n]]);
           for (j = 1; j <= *ord; j++)
             ph[i][ord[j] + 1] -= fac * ph[ord[n]][ord[j] + 1];
         }
@@ -487,7 +490,7 @@ void analy(skelet s) {
         num[i] = 1 - s.a[lo[2]];
         for (j = 2; j < *lo; num[i] = 1 - s.a[lo[++j]] * num[i])
           ;
-        d = pgcd(den[i], num[i] = abs(num[i]));
+        d = pgcd(den[i], num[i] = Abs(num[i]));
         num[i] /= d;
         den[i] /= d;
       }
@@ -512,57 +515,58 @@ void analy(skelet s) {
   for (j = 0; j < s.N; j++)
     D += (num[j] = num[j] * (d / den[j])); /* n_j==num[j]  */
   if ((D *= 2) % d)
-    fprintf(outfi, "D not int!\n");
+    fprintf(ctx.outfi, "D not int!\n");
   D = s.N - D / d; /* D=sum(1-2q_i)*/
   for (j = 0; j < s.N; j++)
     if ((num[j] * (s.a[j] - (s.p[j] == j))) != (d - num[s.p[j]])) {
       printf("Error in calculation of weights!\n"); /* check weights */
-      fprintf(outfi, "Error in calculation of weights!: ");
-      bugcount++;
+      fprintf(ctx.outfi, "Error in calculation of weights!: ");
+      ctx.bugcount++;
     }
-  /*   throw away order 1; write result to outfi (generators, skeleton, #gen.)*/
+  /*   throw away order 1; write result to ctx.outfi (generators, skeleton,
+   * #gen.)*/
   {
     int k, l;
     long G = 1;
     n = 0;
     if (LONGOUT) {
-      fprintf(outfi, "N=%d ", s.N);
-      fprintf(outfi, "d=%ld, n_i=", d);
+      fprintf(ctx.outfi, "N=%d ", s.N);
+      fprintf(ctx.outfi, "d=%ld, n_i=", d);
     }
-    /* else {fprintf(outfi,"%d ", s.N); fprintf(outfi,"%ld",d);} */
+    /* else {fprintf(ctx.outfi,"%d ", s.N); fprintf(ctx.outfi,"%ld",d);} */
     wei[s.N][0] = d;
     for (j = 0; j < s.N; j++) {
       if (LONGOUT)
-        fprintf(outfi, " %ld", num[j]);
+        fprintf(ctx.outfi, " %ld", num[j]);
       wei[j][0] = num[j];
     }
     for (j = 0; j < s.N; j++)
       if ((*ph[j]) > 1) {
         n++;
         if (LONGOUT)
-          fprintf(outfi, "\n%d->Z[%ld]: ", j, *ph[j]);
+          fprintf(ctx.outfi, "\n%d->Z[%ld]: ", j, *ph[j]);
         wei[s.N][n] = ph[j][0];
         for (k = 1; k <= s.N; k++) {
           wei[k - 1][n] = ph[j][k];
           if (LONGOUT)
-            fprintf(outfi, " %ld", ph[j][k]);
+            fprintf(ctx.outfi, " %ld", ph[j][k]);
         }
         G *= *ph[j];
       }
     ns = n;
     if (LONGOUT) {
-      fprintf(outfi, "\nskeleton =");
-      fprintf(outfi, " ");
+      fprintf(ctx.outfi, "\nskeleton =");
+      fprintf(ctx.outfi, " ");
     }
-    if (invertible || !ONLYINV) {
+    if (ctx.invertible || !ONLYINV) {
       for (l = 0; l < s.N; l++)
-        fprintf(outfi, "%d", s.p[l]);
+        fprintf(ctx.outfi, "%d", s.p[l]);
       for (l = 0; l < s.N; l++)
-        fprintf(outfi, " %d", s.a[l]);
-      fprintf(outfi, " inv=%d ", invertible);
+        fprintf(ctx.outfi, " %d", s.a[l]);
+      fprintf(ctx.outfi, " inv=%d ", ctx.invertible);
     }
     if (LONGOUT)
-      fprintf(outfi, "  #generators=%d, Order=%ld\n", n, G);
+      fprintf(ctx.outfi, "  #generators=%d, Order=%ld\n", n, G);
   }
 }
 
@@ -576,31 +580,31 @@ void primedecomp()
 /* decomposition of wei, d, det into their components corresponding to
    the primenumbers pr[j], namely prwei[j], prd[j], prdet[j]                */
 {
-  sint i, j = 0, k, l, p;
-  lint dk;
+  int i, j = 0, k, l, p;
+  long dk;
   for (i = 0; (i < NPN) && (lcmd != 1); i++) {
-    if (!mod(lcmd, p = prime[i])) {
+    if (!Mod(lcmd, p = prime[i])) {
       pr[j] = p;
       for (k = 0; k <= ns; k++) {
         prd[k][j] = 1;
         dk = d[k];
-        while (!mod(dk, p)) {
+        while (!Mod(dk, p)) {
           dk /= p;
           prd[k][j] *= p;
         };
         for (l = 0; l < n; l++)
-          prwei[l][k][j] = mod(wei[l][k], prd[k][j]);
-        prdet[k][j] = rR(mod(det[k], prd[k][j]), prd[k][j]);
+          prwei[l][k][j] = Mod(wei[l][k], prd[k][j]);
+        prdet[k][j] = rR(Mod(det[k], prd[k][j]), prd[k][j]);
       };
-      while (!mod(lcmd, p))
+      while (!Mod(lcmd, p))
         lcmd /= p;
       j++;
     }
   }
   npr = j;
   if (lcmd != 1) {
-    fprintf(outfi, "caution: Big prime number!!!");
-    bugcount++;
+    fprintf(ctx.outfi, "caution: Big prime number!!!");
+    ctx.bugcount++;
   }
 }
 
@@ -608,13 +612,13 @@ void gooddets()
 /* recombines the generators in such a way that they have det=1 (det^d=1 for
    torsion), orders them (decreasing orders), counts them                   */
 {
-  sint i, j, k, l, ig, is, imax, maxdetden, w;
+  int i, j, k, l, ig, is, imax, maxdetden, w;
   /* maxdetden is the maximal denominator of the determinants        */
-  lint auxlong;
+  long auxlong;
   for (j = 0; j <= npr; j++) {
     maxdetden = 1;
     for (i = 1; i <= ns; i++)
-      maxdetden = max(maxdetden, prdet[i][j].den);
+      maxdetden = Max(maxdetden, prdet[i][j].den);
     while (maxdetden > 1 /* prd[0][j] for torsion  */) {
       imax = 0;
       for (i = 1; i <= ns; i++)
@@ -630,7 +634,7 @@ void gooddets()
               is = i;
             };
             k = 0;
-            while (mod(prdet[ig][j].num + k * prdet[is][j].num, maxdetden))
+            while (Mod(prdet[ig][j].num + k * prdet[is][j].num, maxdetden))
               k++;
             for (l = 0; l < n; l++) {
               auxlong = k;
@@ -638,7 +642,7 @@ void gooddets()
               auxlong *= prd[ig][j];
               auxlong /= prd[is][j];
               auxlong += prwei[l][ig][j];
-              prwei[l][ig][j] = mod(auxlong, prd[ig][j]);
+              prwei[l][ig][j] = Mod(auxlong, prd[ig][j]);
             }
             prdet[ig][j] = rI(0);
             imax = is;
@@ -646,7 +650,7 @@ void gooddets()
         }
       prd[imax][j] /= pr[j];
       for (l = 0; l < n; l++)
-        prwei[l][imax][j] = mod(prwei[l][imax][j], prd[imax][j]);
+        prwei[l][imax][j] = Mod(prwei[l][imax][j], prd[imax][j]);
       prdet[imax][j] = rP(prdet[imax][j], rI(pr[j]));
       maxdetden /= pr[j];
     }
@@ -696,21 +700,21 @@ int linklist[NM][MAXPN], targlist[NM][MAXPN], monlist[NM][MAXPN];
 /*    targlist[i][j] indicates subtargets of linklist[i][j]          */
 /*    monlist[i][j] is the actual monomial realising linklist[i][j]  */
 
-sint symcheck(symlist sum, int link, smon mon) {
+int symcheck(symlist sum, int link, smon mon) {
   /* symcheck checks whether there is a monomial mon in
    * the variables indicated by link whose total weight is sum[0] and which
    * transforms under the k'th symmetry with a phase sum[k];
    * if X_i occurs in the monomial then mon[i] is set to 1.                   */
-  sint i, j, k, check, expo;
+  int i, j, k, check, expo;
   int newlink;
   symlist newsum;
   for (i = 0; i < n; i++)
     if (link & mask[i]) {
-      if (!mod(sum[0], wei[i][0])) {
+      if (!Mod(sum[0], wei[i][0])) {
         expo = sum[0] / wei[i][0];
         check = 1;
         for (j = 1; (j <= ns) && check; j++)
-          if (mod(expo * wei[i][j] - sum[j], d[j]))
+          if (Mod(expo * wei[i][j] - sum[j], d[j]))
             check = 0;
         if (check) {
           mon[0] = mon[0] | mask[i];
@@ -731,12 +735,12 @@ sint symcheck(symlist sum, int link, smon mon) {
   return 0;
 }
 
-sint checklink(int link, int targets) {
+int checklink(int link, int targets) {
   /* checklink checks recursively whether a specific link with subtargets
    * indicated by targets exists and can be added to the graph.
    * If a pointer is required, the existence of all further links required
    * by our theorem is checked by recursive calls of checklink.               */
-  sint i, j, k, pn, check;
+  int i, j, k, pn, check;
   int newtarg, newlink;
   smon mon;
   symlist dw;
@@ -769,9 +773,9 @@ sint checklink(int link, int targets) {
   return 1;
 }
 
-sint checkweight() { /* checks whether our weight system allows a
+int checkweight() { /* checks whether our weight system allows a
                     non-degenerate symmetry-respecting potential         */
-  sint i, j;
+  int i, j;
   for (i = 0; i < n; i++)
     pointernum[i] = 0;
   for (i = 0; i < n; i++)
@@ -791,7 +795,7 @@ void addhod(spectrum hodge);
 void proced() {
   int i, j, k, fac, wort, chi, nvar, expo;
   spectrum spec;
-  lint zsum1 = 0, zsum2 = 0, mo = 1, ng, ngb, kgV = 1;
+  long zsum1 = 0, zsum2 = 0, mo = 1, ng, ngb, kgV = 1;
   rat prod;
   symlist omega, ele; /* omega_i = kgV/O_i, ele encodes group element */
   worte wo;           /*  wo[word][0(2)] = contribution of word to ng(ngb) */
@@ -801,7 +805,7 @@ void proced() {
     for (k = 0; k <= 2; k++)
       wo[i][k] = 0;
   for (k = 1; k <= ns; k++)
-    kgV = lcm(kgV, wei[n][k]);
+    kgV = Lcm(kgV, wei[n][k]);
   for (k = 1; k <= ns; k++) {
     omega[k] = kgV / wei[n][k];
     mo *= wei[n][k];
@@ -818,7 +822,7 @@ void proced() {
         expo = 0;
         for (k = 1; k <= ns; k++)
           expo += ele[k] * omega[k] * wei[i][k];
-        if (!mod(expo, kgV))
+        if (!Mod(expo, kgV))
           nvar += mask[i];
       }
       wo[nvar][1]++;
@@ -844,8 +848,8 @@ void proced() {
         if ((mask[j] & i) == mask[j])
           prod = rP(prod, rR(wei[j][0] - wei[n][0], wei[j][0]));
       if (prod.den != 1) {
-        fprintf(outfi, "\ncaution: prod.den != 1\n");
-        bugcount++;
+        fprintf(ctx.outfi, "\ncaution: prod.den != 1\n");
+        ctx.bugcount++;
       }
       zsum1 += wo[i][0] * prod.num;
       zsum2 += wo[i][2] * prod.num;
@@ -855,22 +859,22 @@ void proced() {
   spec[2] /= over; /* bisher b01 nicht durch over dividiert; rueckrechnen:*/
                    /* n n 0 2 -> n+2 n+2 0 1 und n n 0 6 -> n+6 n+6 0 3.  */
   if ((spec[2] != 0) && (spec[2] != 1) && (spec[2] != 3) && (D == 3)) {
-    fprintf(outfi, "caution: b01=%d\n", spec[2]);
-    bugcount++;
+    fprintf(ctx.outfi, "caution: b01=%d\n", spec[2]);
+    ctx.bugcount++;
   }
   ng = -(zsum1 / mo / over + 2) / 2;
   ngb = (zsum2 / mo / over - 2) / 2;
   if (zsum1 != -2 * (ng + 1) * mo * over) {
-    fprintf(outfi, "ng is not integer!\n");
-    bugcount++;
+    fprintf(ctx.outfi, "ng is not integer!\n");
+    ctx.bugcount++;
   }
   if (zsum2 != 2 * (ngb + 1) * mo * over) {
-    fprintf(outfi, "ngb is not integer!\n");
-    bugcount++;
+    fprintf(ctx.outfi, "ngb is not integer!\n");
+    ctx.bugcount++;
   }
   chi = 2 * (ngb - ng);
   if (LONGOUT)
-    fprintf(outfi, "ngb: %ld ng: %ld chi: %d\n", ngb, ng, chi);
+    fprintf(ctx.outfi, "ngb: %ld ng: %ld chi: %d\n", ngb, ng, chi);
   spec[0] = ngb;
   spec[1] = chi;
   addhod(spec);
@@ -882,24 +886,24 @@ void proced() {
 /*    Construction of all symmetries                                        */
 /****************************************************************************/
 
-sint forbidden(sint i, sint j, sint sprns) {
-  sint l;
+int forbidden(int i, int j, int sprns) {
+  int l;
   for (l = 0; l < sprns; l++)
     if (i == norm[l][j])
       return (l + 1);
   return 0;
 }
 
-void reccon(sint j, sint sprns);
+void reccon(int j, int sprns);
 
 void processym() {
-  sint i, j;
+  int i, j;
   ns = auxns[npr - 1];
   if (LONGOUT) {
-    fprintf(outfi, "\nwei:\n");
+    fprintf(ctx.outfi, "\nwei:\n");
     for (j = 0; j < n; j++)
-      fprintf(outfi, " %d", wei[j][0]);
-    fprintf(outfi, "  %d\n", d[0]);
+      fprintf(ctx.outfi, " %d", wei[j][0]);
+    fprintf(ctx.outfi, "  %d\n", d[0]);
   }
   for (i = 1; i <= ns; i++) {
     d[i] = auxd[i - 1][npr - 1];
@@ -908,41 +912,41 @@ void processym() {
     for (j = 0; j < n; j++) {
       wei[j][i] = auxwei[j][i - 1][npr - 1];
       if (LONGOUT)
-        fprintf(outfi, " %d", wei[j][i]);
+        fprintf(ctx.outfi, " %d", wei[j][i]);
     }
     if (LONGOUT)
-      fprintf(outfi, "  %d\n", d[i]);
+      fprintf(ctx.outfi, "  %d\n", d[i]);
   }
   if (checkweight()) {
     if (LONGOUT)
-      fprintf(outfi, "degenerate!!\n");
+      fprintf(ctx.outfi, "degenerate!!\n");
   } else {
     if (LONGOUT)
-      fprintf(outfi, "Hodge numbers: ");
+      fprintf(ctx.outfi, "Hodge numbers: ");
     proced();
     symnum++;
   };
 }
 
-sint rectest(sint j, sint k, pointlist auxel)
+int rectest(int j, int k, pointlist auxel)
 /* the recursive part of zdtest; checks whether auxel and the generators of
    nprwei with index <= k can combine to the generator of the Z_d           */
 {
-  sint i, m;
-  lint auxlong;
+  int i, m;
+  long auxlong;
   pointlist newauxel;
   if (k < 0) {
     for (i = 0; i < n; i++)
-      if (mod(auxel[i] - prwei[i][0][j], prd[0][j]))
+      if (Mod(auxel[i] - prwei[i][0][j], prd[0][j]))
         return 0;
     return 1;
   }
-  for (m = 0; m < prd[0][j]; m += max(1, prd[0][j] / sprd[k][j])) {
+  for (m = 0; m < prd[0][j]; m += Max(1, prd[0][j] / sprd[k][j])) {
     for (i = 0; i < n; i++) {
       auxlong = m;
       auxlong *= nprwei[i][k][j];
       auxlong += auxel[i];
-      newauxel[i] = mod(auxlong, prd[0][j]);
+      newauxel[i] = Mod(auxlong, prd[0][j]);
     }
     if (rectest(j, k - 1, newauxel))
       return 1;
@@ -950,11 +954,11 @@ sint rectest(sint j, sint k, pointlist auxel)
   return 0;
 }
 
-sint zdtest(sint j, sint sprns)
+int zdtest(int j, int sprns)
 /* checks whether the group generated by nprwei contains the generator of
    the Z_d by calling rectest                                               */
 {
-  sint i;
+  int i;
   pointlist auxel;
   if (prd[0][j] <= 1)
     return 1;
@@ -963,7 +967,7 @@ sint zdtest(sint j, sint sprns)
   return rectest(j, sprns - 1, auxel);
 }
 
-void fillup(sint j, sint sprns, sint k, sint l)
+void fillup(int j, int sprns, int k, int l)
 /* j: 0..npr-1, sprns: 0..prns[j], k: 0..sprns-1, l: 1..prns[j]             */
 /* given norm and ord, fillup recursively constructs all possibilities for
    sprwei, calculates nprwei and auxwei from sprwei and calls (depending on
@@ -973,8 +977,8 @@ void fillup(sint j, sint sprns, sint k, sint l)
    the nprwei's for the prime factors up to pr[j];
    the new symmetry is given by auxwei[npr-1]                               */
 {
-  sint imax, m, i;
-  lint auxlong;
+  int imax, m, i;
+  long auxlong;
   if (j >= npr)
     processym();
   else if (k >= sprns) {
@@ -984,8 +988,8 @@ void fillup(sint j, sint sprns, sint k, sint l)
         imax = 0;
         auxns[0] = sprns;
       } else {
-        imax = min(auxns[j - 1], sprns);
-        auxns[j] = max(auxns[j - 1], sprns);
+        imax = Min(auxns[j - 1], sprns);
+        auxns[j] = Max(auxns[j - 1], sprns);
       }
       for (i = 0; i < imax; i++) {
         for (m = 0; m < n; m++)
@@ -1005,23 +1009,23 @@ void fillup(sint j, sint sprns, sint k, sint l)
           auxd[i][j] = auxd[i][j - 1];
         /* if Torsion also auxdet   */ }
       if (LONGOUT) {
-        fprintf(outfi, "\nsprwei[%d]:\n", j);
+        fprintf(ctx.outfi, "\nsprwei[%d]:\n", j);
         for (i = 0; i < sprns; i++) {
           for (m = 1; m <= prns[j]; m++)
-            fprintf(outfi, " %d", sprwei[m][i][j]);
-          fprintf(outfi, "  %d\n", sprd[i][j]);
+            fprintf(ctx.outfi, " %d", sprwei[m][i][j]);
+          fprintf(ctx.outfi, "  %d\n", sprd[i][j]);
         }
-        fprintf(outfi, "nprwei[%d]:\n", j);
+        fprintf(ctx.outfi, "nprwei[%d]:\n", j);
         for (i = 0; i < sprns; i++) {
           for (m = 0; m < n; m++)
-            fprintf(outfi, " %d", nprwei[m][i][j]);
-          fprintf(outfi, "  %d\n", sprd[i][j]);
+            fprintf(ctx.outfi, " %d", nprwei[m][i][j]);
+          fprintf(ctx.outfi, "  %d\n", sprd[i][j]);
         }
-        fprintf(outfi, "auxwei[%d]:\n", j);
+        fprintf(ctx.outfi, "auxwei[%d]:\n", j);
         for (i = 0; i < auxns[j]; i++) {
           for (m = 0; m < n; m++)
-            fprintf(outfi, " %d", auxwei[m][i][j]);
-          fprintf(outfi, "  %d\n", auxd[i][j]);
+            fprintf(ctx.outfi, " %d", auxwei[m][i][j]);
+          fprintf(ctx.outfi, "  %d\n", auxd[i][j]);
         }
       }
       reccon(j + 1, 0);
@@ -1035,9 +1039,9 @@ void fillup(sint j, sint sprns, sint k, sint l)
         auxlong *= sprwei[i][k][j];
         auxlong *= sprd[k][j];
         auxlong /= prd[i][j];
-        nprwei[m][k][j] += mod(auxlong, sprd[k][j]);
+        nprwei[m][k][j] += Mod(auxlong, sprd[k][j]);
       }
-      nprwei[m][k][j] = mod(nprwei[m][k][j], sprd[k][j]);
+      nprwei[m][k][j] = Mod(nprwei[m][k][j], sprd[k][j]);
     /* if Torsion also nprdet     */ }
     fillup(j, sprns, k + 1, 1);
   } else {
@@ -1049,12 +1053,12 @@ void fillup(sint j, sint sprns, sint k, sint l)
       if (l < norm[k][j])
         while (sprwei[l][k][j] < prd[l][j]) {
           fillup(j, sprns, k, l + 1);
-          sprwei[l][k][j] += max(1, pr[j] * prd[l][j] / sprd[k][j]);
+          sprwei[l][k][j] += Max(1, pr[j] * prd[l][j] / sprd[k][j]);
         }
       if (l > norm[k][j])
         while (sprwei[l][k][j] < prd[l][j]) {
           fillup(j, sprns, k, l + 1);
-          sprwei[l][k][j] += max(1, prd[l][j] / sprd[k][j]);
+          sprwei[l][k][j] += Max(1, prd[l][j] / sprd[k][j]);
         }
     }
     m--;
@@ -1066,18 +1070,18 @@ void fillup(sint j, sint sprns, sint k, sint l)
       if (l < norm[k][j])
         while (sprwei[l][k][j] < prd[l][j] / sprd[m][j]) {
           fillup(j, sprns, k, l + 1);
-          sprwei[l][k][j] += max(1, pr[j] * prd[l][j] / sprd[k][j]);
+          sprwei[l][k][j] += Max(1, pr[j] * prd[l][j] / sprd[k][j]);
         }
       if (l > norm[k][j])
         while (sprwei[l][k][j] < prd[l][j] / sprd[m][j]) {
           fillup(j, sprns, k, l + 1);
-          sprwei[l][k][j] += max(1, prd[l][j] / sprd[k][j]);
+          sprwei[l][k][j] += Max(1, prd[l][j] / sprd[k][j]);
         }
     }
   };
 }
 
-void reccon(sint j, sint sprns)
+void reccon(int j, int sprns)
 /* reccon is the starting point for the recursive construction of all
    subgroups of the maximal symmetry group;
    reccon assigns orders sprd[i][j] to the i'th generators of the new group
@@ -1085,7 +1089,7 @@ void reccon(sint j, sint sprns)
    norm[i][j] which generator of prwei is normalized in the i'th generator;
    reccon calls fillup to assign values to the other components             */
 {
-  sint i;
+  int i;
   fillup(j, sprns, 0, 1);
   if (j < npr)
     for (i = 1; i <= prns[j]; i++)
@@ -1094,9 +1098,9 @@ void reccon(sint j, sint sprns)
         if (sprns == 0)
           sprd[sprns][j] = prd[i][j];
         else if (i > norm[sprns - 1][j])
-          sprd[sprns][j] = min(prd[i][j], sprd[sprns - 1][j]);
+          sprd[sprns][j] = Min(prd[i][j], sprd[sprns - 1][j]);
         else
-          sprd[sprns][j] = min(prd[i][j], sprd[sprns - 1][j] / pr[j]);
+          sprd[sprns][j] = Min(prd[i][j], sprd[sprns - 1][j] / pr[j]);
         while (sprd[sprns][j] > 1) {
           reccon(j, sprns + 1);
           sprd[sprns][j] /= pr[j];
@@ -1112,10 +1116,10 @@ void reccon(sint j, sint sprns)
 
 void datain() /*   asks for input, reads input, calculates det         */
 {
-  int i, k, evenn = mod(n - D, 2), addtriv = 2 * ((addsyms + 1) / 2) + evenn;
+  int i, k, evenn = Mod(n - D, 2), addtriv = 2 * ((addsyms + 1) / 2) + evenn;
   norig = n; /* n-1 -> n-D   with D=sum(1-2q_i) */
   d[0] = wei[n][0];
-  oddd = mod(d[0], 2);
+  oddd = Mod(d[0], 2);
   lcmd = d[0];
   det[0] = 0;
   for (k = 1; k <= ns; k++) {
@@ -1123,8 +1127,8 @@ void datain() /*   asks for input, reads input, calculates det         */
     for (i = 0; i <= n; i++)
       det[k] += wei[i][k];
     d[k] = wei[n][k];
-    det[k] = mod(det[k], d[k]);
-    lcmd = lcm(lcmd, d[k]);
+    det[k] = Mod(det[k], d[k]);
+    lcmd = Lcm(lcmd, d[k]);
   }
   if (addtriv) { /* add correct trivial factor + triv. symm. */
     if (oddd) {
@@ -1160,44 +1164,44 @@ void datain() /*   asks for input, reads input, calculates det         */
 }
 
 void longoutput0() {
-  sint j, k;
-  fprintf(outfi, "\nwei:\n");
+  int j, k;
+  fprintf(ctx.outfi, "\nwei:\n");
   for (j = 0; j <= ns; j++) {
     for (k = 0; k < n; k++)
-      fprintf(outfi, " %ld", wei[k][j]);
-    fprintf(outfi, "  %ld\n", d[j]);
+      fprintf(ctx.outfi, " %ld", wei[k][j]);
+    fprintf(ctx.outfi, "  %ld\n", d[j]);
   }
 }
 
 void longoutput1() {
-  sint i, j, k;
-  fprintf(outfi, "\nDecomposition into prime numbers:\n");
+  int i, j, k;
+  fprintf(ctx.outfi, "\nDecomposition into prime numbers:\n");
   for (i = 0; i < npr; i++) {
-    fprintf(outfi, "p=%d:\n", pr[i]);
+    fprintf(ctx.outfi, "p=%d:\n", pr[i]);
     for (j = 0; j <= ns; j++) {
       for (k = 0; k < n; k++)
-        fprintf(outfi, " %d", prwei[k][j][i]);
-      fprintf(outfi, "  %d", prd[j][i]);
-      fprintf(outfi, "  det: %ld/%ld\n", prdet[j][i].num, prdet[j][i].den);
+        fprintf(ctx.outfi, " %d", prwei[k][j][i]);
+      fprintf(ctx.outfi, "  %d", prd[j][i]);
+      fprintf(ctx.outfi, "  det: %ld/%ld\n", prdet[j][i].num, prdet[j][i].den);
     }
   }
 }
 
 void longoutput2() {
-  sint i, j, k;
-  fprintf(outfi, "\nSubgroup with det=1, ordered:\n");
+  int i, j, k;
+  fprintf(ctx.outfi, "\nSubgroup with det=1, ordered:\n");
   for (i = 0; i < npr; i++) {
-    fprintf(outfi, "p=%d:\n", pr[i]);
+    fprintf(ctx.outfi, "p=%d:\n", pr[i]);
     for (j = 0; j <= prns[i]; j++) {
       for (k = 0; k < n; k++)
-        fprintf(outfi, " %d", prwei[k][j][i]);
-      fprintf(outfi, "  %d", prd[j][i]);
-      fprintf(outfi, "  det: %ld/%ld\n", prdet[j][i].num, prdet[j][i].den);
+        fprintf(ctx.outfi, " %d", prwei[k][j][i]);
+      fprintf(ctx.outfi, "  %d", prd[j][i]);
+      fprintf(ctx.outfi, "  det: %ld/%ld\n", prdet[j][i].num, prdet[j][i].den);
     };
   }
 }
 
-sint hodcomp(spectrum hodge1, spectrum hodge2) {
+int hodcomp(spectrum hodge1, spectrum hodge2) {
   if (hodge1[2] < hodge2[2])
     return -1; /*  b01 change  */
   if (hodge1[2] > hodge2[2])
@@ -1216,7 +1220,7 @@ sint hodcomp(spectrum hodge1, spectrum hodge2) {
 spectrum search = {0, 0, 0};
 void searchspec(spectrum);
 void addhod(spectrum hodge) {
-  sint i, j, k;
+  int i, j, k;
   searchspec(hodge);
   for (j = 0; ((hodcomp(hodge, hodlist[j]) > 0) && (j < specnum)); ++j)
     ;
@@ -1231,25 +1235,25 @@ void addhod(spectrum hodge) {
 }
 
 void finishmodel() {
-  sint j;
+  int j;
   if (LONGOUT)
-    fprintf(outfi, "\nspecnum, symnum: ");
-  fprintf(outfi, "sp=%ld sy=%ld\n", specnum, symnum);
+    fprintf(ctx.outfi, "\nspecnum, symnum: ");
+  fprintf(ctx.outfi, "sp=%ld sy=%ld\n", specnum, symnum);
   for (j = 0; j < specnum; j++) {
     int B01 = hodlist[j][2], NGB = hodlist[j][0] - 2 * B01, CHI = hodlist[j][1];
     if (B01)
-      fprintf(outfi, "-%d %d %d %d\n", NGB - CHI / 2, NGB, CHI, B01);
+      fprintf(ctx.outfi, "-%d %d %d %d\n", NGB - CHI / 2, NGB, CHI, B01);
     else
-      fprintf(outfi, "%d %d %d\n", NGB - CHI / 2, NGB, CHI);
+      fprintf(ctx.outfi, "%d %d %d\n", NGB - CHI / 2, NGB, CHI);
   }
-  /*fprintf(outfi,"%d %d\n",hodlist[j][0],hodlist[j][1]);*/ /* b01 change */
+  /*fprintf(ctx.outfi,"%d %d\n",hodlist[j][0],hodlist[j][1]);*/ /* b01 change */
   totsymnum += symnum;
   totspecnum += specnum;
-  maxspecnum = max(maxspecnum, specnum);
-  maxsymnum = max(maxsymnum, symnum);
+  maxspecnum = Max(maxspecnum, specnum);
+  maxsymnum = Max(maxsymnum, symnum);
   modelnum++;
   if (!specnum)
-    bugcount++;
+    ctx.bugcount++;
 }
 void ErrEx(char *c) {
   puts(c);
@@ -1257,7 +1261,7 @@ void ErrEx(char *c) {
 }
 void ReadEOL() {
   char c;
-  while ('\n' != (c = fgetc(infi)))
+  while ('\n' != (c = fgetc(ctx.infi)))
     if (c == EOF) {
       puts("End of File");
       exit(0);
@@ -1266,11 +1270,11 @@ void ReadEOL() {
 
 void ReadSpec() {
   int g, a, c, b = 0; /* g=h[0]-(h[1]=chi)/2; a=h[0]; b=h[3]; */
-  if (stdi)
+  if (ctx.stdi)
     printf("Type 'g a c' or '-g a c h01' with g=h12 and a=h11: ");
-  fscanf(infi, "%d%d%d", &g, &a, &c);
+  fscanf(ctx.infi, "%d%d%d", &g, &a, &c);
   if (g < 0) {
-    fscanf(infi, "%d", &b);
+    fscanf(ctx.infi, "%d", &b);
     g = -g;
   }
   if (c != 2 * (a - g))
@@ -1298,9 +1302,9 @@ void LgoTwistInit(int narg, char *fn[]) {
   int n = 1, t = 0, /* t-> # trivial pairs */
       g = 0, a = 0, b = 0;
   char *c;
-  infi = stdin;
-  stdi = 1;
-  outfi = stdout;
+  ctx.infi = stdin;
+  ctx.stdi = 1;
+  ctx.outfi = stdout;
   if (narg < 2)
     PrintUse("");
   while (n < narg)
@@ -1336,16 +1340,16 @@ void LgoTwistInit(int narg, char *fn[]) {
         break;
       case 'i':
         c = (fn[n][2]) ? &fn[n][2] : fn[++n];
-        infi = fopen(c, "r");
-        if (infi == NULL)
+        ctx.infi = fopen(c, "r");
+        if (ctx.infi == NULL)
           PrintUse("Open infile failed");
         n++;
-        stdi = 0;
+        ctx.stdi = 0;
         break;
       case 'o':
         c = (fn[n][2]) ? &fn[n][2] : fn[++n];
-        outfi = fopen(c, "w");
-        if (outfi == NULL)
+        ctx.outfi = fopen(c, "w");
+        if (ctx.outfi == NULL)
           PrintUse("Open outfile failed");
         n++;
         break;
@@ -1371,18 +1375,18 @@ void LgoTwistInit(int narg, char *fn[]) {
 int main(int narg, char *fn[]) {
   skelet s;
   LgoTwistInit(narg, fn);
-  /*   if (narg>1) infi=fopen(fn[1],"r");		aao2.6	  002244 4 3 4 3
-     4 3 else { infi=stdin; stdi=1; printf("usage: arg1=input file [stdin];
-     arg2=output file [stdout];\n"); printf("       arg3=#pairs of trivial
-     fields to be added;\n"); printf("skeleton = string[#] exp_1 ... exp_#\n");}
-       if (narg>2) outfi=fopen(fn[2],"w"); else outfi=stdout;
+  /*   if (narg>1) ctx.infi=fopen(fn[1],"r");		aao2.6	  002244 4 3 4 3
+     4 3 else { ctx.infi=stdin; ctx.stdi=1; printf("usage: arg1=input file
+     [stdin]; arg2=output file [stdout];\n"); printf("       arg3=#pairs of
+     trivial fields to be added;\n"); printf("skeleton = string[#] exp_1 ...
+     exp_#\n");} if (narg>2) ctx.outfi=fopen(fn[2],"w"); else ctx.outfi=stdout;
        if (narg>3) addsyms= *fn[3]-'0'; else addsyms=0;
        if (narg>4) search[1]=atoi(fn[4]); if (narg>5) search[0]=atoi(fn[5]);
        if (narg>6) search[2]=atoi(fn[6]); search[1]=2*(search[0]-search[1]);
    */
-  while (readline(&s) && !bugcount) { /* search={a,c=2(a-g),b} */
+  while (readline(&s) && !ctx.bugcount) { /* search={a,c=2(a-g),b} */
     analy(s);
-    if (invertible || !ONLYINV) {
+    if (ctx.invertible || !ONLYINV) {
       datain();
       if (LONGOUT)
         longoutput0();
@@ -1396,10 +1400,10 @@ int main(int narg, char *fn[]) {
       finishmodel();
     }
   }
-  /*  fprintf(outfi,"modelnum, totsymnum, maxsymnum, totspecnum, maxspecnum: ");
-      fprintf(outfi,"%ld %ld %ld %ld %ld", modelnum, totsymnum, maxsymnum,
-               totspecnum, maxspecnum); */
-  fprintf(outfi,
+  /*  fprintf(ctx.outfi,"modelnum, totsymnum, maxsymnum, totspecnum, maxspecnum:
+     "); fprintf(ctx.outfi,"%ld %ld %ld %ld %ld", modelnum, totsymnum,
+     maxsymnum, totspecnum, maxspecnum); */
+  fprintf(ctx.outfi,
           "#skel=%ld, #sym=%ld, sym/skel<=%ld, #spectra=%ld, spec/skel<=%ld",
           modelnum, totsymnum, maxsymnum, totspecnum, maxspecnum);
   printpri(pmax);
@@ -1418,8 +1422,8 @@ int interb01(/*struct ein */); /* ...  interface to "mhodge" conventions   */
  *          if(j)pow[--j]=0; else {"do it for pow[]!";  *pow++;}}         *
  *  where O_j=*gen[j], J=NG;      !!! note that pow[J+1] is set to 0 !!!    */
 #if SAFER
-void mod1(rat *a) { a->num = mod(a->num, a->den); }
-int b01(sint N, sint NG, sint zd[NM + 1], lint gen[NS][NM + 1]) {
+void mod1(rat *a) { a->num = Mod(a->num, a->den); }
+int b01(int N, int NG, int zd[NM + 1], long gen[NS][NM + 1]) {
   int b = 0, i, j, eq[NM + 1],
       pow[NS + 1]; /* eq=th_i==q_i; pow(er) of generator */
   over = 0;
@@ -1454,11 +1458,11 @@ int b01(sint N, sint NG, sint zd[NM + 1], lint gen[NS][NM + 1]) {
       if (sum && (sum != *zd))
         can = 0; /* i.e. charge=1? */
       for (k = 0; can && (k < NG); k++) {
-        lint gph = 0; /*check inv. under G_k: gph(ase)*/
+        long gph = 0; /*check inv. under G_k: gph(ase)*/
         for (i = 1; i <= N; i++) {
           if (eq[i])
             gph += gen[k][i];
-          gph = mod(gph, *gen[k]);
+          gph = Mod(gph, *gen[k]);
         }
         if (gph)
           can = 0;
@@ -1476,14 +1480,14 @@ int b01(sint N, sint NG, sint zd[NM + 1], lint gen[NS][NM + 1]) {
   return b;
 }
 #else
-int b01(sint N, sint NG, sint zd[NM + 1], lint gen[NS][NM + 1]) {
+int b01(int N, int NG, int zd[NM + 1], long gen[NS][NM + 1]) {
   int b = 0, i, j, eq[NM + 1],
       pow[NS + 1]; /* eq=th_i==q_i; pow(er) of generator */
-  lint G = **gen;
+  long G = **gen;
   for (j = 1; j < NG; j++)
-    G *= (*gen[j] / gcd(G, *gen[j])); /* lcm(O_j) */
+    G *= (*gen[j] / gcd(G, *gen[j])); /* Lcm(O_j) */
   {
-    lint inv;
+    long inv;
     for (j = 0; j < NG; j++) {
       inv = G / (*gen[j]); /* inv=G/O_j */
       for (i = 1; i <= N; i++)
@@ -1501,10 +1505,10 @@ int b01(sint N, sint NG, sint zd[NM + 1], lint gen[NS][NM + 1]) {
       int can = 1, sum = -(*zd), k;     /* can(didate) for b01-contribution */
       for (i = 1; can && (i <= N); i++) /* check th=0/q -> set eq */
       {
-        lint th = 0;
+        long th = 0;
         for (k = 0; k < NG; k++)
           th += pow[k] * gen[k][i];
-        th = mod(th, G);
+        th = Mod(th, G);
         if (th < 0) {
           printf("warning: th<0!\n");
           th += G;
@@ -1522,11 +1526,11 @@ int b01(sint N, sint NG, sint zd[NM + 1], lint gen[NS][NM + 1]) {
       if (sum)
         can = 0; /* i.e. charge=1? */
       for (k = 0; can && (k < NG); k++) {
-        lint gph = 0; /*check inv. under G_k: gph(ase)*/
+        long gph = 0; /*check inv. under G_k: gph(ase)*/
         for (i = 1; i <= N; i++) {
           if (eq[i])
             gph += gen[k][i];
-          gph = mod(gph, G);
+          gph = Mod(gph, G);
         }
         if (gph)
           can = 0;
@@ -1541,8 +1545,8 @@ int b01(sint N, sint NG, sint zd[NM + 1], lint gen[NS][NM + 1]) {
 #endif
 int interb01() /* aao.c:  *e.np -> ns;  *e.n -> n;  *e.w -> wei;  PM->NS */
 {
-  sint i, j, zd[NM + 1];
-  lint gen[NS][NM + 1];
+  int i, j, zd[NM + 1];
+  long gen[NS][NM + 1];
   zd[0] = wei[n][0];
   for (i = 1 - ADDZD; i <= ns; i++)
     gen[i][0] = wei[n][i];
@@ -1556,7 +1560,9 @@ int interb01() /* aao.c:  *e.np -> ns;  *e.n -> n;  *e.w -> wei;  PM->NS */
 /*  =========================     end of b01      ========================= */
 
 /*  ========================    search for g,a,b  ========================= */
-#define fpri(list, num) fprintf(outfi, list, (long)num)
+template <typename T> void fpri(const char *fmt, T num) {
+  fprintf(ctx.outfi, fmt, static_cast<long>(num));
+}
 void searchspec(spectrum h) /* g=h[0]-(h[1]=chi)/2; a=h[0]; b=h[3]; */
 { /* printf("h=%d %d %d  search=%d %d %d\n",h[0],h[1],h[2],
       search[0],search[1],search[2]);*/
@@ -1569,7 +1575,7 @@ void searchspec(spectrum h) /* g=h[0]-(h[1]=chi)/2; a=h[0]; b=h[3]; */
 #ifdef OLD_FORMAT
   {
     int i, j;
-    fprintf(outfi, "\n");
+    fprintf(ctx.outfi, "\n");
     fpri("C_{(%ld", wei[0][0]);
     for (i = 1; i < n; i++)
       fpri(",%ld", wei[i][0]);
@@ -1584,7 +1590,7 @@ void searchspec(spectrum h) /* g=h[0]-(h[1]=chi)/2; a=h[0]; b=h[3]; */
 #else
   {
     int i, j;
-    fprintf(outfi, "\n");
+    fprintf(ctx.outfi, "\n");
     fpri("%ld", wei[n][0]);
     for (i = 0; i < n; i++)
       fpri(" %ld", wei[i][0]);
