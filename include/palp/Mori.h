@@ -106,6 +106,7 @@ find subdeterminants=volumes=1 for elimination.
 
 /*  ======  typedefs and functions related to INCIDENCEs  ======  */
 
+/* Definitions live in src/MoriCone.cpp; only declared here. */
 Inci64 makeN(int N);
 void putN(int N, Inci64 *I); /* make INCIDENCE */
 void setN(int N, Inci64 *I); /* make INCIDENCE */

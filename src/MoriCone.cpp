@@ -66,35 +66,27 @@ int Multiloop(int *N, int *I, int *j, int *J);
 //============================================================================
 
 //	I N C I D E N C E S
-Inci64 makeN(int N) { return ((Inci64)1) << N; }
-void putN(int N, Inci64 *I) { *I |= 1 << N; }      /* make INCIDENCE */
-void setN(int N, Inci64 *I) { *I |= 1 << N; }      /* make INCIDENCE */
-int getN(int N, Inci64 I) { return (I >> N) % 2; } /* read INCIDENCE */
+Inci64 makeN(int N) { return Inci64(1) << N; }
+void putN(int N, Inci64 *I) { *I |= Inci64(1) << N; } /* make INCIDENCE */
+void setN(int N, Inci64 *I) { *I |= Inci64(1) << N; } /* make INCIDENCE */
+int getN(int N, Inci64 I) { return (I >> N) & 1; }    /* read INCIDENCE */
 void prnI(int N, Inci64 I) {
-  int i;
-  for (i = 0; i < N; i++)
+  for (int i = 0; i < N; i++)
     printf("%d", getN(i, I));
 }
 void fprI(int N, Inci64 I) {
-  int i;
-  for (i = 0; i < N; i++)
+  for (int i = 0; i < N; i++)
     fprintf(outFILE, "%d", getN(i, I));
 } /* print INCIDENCE */
 
 int Inci64_LE(Inci64 A, Inci64 B) { return (A & B) == A; }
-int Inci64_LT(Inci64 A, Inci64 B) {
-  if ((A & B) == A)
-    return A != B;
-  else
-    return 0;
-}
+int Inci64_LT(Inci64 A, Inci64 B) { return ((A & B) == A) ? (A != B) : 0; }
 // int Inci64_LmR(Inci64 *A,Inci64 *B){return (*A==*B) ? 0 : ((*A>*B) ? 1:-1);}
 // int Inci64_diff(const void *A,const void *B){return Inci64_LmR(A,B);}
 
 void PRNtriang(triang *SR, const char *c) {
-  int i;
   printf("%d %s\n", SR->n, c);
-  for (i = 0; i < SR->n; i++) {
+  for (int i = 0; i < SR->n; i++) {
     if (i)
       printf(" ");
     prnI(SR->v, SR->I[i]);
@@ -374,15 +366,25 @@ void Print_Inci64_list(int n, Inci64 *I, int p) {
 }
 
 namespace {
+constexpr Inci64 Inci64_0() { return 0; }
+constexpr Inci64 Inci64_1() { return 1; }
+constexpr bool Inci64_EQ(Inci64 x, Inci64 y) { return x == y; }
+constexpr bool Inci64_EQ_0(Inci64 x) { return x == 0; }
 constexpr Inci64 Inci64_AND(Inci64 I, Inci64 J) { return I & J; }
-} // namespace
+constexpr Inci64 Inci64_OR(Inci64 x, Inci64 y) { return x | y; }
+constexpr Inci64 Inci64_PN(Inci64 x, bool y) {
+  return (x << 1) | static_cast<Inci64>(!y);
+}
 
-int Inci64_abs(Inci64 X) {
-  int abs = X % 2;
-  while (X /= 2)
-    abs += X % 2;
+constexpr int Inci64_abs(Inci64 X) {
+  int abs = 0;
+  while (X) {
+    abs += X & 1;
+    X >>= 1;
+  }
   return abs;
 }
+} // namespace
 
 void IDerr(void) {
   puts("\n       ********       INPUT DATA ERROR    	  ********");
@@ -1808,31 +1810,6 @@ int Induce_Facet_Tri(Inci64 *T, int N, Inci64 f, Inci64 C, Inci64 *iT, int p,
     assert(Inci64_abs(iT[i]) == d);
   }
   assert(A + C == f);
-#ifdef TRACE_TRIANGULATION__
-  {
-    int a = -1;
-    printf("T=");
-    for (i = 0; i < N; i++) {
-      prnI(p, T[i]);
-      printf(" ");
-    }
-    printf("with f-C=");
-    prnIP(A);
-    printf(" -> iT=");
-    for (i = 0; i < n; i++) {
-      prnIP(iT[i]);
-      printf(" ");
-      if (Inci64_abs(iT[i]) != d)
-        a = i;
-    }
-    puts("");
-    if (a >= 0)
-      assert(Inci64_abs(iT[a]) == d);
-  }
-  static int s;
-  if (++s > 13)
-    exit(0);
-#endif
   return n;
 }
 
@@ -1993,14 +1970,6 @@ void GKZsubdivide(Inci64 *F, int f, PolyPointList *P, int p, int *Tp, int *ntp,
         }
       }
 
-#ifdef TRACE_TRIANGULATION__
-  if (comptri) {
-    puts("Maximal triangulations from secondary fans:");
-    for (j = 0; j < nmf; j++)
-      Print_MaxTrian(C[j], CT[j], nmt[j], nt[j], p);
-  }
-#endif
-
   //	now make maximal triangulations MT_{j<c}
 
   c = 0;
@@ -2142,19 +2111,6 @@ void Subdivide(PolyPointList *P, int v, Inci64 I[], int p, Inci64 *T, int *t,
     if (c[i - v] == 2)
       ns2++;
   } // ns2 = #pts @ codim2=triangle
-
-#if TRACE_TRIANGULATION
-  for (j = 0; j < ni; j++)
-    printf("vp[%d]=%d%d%s", j, Tv[j], Tp[j], (j == ni - 1) ? "\n" : " ");
-  for (i = 0; i < p - v; i++)
-    if (c[i] > 2) {
-      printf("p%d on edge:", i + v);
-      for (j = 0; j < c[i]; j++)
-        printf(" %d", C[i][j]);
-      puts("");
-    } else
-      printf("p%d on triangle(%d,%d)\n", i + v, C[i][0], C[i][1]);
-#endif
 
   GKZsubdivide(I, ni, P, p, Tp, ntp, nPS, _Flag, F);
   return;
@@ -2445,12 +2401,6 @@ void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
  ****************************************************************/
 
 namespace {
-constexpr Inci64 Inci64_0() { return 0; }
-constexpr Inci64 Inci64_1() { return 1; }
-constexpr bool Inci64_EQ(Inci64 x, Inci64 y) { return x == y; }
-constexpr bool Inci64_EQ_0(Inci64 x) { return Inci64_EQ(x, Inci64_0()); }
-constexpr Inci64 Inci64_OR(Inci64 x, Inci64 y) { return x | y; }
-constexpr Inci64 Inci64_PN(Inci64 x, bool y) { return 2 * x + !y; }
 constexpr Inci64 Inci64_D2(Inci64 x) { return x / 2; }
 constexpr int Inci64_M2(Inci64 x) { return x % 2; }
 } // namespace
