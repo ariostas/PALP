@@ -1,6 +1,7 @@
 #pragma once
 
 #include <limits.h>
+#include <memory>
 
 #ifdef __DECC           /* use local "/tmp" on clusters: */
 #define USE_TMP_DIR (1) /* write aux-files to "/tmp"     */
@@ -84,6 +85,7 @@ typedef struct {
       nVmax, NUCmax, NFnum[VERT_Nmax][NUC_Nmax];
   Along Fv_pos[VERT_Nmax][NUC_Nmax];
   UPint RAM_pos[VERT_Nmax][NUC_Nmax];
+  std::unique_ptr<unsigned char[]> RAM_NF_owner;
   unsigned char *RAM_NF;
   long long NB;
   FILE *Finfo, *Fsl, *Fv[VERT_Nmax];

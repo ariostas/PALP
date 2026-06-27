@@ -11,4 +11,5 @@ install
 *.cmake
 CMakeCache.txt
 CMakeFiles
+Testing
 

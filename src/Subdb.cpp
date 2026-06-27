@@ -2,6 +2,7 @@
 #include <palp/Rat.h>
 #include <palp/Subpoly.h>
 
+#include <memory>
 #include <string>
 #include <vector>
 /*  NB mod 2^32, works for #poly<2^32   */
@@ -238,8 +239,9 @@ void Init_DB(NF_List *_NFL) {
   fflush(stdout);
   assert(RAM_size <= INT_MAX);
 
-  DB->RAM_NF = (unsigned char *)malloc(RAM_size);
-  assert(DB->RAM_NF != NULL);
+  DB->RAM_NF_owner =
+      std::make_unique<unsigned char[]>(static_cast<size_t>(RAM_size));
+  DB->RAM_NF = DB->RAM_NF_owner.get();
 
   /* read the DB-files and create RAM_NF: */
   for (v = 2; v <= DB->nVmax; v++)
@@ -438,8 +440,10 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
   strcpy(Ifx, ".sl");
   if (IslNF)
     assert(NULL != (FI = fopen(Ifn.data(), "rb")));
+  std::vector<unsigned char> ucSL_buffer;
   if ((IslNB + AslNB))
-    assert(NULL != (ucSL = (unsigned char *)malloc((IslNB + AslNB))));
+    ucSL_buffer.resize(IslNB + AslNB);
+  ucSL = ucSL_buffer.data();
   HApos = FTELL(FA);
   FSEEK(FA, 0, SEEK_END);
   Apos = FTELL(FA);
@@ -1175,8 +1179,8 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
     printf("Cannot open %s", polyo);
     exit(0);
   }
-  ucSL = (unsigned char *)malloc(SL_Nmax * CperR_MAX * sizeof(char));
-  assert(ucSL != NULL);
+  std::vector<unsigned char> ucSL_buffer(SL_Nmax * CperR_MAX * sizeof(char));
+  ucSL = ucSL_buffer.data();
   Init_FInfoList(&FIs);
 
   if (db) {
@@ -1927,16 +1931,17 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto,
   Long VPM[EQUA_Nmax][VERT_Nmax];
   EqList E;
   time_t Tstart;
-  char *dbname = (char *)malloc(1 + strlen(dbin) + File_Ext_NCmax), *fx;
-  char *dbhname = (char *)malloc(6 + strlen(dbout) + File_Ext_NCmax), *fhx;
+  char *fx;
+  std::vector<char> dbname(1 + strlen(dbin) + File_Ext_NCmax);
+  char *fhx;
+  std::vector<char> dbhname(6 + strlen(dbout) + File_Ext_NCmax);
   unsigned char uc_poly[NUC_Nmax];
   int d, v, nu, i, j, list_num, sl_nNF, sl_SM, sl_NM, sl_NB, dh,
       nnf_vd[VERT_Nmax][Hod_Dif_max + 1], nnf_v[VERT_Nmax];
   BaHo BH;
   FILE *Faux[Hod_Dif_max + 1];
   FILE *Fvinfo;
-  PolyPointList *_PD = (PolyPointList *)malloc(sizeof(PolyPointList));
-  assert(_PD != NULL);
+  std::unique_ptr<PolyPointList> _PD = std::make_unique<PolyPointList>();
 
   if (!*dbin || !*dbout) {
     puts("You have to specify I/O database names via -di and -do");
@@ -1946,19 +1951,19 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto,
   for (i = 0; i <= Hod_Dif_max; i++)
     for (j = 0; j < VERT_Nmax; j++)
       nnf_vd[j][i] = 0;
-  strcpy(dbname, dbin);
-  strcpy(dbhname, dbout);
-  strcat(dbname, ".info");
-  strcat(dbhname, ".vinfo");
+  strcpy(dbname.data(), dbin);
+  strcpy(dbhname.data(), dbout);
+  strcat(dbname.data(), ".info");
+  strcat(dbhname.data(), ".vinfo");
   fx = &dbname[strlen(dbin) + 1];
   fhx = &dbhname[strlen(dbout) + 1];
-  Fvinfo = fopen(dbhname, "a");
+  Fvinfo = fopen(dbhname.data(), "a");
 
-  printf("Reading %s: ", dbname);
+  printf("Reading %s: ", dbname.data());
   fflush(0);
 
   /* read the info-file: */
-  DB.Finfo = fopen(dbname, "r");
+  DB.Finfo = fopen(dbname.data(), "r");
   assert(DB.Finfo != NULL);
   fscanf(DB.Finfo, "%d  %d %d %d  %d  %lld %d %lld %lld  %d %d %d %d", &d,
          &DB.nV, &DB.nVmax, &DB.NUCmax, &list_num, &DB.nNF, &DB.nSM, &DB.nNM,
@@ -1983,7 +1988,7 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto,
   }
 
   if (ferror(DB.Finfo)) {
-    printf("File error in %s\n", dbname);
+    printf("File error in %s\n", dbname.data());
     exit(0);
   }
   fclose(DB.Finfo);
@@ -2009,7 +2014,7 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto,
       printf("v=%d: ", v);
       fflush(0);
       strcpy(fx, ext);
-      DB.Fv[v] = fopen(dbname, "rb");
+      DB.Fv[v] = fopen(dbname.data(), "rb");
       assert(DB.Fv[v] != NULL);
       for (nu = 0; nu <= DB.NUCmax; nu++)
         for (i = 0; i < DB.NFnum[v][nu]; i++) {
@@ -2023,8 +2028,8 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto,
           assert(V.nv == v);
           Make_VEPM(_P, &V, &E, VPM);
           Complete_Poly(VPM, &E, V.nv, _P);
-          Make_Dual_Poly(_P, &V, &E, _PD);
-          RC_Calc_BaHo(_P, &V, &E, _PD, &BH);
+          Make_Dual_Poly(_P, &V, &E, _PD.get());
+          RC_Calc_BaHo(_P, &V, &E, _PD.get(), &BH);
           if (BH.h1[1] < BH.h1[2])
             mirror = 1;
           if (mirror)
@@ -2036,7 +2041,7 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto,
             aext[5] = '0' + (dh / 10) % 10;
             aext[6] = '0' + dh % 10;
             strcpy(fhx, aext);
-            Faux[dh] = fopen(dbhname, "ab");
+            Faux[dh] = fopen(dbhname.data(), "ab");
           }
           if (!nnf_vd[v][dh])
             nd++;
@@ -2061,7 +2066,7 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto,
         }
 
       if (ferror(DB.Fv[v])) {
-        printf("File error in %s\n", dbname);
+        printf("File error in %s\n", dbname.data());
         exit(0);
       }
       fclose(DB.Fv[v]);
@@ -2082,7 +2087,6 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto,
       printf(" %d NF (%ds)\n", nnf_v[v], (int)difftime(time(NULL), Tstart));
       fflush(0);
     }
-  free(_PD);
   fclose(Fvinfo);
 }
 
@@ -2090,10 +2094,11 @@ void Sort_Hodge(char *dbaux, char *dbout) {
   /* Sort from v-chi-format to chi-h12-format */
 
   time_t Tstart;
-  char *dbaname = (char *)malloc(6 + strlen(dbaux) + File_Ext_NCmax), *fax;
-  char *dbhname =
-           (char *)malloc(6 + strlen(*dbout ? dbout : dbaux) + File_Ext_NCmax),
-       *fhx;
+  char *fax;
+  std::vector<char> dbaname(6 + strlen(dbaux) + File_Ext_NCmax);
+  char *fhx;
+  std::vector<char> dbhname(6 + strlen(*dbout ? dbout : dbaux) +
+                            File_Ext_NCmax);
   int v, i, j, dh, nd, nnf_d[Hod_Dif_max + 1],
       nnf_vd[VERT_Nmax][Hod_Dif_max + 1], nnf_h[Hod_Min_max + 1],
       nnf_v[VERT_Nmax];
@@ -2108,18 +2113,18 @@ void Sort_Hodge(char *dbaux, char *dbout) {
 
   if (!*dbout)
     dbout = dbaux;
-  strcpy(dbaname, dbaux);
-  strcat(dbaname, ".vinfo");
-  strcpy(dbhname, dbout);
-  strcat(dbhname, ".hinfo");
+  strcpy(dbaname.data(), dbaux);
+  strcat(dbaname.data(), ".vinfo");
+  strcpy(dbhname.data(), dbout);
+  strcat(dbhname.data(), ".hinfo");
   fhx = &dbhname[strlen(dbout) + 1];
   fax = &dbaname[strlen(dbaux) + 1];
 
-  printf("Reading %s\n", dbaname);
+  printf("Reading %s\n", dbaname.data());
   fflush(0);
 
   /* read the info-file: */
-  Fvinfo = fopen(dbaname, "r");
+  Fvinfo = fopen(dbaname.data(), "r");
   assert(Fvinfo != NULL);
   while ((fscanf(Fvinfo, "%d", &v)) != EOF) {
     fscanf(Fvinfo, "%d  %d", &nd, &(nnf_v[v]));
@@ -2131,7 +2136,7 @@ void Sort_Hodge(char *dbaux, char *dbout) {
     }
   }
   if (ferror(Fvinfo)) {
-    printf("File error in %s\n", dbaname);
+    printf("File error in %s\n", dbaname.data());
     exit(0);
   }
   fclose(Fvinfo);
@@ -2140,7 +2145,7 @@ void Sort_Hodge(char *dbaux, char *dbout) {
   fflush(0);
   Tstart = time(NULL);
 
-  Fhinfo = fopen(dbhname, "w");
+  Fhinfo = fopen(dbhname.data(), "w");
   assert(Fhinfo != NULL);
 
   /* Sort the Hodge&Poly-Data */
@@ -2172,7 +2177,7 @@ void Sort_Hodge(char *dbaux, char *dbout) {
           aext[1] = '0' + v / 10;
           aext[2] = '0' + v % 10;
           strcpy(fax, aext);
-          Fchia = fopen(dbaname, "rb");
+          Fchia = fopen(dbaname.data(), "rb");
           for (i = 0; i < nnf_vd[v][dh]; i++) {
             h12 = fgetc(Fchia);
             if (!nnf_h[h12]) {
@@ -2180,7 +2185,7 @@ void Sort_Hodge(char *dbaux, char *dbout) {
               hext[6] = '0' + (h12 / 10) % 10;
               hext[7] = '0' + h12 % 10;
               strcpy(fhx, hext);
-              Fh[h12] = fopen(dbhname, "wb");
+              Fh[h12] = fopen(dbhname.data(), "wb");
               nh++;
             }
             nnf_h[h12]++;
@@ -2244,7 +2249,8 @@ void Sort_Hodge(char *dbaux, char *dbout) {
 void Test_Hodge_db(char *dbname) {
 
   time_t Tstart;
-  char *filename = (char *)malloc(6 + strlen(dbname) + File_Ext_NCmax), *fhx;
+  char *fhx;
+  std::vector<char> filename(6 + strlen(dbname) + File_Ext_NCmax);
   int i, j, dh, h12, nh, nnf_sum, nnf_d[Hod_Dif_max + 1],
       nnf_dh[Hod_Dif_max + 1][Hod_Min_max + 1];
   FILE *Fh;
@@ -2256,15 +2262,15 @@ void Test_Hodge_db(char *dbname) {
       nnf_dh[i][j] = 0;
   }
 
-  strcpy(filename, dbname);
-  strcat(filename, ".hinfo");
+  strcpy(filename.data(), dbname);
+  strcat(filename.data(), ".hinfo");
   fhx = &filename[strlen(dbname) + 1];
 
-  printf("Reading %s\n", filename);
+  printf("Reading %s\n", filename.data());
   fflush(0);
 
   /* read the info-file: */
-  Fhinfo = fopen(filename, "r");
+  Fhinfo = fopen(filename.data(), "r");
   assert(Fhinfo != NULL);
   while ((fscanf(Fhinfo, "%d", &dh)) != EOF) {
     fscanf(Fhinfo, "%d  %d", &nh, &(nnf_d[dh]));
@@ -2280,7 +2286,7 @@ void Test_Hodge_db(char *dbname) {
     }
   }
   if (ferror(Fhinfo)) {
-    printf("File error in %s\n", filename);
+    printf("File error in %s\n", filename.data());
     exit(0);
   }
   fclose(Fhinfo);
@@ -2312,7 +2318,7 @@ void Test_Hodge_db(char *dbname) {
           hext[6] = '0' + (h12 / 10) % 10;
           hext[7] = '0' + h12 % 10;
           strcpy(fhx, hext);
-          Fh = fopen(filename, "rb");
+          Fh = fopen(filename.data(), "rb");
           assert(Fh != 0);
           while ((c1 = fgetc(Fh)) != EOF) {
             nnf_sum++;
@@ -2653,23 +2659,23 @@ void Test_Hodge_file(char *filename, PolyPointList *_P) {
 void Open_DB(char *dbin, DataBase **_DB, int info) {
   int i, j, v, nu;
   DataBase *DB;
-  char *dbname, *fx, ext[4];
+  char *fx, ext[4];
+  std::vector<char> dbname(1 + strlen(dbin) + File_Ext_NCmax);
   if (*dbin == 0) {
     *_DB = NULL;
     return;
   }
-  dbname = (char *)malloc(1 + strlen(dbin) + File_Ext_NCmax);
-  DB = (DataBase *)malloc(sizeof(DataBase));
+  DB = new DataBase();
   assert(DB != NULL);
   *_DB = DB;
-  strcpy(dbname, dbin);
-  strcat(dbname, ".info");
+  strcpy(dbname.data(), dbin);
+  strcat(dbname.data(), ".info");
   fx = &dbname[strlen(dbin) + 1];
   if (info) {
-    printf("Reading %s: ", dbname);
+    printf("Reading %s: ", dbname.data());
     fflush(0);
   }
-  DB->Finfo = fopen(dbname, "r");
+  DB->Finfo = fopen(dbname.data(), "r");
   assert(DB->Finfo != NULL);
   fscanf(DB->Finfo, "%d  %d %d %d  %d  %lld %d %lld %lld  %d %d %d %d", &DB->d,
          &DB->nV, &DB->nVmax, &DB->NUCmax, &DB->list_num, &DB->nNF, &DB->nSM,
@@ -2694,7 +2700,7 @@ void Open_DB(char *dbin, DataBase **_DB, int info) {
     }
   }
   if (ferror(DB->Finfo)) {
-    printf("File error in %s\n", dbname);
+    printf("File error in %s\n", dbname.data());
     exit(0);
   }
   fclose(DB->Finfo);
@@ -2706,7 +2712,7 @@ void Open_DB(char *dbin, DataBase **_DB, int info) {
       ext[1] = '0' + v / 10;
       ext[2] = '0' + v % 10;
       strcpy(fx, ext);
-      DB->Fv[v] = fopen(dbname, "rb");
+      DB->Fv[v] = fopen(dbname.data(), "rb");
       assert(DB->Fv[v] != NULL);
       if (0 == DB->v) {
         DB->v = v;
@@ -2727,7 +2733,7 @@ void Close_DB(DataBase *DB) {
       }
       fclose(DB->Fv[v]);
     }
-  free(DB);
+  delete DB;
 }
 int Read_H_ucNF_from_DB(DataBase *DB, unsigned char *uc) /* p=next read pos */
 {
