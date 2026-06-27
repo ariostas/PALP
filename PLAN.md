@@ -107,11 +107,12 @@ cmake --build build/ubsan && ctest --test-dir build/ubsan
 #### Step 4.1 — `lgotwist.cpp` (standalone, not in CMake)
 
 - [x] Renamed.
+- [x] Switched to C++ standard headers (`<cstdio>`, `<cstdlib>`, `<cstring>`).
+- [x] Remove `register` keyword.
+- [x] Replace `#define abs/min/max/mod` with inline helper functions in an anonymous namespace.
+- [x] Replace `#ifdef __MSDOS__` platform sizing branch with `constexpr int` constants.
+- [x] Replace small I/O/control globals with a `LgoTwistContext` struct (`infi`, `outfi`, `stdi`, `bugcount`, `invertible`).
 - [ ] Remove duplicated rational arithmetic (ISSUES.md #36); reuse `Rat.cpp` logic or align types.
-- [ ] Replace `#define abs/min/max/mod` (ISSUES.md #31) with standard library equivalents.
-- [ ] Replace global variables with a `LgoTwistContext` struct.
-- [ ] Remove `register` keyword.
-- [ ] Replace `#ifdef __MSDOS__` platform checks with C++17 equivalents.
 - **Verify**: build standalone manually.
 
 #### Step 4.3 — Final cleanup
@@ -140,7 +141,7 @@ Symbols left as macros because they are required by `#if`/`#ifdef` array sizing 
 - `src/LG.cpp`: `COEFF_Nmax` (depends on local variables, used for array sizes).
 - `src/MoriCone.cpp`: `BZangle`, `SameRayBZ`, `BZR`, `BZRx`, `BZRE` (capture many local variables).
 - `src/Subadd.cpp`: `TEST_UCnf`, `ADD_LIST_LENGTH`, `INCREMENTAL_TIME`, `INCREMENTAL_WRITE`, `ACCEL_PEntComp`, `USE_UNIT_ENCODE` (active, deeply interleaved).
-- `src/lgotwist.cpp`: standalone; lower priority.
+- `src/lgotwist.cpp`: tunable constants and helper macros converted; large algorithmic arrays remain file-scope globals for now.
 - `include/palp/Global.h`: large-`VERT_Nmax` `INCI_*` branch (currently dead since `VERT_Nmax <= 64`).
 
 ---
