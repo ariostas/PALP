@@ -265,8 +265,18 @@ This is the highest-risk step. Take extra care.
   (ISSUES.md #3). *Deferred*: `DYN_PPL.L` is a raw `Vector*` used throughout
   `E_Poly.cpp` and `nef.cpp`; converting it requires changing the struct
   definition in `Nef.h` and all call sites.
-- [ ] Convert remaining `malloc`/`calloc` allocations in `E_Poly.cpp` to
-  `std::unique_ptr`/`std::vector`.
+- [x] Convert remaining `malloc`/`calloc` allocations in `E_Poly.cpp` to
+  `std::unique_ptr`/`std::vector`:
+  - `PRINT_GORE` and `PRINT_FIBRATIONS` local `PolyPointList*` / `VertexNumList*`
+    / `EqList*` → `std::unique_ptr` / stack objects.
+  - `Make_S_Poly` local `_CV`, `_CE`, `_T` → stack / `std::unique_ptr`; left
+    `DYN_PPL CP.L` raw because `DYN_PPL` is deferred.
+  - `Compute_E_Poly` local `_I_D`, `_C_D`, `_C_N` → stack objects; kept
+    `_S_D`/`_S_N`/`_BL` and poset arrays raw due to variable sizes.
+  - `Make_E_Poly` local large `PolyPointList*` / `EqList*` / `VertexNumList*` /
+    `LInfo*` → `std::unique_ptr` to avoid stack overflow.
+  - `AnalyseGorensteinCone` local `_P_D`, `_V_D`, `_E_D`, `_new_E_D`, `VPM`,
+    `VPM_D` → `std::unique_ptr` / heap arrays to avoid stack overflow.
 - **Verify**: build + run all `tests/6.*` scripts (nef uses E_Poly).
 
 - [x] #### Step 3.2 — `Nefpart.c` → `Nefpart.cpp` (~837 lines)

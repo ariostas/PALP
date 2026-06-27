@@ -2,6 +2,8 @@
 #include <palp/Nef.h>
 #include <palp/Rat.h>
 
+#include <memory>
+
 namespace {
 constexpr bool write_cws = true; /* output CWS data in E-poly printing */
 }
@@ -245,20 +247,12 @@ void PRINT_PL(PolyPointList *_P, const char *comment) {
 
 void PRINT_GORE(PolyPointList *_P, int codim, int n, const char *comment) {
 
-  PolyPointList *_P_AUX;
-  VertexNumList *_V_AUX;
-  EqList *_E_AUX;
+  auto _P_AUX = std::make_unique<PolyPointList>();
+  VertexNumList _V_AUX_obj;
+  EqList _E_AUX_obj;
+  VertexNumList *_V_AUX = &_V_AUX_obj;
+  EqList *_E_AUX = &_E_AUX_obj;
   int i, j, Z = 0;
-
-  _P_AUX = (PolyPointList *)malloc(sizeof(PolyPointList));
-  if (_P_AUX == NULL)
-    Die("Unable to alloc space for PolyPointLis _P_AUX");
-  _V_AUX = (VertexNumList *)malloc(sizeof(VertexNumList));
-  if (_V_AUX == NULL)
-    Die("Unable to alloc space for VertexNumList _V_AUX");
-  _E_AUX = (EqList *)malloc(sizeof(EqList));
-  if (_E_AUX == NULL)
-    Die("Unable to alloc space for EqList _E_AUX");
 
   _P_AUX->n = _P->n - codim + 1;
 
@@ -286,10 +280,10 @@ void PRINT_GORE(PolyPointList *_P, int codim, int n, const char *comment) {
     _P_AUX->x[_P_AUX->np][j] = 0;
   _P_AUX->np++;
   /* Print_PPL(_P_AUX,"Ref_Check input"); */
-  assert(Ref_Check(_P_AUX, _V_AUX, _E_AUX));
+  assert(Ref_Check(_P_AUX.get(), _V_AUX, _E_AUX));
   /* Find_Equations(_P_AUX, _V_AUX, _E_AUX);  ...  redundant */
   if (n == 0) {
-    Sort_PPL(_P_AUX, _V_AUX);
+    Sort_PPL(_P_AUX.get(), _V_AUX);
     fprintf(outFILE, "%d %d %s (nv=%d)\n", _P_AUX->n, _P_AUX->np, comment,
             _V_AUX->nv);
     for (i = 0; i < _P_AUX->n; i++) {
@@ -326,9 +320,6 @@ void PRINT_GORE(PolyPointList *_P, int codim, int n, const char *comment) {
       fprintf(outFILE, "\n");
     }
   }
-  free(_P_AUX);
-  free(_V_AUX);
-  free(_E_AUX);
 }
 
 Long G_x_P(Long *Gi, Long *V, int *d) {
@@ -346,24 +337,16 @@ void PRINT_Fibrations(VertexNumList *_V, PolyPointList *_P, Flags *_F
 
   Long G[VERT_Nmax][POLY_Dmax][POLY_Dmax];
   int s[VERT_Nmax], CD = _F->f, n, c, i, j, fib, nf, nv, np, dim[VERT_Nmax];
-  PolyPointList *_P_AUX;
-  VertexNumList *_V_AUX;
-  EqList *_E_AUX;
+  auto _P_AUX = std::make_unique<PolyPointList>();
+  VertexNumList _V_AUX_obj;
+  EqList _E_AUX_obj;
+  VertexNumList *_V_AUX = &_V_AUX_obj;
+  EqList *_E_AUX = &_E_AUX_obj;
   char C[VERT_Nmax];
-
-  _P_AUX = (PolyPointList *)malloc(sizeof(PolyPointList));
-  if (_P_AUX == NULL)
-    Die("Unable to alloc space for PolyPointLis _P_AUX");
-  _V_AUX = (VertexNumList *)malloc(sizeof(VertexNumList));
-  if (_V_AUX == NULL)
-    Die("Unable to alloc space for VertexNumList _V_AUX");
-  _E_AUX = (EqList *)malloc(sizeof(EqList));
-  if (_E_AUX == NULL)
-    Die("Unable to alloc space for EqList _E_AUX");
 
   if (_P->np >= VERT_Nmax)
     Die("Need _P->np < VERT_Nmax in PRINT_Fibrations");
-  IP_Fiber_Data(_P, _P_AUX, _V->nv, G, dim, &nf, CD);
+  IP_Fiber_Data(_P, _P_AUX.get(), _V->nv, G, dim, &nf, CD);
   if (nf >= VERT_Nmax)
     Die("Need  nf < VERT_Nmax in PRINT_Fibrations");
 
@@ -390,7 +373,7 @@ void PRINT_Fibrations(VertexNumList *_V, PolyPointList *_P, Flags *_F
     }
     _P_AUX->np = c;
     _P_AUX->n = dim[n];
-    assert(Ref_Check(_P_AUX, _V_AUX, _E_AUX));
+    assert(Ref_Check(_P_AUX.get(), _V_AUX, _E_AUX));
     for (i = 0; i < (_P->np - 1); i++)
       C[i] = '_';
     for (i = 0; i < c; i++)
@@ -401,20 +384,17 @@ void PRINT_Fibrations(VertexNumList *_V, PolyPointList *_P, Flags *_F
       fprintf(outFILE, "%s%c", (_P->np > 20) ? "   " : "    ", C[i]);
     nv = _V_AUX->nv;
     np = (_P_AUX->np + 1);
-    EL_to_PPL(_E_AUX, _P_AUX, &dim[n]);
-    assert(Ref_Check(_P_AUX, _V_AUX, _E_AUX));
+    EL_to_PPL(_E_AUX, _P_AUX.get(), &dim[n]);
+    assert(Ref_Check(_P_AUX.get(), _V_AUX, _E_AUX));
     {
       Long X[VERT_Nmax][VERT_Nmax];
-      Make_VEPM(_P_AUX, _V_AUX, _E_AUX, X);
-      Complete_Poly(X, _E_AUX, _V_AUX->nv, _P_AUX);
+      Make_VEPM(_P_AUX.get(), _V_AUX, _E_AUX, X);
+      Complete_Poly(X, _E_AUX, _V_AUX->nv, _P_AUX.get());
       /*Dim_Fib_CI(dim, n, _PTL, C);*/
       fprintf(outFILE, "  cd=%d  m:%3d %2d n:%2d %d\n", (_P->n - dim[n]),
               _P_AUX->np, _V_AUX->nv, np, nv);
     }
   }
-  free(_P_AUX);
-  free(_V_AUX);
-  free(_E_AUX);
 }
 
 /*   ===============	End of FIBRATIONS	        ===================  */
@@ -934,9 +914,6 @@ void Make_S_Poly(Cone *_C, VertexNumList *_V, EqList *_E, PolyPointList *_P,
                  int CHECK_SERRE) {
   Long PM[EQUA_Nmax][VERT_Nmax];
   DYN_PPL CP;
-  VertexNumList *_CV;
-  EqList *_CE;
-  SPoly *_T;
   int i = 1, j, d, min;
 
   CP.NP_max = NP_Max;
@@ -945,19 +922,15 @@ void Make_S_Poly(Cone *_C, VertexNumList *_V, EqList *_E, PolyPointList *_P,
   CP.L = (Vector *)calloc(CP.NP_max, sizeof(Vector));
   if (CP.L == NULL)
     Die("Unable to alloc space for PolyPointList _CP.L");
-  _CV = (VertexNumList *)malloc(sizeof(VertexNumList));
-  if (_CV == NULL)
-    Die("Unable to alloc space for VertexNumList _CV");
-  _CE = (EqList *)malloc(sizeof(EqList));
-  if (_CE == NULL)
-    Die("Unable to alloc space for EqList _CE");
-  _T = (SPoly *)calloc(_PEL->n, sizeof(SPoly));
-  if (_T == NULL)
-    Die("Unable to alloc space for SPoly _T");
+  VertexNumList _CV_obj;
+  EqList _CE_obj;
+  auto _T = std::make_unique<SPoly[]>(_PEL->n);
+  VertexNumList *_CV = &_CV_obj;
+  EqList *_CE = &_CE_obj;
 
   Poly_To_DYNPoly(&CP, _P);
-  Init_ST(_S, _T, _PEL);
-  Poly_To_ST(&CP, _E, _C, _S, _T, _PEL, i, CHECK_SERRE);
+  Init_ST(_S, _T.get(), _PEL);
+  Poly_To_ST(&CP, _E, _C, _S, _T.get(), _PEL, i, CHECK_SERRE);
 
   if (SINFO) {
     printf("\n\n#points in largest cone:\n");
@@ -968,7 +941,7 @@ void Make_S_Poly(Cone *_C, VertexNumList *_V, EqList *_E, PolyPointList *_P,
     New_CPVE(_P, &CP, _V, _CV, _E, _CE, i);
     DYNMake_VEPM(&CP, _CV, _CE, PM);
     DYNComplete_Poly(PM, _CE, _V->nv, &CP);
-    Poly_To_ST(&CP, _CE, _C, _S, _T, _PEL, i, CHECK_SERRE);
+    Poly_To_ST(&CP, _CE, _C, _S, _T.get(), _PEL, i, CHECK_SERRE);
     if (SINFO)
       printf("layer: %2d #p: %8d #ip: %8d\n", i, (int)_S[_PEL->n - 1].S[i],
              (int)_T[_PEL->n - 1].S[i]);
@@ -998,9 +971,6 @@ void Make_S_Poly(Cone *_C, VertexNumList *_V, EqList *_E, PolyPointList *_P,
         _S[i].S[_PEL->L[i].dim] = 0;
     }
   }
-  free(_T);
-  free(_CV);
-  free(_CE);
   free(CP.L);
 }
 
@@ -1279,18 +1249,10 @@ void Compute_E_Poly(EPoly *_EP, PolyPointList *_P_D, VertexNumList *_V_D,
   SPoly *_S_D = NULL, *_S_N = NULL;
   BPoly *_BL = NULL;
   Poset_Element_List PEL_D, PEL_N;
-  FaceInfo *_I_D;
-  Cone *_C_D, *_C_N;
-
-  _I_D = (FaceInfo *)malloc(sizeof(FaceInfo));
-  if (_I_D == NULL)
-    Die("Unable to alloc space for FaceInfo _I_D");
-  _C_D = (Cone *)malloc(sizeof(Cone));
-  if (_C_D == NULL)
-    Die("Unable to alloc space for Cone _C_D");
-  _C_N = (Cone *)malloc(sizeof(Cone));
-  if (_C_N == NULL)
-    Die("Unable to alloc space for Cone _C_N");
+  FaceInfo _I_D_obj;
+  Cone _C_D_obj, _C_N_obj;
+  FaceInfo *_I_D = &_I_D_obj;
+  Cone *_C_D = &_C_D_obj, *_C_N = &_C_N_obj;
 
   Make_Incidence(_P_D, _V_D, _E_D, _I_D);
 
@@ -1346,9 +1308,6 @@ void Compute_E_Poly(EPoly *_EP, PolyPointList *_P_D, VertexNumList *_V_D,
   free(_S_N);
   free(IL.L);
   free(_BL);
-  free(_I_D);
-  free(_C_D);
-  free(_C_N);
 }
 
 void Make_E_Poly(FILE *outFILE, CWS *_W, PolyPointList *_CP, VertexNumList *_CV,
@@ -1361,63 +1320,44 @@ void Make_E_Poly(FILE *outFILE, CWS *_W, PolyPointList *_CP, VertexNumList *_CV,
   BPoly *_BL = NULL; */
   EPoly EP;
   /* Poset_Element_List PEL_D, PEL_N;*/
-  PartList *_PTL;
-  PolyPointList *_P = NULL, *_DP = NULL, *_P_D, *_P_N;
-  VertexNumList *_V = NULL, *_DV = NULL, *_V_D, *_V_N;
-  EqList *_E = NULL, *_DE = NULL, *_E_D, *_E_N;
+  auto _PTL_up = std::make_unique<PartList>();
+  auto _P_D_up = std::make_unique<PolyPointList>();
+  auto _P_N_up = std::make_unique<PolyPointList>();
+  auto _V_D_up = std::make_unique<VertexNumList>();
+  auto _V_N_up = std::make_unique<VertexNumList>();
+  auto _E_D_up = std::make_unique<EqList>();
+  auto _E_N_up = std::make_unique<EqList>();
+  auto _L_up = std::make_unique<LInfo>();
+  auto _DP_up = std::make_unique<PolyPointList>();
+  auto _P_up = std::make_unique<PolyPointList>();
+  auto _DV_up = std::make_unique<VertexNumList>();
+  auto _V_up = std::make_unique<VertexNumList>();
+  auto _DE_up = std::make_unique<EqList>();
+  auto _E_up = std::make_unique<EqList>();
+  PartList *_PTL = _PTL_up.get();
+  PolyPointList *_P = NULL, *_DP = NULL, *_P_D = _P_D_up.get(),
+                *_P_N = _P_N_up.get();
+  VertexNumList *_V = NULL, *_DV = NULL, *_V_D = _V_D_up.get(),
+                *_V_N = _V_N_up.get();
+  EqList *_E = NULL, *_DE = NULL, *_E_D = _E_D_up.get(), *_E_N = _E_N_up.get();
   /*FaceInfo *_I_D;
     Cone *_C_D, *_C_N;*/
   LInfo *_L = NULL;
 
   /*   ===============	Begin of Static Allocation	===================  */
-  _PTL = (PartList *)malloc(sizeof(PartList));
-  if (_PTL == NULL)
-    Die("Unable to alloc space for PartList _PTL");
-  _P_D = (PolyPointList *)malloc(sizeof(PolyPointList));
-  if (_P_D == NULL)
-    Die("Unable to alloc space for PolyPointLis _P_D");
-  _P_N = (PolyPointList *)malloc(sizeof(PolyPointList));
-  if (_P_N == NULL)
-    Die("Unable to alloc space for PolyPointLis _P_N");
-  _V_D = (VertexNumList *)malloc(sizeof(VertexNumList));
-  if (_V_D == NULL)
-    Die("Unable to alloc space for VertexNumList _V_D");
-  _V_N = (VertexNumList *)malloc(sizeof(VertexNumList));
-  if (_V_N == NULL)
-    Die("Unable to alloc space for VertexNumList _V_N");
-  _E_D = (EqList *)malloc(sizeof(EqList));
-  if (_E_D == NULL)
-    Die("Unable to alloc space for EqList _E_D");
-  _E_N = (EqList *)malloc(sizeof(EqList));
-  if (_E_N == NULL)
-    Die("Unable to alloc space for EqList _E_N");
+
   if (_F->Lv || _F->Lp) {
-    _L = (LInfo *)malloc(sizeof(LInfo));
-    if (_L == NULL)
-      Die("Unable to alloc space for LInfo _L");
+    _L = _L_up.get();
   }
   if (_F->N) {
-    _DP = (PolyPointList *)malloc(sizeof(PolyPointList));
-    if (_DP == NULL)
-      Die("Unable to alloc space for PolyPointLis _DP");
-    _DV = (VertexNumList *)malloc(sizeof(VertexNumList));
-    if (_DV == NULL)
-      Die("Unable to alloc space for VertexNumList _DV");
-    _DE = (EqList *)malloc(sizeof(EqList));
-    if (_DE == NULL)
-      Die("Unable to alloc space for EqList _DE");
+    _DP = _DP_up.get();
+    _DV = _DV_up.get();
+    _DE = _DE_up.get();
   } else {
-    _P = (PolyPointList *)malloc(sizeof(PolyPointList));
-    if (_P == NULL)
-      Die("Unable to alloc space for PolyPointLis _P");
-    _V = (VertexNumList *)malloc(sizeof(VertexNumList));
-    if (_V == NULL)
-      Die("Unable to alloc space for VertexNumList _V");
-    _E = (EqList *)malloc(sizeof(EqList));
-    if (_E == NULL)
-      Die("Unable to alloc space for EqList _E");
+    _P = _P_up.get();
+    _V = _V_up.get();
+    _E = _E_up.get();
   }
-  /*   ===============	End of Static Allocation	===================  */
 
   if (_F->N) {
     _P = _CP;
@@ -1514,25 +1454,6 @@ void Make_E_Poly(FILE *outFILE, CWS *_W, PolyPointList *_CP, VertexNumList *_CV,
                   &Tstart, &Cstart);
   if (_F->n && N_Part(_PTL))
     PRINT_PL(_P, "Points of Poly in N-Lattice:");
-  /*   ===============	Begin of FREE Static Allocation	===================  */
-  free(_PTL);
-  free(_P_D);
-  free(_P_N);
-  free(_V_D);
-  free(_V_N);
-  free(_E_D);
-  free(_E_N);
-  free(_L);
-  if (_F->N) {
-    free(_DP);
-    free(_DE);
-    free(_DV);
-  } else {
-    free(_P);
-    free(_E);
-    free(_V);
-  }
-  /*   ===============	End of FREE Static Allocation	===================  */
 }
 
 void SL2Z_Make_Poly_UTriang(PolyPointList *P);
@@ -1547,16 +1468,22 @@ void AnalyseGorensteinCone(CWS *_CW, PolyPointList *_P, VertexNumList *_V,
   EPoly EP;
   int i, j, k, dim = _P->n - (*_codim * 2) + 1, chi, r = 1;
   int h[POLY_Dmax][POLY_Dmax] = {};
-  PolyPointList *_P_D = (PolyPointList *)malloc(sizeof(PolyPointList));
-  VertexNumList *_V_D = (VertexNumList *)malloc(sizeof(VertexNumList));
-  EqList *_E_D = (EqList *)malloc(sizeof(EqList));
+  auto _P_D_up = std::make_unique<PolyPointList>();
+  auto _V_D_up = std::make_unique<VertexNumList>();
+  auto _E_D_up = std::make_unique<EqList>();
   /* the Gorenstein-polytope in N-lattice and its vertices and equations */
-  EqList *_new_E_D = (EqList *)malloc(sizeof(EqList));
+  auto _new_E_D_up = std::make_unique<EqList>();
   /* the equations of _P_D in an order corresponding to the vertices of _P */
-  PairMat VPM, VPM_D;
+  auto VPM_up = std::make_unique<Long[]>(EQUA_Nmax * VERT_Nmax);
+  auto VPM_D_up = std::make_unique<Long[]>(EQUA_Nmax * VERT_Nmax);
+  Long(*VPM)[VERT_Nmax] = reinterpret_cast<Long(*)[VERT_Nmax]>(VPM_up.get());
+  Long(*VPM_D)[VERT_Nmax] =
+      reinterpret_cast<Long(*)[VERT_Nmax]>(VPM_D_up.get());
 
-  if ((_P_D == NULL) || (_V_D == NULL) || (_E_D == NULL) || (_new_E_D == NULL))
-    Die("Unable to allocate space for _P_D in AnalyseGorensteinCone");
+  PolyPointList *_P_D = _P_D_up.get();
+  VertexNumList *_V_D = _V_D_up.get();
+  EqList *_E_D = _E_D_up.get();
+  EqList *_new_E_D = _new_E_D_up.get();
 
   if (POLY_Dmax < _P->n + 1) { /* only relevant if index == 1 */
     printf("Please increase POLY_Dmax to at least %d = %d + 1\n", (_P->n + 1),
@@ -1699,7 +1626,7 @@ void AnalyseGorensteinCone(CWS *_CW, PolyPointList *_P, VertexNumList *_V,
       Print_PPL(_P, "Points  of support in M:");
     if (_F->t)
       Time_Info(&Tstart, &Cstart, "");
-    if (_F->N) { /* revert M-N-swap (necessary because of alloc/free)  */
+    if (_F->N) { /* revert M-N-swap  */
       PolyPointList *_auxP = _P_D;
       VertexNumList *_auxV = _V_D;
       EqList *_auxE = _new_E_D;
@@ -1720,8 +1647,4 @@ void AnalyseGorensteinCone(CWS *_CW, PolyPointList *_P, VertexNumList *_V,
     if ((_F->Rv) || ((_F->V) && (_F->N)))
       Print_VL(_P, _V, "Vertices of input polytope:");
   }
-  free(_P_D);
-  free(_E_D);
-  free(_V_D);
-  free(_new_E_D);
 }
