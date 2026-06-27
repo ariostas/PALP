@@ -416,14 +416,12 @@ void Mink_WPCICY(AmbiPointList *_AP_1, AmbiPointList *_AP_2,
   p_max = ((Long)IntSqrt(P_max));
 
   std::vector<Long> _x(_AP_1->N);
-  std::vector<Vector> B_L(P_max);
-  B.L = B_L.data();
+  B.L.resize(P_max);
   std::vector<Long> _B_num(P_max);
   std::vector<Long> _c_num(p_max);
   std::vector<Long> _c_less(p_max);
 
   B.n = _AP_1->N;
-  B.NP_max = P_max;
   for (j = 0; j < _AP_1->np; j++)
     for (k = 0; k < _AP_2->np; k++) {
       if (n == p_max)

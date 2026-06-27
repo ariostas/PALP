@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 constexpr int Nef_Max = 500000;
 constexpr int NP_Max = 500000;
 #define W_Nmax (POLY_Dmax + 1)
@@ -98,9 +100,9 @@ struct Vector {
 typedef struct Vector Vector;
 
 typedef struct {
-  struct Vector *L;
+  std::vector<Vector> L;
   int n;
-  Long np, NP_max;
+  Long np;
 } DYN_PPL;
 
 void part_nef(PolyPointList *, VertexNumList *, EqList *, PartList *, int *,

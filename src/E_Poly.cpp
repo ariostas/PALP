@@ -57,11 +57,8 @@ void DYNadd_for_completion(Long *yDen, Long Den, EqList *_E, DYN_PPL *_CP) {
   for (i = 0; i < _E->ne; i++)
     if (Eval_Eq_on_V(&(_E->e[i]), yold, n) < 0)
       return;
-  if (!(_CP->np < _CP->NP_max)) {
-    _CP->NP_max += 1000000;
-    if ((_CP->L = (Vector *)realloc(_CP->L, _CP->NP_max * sizeof(Vector))) ==
-        NULL)
-      Die("Unable to realloc space for _CP->L");
+  if (_CP->np >= static_cast<Long>(_CP->L.size())) {
+    _CP->L.resize(_CP->L.size() + 1000000);
   }
   for (i = 0; i < n; i++)
     _CP->L[_CP->np].x[i] = yold[i];
@@ -901,7 +898,7 @@ void New_CPVE(PolyPointList *_P, DYN_PPL *_CP, VertexNumList *_V,
 void Poly_To_DYNPoly(DYN_PPL *_CP, PolyPointList *_P) {
   int i, d;
 
-  assert(_P->np <= _CP->NP_max);
+  assert(_P->np <= static_cast<Long>(_CP->L.size()));
   for (i = 0; i < _P->np; i++)
     for (d = 0; d < _P->n; d++)
       _CP->L[i].x[d] = _P->x[i][d];
@@ -916,12 +913,9 @@ void Make_S_Poly(Cone *_C, VertexNumList *_V, EqList *_E, PolyPointList *_P,
   DYN_PPL CP;
   int i = 1, j, d, min;
 
-  CP.NP_max = NP_Max;
+  CP.L.resize(NP_Max);
   min = Min_Dim(_C->dim, CHECK_SERRE);
 
-  CP.L = (Vector *)calloc(CP.NP_max, sizeof(Vector));
-  if (CP.L == NULL)
-    Die("Unable to alloc space for PolyPointList _CP.L");
   VertexNumList _CV_obj;
   EqList _CE_obj;
   auto _T = std::make_unique<SPoly[]>(_PEL->n);
@@ -971,7 +965,6 @@ void Make_S_Poly(Cone *_C, VertexNumList *_V, EqList *_E, PolyPointList *_P,
         _S[i].S[_PEL->L[i].dim] = 0;
     }
   }
-  free(CP.L);
 }
 
 void SB_To_E(EPoly *_EP, Cone *_C, Poset_Element_List *_PEL, BPoly *_BL,
