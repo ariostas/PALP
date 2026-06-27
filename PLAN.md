@@ -8,757 +8,197 @@ separate phase after migration.
 
 ## Principles
 
-- **Behavior preservation first**: every step must keep the full test suite
-  passing.
-- **One file per step**: each step converts a single `.c` file to `.cpp` (or
-  a single cross-cutting concern). Verify with `cmake --build build && ctest`
-  after each step.
-- **Run `clang-format` before every commit**: the project uses the default
-  LLVM style (via the `.clang-format` file at the repository root). Format all
-  changed C++ sources and headers with `clang-format -i` before staging, and
-  verify that `cmake --build` and `ctest` still pass afterwards.
-- **Commit after every step**: once verification passes, the changes for that
-  step must be committed before moving on. Use a descriptive commit message
-  (e.g., "Migrate Rat.c to Rat.cpp"). This keeps history reviewable and makes
-  it easy to bisect if a later step breaks a test.
-- **POLY_Dmax stays compile-time**: keep `constexpr` equivalent of current
-  macros;
-do not switch to dynamic allocation in the migration phase.
-- **No new features**: don't refactor algorithms; only modernize the language
-  constructs.
-- **Exact output compatibility**: every test in `tests/` must produce identical
-  output before and after each step.
+- **Behavior preservation first**: every step must keep the full test suite passing.
+- **One file per step**: convert a single source or cross-cutting concern at a time.
+- **Run `clang-format -i -style=LLVM` before every commit**.
+- **Commit after every verified step** with a descriptive message.
+- **POLY_Dmax stays compile-time**;
+no dynamic allocation in the migration phase.-
+    **No new features ** : modernize language constructs only,
+    not algorithms.- **Exact output compatibility ** : every `tests/*.sh` output must match the pre-migration baseline.
 
-## Test harness (run before starting)
+## Test harness
 
-1. Build baseline:
-   ```bash
-   cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-   cmake --build build
-   ```
-2. Run tests:
-   ```bash
-   cd build && ctest
-   ```
-3. Build and run sanitizer builds:
-   ```bash
-   cmake -S . -B build/asan -DCMAKE_BUILD_TYPE=Release \
-     -DCMAKE_C_FLAGS="-O1 -g -fno-omit-frame-pointer -fsanitize=address" \
-     -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address"
-   cmake --build build/asan
-   cd build/asan && ctest
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+ctest --test-dir build
 
-   cmake -S . -B build/ubsan -DCMAKE_BUILD_TYPE=Release \
-     -DCMAKE_C_FLAGS="-O1 -g -fno-omit-frame-pointer -fsanitize=undefined -fno-sanitize-recover=undefined" \
-     -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=undefined"
-   cmake --build build/ubsan
-   cd build/ubsan && ctest
-   ```
-4. Record golden outputs from all test scripts for regression checking (the
-   test scripts already embed expected outputs, so this is implicit).
+# Sanitizer builds (Phase 5)
+cmake -S . -B build/asan -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_CXX_FLAGS="-O1 -g -fno-omit-frame-pointer -fsanitize=address" \
+  -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address"
+cmake --build build/asan && ctest --test-dir build/asan
+
+cmake -S . -B build/ubsan -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_CXX_FLAGS="-O1 -g -fno-omit-frame-pointer -fsanitize=undefined -fno-sanitize-recover=undefined" \
+  -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=undefined"
+cmake --build build/ubsan && ctest --test-dir build/ubsan
+```
 
 ---
 
-## Phases
+## Completed migration work
 
 ### Phase 0 — Infrastructure
 
-- [x] #### Step 0.1 — Update CMakeLists.txt for C++ support
+- [x] Step 0.1 — `CMakeLists.txt`: CXX-only, C++17, `-Wall -Wextra`, `palp_sources()` helper.
+- [x] Step 0.2 — Headers moved to `include/palp/` with `#pragma once`; include paths updated.
+- [x] Step 0.3 — `palp_types.h` shim added and integrated via `Global.h`.
 
-- Change `LANGUAGES C` to `LANGUAGES C CXX`.
-- Add `set(CMAKE_CXX_STANDARD 17)` and `set(CMAKE_CXX_STANDARD_REQUIRED ON)`.
-- Add a helper function or macro that can compile a PALP source as either `.c`
-  or `.cpp`, so both can coexist during migration.
-- Add `target_compile_options(... PRIVATE -Wall -Wextra)` for C++ targets.
-- Keep the existing C targets working unchanged.
-- **Verify**: `cmake --build build && cd build && ctest` — all pass.
+### Phase 1 — Foundation libraries
 
-- [x] #### Step 0.2 — Reorganize headers into `include/palp/`
+- [x] Step 1.1 — `Rat.c` → `Rat.cpp`: constructors, removed `register`.
+- [x] Step 1.2 — `Vertex.c` → `Vertex.cpp`: RAII temp arrays, kept `INCI` macros.
+- [x] Step 1.3 — `Coord.c` → `Coord.cpp`: `std::array` buffers, `fscanf` checks.
+- [x] Step 1.4 — `Polynf.c` → `Polynf.cpp`: largest file; RAII, `constexpr` debug flags, removed dead code.
+- [x] Step 1.5 — `LG.c` → `LG.cpp`: `std::array`/`std::vector`, `PoCoLi` rewritten, debug flags modernized.
 
-- Create `include/palp/` directory.
-- Copy (not move yet) `Global.h`, `Rat.h`, `LG.h`, `Nef.h`, `Mori.h`,
-  `Subpoly.h` into `include/palp/` with `#pragma once` added.
-- Add `include/palp/` to `target_include_directories` for all targets.
-- Update all `#include "Global.h"` etc. to `#include "palp/Global.h"` in all
-  `.c` files.
-- Remove the old top-level header files (or leave as forwarding shims during
-  migration).
-- **Verify**: build + test.
+### Phase 2 — Driver programs
 
-- [x] #### Step 0.3 — Create C++ compatibility shim
+- [x] Step 2.1 — `poly.c` → `poly.cpp`: `std::unique_ptr` for core structs.
+- [x] Step 2.2 — `cws.c` → `cws.cpp`: `constexpr`, `std::array`, removed dead `FileRW()`, `snprintf`.
+- [x] Step 2.3 — `class.c` → `class.cpp`: bounded `scanf`, `std::unique_ptr<_P>`.
+- [x] Step 2.4 — `nef.c` → `nef.cpp`: `using`/struct aliases, `std::vector`/`std::unique_ptr`, `Die()` modernization.
+- [x] Step 2.5 — `mori.c` → `mori.cpp`: `std::unique_ptr` for core structs.
 
-- Create `include/palp/palp_types.h` defining the integer type aliases in a
-  C++-friendly way:
-  ```cpp
-#include <cstdint>
-  using Long = long;
-using LLong = long long;
-// ... etc
-  ```
-- This lets `.cpp` files include PALP headers without C-isms breaking.
-- **Verify**: a trivial `.cpp` file that includes `palp/Global.h` compiles.
+### Phase 3 — Secondary libraries (mostly done)
 
----
+- [x] Step 3.2 — `Nefpart.c` → `Nefpart.cpp`: `std::sort`, RAII, removed debug pause.
+- [x] Step 3.4 — `SingularInput.c` → `SingularInput.cpp`: `std::string`/`std::vector`.
+- [x] Step 3.5 — `Subdb.c` → `Subdb.cpp`: filename buffers modernized, binary I/O preserved.
+- [x] Step 3.6 — `Subpoly.c` → `Subpoly.cpp`: feature flags → `constexpr`, all local allocations RAII.
+- [x] Step 3.7 — `Subdb.c` → `Subdb.cpp` (continued): removed `goto`/static state, `snprintf`, converted remaining heap allocations, fixed `Open_DB`/`Close_DB` ownership.
 
-### Phase 1 — Foundation libraries (leaf modules)
+### Phase 4 — Standalone & cleanup
 
-These modules have no dependencies on other PALP modules (only on standard C
-library and each other in a simple chain). Convert in dependency order.
-
-- [x] #### Step 1.1 — `Rat.c` → `Rat.cpp`
-
-- [x] Rename `Rat.c` → `Rat.cpp` (mixed C/C++ linkage was temporarily ensured
-  via `extern "C"`; removed after full C++ migration).
-- [x] Remove `register` keyword (all instances).
-- [x] Replace `#ifdef TEST` test blocks: none present in `Rat.c`/`Rat.cpp`.
-- [x] Convert `Rat`/`LRat` structs: add C++ constructors, keep as POD-like
-  structs.
-- **Verify**: build + test (especially `tests/2.*` which exercise `poly.x`
-  which uses `Rat`).
-
-- [x] #### Step 1.2 — `Vertex.c` → `Vertex.cpp`
-
-- [x] Rename `Vertex.c` → `Vertex.cpp`.
-- [x] Replace `malloc`/`free` for temp arrays (`CEq`, `CEq_I`, `F_I`) with
-  `std::vector` or `std::make_unique`.
-- [x] Keep `INCI` macros and typedefs as-is (performance-critical bit operations).
-- [x] Keep `exit(0)` calls for now (bug fix is Phase 5).
-- **Verify**: build + test (all `tests/2.*`, `tests/3.*`).
-
-- [x] #### Step 1.3 — `Coord.c` → `Coord.cpp`
-
-- [x] Rename `Coord.c` → `Coord.cpp`.
-- [x] Replace some `char c[999]` local buffers with `std::array<char, 999>`.
-- [x] Replace remaining `fscanf`-based parsing: add return-value checks but keep
-  identical output behavior (check return, on failure produce same error message).
-  `ReadCwsPp`, `Read_PP`, `Read_CWS` now check `fscanf` return values and exit
-  with a descriptive error message on failure.
-- [x] Keep `static int InputOK` as-is for now (documented in ISSUES.md #44).
-- **Verify**: build + test (all `tests/2.*`, `tests/4.*`).
-
-- [x] #### Step 1.4 — `Polynf.c` → `Polynf.cpp` (largest: ~3223 lines)
-
-This is the highest-risk step. Take extra care.
-
-- [x] Rename `Polynf.c` → `Polynf.cpp`.
-- [x] Replace `#if (VERT_Nmax < 129)` stack-vs-heap conditionals with RAII
-  allocations (completed in earlier work; none remain).
-- [x] `volatile` was not present in `Polynf.cpp`.
-- [x] `register` keyword was not present in `Polynf.cpp`.
-- [x] `static int` counters (`ConifoldSing` statistics, `Print_Fiber_PolyData`'s
-  `f`, `GL_Lattice_Basis`'s `x`, `Fano5d`'s `FPc`) are left as `static` and
-  documented (ISSUES.md #16): making them explicit parameters would require
-  changing public/internal call signatures and output behavior.
-- [x] Replace `#ifdef TEST`/`#ifdef TEST_OUT`/`#ifdef TEST_ImpPhase`/etc. debug
-  blocks with `constexpr bool` flags at the top of `Polynf.cpp`.
-- [x] Remove `puts("PM")` debug print (ISSUES.md #33).
-- **Verify**: build + test for ALL dimensions (4, 5, 6, 11) — run full
-  `ctest` with `DIM` variations.
-
-- [x] #### Step 1.5 — `LG.c` → `LG.cpp` (~1113 lines)
-
-- [x] Rename `LG.c` → `LG.cpp`.
-- [x] Remove `register` keyword (all instances).
-- [x] Replace `char c[999]` in `Read_WZ_PP` with `std::array<char, 999>`.
-- [x] Replace `AllocPoCoLi`/`Free_PoCoLi` manual pointer arithmetic with
-  `std::vector<int> e` and `std::vector<Pint> c` inside `PoCoLi`. Rewrite
-  `PoincarePoly` local `B` to use `AllocPoCoLi` instead of stack arrays.
-- [x] Replace `#ifdef TEST`/`#ifdef TEST_PP`/`#ifdef TEST_PD` debug blocks with
-  `constexpr bool` flags at the top of `LG.cpp`;
-  remove mid - file `#define TEST`/
-  `#undef TEST` toggles.Keep `#if (WZinput)` macro as - is(always 1).-
-          [x] `static int MaxPoNum` (
-              inside `TEST_WeightMakePoints`) and `static int M` (inside `Add_Mono_2_Poly` debug
-                                                                      block)
-                                                          remain in compile
-                                                      - time
-                                                      - disabled debug code; documented as harmless (ISSUES.md #15).
-
-
-
-### Phase 2 — Driver programs (depend on Phase 1 libraries)
-
-- [x] #### Step 2.1 — `poly.c` → `poly.cpp`
-
-- [x] Rename `poly.c` → `poly.cpp`.
-- [x] Replace `malloc` for large compile-time-sized structs (`CWS`, `EqList`,
-  `PolyPointList`) with `std::unique_ptr`. `PairMat` remains a raw heap
-  allocation because it is a C-style 2D array typedef and is not directly
-  supported by `std::unique_ptr` without a custom deleter.
-- [x] Add a comment that `FILE *inFILE, *outFILE` are temporary globals
-  (ISSUES.md #40).
-- [x] Replace `VPermList *VP = (VPermList*) malloc(...)` with
-  `std::make_unique<VPermList>`.
-- Keep `printf`/`fprintf` as-is for exact output format preservation.
-- **Verify**: build + run ALL `tests/2.*` and `tests/3.*` scripts.
-
-- [x] #### Step 2.2 — `cws.c` → `cws.cpp` (~1935 lines)
-
-- [x] Rename `cws.c` → `cws.cpp`.
-- [x] Replace `WDIM=800000` and `TWDIM=16384` magic constants with
-  `constexpr int` (done in the `#define` sweep).
-- [x] Replace VLA `int IN[AMBI_Dmax*(AMBI_Dmax+1)]` with
-  `std::array<int, AMBI_Dmax*(AMBI_Dmax+1)>`.
-- [x] Remove dead `FileRW()` function (ISSUES.md #6) by commenting it out.
-- [x] Replace `sprintf(command, ...)` with `snprintf` (behavior-preserving,
-  safer).
-- [x] Replace `atoi("3")` / `atoi("4")` pointless conversions with direct
-  integer literals.
-- [x] Convert `PRINT_CWS` `PolyPointList` allocations to `std::unique_ptr`.
-- [x] Replace all remaining `malloc`/`free` pairs in `cws.cpp` with stack
-  variables, `std::vector`, or `std::unique_ptr`. Keep huge dimension-sensitive
-  buffers (`RgcClassData`, `WSaux`, and `PolyPointList` in some paths) on the
-  heap via `std::unique_ptr` to avoid stack overflow while still removing manual
-  memory management.
-- **Verify**: build + run all `tests/4.*` scripts.
-
-- [x] #### Step 2.3 — `class.c` → `class.cpp`
-
-- [x] Rename `class.c` → `class.cpp`.
-- [x] Replace `char Blank=0` pointer-to-empty-string hack with a named
-  one-character null-terminated array `char empty[1] = {0};` and use it as
-  the default for all `char*` option strings. The called functions only read
-  these strings and do not modify them.
-- [x] Replace `scanf("%s", &hc)` interactive help with a bounded read:
-  `char buf[2];
-  if (scanf("%1s", buf) == 1)
-    hc = buf[0];
-  else
-    hc = 'e';
-  `.
-- [x] Keep `FILE *inFILE, *outFILE` global definition here (class.x defines
-  them), with a comment referencing ISSUES.md #40.
-- [x] Convert `_P` allocation from `malloc` to `std::unique_ptr`.
-- **Verify**: build + run any class-related tests (check if class tests exist
-  in `tests/`; if not, create a basic smoke test).
-
-- [x] #### Step 2.4 — `nef.c` → `nef.cpp`
-
-- [x] Rename `nef.c` → `nef.cpp`.
-- [x] Replace local typedefs: `CWLatticeBasis` and `Pstat` are now a `using`
-  alias and a `struct`, respectively. `AmbiLatticeBasis` comes from `LG.h`
-  and is no longer re-typedef'd in `nef.cpp`.
-- [x] Replace VLA `Long PM[EQUA_Nmax][VERT_Nmax]` with a
-  `std::vector<std::array<Long, VERT_Nmax>>` and a reinterpret-cast to
-  the 2D array type expected by `Make_VEPM`/`Complete_Poly`.
-- [x] Fix `int long nl` → `long nl` and move `FilterFlag` to a separate `int`
-  declaration (ISSUES.md #22).
-- [x] Convert `malloc`/`calloc` allocations in `main`, `Mink_WPCICY`, and
-  `Make_Poly_WPCICY` to `std::unique_ptr`/`std::vector`.
-- [x] Add comment documenting `FILE *inFILE, *outFILE` globals (ISSUES.md #40).
-- **Verify**: build + run all `tests/6.*` scripts.
-
-- [x] #### Step 2.5 — `mori.c` → `mori.cpp`
-
-- [x] Rename `mori.c` → `mori.cpp`.
-- [x] Replace `CWS`, `EqList`, and `PolyPointList` allocations with
-  `std::unique_ptr`. `PairMat` remains a raw heap allocation because it is a
-  C-style 2D array typedef.
-- [x] Keep `FILE *inFILE, *outFILE` global definition here (mori.x defines
-  them), with a comment referencing ISSUES.md #40.
-- **Verify**: build + run all `tests/7.*` scripts.
+- [x] Step 4.2 — Removed `.c` files from CMake, deleted `GNUmakefile`/root `Makefile`, moved sources to `src/`, removed `extern "C"` shims, consolidated `palp::min`/`palp::max`.
+- [x] Step 4.4 — `#define` → `constexpr`/`using` sweep across `cws`, `SingularInput`, `Vertex`, `Subdb`, `Polynf`, `LG`, `E_Poly`/`nef`, `poly`, `MoriCone`, `Subadd`, `Global.h`, `Nef.h`, `LG.h`, `Subpoly.h`, `Rat.h`.
+- [x] Step 4.5 — Fixed-size local buffers → `std::array` in `Coord.cpp` and `Vertex.cpp`.
 
 ---
 
-### Phase 3 — Secondary libraries (depend on Phase 1 + 2)
+## Remaining migration work
 
-- [~] #### Step 3.1 — `E_Poly.c` → `E_Poly.cpp` (~1544 lines)
+### Phase 3 — Secondary libraries (leftovers)
 
-- [x] Rename `E_Poly.c` → `E_Poly.cpp`.
-- [x] Remove local `#define min`/`#define max` (ISSUES.md #28) — already removed
-  in the `#define` sweep;
-  `palp::min`/`palp::max` in `Global.h` are used.- [x] Fix `int h[POLY_Dmax]
-                                                                 [POLY_Dmax] =
-      {{0}, {0}}` → `int h[POLY_Dmax][POLY_Dmax] =
-          {}` (ISSUES.md #4).- [x] Replace `Die()` function with a `
-          [[noreturn]] void Die(const char *)` signature;
-  updated declarations in `Nef.h`, `nef.cpp`,
-      and `cws.cpp`.-
-          [] Replace `realloc` in `DYNadd_for_completion` with `std::
-                  vector` growth(ISSUES.md #3)
-                      .*
-              Deferred *
-      : `DYN_PPL.L` is a raw `Vector *` used throughout
-  `E_Poly.cpp` and `nef.cpp`;
-  converting it requires changing the struct
-  definition in `Nef.h` and all call sites.
-- [x] Convert remaining `malloc`/`calloc` allocations in `E_Poly.cpp` to
-  `std::unique_ptr`/`std::vector`:
-  - `PRINT_GORE` and `PRINT_FIBRATIONS` local `PolyPointList*` / `VertexNumList*`
-    / `EqList*` → `std::unique_ptr` / stack objects.
-  - `Make_S_Poly` local `_CV`, `_CE`, `_T` → stack / `std::unique_ptr`;
-  left
-    `DYN_PPL CP.L` raw because `DYN_PPL` is deferred.- `Compute_E_Poly` local `_I_D`, `_C_D`, `_C_N` → stack
-      objects;
-  kept
-    `_S_D`/`_S_N`/`_BL` and poset arrays raw due to variable sizes.- `Make_E_Poly` local large `PolyPointList *` / `EqList *` / `VertexNumList *` /
-    `LInfo *` → `std::unique_ptr` to avoid stack overflow.- `AnalyseGorensteinCone` local `_P_D`, `_V_D`, `_E_D`, `_new_E_D`, `VPM`,
-    `VPM_D` → `std::unique_ptr` / heap arrays to avoid stack overflow.-
-         **Verify ** : build + run all `tests / 6. *` scripts(nef uses E_Poly).
+#### Step 3.1 — `E_Poly.cpp` (partial)
 
-         - [x]####Step 3.2 — `Nefpart.c` → `Nefpart.cpp` (~837 lines)
+- [x] Renamed, removed local `min`/`max` macros, fixed partial array init, modernized `Die()`, converted all local `malloc`/`calloc` to RAII.
+- [ ] Convert `DYN_PPL.L` (`Vector *` with `realloc`) to `std::vector` growth.
+  - *Deferred*: requires changing the `DYN_PPL` struct in `Nef.h` and updating all call sites in `E_Poly.cpp` and `nef.cpp`.
 
-         - [x] Rename `Nefpart.c` → `Nefpart.cpp`.-
-         [x] Remove `scanf("%c", &c)` interactive debug
-         pause(ISSUES.md #38) by gating the `_F
-             ->Test` block behind `#ifndef NDEBUG` and checking
-         the `scanf` return value.-
-         [x] Replace bubble sort(`Bubble_PTL`) with `std::sort` using a custom
-         comparator that calls `COMP_S`;
-  all tests pass,
-      confirming identical ordering.- [x] Replace `calloc`/`malloc` with `std::unique_ptr`/`std::vector` in
-  `Dir_Product`, `REC_Dir_Product`, `Remove_Sym`, `Check_Convexity`,
-      and
-  `part_nef`.- **Verify ** : build + run all `tests / 6. *` scripts.
+#### Step 3.3 — `MoriCone.cpp` (partial)
 
-          - [~]####Step 3.3 — `MoriCone.c` → `MoriCone.cpp` (~1792 lines)
+- [x] Renamed, fixed `assert(++m < binco)` side-effect bug, converted safe heap allocations.
+- [ ] Replace `Inci64_*` macros with `constexpr` inline functions (performance-critical bit ops).
+- [ ] Remove stray `printf` debug output inside `#if TRACE_TRIANGULATION` blocks.
+- [ ] Replace `exit(0)`/`exit(1)` with `palp::die()` (deferred to Phase 5).
 
-          - [x] Rename `MoriCone.c` → `MoriCone.cpp`.-
-          [x] Fix `assert(++m < binco)` (ISSUES.md #1)
-      : moved `++m` out of assert.-
-          [] Replace `Inci64` macros(`makeN`, `putN`, `getN`,
-                                     etc.) with `constexpr` inline functions.*
-              Deferred * : they are used heavily and some are performance
-          - critical bit operations;
-  converting them safely
-    requires care
-      .-
-      [x] Remove dead `#ifdef OLD_code`
-          and `#ifdef FIRST_TRY__TOO_COMPLICATED...` blocks(ISSUES.md #35)
-      .-
-      [] Remove stray `printf` debug(ISSUES.md #34)
-      .* Deferred
-          *
-      : remaining debug prints are inside `#if TRACE_TRIANGULATION` blocks.-
-      [] Replace `exit(0)` / `exit(1)` with `palp::die()`.*Deferred to Phase 5 *
-      .-
-      **Verify ** : build + run all `tests / 7. *` scripts.
+#### Step 3.6 — `Subadd.cpp`
 
-      - [x]####Step 3.4 — `SingularInput.c` → `SingularInput.cpp` (~591 lines)
-
-      - [x] Rename `SingularInput.c` → `SingularInput.cpp`.-
-      [x] Replaced `char filename[20]` with `const std::string &`.-
-      [x] Replaced `char string[maxline]` VLA with `std::vector<char>`.-
-      [x] Converted `he` to `std::vector<int>` (replaced malloc / free)
-      .-
-      [x] Converted `SFname` / `SingularCall` `malloc`/`snprintf` to `std::
-                                                           string`.-
-      [x] Kept `mkstemp` usage as -
-      is(proper POSIX API)
-      .-
-      [x] Kept `system()` call; noted in ISSUES.md #11.
-- **Verify**: build + run all `tests/7.*` scripts.
-
-- [x] #### Step 3.5 — `Subdb.c` → `Subdb.cpp` (~1885 lines)
-
-- [x] Rename `Subdb.c` → `Subdb.cpp`.
-- [x] Converted local filename buffers (`dbnames`, `dbname`, `Ifn`, `Ofn`, `Sfn`)
-  from `malloc`/`free` to `std::string` / `std::vector<char>`.
-- [ ] Left binary `unsigned char *` database buffers and `FILE*` I/O as-is to
-  preserve on-disk format. *Deferred to later phase if needed.*
-- **Verify**: build + run all database-related tests.
-
-- [x] #### Step 3.6 — `Subpoly.c` → `Subpoly.cpp` (~1614 lines)
-
-- [x] Rename `Subpoly.c` → `Subpoly.cpp`.
-- [x] Converted local feature flags (`UnAided_IP_Check`, `SIMPLE_CTH`,
-  `INCOMPLETE_SL_REDUCTION`, `TEST_Aided_IP_Check`, `IMPROVE_SL_COORD`) to
-  `constexpr`/`if constexpr`.
-- [x] Removed dead `IMPROVE_SL_REGCD` branch.
-- [x] Centralized `CEQ_Nmax` in `Global.h`, removed local fallbacks.
-- [x] Replaced all `malloc`/`free` allocations with stack variables or
-  `std::vector` (`Drop_and_Keep`, `Reduce_Poly`, `DPircheck`, `DPvircheck`,
-  `Find_RSP_Drop_and_Keep`, `Poly_Max_check`, `Overall_check`, `_NFL` objects,
-  `dbname` buffer in `Find_Sublat_Polys`).
-- [x] `subl_int` remains `LLong` alias (consistent with project types).
-- [ ] Replace `exit(0)` with `palp::die()`. *Deferred to Phase 5*.
-- [ ] Replace `drop_point[POLY_Dmax]` "silence compiler" zero-init with `= {}`
-  (ISSUES.md, code smell).
-- [ ] Replace `malloc`/`calloc` with `std::vector` or `std::make_unique`.
-- **Verify**: build + run class-related tests.
-
-- [ ] #### Step 3.6 — `Subadd.c` → `Subadd.cpp` (~1408 lines)
-
-- [x] Rename `Subadd.c` → `Subadd.cpp`.
-- [ ] Replace `fscanf(F, "%c%c%c%c", &A, &B, &C, &D)` with `fread` for binary I/O
-  (more correct and faster).
+- [x] Renamed, compression constants modernized, dead `MOVE_SAVE_FILE` block removed.
+- [ ] Replace `fscanf(F, "%c%c%c%c", &A, &B, &C, &D)` with `fread` for binary I/O.
 - [ ] Replace `unsigned char auxUC[POLY_Dmax*VERT_Nmax]` VLA with `std::vector`.
-- [ ] Replace `NF_List *AuxNFLptr = NULL` global (ISSUES.md #17) with explicit
-  parameter passing where feasible;
-  otherwise document.
+- [ ] Replace `NF_List *AuxNFLptr = NULL` global with explicit parameter passing or document.
 - [ ] Replace `fgetUI`/`fputUI` with `fread`/`fwrite`-based versions.
-- **Verify**: build + run class-related tests.
 
-- [x] #### Step 3.7 — `Subdb.c` → `Subdb.cpp` (~1915 lines)
+### Phase 4 — Standalone & cleanup
 
-- [x] Rename `Subdb.c` → `Subdb.cpp`.
-- [x] Replaced `goto END_SL` / `goto END_VN` with a `bool sl_done` flag and
-  `break` in `Reduce_Aux_File`.
-- [x] Replaced `static unsigned char uc[NUC_Nmax]` and `static int ms3` in
-  `Read_H_poly_from_DB` with `DataBase::last_uc` / `DataBase::last_ms3`.
-- [x] Replaced `sprintf(com, ...)` with `snprintf` in `Extract_from_Hodge_db`.
-- [x] Replaced `static EqList E` in `DB_to_Hodge`, `PH_Sublat_Polys`, and
-  `V_Sublat_Polys` with local variables.
-- [x] Converted remaining `malloc`/`free` allocations in `src/Subdb.cpp`:
-  - `Init_DB`: `DB->RAM_NF` buffer now owned by a new `std::unique_ptr<unsigned char[]>` field `RAM_NF_owner` in `DataBase`, keeping the raw `RAM_NF` pointer semantics unchanged.
-  - `Add_Polya_2_DBi`: temporary `ucSL` byte buffer converted to `std::vector<unsigned char>`.
-  - `Reduce_Aux_File`: temporary `ucSL` byte buffer converted to `std::vector<unsigned char>`.
-  - `DB_to_Hodge`: filename buffers converted to `std::vector<char>`;
-  local `_PD` allocation converted
-          to `std::unique_ptr<PolyPointList>`.- `Sort_Hodge`
-      : filename buffers converted to `std::vector<char>`.- `Test_Hodge_db`
-      : filename buffer converted to `std::vector<char>`.- `Open_DB`/`Close_DB`
-      : local filename buffer converted to `std::vector<char>`;
-  `DataBase` allocation changed
-      from `malloc` to `new DataBase()` and `Close_DB` now uses `delete DB`,
-      preserving the original caller - owned raw - pointer interface.-
-          **Verify ** : build + run class -
-          related tests.
+#### Step 4.1 — `lgotwist.cpp` (standalone, not in CMake)
 
-          -- -
-
-          ## #Phase 4 — Standalone &cleanup
-
-          - [ x ]####Step
-            4.1 — `lgotwist.c` → `lgotwist.cpp` (standalone, not in CMake)
-
-          - [ x ] Rename `lgotwist.c` → `lgotwist.cpp` (no CMake target).-
-          [] Remove duplicated rational arithmetic(ISSUES.md #36); use `Rat.cpp`'s
-  functions or keep standalone but at least use the same types.
-- [ ] Replace `#define abs/min/max/mod` (ISSUES.md #31) with standard library
-  functions.
-- [ ] Replace global variables (ISSUES.md, lgotwist.c global state) with a
-  `LgoTwistContext` struct.
+- [x] Renamed.
+- [ ] Remove duplicated rational arithmetic (ISSUES.md #36); reuse `Rat.cpp` logic or align types.
+- [ ] Replace `#define abs/min/max/mod` (ISSUES.md #31) with standard library equivalents.
+- [ ] Replace global variables with a `LgoTwistContext` struct.
 - [ ] Remove `register` keyword.
 - [ ] Replace `#ifdef __MSDOS__` platform checks with C++17 equivalents.
-- **Verify**: build standalone (not in test suite; manual verification).
+- **Verify**: build standalone manually.
 
-- [x] #### Step 4.2 — Remove `.c` files and legacy build files
+#### Step 4.3 — Final cleanup
 
-- [x] Once all `.cpp` files pass all tests, remove the original `.c` files from
-  `CMakeLists.txt`.
-- [x] Remove the deprecated `GNUmakefile` and root `Makefile` (CMake is the
-  primary and only supported build system).
-- [x] Move all C++ sources under `src/` and `Rat.h` under `include/palp/`.
-- [x] Remove `extern "C"` shims from all headers and source files now that the
-  project is C++-only.
-- [x] Remove `extern "C"` shims from all headers and source files now that the
-  project is C++-only.
-- [x] Remove `extern "C"` shims from all headers and source files now that the
-  project is C++-only.
-- [x] Add proper include guards (now `#pragma once`) to all headers
-  (`Global.h`, `LG.h`, `Nef.h`, `Mori.h`, `Subpoly.h`, `Rat.h`,
-  `palp_types.h`).
-- [x] Consolidate `min`/`max` definitions: introduce `palp::min`/`palp::max`
-  templates in `Global.h`, remove macros from `LG.h`, `Subpoly.h`, and
-  `E_Poly.cpp`. Keep standalone `lgotwist.cpp` macros for now.
-- [ ] Clean up any remaining forwarding shims from Step 0.2.
-- **Verify**: full clean build + test.
-
-- [ ] #### Step 4.3 — Final cleanup
-
-- [x] Remove `palp_types.h` shim if all types are now properly C++.
-  *Done earlier;
-  no separate `palp_types.h` exists.*
-- [x] Consolidate `min`/`max` definitions: delete from `LG.h`, `Subpoly.h`,
-  `E_Poly.cpp` (all instances of `#define min/max`).
-  *`palp::min`/`palp::max` templates are in `Global.h`; no `#define min/max`
-  remain in those files. Standalone `lgotwist.cpp` keeps its own for now.*
-- [ ] Remove the `-DNDEBUG` workaround in CMake (line 15 of `CMakeLists.txt`)
-  if asserts have been replaced with proper error handling in Phase 5.
-  If not yet, keep it.
-- [ ] Convert remaining header-level `#define` constants that are safe to
-  `constexpr`/`using` without breaking `#if` array-size logic (e.g. type aliases
-  and scalar limits not used in preprocessor conditionals).
-- [ ] Run full test suite across all dimensions:
+- [ ] Remove `-DNDEBUG` workaround in `CMakeLists.txt` (line 16) once asserts are replaced with proper error handling in Phase 5.
+- [ ] Convert any remaining header-level `#define` constants that are safe to `constexpr`/`using` without breaking `#if` array-size logic.
+- [ ] Run full multi-dimension test sweep:
   ```bash
-  for DIM in 4 5 6 11;
-  do
+  for DIM in 4 5 6 11; do
     cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPOLY_Dmax=$DIM
     cmake --build build
-    cd build && DIM=$DIM ctest && cd ..
+    DIM=$DIM ctest --test-dir build
   done
   ```
 - [ ] Run ASAN and UBSAN builds one final time.
-- **Verify**: everything green.
 
-### Step 4.4 — `#define` → `constexpr`/`using` sweep (in progress)
+#### Step 4.4 — `#define` → `constexpr`/`using` sweep (leftovers)
 
-A cross-cutting pass to replace file-local `#define` constants with C++17
-`constexpr`/`using` where it does not change preprocessor-controlled array
-sizes or conditional-compilation behavior. Symbols that are still required by
-`#if`/`#ifdef` guards are left as macros until their guarded blocks are
-converted to `if constexpr` or removed.
+Symbols left as macros because they are required by `#if`/`#ifdef` array sizing or conditional compilation:
 
-Files already converted:
-- `src/cws.cpp`: `Only_IP_CWS`, `TRANS_INFO_FOR_IP_WEIGHTS`, `NFmax`,
-  `SIMPLEX_POINT_Nmax`, `OSL`, `WDIM`, `lcm`, `TWDIM`, `mod`, `ALLOWHALF`,
-  `CHAT`, plus dead-code removal.
-- `src/SingularInput.cpp`: `DijkEQ`, `T_DIV`, `DIVclassBase`,
-  `TEST_PRINT_SINGULAR_IO`, `NORM_SIMP_NUM`, plus `const` correctness for
-  `DivClassBasis` string arguments.
-- `src/Vertex.cpp`: `SHOW_NEW_CEq`, `LLong_EEV`, `TEST_EEV`,
-  `VERT_WITH_MAX_DISTANCE`, `LONG_EQ_FIRST`, `TEST_GLZ_EQ`, `MAX_BAD_EQ`
-  (converted to `constexpr bool` together with its `#if` block).
-- `src/Subdb.cpp`: `SUBTRACT_H_FROM_SL`, `Hod_Dif_max`, `Hod_Min_max`, all
-  local `TEST`/`TEST_OUT` toggles.
-- `src/Polynf.cpp`: `SORT_CWS`, `FIB_PERM`, `SSR_PRINT`,
-  `ALL_FANOS_BUT_INEFFICIENT`, `FANO_CONIFOLD`, `SL_Long`, `KPF`,
-  `RelativeSimplexVolume`, `No_OLD_FACE_LIST`, `SQnum_Max`, `TESTfano`,
-  `FanoProjNPmax`, `FPcirNmax`, `PrintFanoProjCand`, `INCIbits`, `Fputs`
-  to an inline function, `SMOOTH`, `NON_REF`, `BARY_PRINT`,
-  `ZEROSUM_PRINT`, `KP_PRINT`, `SHOW_NFX_LIMIT`. Active
-  preprocessor-dependent flags whose values are used for array sizes
-  (`NFX_Limit`, `X_Limit`, `VPM_Limit`) and `KP_VALUE`/`KP_EXIT` remain
-  as macros.
-- `src/LG.cpp`: `SHOW_b01_TWIST`, `Tout`, `DET_WARN_ONLY`,
-  `ABBREV_POLY_PRINT`, `NO_COORD_IMPROVEMENT` (kept as macro to keep dead
-  blocks disabled), `TEST_LG`, `TEST_PP`, `TEST_PD`, `StandardOutput`.
-- `src/E_Poly.cpp` / `src/nef.cpp`: `WRITE_CWS` replaced with local
-  `constexpr bool write_cws`; macro removed from `include/palp/Nef.h`.
-- `src/poly.cpp` / `src/nef.cpp`: `OSL`.
-- `src/MoriCone.cpp`: `ANfan`, `ANtri`, `Inci64_AND`, `Inci64_EQ`,
-  `Inci64_0`, `Inci64_1`, `Inci64_EQ_0`, `Inci64_OR`, `Inci64_PN`,
-  `Inci64_D2`, `Inci64_M2`, plus fix of `assert(++m<binco)` side-effect bug.
-- `src/Subadd.cpp`: compression constants `UCM`, `USM`, `Nint_XLong`, `NX`,
-  `UNIT_OFF`, `LL_BASE`, and `MirTest` to an inline function. Dead
-  `MOVE_SAVE_FILE` block removed.
-- `include/palp/Global.h`: `GL_Long`, `MAXLD`, `INT_Nbits`,
-  `LONG_LONG_Nbits`, `I_NUI`, all single-integer `INCI_*` bit helpers,
-  `EQUA_Nmax` fallback, `CEQ_Nmax`, and the large-`INCI` branch of
-  `INCI_M2`.
-- `include/palp/Nef.h`: `Nef_Max`, `NP_Max`, `MAXSTRING`, `Pos_Max`,
-  `FIB_POINT_Nmax` converted to `constexpr`. `W_Nmax` remains a macro
-  because both `Nef.h` and `LG.h` define it for array sizes.
-- `include/palp/LG.h`: `Pint`.
-- `include/palp/Subpoly.h`: `NUC_Nmax`, `MAX_REC_DEPTH`, `Along`, `UPint`,
-  `FORCE_SAVE_TIME`, `GOOD_SAVE_TIME`, `WRITE_DIM`, `MIN_NEW`,
-  `MIN_W_SAVE_TIME`, `WATCHREF`, `SAVE_INC`, `CperR_MAX`, `BASE_MAX`,
-  `BLOCK_LENGTH`, `subl_int`, `NB_MAX`, `SL_Nmax`, `File_Ext_NCmax`,
-  `SAVE_FILE_EXT`;
-  preprocessor consistency check replaced with
-  `static_assert`
-          .
-
-      Still to convert in `.cpp` files : - `src /
-      Coord.cpp`: `NO_COORD_IMPROVEMENT` is defined,
-      so all
-  `#ifndef NO_COORD_IMPROVEMENT` blocks are dead;
-  removing them
-    requires care
-  because `Wperm_to_GLZ`/`CWS_to_PermCWS` are declared in
-                             prototypes.- `src / LG.cpp`
-      : `COEFF_Nmax` depends on local variables and is used in array sizes; keep as macro for now.
-- `src/MoriCone.cpp`: the local geometric helper macros `BZangle`,
-  `SameRayBZ`, `BZR`, `BZRx`, `BZRE` capture many local variables from the
-  enclosing functions and are used in many contexts;
-  intentionally left as
-  expression macros to avoid large risky refactor.
-- `src/Subadd.cpp`: the `#ifdef` feature flags `TEST_UCnf`,
-  `ADD_LIST_LENGTH`, `INCREMENTAL_TIME`, `INCREMENTAL_WRITE`,
-  `ACCEL_PEntComp`, `USE_UNIT_ENCODE` are all currently enabled and deeply
-  interleaved with function bodies. Converting them to `if constexpr`
-  requires careful untangling and is deferred.
-- `src/lgotwist.cpp`: standalone;
-  lower priority.
-
-Still to convert in headers:
-- `include/palp/Global.h`: `POLY_Dmax`, `POINT_Nmax`, `VERT_Nmax`,
-  `FACE_Nmax`, `SYM_Nmax`, `EQUA_Nmax`, `AMBI_Dmax`, `FIB_Nmax`,
-  `CD2F_Nmax` remain compile-time sizing macros; `MULTIPLYING` also
-  remains because it controls a global `#if` branch. Converting these to
-  `constexpr` would require dynamic allocation of all dependent arrays and
-  is out of scope for this sweep.
-- `include/palp/LG.h`: `WZinput` (used in `#if`), `W_Nmax`.
+- `include/palp/Global.h`: `POLY_Dmax`, `POINT_Nmax`, `VERT_Nmax`, `FACE_Nmax`, `SYM_Nmax`, `EQUA_Nmax`, `AMBI_Dmax`, `FIB_Nmax`, `CD2F_Nmax`, `MULTIPLYING`.
+- `include/palp/LG.h`: `WZinput`, `W_Nmax`.
 - `include/palp/Nef.h`: `W_Nmax`.
-- `include/palp/Subpoly.h`: `USE_TMP_DIR` (used in `#if`). `FTELL`/`FSEEK`
-  are now inline wrapper functions.
-- `include/palp/Rat.h`: `ARG_FUN` converted to a `using` alias.
-- `include/palp/Global.h`: the large-`VERT_Nmax` `INCI_*` branch is not
-  currently compiled (`VERT_Nmax <= 64`) and can be converted later.
-
-### Step 4.5 — Use `std::array` for fixed-size local buffers (done)
-
-- [x] `src/Coord.cpp`: converted `std::vector<int> IN(AMBI_Dmax*(AMBI_Dmax+1))`
-  in `ReadCwsPp`, `Read_PP`, and `Read_CWS` to
-  `std::array<int, AMBI_Dmax*(AMBI_Dmax+1)>`.
-- [x] `src/Vertex.cpp`: converted `std::vector<INCI> CEq_I(CEQ_Nmax)` and
-  `std::vector<INCI> F_I(EQUA_Nmax)` in `Finish_IP_Check`,
-  `Find_Equations`, and `IP_Check` to `std::array`.
-- [x] `PoCoLi` in `include/palp/LG.h` remains `std::vector` because its size is
-  runtime-dependent.
+- `include/palp/Subpoly.h`: `USE_TMP_DIR`.
+- `src/Coord.cpp`: `NO_COORD_IMPROVEMENT` (always defined; removing dead blocks needs prototype cleanup).
+- `src/LG.cpp`: `COEFF_Nmax` (depends on local variables, used for array sizes).
+- `src/MoriCone.cpp`: `BZangle`, `SameRayBZ`, `BZR`, `BZRx`, `BZRE` (capture many local variables).
+- `src/Subadd.cpp`: `TEST_UCnf`, `ADD_LIST_LENGTH`, `INCREMENTAL_TIME`, `INCREMENTAL_WRITE`, `ACCEL_PEntComp`, `USE_UNIT_ENCODE` (active, deeply interleaved).
+- `src/lgotwist.cpp`: standalone; lower priority.
+- `include/palp/Global.h`: large-`VERT_Nmax` `INCI_*` branch (currently dead since `VERT_Nmax <= 64`).
 
 ---
 
-### Phase 5 — Bug fixes (separate from migration)
+## Phase 5 — Bug fixes (after migration)
 
-Each bug fix is a separate step with a regression test added to the test
-suite. See `ISSUES.md` for the full list. Apply in order of severity.
+Each fix is a separate step with a regression test where possible. See `ISSUES.md` for details.
 
-#### Step 5.1 — Fix `assert(++m < binco)` side-effect bug
-
-- [ ] File: `MoriCone.cpp` (was `MoriCone.c:408`).
-- [ ] Move increment out of assert.
-- [ ] Add regression test: a polytope that triggers the binco path.
-
-#### Step 5.2 — Fix `exit(0)` → `exit(1)` for error paths
-
-- [ ] All files: replace `exit(0)` on error conditions with `exit(1)`.
-- [ ] This is a large mechanical change;
-  do
-    it in one step with careful testing.- [] Tests check stdout, not exit codes,
-        so output should be identical.
-
-            ####Step 5.3 — Fix memory leaks
-
-            - [] `mori.cpp`: free all allocations(ISSUES.md #8).-
-            [x] `cws.cpp` `RgcWeights`: `RgcClassData *X` is now a
-  `std::unique_ptr<RgcClassData>`,
-        so it is freed automatically.-
-            [] `Polynf.cpp` `Eval_Poly_NF`/`Fano5d`: free on error
-                                                     paths(ISSUES.md #12, #13)
-                                                         .-
-            [] Run ASAN build to verify zero leaks.
-
-            ####Step 5.4 — Fix `realloc` losing old pointer
-
-            - [] `E_Poly.cpp` `DYNadd_for_completion` (ISSUES.md #3).-
-            [] Use `std::vector` which handles this correctly.
-
-            ####Step 5.5 — Fix partial array initialization
-
-            - [] `E_Poly.cpp` (ISSUES.md #4)
-        : `= {{0}, {0}}` → `= {}`.
-
-                              ####Step
-                              5.6 — Add missing `fscanf` return -value checks
-
-                              - [] All files(ISSUES.md #27)
-        : wrap `fscanf` calls,
-          check return,
-          produce identical error messages on failure.
-
-                  ####Step 5.7 — Fix `system()` command injection
-
-                  - [] `SingularInput.cpp` (ISSUES.md #11)
-        : sanitize `getenv("TMPDIR")` or
-              use
-  `std::filesystem::temp_directory_path()`.
-
-                  ####Step 5.8 — Fix buffer overflow risks
-
-                  - [] `LG.cpp` `char c[999]` (ISSUES.md #23)
-        : use `std::string` with bounds
-                  - checked reading.-
-                  [] `lgotwist.cpp` `s
-                      ->p[s->N++]` (ISSUES.md #24)
-        : add bounds check.-
-                  [] `cws
-                      .cpp` `char command[100]` (ISSUES.md #25)
-        : use `snprintf`.-
-                  [] `Subdb
-                      .cpp` `char com[35]` (ISSUES.md #26)
-        : use `snprintf`.
-
-          ####Step 5.9 — Fix integer overflow risks
-
-                  - [] `Polynf.cpp` volume computation(ISSUES.md #18)
-        : add overflow checks
-              or
-              use wider types.-
-                  [] `lgotwist
-                      .cpp` `lcm` macro(ISSUES.md #19)
-        : divide before multiply.
-
-          ####Step 5.10 — Fix `assert ` used as control flow
-
-                  - [] Replace critical
-                  asserts(those guarding data correctness,
-                          not just internal consistency) with
-                  explicit `if ` checks
-                  + error handling.-
-                  [] `Polynf.cpp : 894` `assert(g > 0)` (ISSUES.md #5).-
-                  [] `Vertex
-                          .cpp : 154` Euler characteristic check(ISSUES.md #47)
-                          .
-
-                      ####Step 5.11 — Fix global `inFILE`/`outFILE` state
-
-                  -
-                  [] Replace with
-                      a `PalpContext` struct holding `inFILE`/`outFILE` and pass
-                                                              explicitly to
-                                                              library functions(
-                                                                  ISSUES.md #40,
-                                                                  #41, #43)
-                                                                  .-
-                  [] This is a large refactor;
-  do it last and carefully.
-
-#### Step 5.12 — Remove dead code
-
-- [ ] Remove `FileRW()` (ISSUES.md #6).
-- [ ] Remove `#ifdef OLD_code` blocks (ISSUES.md #35).
-- [ ] Remove debug `puts("PM")`, `printf` (ISSUES.md #33, #34).
-- [ ] Remove `#define TEST`/`#undef TEST` toggling (ISSUES.md #37).
+- [ ] **5.1** Fix `assert(++m < binco)` side effect in `MoriCone.cpp`.
+- [ ] **5.2** Replace `exit(0)` with `exit(1)` on all error paths.
+- [ ] **5.3** Fix memory leaks (`Polynf.cpp` error paths, ASAN verification).
+- [ ] **5.4** Fix `realloc` losing old pointer in `E_Poly.cpp` `DYNadd_for_completion`.
+- [ ] **5.5** Fix partial array initialization in `E_Poly.cpp`.
+- [ ] **5.6** Add missing `fscanf` return-value checks everywhere.
+- [ ] **5.7** Fix `system()` command injection in `SingularInput.cpp`.
+- [ ] **5.8** Fix buffer-overflow risks (`LG.cpp`, `lgotwist.cpp`, `cws.cpp`, `Subdb.cpp`).
+- [ ] **5.9** Fix integer-overflow risks (`Polynf.cpp`, `lgotwist.cpp`).
+- [ ] **5.10** Replace critical `assert`s used as control flow with explicit `if` checks.
+- [ ] **5.11** Replace global `inFILE`/`outFILE` state with a `PalpContext` struct.
+- [ ] **5.12** Remove dead code (`FileRW`, `OLD_code`, debug prints, `TEST` toggles).
 
 ---
 
-## Tracking completed work
+## File dependency graph
 
-Mark each step with `- [x]` as it is completed and committed. Keep this list
-up to date so the current state of the migration is always visible at a
-glance. The next unmarked item is the current step.
+```text
+Rat.c           → Step 1.1
+Vertex.c        → Step 1.2
+Coord.c         → Step 1.3
+Polynf.c        → Step 1.4
+LG.c            → Step 1.5
 
-## Verification Protocol (after every step)
+poly.c          → Step 2.1  (uses LG, Global)
+cws.c           → Step 2.2  (uses LG, Global)
+class.c         → Step 2.3  (uses Subpoly)
+nef.c           → Step 2.4  (uses Nef, LG)
+mori.c          → Step 2.5  (uses Mori, LG)
 
-1. **Build**: `cmake --build build` must succeed with `-Wall -Wextra` and no
-   warnings.
-2. **Tests**: `cd build && ctest` must pass 100%.
-3. **ASAN**: `cmake --build build/asan && ctest --test-dir build/asan` must
-   pass with no address sanitizer errors.
-4. **UBSAN**: `cmake --build build/ubsan && ctest --test-dir build/ubsan` must
-   pass with no undefined behavior sanitizer errors.
-5. **Spot-check**: for steps touching core libraries, diff output of a
-   representative input across dims 4, 5, 6, 11 against pre-migration golden
-   output.
-6. **Git**: after each successful step, commit with a descriptive message
-   (e.g., "Migrate Rat.c → Rat.cpp"). The commit is part of the step;
-  no subsequent step may begin until the previous one is committed and
-          the repository is in a clean state
-              .
+E_Poly.c        → Step 3.1  (uses Nef, Rat)
+Nefpart.c       → Step 3.2  (uses Nef)
+MoriCone.c      → Step 3.3  (uses Rat, Mori)
+SingularInput.c → Step 3.4  (uses Mori)
+Subdb.c         → Step 3.5  (uses Subpoly, Rat)
+Subpoly.c       → Step 3.6  (uses Rat, Subpoly.h)
+Subadd.c        → Step 3.6  (uses Subpoly)
+Subdb.c         → Step 3.7  (continued)
 
-      -- -
-
-      ##File dependency
-      graph(conversion order)
-
-``` Rat.c(leaf)           → Step 1.1 Vertex.c(← Rat, Global)  → Step
-      1.2 Coord.c(← Rat, Global)  → Step
-      1.3 Polynf.c(← Rat, Global)  → Step
-      1.4 LG.c(← Rat, Global)  → Step 1.5 poly.c(← LG, Global)   → Step
-      2.1 cws.c(← LG, Global)  → Step 2.2 class.c(← Subpoly)      → Step
-      2.3 nef.c(← Nef, LG)      → Step 2.4 mori.c(← Mori, LG)    → Step
-      2.5 E_Poly.c(← Nef, Rat)     → Step
-      3.1 Nefpart.c(← Nef)          → Step
-      3.2 MoriCone.c(← Rat, Mori)    → Step
-      3.3 SingularInput.c(← Mori)     → Step
-      3.4 Subpoly.c(← Rat, Subpoly.h) → Step
-      3.5 Subadd.c(← Subpoly)      → Step
-      3.6 Subdb.c(← Subpoly, Rat) → Step 3.7 lgotwist.c(standalone)     → Step
-      4.1
+lgotwist.c      → Step 4.1  (standalone)
 ```
 
-      -- -
+## Risk assessment
 
-      ##Risk assessment
-
-      | Step | Risk | Reason | | -- -- --| -- -- --| -- -- -- --| |
-      1.4(Polynf) | High | Largest file(3223 lines),
-      complex math, many conditionals | | 2.2(cws) | High | 1935 lines,
-      many code paths, hardcoded tables | | 3.7(Subdb) | Medium | File I / O,
-      goto flow control,
-      database logic | | 1.5(LG) | Medium | Polynomial arithmetic,
-      manual memory management | | 3.3(MoriCone) | Medium | Complex geometry,
-      assert side - effect bug | | All others | Low - Medium
-          | Standard C - to - C++ conversion |
+| Step | Risk | Reason |
+|------|------|--------|
+| 1.4 `Polynf` | High | Largest file (~3223 lines), complex math, many conditionals |
+| 2.2 `cws` | High | 1935 lines, many code paths, hardcoded tables |
+| 3.7 `Subdb` | Medium | File I/O, database logic, ownership semantics |
+| 1.5 `LG` | Medium | Polynomial arithmetic, manual memory management |
+| 3.3 `MoriCone` | Medium | Complex geometry, assert side-effect bug |
+| All others | Low–Medium | Standard C-to-C++ conversion |
