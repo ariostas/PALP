@@ -1,6 +1,8 @@
 #include <palp/Global.h>
 #include <palp/Subpoly.h>
 
+#include <vector>
+
 /*   VF_2_ucNF / UCnf2vNF compression/decompression assumes that vNF[0][0]==1
  *   (see UCnf2vNF: "{ off=NF[0][0]-1; ..."
  */
@@ -75,7 +77,8 @@ typedef struct {
 } Base_List;
 
 void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
-               int *NV, int *nUC, unsigned char *UC);         /* OUT */
+               int *NV, int *nUC, unsigned char *UC,          /* OUT */
+               NF_List *StatsL = nullptr); /* optional stats */
 void Print_Statistics(NF_List *);
 void Init_BaseList(Base_List **BL, int *d); /* malloc + init.; BL=&(list) */
 void Insert_PPent_into_Pent(NF_List *S);
@@ -114,7 +117,6 @@ void Init_New_List(NF_List *S) {
 #endif
 }
 
-NF_List *AuxNFLptr = NULL; /* dirty trick for Xmin Xmax Xdif */
 void Init_NF_List(NF_List *L) {
   L->TIME = L->SAVE = time(NULL);
   fputs(ctime(&L->TIME), stdout);
@@ -130,7 +132,6 @@ void Init_NF_List(NF_List *L) {
   Init_FInfoList(&L->Aux);
   Init_New_List(L);
   L->savedNP = 0;
-  AuxNFLptr = L;
   if (L->rf)
     Read_Aux_File(L);
   else
@@ -234,11 +235,15 @@ int InfoSize(int rd, int lists, FInfoList *FI) {
 }
 unsigned int fgetUI(FILE *F) /* read unsigned int from bin file */
 {
-  unsigned char A, B, C, D; /* L=D+256*(C+256*(B+256*A)); */
-  fscanf(F, "%c%c%c%c", &A, &B, &C, &D);
-  return (((unsigned int)A * 256 + (unsigned int)B) * 256 + (unsigned int)C) *
+  unsigned char buf[4]; /* L=buf[3]+256*(buf[2]+256*(buf[1]+256*buf[0])); */
+  if (fread(buf, sizeof(buf[0]), sizeof(buf), F) != sizeof(buf)) {
+    printf("Failed to read unsigned int from binary file\n");
+    exit(0);
+  }
+  return (((unsigned int)buf[0] * 256 + (unsigned int)buf[1]) * 256 +
+          (unsigned int)buf[2]) *
              256 +
-         (unsigned int)D;
+         (unsigned int)buf[3];
 }
 void Read_Bin_Info(FILE *F, int *d, unsigned *li, int *SLN, int *slSM,
                    int *slNM, Along *NewSLnb, FInfoList *FI) {
@@ -402,15 +407,15 @@ void Read_Aux_File(NF_List *L) {
 }
 void fputUI(unsigned int l, FILE *F) /* write unsigned int to bin file */
 {
-  unsigned char A, B, C, D;
-  D = l % 256;
+  unsigned char buf[4];
+  buf[3] = l % 256;
   l /= 256;
-  C = l % 256;
+  buf[2] = l % 256;
   l /= 256;
-  B = l % 256;
+  buf[1] = l % 256;
   l /= 256;
-  A = l;
-  fprintf(F, "%c%c%c%c", A, B, C, D);
+  buf[0] = l;
+  fwrite(buf, sizeof(buf[0]), sizeof(buf), F);
 }
 void TestMSbits(NF_List *S, PolyPointList *_P) {
   int i, v, nu, tc, peNF = 0, peSM = 0, peNM = 0, slNF = 0, slSM = 0, slNM = 0,
@@ -1233,7 +1238,7 @@ int Add_NF_to_List(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   if (_L->SL)
     _L->nSLNF++;
 
-  VF_2_ucNF(_P, _V, _E, &NV, &nUC, UC);
+  VF_2_ucNF(_P, _V, _E, &NV, &nUC, UC, _L);
 
   NewNF = ucNF_Sort_Add(&NV, &nUC, UC, _L); /* 1::new::cont. */
 
@@ -1643,11 +1648,12 @@ int RIGHTminusLEFT(unsigned char *ucL, unsigned char *ucR, int *nuc) {
   return 0;
 }
 void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
-               int *NV, int *nUC, unsigned char *UC)          /* OUT */
+               int *NV, int *nUC, unsigned char *UC,          /* OUT */
+               NF_List *StatsL) /* optional stats */
 {
   Long V_NF[POLY_Dmax][VERT_Nmax], F_NF[POLY_Dmax][VERT_Nmax];
   Long VM[POLY_Dmax][VERT_Nmax], VPM[VERT_Nmax][VERT_Nmax];
-  unsigned char auxUC[POLY_Dmax * VERT_Nmax];
+  std::vector<unsigned char> auxUC(POLY_Dmax * VERT_Nmax);
   int MS = 0, vb, vo, vnuc, vbmin, fb, fo, fnuc, fbmin, vone = 0, fone = 0,
       MSone;
 #ifndef SORT_NUC_FIRST
@@ -1722,18 +1728,18 @@ void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
   *NV = (MS == 2) ? E->ne : V->nv;
   MSone = MS;
 
-  if (AuxNFLptr != NULL) /* base:byte statistics */
-  {                      /* if(AuxNFLptr->Xmin>-vo) AuxNFLptr->Xmin=-vo;
-                            if(AuxNFLptr->Xmax<vbmin-vo-1) AuxNFLptr->Xmax=vbmin-vo-1; */
+  if (StatsL != NULL) /* base:byte statistics */
+  {                   /* if(StatsL->Xmin>-vo) StatsL->Xmin=-vo;
+                          if(StatsL->Xmax<vbmin-vo-1) StatsL->Xmax=vbmin-vo-1; */
     if (MS == 2) {
-      if (AuxNFLptr->Xdif < fbmin)
-        AuxNFLptr->Xdif = fbmin;
+      if (StatsL->Xdif < fbmin)
+        StatsL->Xdif = fbmin;
     } else {
-      if (AuxNFLptr->Xdif < vbmin)
-        AuxNFLptr->Xdif = vbmin;
+      if (StatsL->Xdif < vbmin)
+        StatsL->Xdif = vbmin;
     }
-    if (AuxNFLptr->Xnuc < *nUC)
-      AuxNFLptr->Xnuc = *nUC;
+    if (StatsL->Xnuc < *nUC)
+      StatsL->Xnuc = *nUC;
     if (((MS == 2) && (fbmin > BASE_MAX)) || ((MS < 2) && (vbmin > BASE_MAX))) {
       printf("WARNING MS=%d  v=%d vb=%d vnuc=%d  f=%d fb=%d fnuc=%d\n", MS,
              V->nv, vbmin, vnuc, E->ne, fbmin, fnuc);
@@ -1760,8 +1766,8 @@ void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
   if (MS == 0) /* nuc and nv agree => compare UC[] */
   {
     int RmL;
-    AuxVnf2ucNF(F_NF, &P->n, &E->ne, &fo, &fb, &fnuc, &MSone, auxUC);
-    RmL = RIGHTminusLEFT(UC, auxUC, nUC);
+    AuxVnf2ucNF(F_NF, &P->n, &E->ne, &fo, &fb, &fnuc, &MSone, auxUC.data());
+    RmL = RIGHTminusLEFT(UC, auxUC.data(), nUC);
     if (RmL > 0) {
       MS = 1;
       (*UC)++;
@@ -1832,7 +1838,7 @@ void Test_ucNF(int *d, int *v, int *nuc, unsigned char *uc, PolyPointList *_P) {
     for (j = 0; j < *d; j++)
       _P->x[i][j] = tNF[j][i];
   assert(Ref_Check(_P, &V, &E));
-  VF_2_ucNF(_P, &V, &E, &NV, &NUC, UC);
+  VF_2_ucNF(_P, &V, &E, &NV, &NUC, UC, nullptr);
   assert(*v == NV);
   assert(*nuc == NUC);
   assert(RIGHTminusLEFT(uc, UC, nuc) == 0);
@@ -2291,7 +2297,8 @@ void UCnf_2_ANF(int *d, int *v, int *nuc, unsigned char *uc, /* IN */
   assert(*MS % 4 == 1);
 }
 void ANF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
-                int *NV, int *nUC, unsigned char *UC)          /* OUT */
+                int *NV, int *nUC, unsigned char *UC,          /* OUT */
+                NF_List *StatsL) /* optional stats */
 {
   int vb, vo, vnuc, vbmin, vone = 0, MSone;
   Long V_NF[POLY_Dmax][VERT_Nmax];
@@ -2308,12 +2315,12 @@ void ANF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
   *NV = V->nv;
   MSone = 1;
 
-  if (AuxNFLptr != NULL) /* base:byte statistics */
+  if (StatsL != NULL) /* base:byte statistics */
   {
-    if (AuxNFLptr->Xdif < vbmin)
-      AuxNFLptr->Xdif = vbmin;
-    if (AuxNFLptr->Xnuc < *nUC)
-      AuxNFLptr->Xnuc = *nUC;
+    if (StatsL->Xdif < vbmin)
+      StatsL->Xdif = vbmin;
+    if (StatsL->Xnuc < *nUC)
+      StatsL->Xnuc = *nUC;
     if (vbmin > BASE_MAX) {
       printf("WARNING MS=%d  v=%d vb=%d vnuc=%d\n", 1, V->nv, vbmin, vnuc);
       VPrint(&P->n, &V->nv, V_NF);
@@ -2388,7 +2395,7 @@ int Add_ANF_to_List(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   if (_L->SL)
     _L->nSLNF++;
 
-  ANF_2_ucNF(_P, _V, _E, &NV, &nUC, UC);
+  ANF_2_ucNF(_P, _V, _E, &NV, &nUC, UC, _L);
 
   NewNF = ucNF_Sort_Add(&NV, &nUC, UC, _L); /* 1::new::cont. */
 

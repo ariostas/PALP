@@ -220,9 +220,10 @@ int InfoSize(int rd, int lists, FInfoList *FI);
 int Make_Poly_NF(PolyPointList *_P, VertexNumList *_V, EqList *_E,
                  Long pNF[POLY_Dmax][VERT_Nmax]); /* 1 if reflexive */
 void ANF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
-                int *NV, int *nUC, unsigned char *UC);         /* OUT */
-void UCnf_2_ANF(int *d, int *v, int *nuc, unsigned char *uc,   /* IN */
-                Long NF[POLY_Dmax][VERT_Nmax], int *MS);       /* OUT */
+                int *NV, int *nUC, unsigned char *UC,          /* OUT */
+                NF_List *StatsL = nullptr); /* optional stats */
+void UCnf_2_ANF(int *d, int *v, int *nuc, unsigned char *uc, /* IN */
+                Long NF[POLY_Dmax][VERT_Nmax], int *MS);     /* OUT */
 
 void Print_Expect(FInfoList *L);
 
