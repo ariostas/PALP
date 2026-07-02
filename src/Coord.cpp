@@ -4,8 +4,6 @@
 #include <array>
 #include <vector>
 
-#undef TEST_Wbase
-#undef USE_Old_Wbase
 #define NO_COORD_IMPROVEMENT /* switch off weight permutation */
 
 using CWLatticeBasis = struct {
@@ -647,65 +645,10 @@ void Print_CWH(CWS *_W, BaHo *_BH) {
  *   CWS by iteration: NextWeight=W[]*B; NewB=Basis(NextW); B[i+1]=B[i]*NewB;
  *									    */
 
-void PrintBasis(CWLatticeBasis *_B) {
-  int i, j;
-  puts("Basis:");
-  for (i = 0; i < _B->n; i++) {
-    for (j = 0; j < _B->N; j++)
-      fprintf(outFILE, "%6d ", (int)_B->x[i][j]);
-    puts("");
-  }
-  puts("End of Basis  - -");
-}
-
-void Orig_Solve_Next_WEq(Long *NW, CWLatticeBasis *_B) {
-  int i, j, P = 0, p[AMBI_Dmax];
-  Long W[AMBI_Dmax], G;
-  _B->n = _B->N - 1;
-  for (i = 0; i < _B->N; i++) {
-    for (j = 0; j < _B->n; j++)
-      _B->x[j][i] = 0; /* init B.x=0 */
-    if (NW[i]) {
-      p[P] = i;
-      W[P++] = NW[i];
-    } /* non-zero weights */
-  }
-  if (P < 2)
-    puts("need two non-zero weights in  >>Solve_Next_WEq<<");
-  for (i = 0; i < p[0]; i++)
-    _B->x[i][i] = 1;
-  while ((++i) < p[1])
-    _B->x[i - 1][i] = 1;
-  G = Fgcd(W[0], W[1]);
-  if (W[0] / G < 0)
-    G = -G;
-  _B->x[i - 1][p[0]] = -W[1] / G;
-  _B->x[i - 1][p[1]] = W[0] / G;
-  j = 2;
-  while (++i < _B->N) {
-    if (NW[i]) {
-      int k;
-      Long *X = _B->x[i - 1], K[AMBI_Dmax], g = REgcd(W, &j, K);
-      G = Fgcd(g, NW[i]);
-      if (g / G < 0)
-        G = -G;
-      X[i] = g / G;
-      g = W[j] / G;
-      for (k = 0; k < j; k++)
-        X[p[k]] = -K[k] * g;
-      j++;
-    } else
-      _B->x[i - 1][i] = 1;
-  }
-}
 void Solve_Next_WEq(Long *NW, CWLatticeBasis *_B) {
   Long W[AMBI_Dmax], *X[AMBI_Dmax], GLZ[AMBI_Dmax][AMBI_Dmax];
   int i, j, P = 0, p[AMBI_Dmax];
   _B->n = _B->N - 1;
-#ifdef TEST_Wbase
-  Orig_Solve_Next_WEq(NW, _B);
-  PrintBasis(_B);
-#endif
   for (i = 0; i < _B->N; i++) {
     for (j = 0; j < _B->n; j++)
       _B->x[j][i] = 0; /* init B.x=0 */
@@ -746,15 +689,6 @@ void Solve_Next_WEq(Long *NW, CWLatticeBasis *_B) {
     } else
       _B->x[i - 1][i] = 1;
   }
-#ifdef TEST_Wbase
-  /* for(i=0;i<_B->N;i++)printf("%d ",NW[i]);puts("=NW");for(i=0;i<P;i++)
-  {for(j=0;j<P;j++)printf("%4d ",GLZ[i][j]);puts("=GL");} */
-  printf("New version: ");
-  PrintBasis(_B);
-#endif
-#ifdef USE_Old_Wbase
-  Orig_Solve_Next_WEq(NW, _B);
-#endif
 }
 void Make_CWS_Basis(CWS *_C, CWLatticeBasis *_B) {
   int i, j, k, l;
@@ -1243,43 +1177,6 @@ void Tri_GLZ_Basis_Perm(int *d, int *pi, /* int *pinv, */ Tri_GLZ_MPaux *AP) {
     assert(g == AP->g);
   else
     AP->g = g;
-#ifdef TEST_MIN_GLZ
-  {
-    Long err = 0, max = 0, tsum = 0, pos;
-    for (i = 0; i < *d; i++) {
-      for (j = 0; j < *d; j++) {
-        pos = S[i][j];
-        if (pos < 0)
-          pos = -pos;
-        tsum += pos;
-        if (max < pos)
-          max = pos;
-      }
-      if (err == 0) {
-        for (j = 0; j < *d; j++)
-          err += N[j] * S[i][j];
-        if (i == 0)
-          err -= g;
-      }
-    }
-    assert((norm == tsum) || (norm == max));
-    printf("max=%lld, sum=%lld\n", (long long)max, (long long)tsum);
-    if (err) {
-      for (i = 0; i < *d; i++)
-        printf("%d", pi[i]);
-      printf("  g=%d  norm=%d", (int)g, (int)norm);
-      puts("");
-      for (i = 0; i < *d; i++) {
-        printf("S[%d]=", i);
-        for (j = 0; j < *d; j++)
-          printf(" %5d", S[i][j]);
-        if (!i)
-          printf("   g=%d  norm=%d", (int)g, (int)norm);
-        puts("");
-      }
-    }
-  }
-#endif
   if ((0 == AP->s) || (norm < AP->s)) /* init or improve AP->G */
   {
     for (i = 0; i < *d; i++)
@@ -1304,16 +1201,6 @@ Long Wperm_to_GLZ(Long *W, int *d, Long **G, int *P) {
   for (i = 0; i < *d; i++)
     for (j = 0; j < *d; j++)
       G[i][j] = AS.G[i][j];
-#ifdef TEST_MIN_GLZ
-  for (i = 0; i < *d; i++) {
-    printf("  G[%d]=", i);
-    for (j = 0; j < *d; j++)
-      printf(" %5d", G[i][j]);
-    if (!i)
-      printf("  g=%d norm=%d", (int)AS.g, (int)AS.s);
-    puts("");
-  }
-#endif
   return AS.g;
 }
 void CWS_to_PermCWS(CWS *Cin, CWS *C, int *pi) {

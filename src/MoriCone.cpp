@@ -225,86 +225,6 @@ void DivClassBasis(int SF, PolyPointList *P, int v, const char *D,
   exit(1);
 }
 
-void OLD_LinRelLatticeBasis(int SF, PolyPointList *P, int v, char *D, char *B) {
-  int i, j, k, l;
-  Long cdiv = 0;
-  if (v > 8) {
-    DivClassBasis(SF, P, v, D, B);
-    return;
-  }
-  if (P->n != 4) {
-    DivClassBasis(SF, P, v, D, B);
-    return;
-  }
-
-  for (l = 3; l < v; l++)
-    for (k = 2; k < l; k++)
-      for (j = 1; j < k; j++)
-        for (i = 0; i < j; i++) {
-          Long *X[4];
-          Inci64 I = makeN(i) + makeN(j) + makeN(k) + makeN(l);
-          int x = 0, y;
-          Long sv;
-          for (y = 0; y < v; y++)
-            if (getN(y, I))
-              X[x++] = P->x[y];
-          assert(x == 4);
-          /*---ENDE
-           * QUICK-FIX----------------------------------------------------------*/
-
-          // printf("SimpVol[%d%d%d%d]=%ld\n",i,j,k,l,SimplexVolume(X,P->n));
-          sv = SimplexVolume(X, P->n);
-          cdiv = NNgcd(cdiv, sv);
-          if (sv == 1) {
-            x = 0;
-            dprintf(SF, "\nideal DCbase=");
-            for (y = 0; y < v; y++)
-              if (!getN(y, I)) { /* integral basis B[] */
-                if (x)
-                  dprintf(SF, ",");
-                dprintf(SF, "%s%d-%s%d", B, ++x, D, y + 1);
-              }
-            assert(x == v - 4);
-            dprintf(SF, ";\n");
-            return;
-          }
-        }
-
-  if (cdiv > 1) {
-    printf("Fundamental group = Z%d\n", (int)cdiv);
-    fflush(0);
-    for (l = 3; l < v; l++)
-      for (k = 2; k < l; k++)
-        for (j = 1; j < k; j++)
-          for (i = 0; i < j; i++) {
-            Long *X[4];
-            Inci64 I = makeN(i) + makeN(j) + makeN(k) + makeN(l);
-            int x = 0, y;
-            Long sv;
-            for (y = 0; y < v; y++)
-              if (getN(y, I))
-                X[x++] = P->x[y];
-            assert(x == 4);
-            sv = SimplexVolume(X, P->n);
-            if (sv == cdiv) {
-              x = 0;
-              dprintf(SF, "\nideal DCbase=");
-              for (y = 0; y < v; y++)
-                if (!getN(y, I)) { /* integral basis B[] */
-                  if (x)
-                    dprintf(SF, ",");
-                  dprintf(SF, "%s%d-%s%d", B, ++x, D, y + 1);
-                } /* OFFSET */
-              assert(x == v - 4);
-              dprintf(SF, ";\n");
-              return;
-            }
-          }
-  }
-  puts("IMPROVE CODE: no Vol=1 simplex in LinRelLatticeBasis!!!");
-  exit(1);
-}
-
 /*  ideal IRingNorm = (Q*U - Di.Dj.Dk); on the CY where
  *  Q = Di.Dj.Dk.Dcy / Di.Dj.Dk.Dl*Vol(\s_ijkl) and Di.Dj.Dk.Dl*Vol(\s) = U = 1
  *  on ambient space IP_\S, i.e. we introduce a formal variable U = Unit
@@ -1488,87 +1408,6 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
     Y[y] = YY[0];
     assert(nse <= VERT_Nmax);
 
-#ifdef CANNOT_HANDLE_CONINCIDENT_INTERSECTION_POINTS // o.k. for iem==2 ???
-    {
-      Inci64 Qinc[VERT_Nmax];
-      for (i = 0; i < en; i++)
-        switch (ien[i]) { // edges: DOUBLE; if(ien[i]) SPLIT;
-        case 0:
-          OE[noe][0] = OE[noe + 1][1] = Eli[i][0];
-          OE[noe][1] = OE[noe + 1][0] = Eli[i][1];
-          noe += 2;
-          break;
-        case 1:
-          if ((j = IEli[i][0]) > i) {
-            k = q + r; // if new add Q to YY's
-            IntersectEdges(BZRE(i, 0), BZRE(i, 1), BZRE(j, 0), BZRE(j, 1),
-                           Y[y]);
-            Qinc[q] = makeN(i) + makeN(j);
-            Y[++y] = YY[++q];
-          } // Y[r+q]::E_i & E_j
-          else {
-            for (k = 0; k < q; k++)
-              if (Qinc[k] == (makeN(i) + makeN(j)))
-                break;
-            assert(k < q);
-            k += r;
-          }
-          OE[noe][0] = OE[noe + 1][1] = Eli[i][0];
-          OE[noe][1] = OE[noe + 1][0] = k;
-          noe += 2;
-          OE[noe][0] = OE[noe + 1][1] = Eli[i][1];
-          OE[noe][1] = OE[noe + 1][0] = k;
-          noe += 2;
-          //	printf("XXXX	edge %d intersect with %d ...
-          // k=%d\n",i,IEli[i][0],k);
-          assert(y == q + r);
-          break;
-        case 2:
-          for (f = 0; f < 2; f++) {
-            if ((j = IEli[i][f]) > i) {
-              k = q + r; // if new add Q to YY
-              IntersectEdges(BZRE(i, 0), BZRE(i, 1), BZRE(j, 0), BZRE(j, 1),
-                             Y[y]);
-              Qinc[q] = makeN(i) + makeN(j);
-              Y[++y] = YY[++q];
-            } // Y[r+q]::E_i & E_j
-            else {
-              for (k = 0; k < q; k++)
-                if (Qinc[k] == (makeN(i) + makeN(j)))
-                  break;
-              assert(k < q);
-              k += r;
-            }
-            //	printf("****	edge %d intersect with %d\n",i,j);
-            OE[noe][f] = OE[noe + 1][1 - f] = k;
-          } // add middle-edge
-          assert(f = XYZcone(Y[OE[noe][0]], Y[OE[noe][1]], Y[Eli[i][1]]));
-          if (f > 0) {
-            k = OE[noe][0];
-            f = OE[noe][1];
-          } else {
-            f = OE[noe][0];
-            k = OE[noe][1];
-          }
-          noe += 2; // edge=(i0,k,f,i1)
-          //	printf("edge(%d)=%d %d %d %d\n",i,Eli[i][0],k,f,Eli[i][1]);
-          assert(XYZcone(Y[f], Y[k], Y[Eli[i][0]]) > 0); // add end-edges
-          OE[noe][0] = OE[noe + 1][1] = Eli[i][0];
-          OE[noe][1] = OE[noe + 1][0] = k;
-          noe += 2;
-          OE[noe][0] = OE[noe + 1][1] = Eli[i][1];
-          OE[noe][1] = OE[noe + 1][0] = f;
-          noe += 2;
-          break;
-        default:
-          puts("#(intersect.edges)>2 in Triang3dSFan() TO DO");
-          exit(1);
-        }
-      assert(2 * nse == noe);
-      assert(2 - y + nse <= VERT_Nmax); // Euler == y-nse+ncr == 2
-    }
-#endif // => first make intersections, then split edges, then add unsplit
-
     for (i = 0; i < en; i++)
       if (ien[i]) { // Y[k]::Y[y]=YY[q]=intersection(Ei,Ej)
         OE[noe][0] = Eli[i][0];
@@ -1759,22 +1598,6 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
       CT[*nmt + 1] = &CT[*nmt][nt[*nmt]];
       tmt += nt[(*nmt)++];
     }
-#ifdef PRINT_NON_MAXIMAL_TRIANGULATIONS
-    j = (*nmt) - (U == C);
-    if (U == C)
-      printf("maximal[");
-    else
-      printf("non-max[");
-    prnI(p, C);
-    printf(" > ");
-    prnI(p, U);
-    printf("]:");
-    for (a = 0; a < nt[j]; a++) {
-      printf(" ");
-      prnI(p, CT[j][a]);
-    }
-    puts("");
-#endif
   }
   assert(*nmt); // check total #triangle in max.triangulations:
   j = 0;

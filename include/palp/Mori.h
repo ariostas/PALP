@@ -104,6 +104,11 @@ Simply trying to find toric divisors that span the lattice of DivClasses i.e.
 find subdeterminants=volumes=1 for elimination.
 */
 
+void StanleyReisner(triang *SR, triang *T);
+/*
+Determine and print the SR ideal.
+*/
+
 /*  ======  typedefs and functions related to INCIDENCEs  ======  */
 
 /* Definitions live in src/MoriCone.cpp; only declared here. */
