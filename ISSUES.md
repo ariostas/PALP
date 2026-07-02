@@ -48,22 +48,23 @@ names and descriptions should remain locatable.
   but `IP_Check` returns 0 and leaks in an analogous path.
 
 ### 4. `realloc` loses old pointer on failure
-- **File**: `E_Poly.c`
-- **Line**: 53
+- **File**: `E_Poly.cpp`
+- **Line**: ~60
 - **Severity**: High
-- **Description**: `DYNadd_for_completion` assigns `realloc` result directly
-  to `_CP->L` without saving the old pointer. If `realloc` returns NULL, the
-  old memory is leaked. Standard C bug. Fix: save old pointer, check for NULL,
-  free old on failure.
+- **Status**: Fixed
+- **Description**: `DYNadd_for_completion` previously used `realloc` directly on
+  `_CP->L`. During migration the buffer was converted to `std::vector`, so resize
+  failures are handled by the standard library and the old pointer is no longer
+  lost. A capacity check (`_CP->np >= _CP->L.size()`) triggers `resize()` before
+  the new element is written.
 
 ### 5. Partial array initialization
-- **File**: `E_Poly.c`
-- **Line**: 673
+- **File**: `E_Poly.cpp`
+- **Line**: ~722, ~1463
 - **Severity**: Medium
-- **Description**: `int h[POLY_Dmax][POLY_Dmax] = {{0},{0}}` — only initializes
-  the first two rows explicitly. While C99 does zero-fill the rest, this is
-  misleading and fragile on some compilers. Should be `= {}` or `= {{0}}` for
-  full zeroing.
+- **Status**: Fixed
+- **Description**: `int h[POLY_Dmax][POLY_Dmax] = {}` now used consistently for
+  full zero-initialization in both `Make_Mirror` and `Compute_E_Poly`.
 
 ### 6. `assert` guarding division by zero
 - **File**: `Polynf.cpp`
