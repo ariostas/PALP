@@ -2233,17 +2233,6 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
         return 0;
       } /* 4 vertices: no square */
     }
-#ifdef PRINT_COORD
-    {
-      int l;
-      for (l = 0; l < e; l++) {
-        printf("X[%d]=", l);
-        for (i = 0; i < P->n; i++)
-          printf("%3ld ", X[l][i]);
-        printf(" j=%d fn=%d\n", j, nf);
-      }
-    }
-#endif
     if (1 < LinRelSimplexVolume(X, 3, P->n)) {
       nonbasic++;
       free(_FI);
@@ -2513,11 +2502,6 @@ void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E) {
       if (nis)
         sym++;
       assert(bcz);
-#ifdef PRINT_ALL_ZEROSUM
-      if (is == 0)
-        Print_PPL(P, is ? "zerosum" : "symmetric");
-      fflush(0);
-#endif
     } /* else if(bcz) Print_PPL(P,"bary=0 for kPsum!=0"); */
 
     strcat(c, "PPL:");
@@ -2629,29 +2613,6 @@ void IPS_Rec_New_Vertex(Long PM[][POLY_Dmax], int *p, int *d, int *nw,
         Check_New_Fiber(PM, d, s, r, FW);
   } /* printf("finished r=%d\n",r); */
 }
-#ifdef CHECK_Nref_FIRST
-int Fiber_Ref_Check(Long PM[][POLY_Dmax], int *d, int *p, int *v,
-                    GL_Long G[POLY_Dmax][POLY_Dmax], GL_Long Ginv[][POLY_Dmax],
-                    Long X[VERT_Nmax][VERT_Nmax], PolyPointList *A, int r) {
-  int i, j;
-  VertexNumList V;
-  EqList E;
-  int l, c = 0;
-  for (i = 0; i < *p; i++) {
-    for (l = r; l < *d; l++)
-      if (GxP(G[l], PM[i], d))
-        break;
-    if (l == *d) {
-      for (l = 0; l < r; l++)
-        A->x[c][l] = GxP(G[l], PM[i], d);
-      c++;
-    }
-  }
-  A->np = c;
-  A->n = r;
-  if (!Ref_Check(A, &V, &E))
-    return 0; /* only necessary */
-#else
 int Fiber_Ref_Check(Long PM[][POLY_Dmax], int *d, /*int *p,*/ int *v,
                     GL_Long G[POLY_Dmax][POLY_Dmax], /* GL_Long
                     Ginv[][POLY_Dmax], Long X[VERT_Nmax][VERT_Nmax],  */
@@ -2659,7 +2620,6 @@ int Fiber_Ref_Check(Long PM[][POLY_Dmax], int *d, /*int *p,*/ int *v,
   int i, j;
   VertexNumList V;
   EqList E;
-#endif
   A->np = *v;
   A->n = *d;
   for (i = 0; i < *v; i++)
@@ -3378,32 +3338,6 @@ void Print_Fiber_PolyData(PolyPointList *P, VertexNumList *V, Long *W, int w,
   }
   fprintf(outFILE, "\n");
 }
-#ifdef OLD_IPS /* switch of Check_New_Fiber in ... !!! */
-void IP_Simplices(PolyPointList *_P, int nv, int PS, int VS, int CDin) {
-  int i, nw, np = VS ? nv : _P->np - 1;
-  Long W[FIB_Nmax][VERT_Nmax];
-  VertexNumList V;
-  V.nv = nv;
-  for (i = 0; i < nv; i++)
-    V.v[i] = i;
-  int CD;
-  for (i = V.nv; i < _P->np - 1; i++)
-    if (Vec_is_zero(_P->x[i], _P->n)) {
-      Swap_Vecs(_P->x[i], _P->x[_P->np - 1], _P->n);
-      break;
-    }
-  CD = CDin;
-  assert(CD < 4);
-  IP_Simplex_Decomp(_P->x, np, _P->n, &nw, W, FIB_Nmax, CD);
-  if (nw == 0)
-    return;
-  if (CD == 0)
-    Aux_IPS_Print_Poly(_P, &V, np, nw, VS, CD);
-  for (i = 0; i < nw; i++)
-    Print_Fiber_PolyData(_P, &V, W[i], np, i, nw, VS, CD);
-}
-void Check_New_Fiber(Long PM[][POLY_Dmax], int *, int *, int, FibW *) { ; }
-#else
 void Check_New_Fiber(Long PM[][POLY_Dmax], int *d, int *s, int r, FibW *F) {
   int i, j, c, l, *n = &F->nf;
   Long X[VERT_Nmax][VERT_Nmax], x;
@@ -3693,7 +3627,6 @@ void IP_Fiber_Data(PolyPointList *PD, PolyPointList *AuxP,
   }
   free(F);
 } /* aux routine for nef package */
-#endif
 /*      =============================================================       */
 
 /*      =============================================================       */
