@@ -257,7 +257,7 @@ void Make_Incidence(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     Print_PPL(_P, "PPL for incidence error");
     Print_FaceInfo(_P->n, _I);
     printf("d=%d  euler=%d\n", d, M);
-    assert(M == 2 * (d % 2));
+    exit(1);
   }
 }
 
