@@ -190,11 +190,17 @@ void Make_Incidence(PolyPointList *_P, VertexNumList *_V, EqList *_E,
  */
 {
   int i, j, M = _P->n - 1, d = M, D;
-  assert(_E->ne <= VERT_Nmax);
+  if (_E->ne > VERT_Nmax) {
+    fputs("Error: too many equations in FACE_Info\n", stderr);
+    exit(1);
+  }
   _I->nf[M] = _E->ne;
   for (i = 0; i < _E->ne; i++)
     _I->v[M][i] = Eq_To_INCI(&_E->e[i], _P, _V); /* init .v*/
-  assert(i > 0);
+  if (i <= 0) {
+    fputs("Error: FACE_Info needs at least one equation\n", stderr);
+    exit(1);
+  }
   _I->f[M][--i] = INCI_1();
   while (i--)
     _I->f[M][i] = INCI_PN(_I->f[M][i + 1], 1); /* init .f */
@@ -225,8 +231,11 @@ void Make_Incidence(PolyPointList *_P, VertexNumList *_V, EqList *_E,
                       _I->v[d][l] = _I->v[d][*n];
                       _I->f[d][l] = _I->f[d][*n];
                     }
-                  } else
-                    assert(!INCI_LE(x, _I->v[d][l]));
+                  } else if (INCI_LE(x, _I->v[d][l])) {
+                    fputs("Error: inconsistent face lattice in FACE_Info\n",
+                          stderr);
+                    exit(1);
+                  }
 
                 /* for(k++;k<*n;k++)
                    if(!INCI_LE(x,_I->v[d][k])&&!INCI_LE(_I->v[d][k],x))
@@ -238,7 +247,10 @@ void Make_Incidence(PolyPointList *_P, VertexNumList *_V, EqList *_E,
           }
           if (*n == k) /* non-comparable => new face */
           {
-            assert(k < FACE_Nmax);
+            if (k == FACE_Nmax) {
+              fputs("Error: too many faces in FACE_Info\n", stderr);
+              exit(1);
+            }
             _I->v[d][k] = x;
             _I->f[d][k] = u;
             (*n)++;
@@ -321,7 +333,10 @@ Equation EEV_To_Equation(Equation *_E1, Equation *_E2, Long *_V, int n) {
   l = Eval_Eq_on_V(_E2, _V, n);
   m = Eval_Eq_on_V(_E1, _V, n);
   g = NNgcd(l, m);
-  assert(g);
+  if (!g) {
+    fputs("Error: gcd(0,0) in EEV_To_Equation\n", stderr);
+    exit(1);
+  }
   l /= g;
   m /= g;
   /* LLong version */
@@ -332,7 +347,10 @@ Equation EEV_To_Equation(Equation *_E1, Equation *_E2, Long *_V, int n) {
     G = C = ((LLong)l) * ((LLong)_E1->c) - ((LLong)m) * ((LLong)_E2->c);
     for (i = 0; i < n; i++)
       G = LNNgcd(G, A[i]);
-    assert(G);
+    if (!G) {
+      fputs("Error: GCD is zero in EEV_To_Equation\n", stderr);
+      exit(1);
+    }
     if (G != 1) {
       C /= G;
       for (i = 0; i < n; i++)
@@ -534,7 +552,10 @@ Long VZ_to_Base(Long *V, int *d, Long M[POLY_Dmax][POLY_Dmax]) /* 0 iff V=0 */
       int I = J;
       for (j = *d - 1; j >= 0; j--)
         G[i][j] = (V[j]) ? G[i][--I] : 0;
-      assert(I == 0);
+      if (I != 0) {
+        fputs("Error: basis mismatch in VZ_to_Base\n", stderr);
+        exit(1);
+      }
     }
   }
   return g;
@@ -550,7 +571,10 @@ int OrthBase_red_by_V(Long *V, int *d, Long A[][POLY_Dmax], int *r,
     for (j = 0; j < *d; j++)
       W[i] += A[i][j] * V[j];
   }
-  assert(VZ_to_Base(W, r, G));
+  if (!VZ_to_Base(W, r, G)) {
+    fputs("Error: zero vector in OrthBase_red_by_V\n", stderr);
+    exit(1);
+  }
   for (i = 0; i < *r - 1; i++)
     for (k = 0; k < *d; k++) {
       B[i][k] = 0;
@@ -644,7 +668,10 @@ int GLZ_Start_Simplex(PolyPointList *_P, VertexNumList *_V, CEqList *_C) {
     for (x = 0; x < _P->n; x++)
       for (y = 0; y < _P->n; y++)
         _C->e[x].a[y] = (x == y);
-    assert(_P->np > 0);
+    if (_P->np <= 0) {
+      fputs("Error: GLZ_Start_Simplex needs at least one point\n", stderr);
+      exit(1);
+    }
     for (x = 0; x < _P->n; x++)
       _C->e[x].c = -_P->x[0][x];
     return _C->ne = _P->n;
@@ -656,7 +683,11 @@ int GLZ_Start_Simplex(PolyPointList *_P, VertexNumList *_V, CEqList *_C) {
     if (Vec_Greater_Than(Z, Y, _P->n))
       Y = _P->x[y = i]; /* (x_n)-min: VN[1] */
   }
-  assert(x != y); /* at this point I need two different vertices */
+  if (x == y) {
+    fputs("Error: GLZ_Start_Simplex needs two distinct extreme vertices\n",
+          stderr);
+    exit(1);
+  }
   for (i = 0; i < *d; i++) {
     Long Xi = (X[i] > 0) ? X[i] : -X[i], Yi = (Y[i] > 0) ? Y[i] : -Y[i];
     if (Xi > XX)
@@ -728,7 +759,10 @@ int GLZ_Start_Simplex(PolyPointList *_P, VertexNumList *_V, CEqList *_C) {
       E->a[i] = Z[i];
     E->c = -Eval_Eq_on_V(E, X, _P->n);
     XX = Eval_Eq_on_V(E, _P->x[_V->v[*d - 1]], _P->n);
-    assert(XX);
+    if (!XX) {
+      fputs("Error: degenerate second start simplex equation\n", stderr);
+      exit(1);
+    }
     if (XX < 0) {
       for (i = 0; i < *d; i++)
         E->a[i] = -Z[i];
@@ -749,7 +783,10 @@ int GLZ_Start_Simplex(PolyPointList *_P, VertexNumList *_V, CEqList *_C) {
         E->a[i] = Z[i];
       E->c = -Eval_Eq_on_V(E, X, _P->n);
       XX = Eval_Eq_on_V(E, _P->x[_V->v[x]], _P->n);
-      assert(XX);
+      if (!XX) {
+        fputs("Error: degenerate start simplex equation\n", stderr);
+        exit(1);
+      }
       if (XX < 0) {
         for (i = 0; i < *d; i++)
           E->a[i] = -Z[i];
@@ -757,11 +794,18 @@ int GLZ_Start_Simplex(PolyPointList *_P, VertexNumList *_V, CEqList *_C) {
       }
     }
   }
-  assert(*d + 1 == _C->ne);
+  if (*d + 1 != _C->ne) {
+    fputs("Error: GLZ_Start_Simplex did not produce d+1 equations\n", stderr);
+    exit(1);
+  }
   for (x = 0; x < _C->ne; x++)
     for (i = 0; i <= *d; i++)
-      assert((x == i) ==
-             (0 != Eval_Eq_on_V(&_C->e[x], _P->x[_V->v[*d - i]], _P->n)));
+      if ((x == i) !=
+          (0 != Eval_Eq_on_V(&_C->e[x], _P->x[_V->v[*d - i]], _P->n))) {
+        fputs("Error: start simplex equations are not dual to vertices\n",
+              stderr);
+        exit(1);
+      }
   return 0;
 }
 
@@ -818,11 +862,20 @@ void Make_New_CEqs(PolyPointList *_P, VertexNumList *_V, CEqList *_C,
               break;
         if (k != _F->ne)
           continue;
-        assert(_C->ne < CEQ_Nmax);
+        if (_C->ne >= CEQ_Nmax) {
+          fputs("Error: too many candidate equations in Make_New_CEqs\n",
+                stderr);
+          exit(1);
+        }
         CEq_I[_C->ne] = INCI_PN(INCI_D2(New_Face), 0);
         _C->e[_C->ne] = EEV_To_Equation(&(Bad_C.e[i]), &(_F->e[j]),
                                         _P->x[_V->v[_V->nv - 1]], _P->n);
-        assert(IsGoodCEq(&(_C->e[_C->ne++]), _P, _V));
+        if (!IsGoodCEq(&(_C->e[_C->ne]), _P, _V)) {
+          fputs("Error: invalid candidate equation produced in Make_New_CEqs\n",
+                stderr);
+          exit(1);
+        }
+        _C->ne++;
       }
   for (j = 0; j < Old_C_ne; j++)
     if (!INCI_M2(CEq_I[j]))
@@ -848,11 +901,20 @@ void Make_New_CEqs(PolyPointList *_P, VertexNumList *_V, CEqList *_C,
             break;
         if (k != _F->ne)
           continue;
-        assert(_C->ne < CEQ_Nmax);
+        if (_C->ne >= CEQ_Nmax) {
+          fputs("Error: too many candidate equations in Make_New_CEqs\n",
+                stderr);
+          exit(1);
+        }
         CEq_I[_C->ne] = INCI_PN(INCI_D2(New_Face), 0);
         _C->e[_C->ne] = EEV_To_Equation(&(Bad_C.e[i]), &(_C->e[j]),
                                         _P->x[_V->v[_V->nv - 1]], _P->n);
-        assert(IsGoodCEq(&(_C->e[_C->ne++]), _P, _V));
+        if (!IsGoodCEq(&(_C->e[_C->ne]), _P, _V)) {
+          fputs("Error: invalid candidate equation produced in Make_New_CEqs\n",
+                stderr);
+          exit(1);
+        }
+        _C->ne++;
       }
 }
 
@@ -878,7 +940,10 @@ int IP_Search_Bad_Eq(CEqList *_C, EqList *_F, INCI *CEq_I, INCI *F_I,
         *_IP = 0;
         return 1;
       }
-      assert(_F->ne < EQUA_Nmax);
+      if (_F->ne >= EQUA_Nmax) {
+        fputs("Error: too many facet equations in Search_Bad_Eq\n", stderr);
+        exit(1);
+      }
       /* printf("#Feq=%d  #Ceq=%d\n",_F->ne,_C->ne); fflush(stdout); */
       _F->e[_F->ne] = _C->e[M];
       F_I[_F->ne++] = CEq_I[M];
@@ -897,7 +962,10 @@ int IP_Search_Bad_Eq(CEqList *_C, EqList *_F, INCI *CEq_I, INCI *F_I,
         *_IP = 0;
         return 1;
       }
-      assert(_F->ne < EQUA_Nmax);
+      if (_F->ne >= EQUA_Nmax) {
+        fputs("Error: too many facet equations in IP_Search_Bad_Eq\n", stderr);
+        exit(1);
+      }
       _F->e[_F->ne] = _C->e[_C->ne];
       F_I[_F->ne++] = CEq_I[_C->ne];
     }
@@ -925,7 +993,10 @@ int FE_Search_Bad_Eq(CEqList *_C, EqList *_F, INCI *CEq_I, INCI *F_I,
         }
       if (_C->e[M].c < 1)
         *_IP = 0;
-      assert(_F->ne < EQUA_Nmax);
+      if (_F->ne >= EQUA_Nmax) {
+        fputs("Error: too many facet equations in Search_Bad_Eq\n", stderr);
+        exit(1);
+      }
       /* printf("#Feq=%d  #Ceq=%d\n",_F->ne,_C->ne); fflush(stdout); */
       _F->e[_F->ne] = _C->e[M];
       F_I[_F->ne++] = CEq_I[M];
@@ -942,7 +1013,10 @@ int FE_Search_Bad_Eq(CEqList *_C, EqList *_F, INCI *CEq_I, INCI *F_I,
           return ++_C->ne;
       if (_C->e[_C->ne].c < 1)
         *_IP = 0;
-      assert(_F->ne < EQUA_Nmax);
+      if (_F->ne >= EQUA_Nmax) {
+        fputs("Error: too many facet equations in Search_Bad_Eq\n", stderr);
+        exit(1);
+      }
       _F->e[_F->ne] = _C->e[_C->ne];
       F_I[_F->ne++] = CEq_I[_C->ne];
     }
@@ -962,7 +1036,10 @@ int REF_Search_Bad_Eq(CEqList *_C, EqList *_F, INCI *CEq_I, INCI *F_I,
       *_REF = 0;
       return 1;
     }
-    assert(_F->ne < EQUA_Nmax);
+    if (_F->ne >= EQUA_Nmax) {
+      fputs("Error: too many facet equations in REF_Search_Bad_Eq\n", stderr);
+      exit(1);
+    }
     _F->e[_F->ne] = _C->e[_C->ne];
     F_I[_F->ne++] = CEq_I[_C->ne];
   }
@@ -974,7 +1051,10 @@ int Finish_Find_Equations(PolyPointList *_P, VertexNumList *_V, EqList *_F,
   int IP = 1;
   while (0 <= _CEq->ne)
     if (FE_Search_Bad_Eq(_CEq, _F, CEq_I, F_I, _P, &IP)) {
-      assert(_V->nv < VERT_Nmax);
+      if (_V->nv >= VERT_Nmax) {
+        fputs("Error: too many vertices in Finish_Find_Equations\n", stderr);
+        exit(1);
+      }
       _V->v[_V->nv++] = Search_New_Vertex(&(_CEq->e[_CEq->ne - 1]), _P);
       Make_New_CEqs(_P, _V, _CEq, _F, CEq_I, F_I);
     }
@@ -1011,7 +1091,10 @@ int Finish_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F,
     if (IP_Search_Bad_Eq(_CEq, _F, CEq_I, F_I, _P, &IP)) {
       if (!IP)
         return 0; /* found d<=0 */
-      assert(_V->nv < VERT_Nmax);
+      if (_V->nv >= VERT_Nmax) {
+        fputs("Error: too many vertices in Finish_IP_Check\n", stderr);
+        exit(1);
+      }
       _V->v[_V->nv++] = Search_New_Vertex(&(_CEq->e[_CEq->ne - 1]), _P);
       Make_New_CEqs(_P, _V, _CEq, _F, CEq_I, F_I);
     }
@@ -1043,7 +1126,10 @@ int Finish_REF_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F,
     if (REF_Search_Bad_Eq(_CEq, _F, CEq_I, F_I, _P, &REF)) {
       if (!REF)
         return 0; /* found d!=1 */
-      assert(_V->nv < VERT_Nmax);
+      if (_V->nv >= VERT_Nmax) {
+        fputs("Error: too many vertices in Finish_REF_Check\n", stderr);
+        exit(1);
+      }
       _V->v[_V->nv++] = Search_New_Vertex(&(_CEq->e[_CEq->ne - 1]), _P);
       Make_New_CEqs(_P, _V, _CEq, _F, CEq_I, F_I);
     }
@@ -1103,7 +1189,10 @@ void add_for_completion(Long *yDen, Long Den, EqList *_E, PolyPointList *_CP,
   for (i = 0; i < *old_np; i++)
     if (Vec_Equal(_CP->x[i], yold, n))
       return;
-  assert(_CP->np < POINT_Nmax);
+  if (_CP->np >= POINT_Nmax) {
+    fputs("Error: too many points in Add_Points\n", stderr);
+    exit(1);
+  }
   for (i = 0; i < n; i++)
     _CP->x[_CP->np][i] = yold[i];
   _CP->np++;

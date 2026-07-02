@@ -37,15 +37,15 @@ names and descriptions should remain locatable.
   them into one buffer.
 
 ### 3. Memory leaks on error paths in `Find_Equations` / `IP_Check` / `Ref_Check`
-- **File**: `Vertex.c`
-- **Lines**: 633–654, 667–683, 696–710
+- **File**: `Vertex.cpp`
+- **Lines**: 984–1125
 - **Severity**: Critical
-- **Description**: These three functions `malloc` `CEq`, `CEq_I`, `F_I`. On
-  certain paths (e.g., `GLZ_Start_Simplex` returning nonzero), they `free` all
-  three and return. But on the `exit(0)` path inside `Finish_Find_Equations`
-  and subroutines, the memory is leaked. The three functions also have
-  inconsistent error handling: `Find_Equations` returns 0 on simplex-codim > 0
-  but `IP_Check` returns 0 and leaks in an analogous path.
+- **Status**: Fixed
+- **Description**: `CEq`, `CEq_I`, and `F_I` were originally raw `malloc`ed
+  buffers. They are now `std::unique_ptr<CEqList>` and `std::array<INCI,...>`,
+  so memory is released automatically on every exit path including the
+  `exit(1)` calls in subroutines. Remaining bounds checks that previously used
+  `assert` were also converted to explicit `fputs`/`exit(1)` errors.
 
 ### 4. `realloc` loses old pointer on failure
 - **File**: `E_Poly.cpp`
