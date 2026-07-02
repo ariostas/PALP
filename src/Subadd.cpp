@@ -45,7 +45,7 @@ int IntSqrt(int q) /* sqrt(q) => r=1; r'=(q+r*r)/(2r); */
       return (int)r;
     else {
       printf("Error in sqrt(%d)=%d\n", q, (int)n);
-      exit(0);
+      exit(1);
     }
   }
   return 0;
@@ -153,7 +153,7 @@ void Test_SLnbMS(NF_List *S) {
     int ms = C[2] % 4;
     if (C[0] > VERT_Nmax) {
       printf("v[%d]=%d\n", i, C[0]);
-      exit(0);
+      exit(1);
     }
     tNB += C[1] + 2;
     if (ms) {
@@ -165,7 +165,7 @@ void Test_SLnbMS(NF_List *S) {
   if ((S->slNM != tNM) || (S->slSM != tSM) || (testNB && (S->NewNB != tNB))) {
     printf("Test_SLnbMS  NM: %d=%d  SM: %d=%d  NM: %lld=%d", S->slNM, tNM,
            S->slSM, tSM, S->NewNB, tNB);
-    exit(0);
+    exit(1);
   }
   assert(S->nSLP == 2 * S->SLN - tSM - tNM);
 }
@@ -185,19 +185,19 @@ void Test_NF_List(NF_List *S, PolyPointList *_P) {
       unsigned int oldn = S->PE[i - 1].n;
       if (oldC[0] > nv) {
         printf("NV failed at i=%d\n", i);
-        exit(0);
+        exit(1);
       }
       if (oldC[0] == nv) {
         assert(oldC[1] <= nuc);
         if (oldC[1] == nuc)
           if (RIGHTminusLEFT(olduc, uc, &nuc) < 0) {
             printf("failed at i=%d\n", i);
-            exit(0);
+            exit(1);
           }
         if (oldC[1] == nuc)
           if (oldn > S->PE[i].n) {
             printf("oldn>S->PE[%d].n\n", i);
-            exit(0);
+            exit(1);
           }
       }
     }
@@ -216,14 +216,14 @@ void Test_PPEN(NF_List *S) {
       unsigned char *oldC = &S->NewNF[S->PPE[i - 1].pe.c], *olduc = &oldC[2];
       if (oldC[0] > nv) {
         printf("NV failed at i=%d:  v%d=%d  v%d=%d\n", i, i, *C, i - 1, *oldC);
-        exit(0);
+        exit(1);
       }
       if (oldC[0] == nv) {
         assert(oldC[1] <= nuc);
         if (oldC[1] == nuc)
           if (RIGHTminusLEFT(olduc, uc, &nuc) < 0) {
             printf("failed at i=%d\n", i);
-            exit(0);
+            exit(1);
           }
       }
     }
@@ -238,7 +238,7 @@ unsigned int fgetUI(FILE *F) /* read unsigned int from bin file */
   unsigned char buf[4]; /* L=buf[3]+256*(buf[2]+256*(buf[1]+256*buf[0])); */
   if (fread(buf, sizeof(buf[0]), sizeof(buf), F) != sizeof(buf)) {
     printf("Failed to read unsigned int from binary file\n");
-    exit(0);
+    exit(1);
   }
   return (((unsigned int)buf[0] * 256 + (unsigned int)buf[1]) * 256 +
           (unsigned int)buf[2]) *
@@ -306,7 +306,7 @@ void Read_Honest_Poly(FILE *F, FInfoList *FI, NF_List *L) {
   FI->NFli = (unsigned char *)malloc(FI->NB * sizeof(char));
   if (FI->NFli == NULL) {
     puts("Aux.NFli allocation failed");
-    exit(0);
+    exit(1);
   }
   for (v = L->d + 1; v <= FI->nVmax; v++)
     if (FI->nNUC[v])
@@ -345,7 +345,7 @@ void Read_In_File(NF_List *S) {
   fflush(stdout);
   if (F == NULL) {
     puts("Cannot open (read)!");
-    exit(0);
+    exit(1);
   }
   Read_Honest_Poly(F, &S->In, S);
   S->NP = S->nSLP = 0;
@@ -361,7 +361,7 @@ void Read_File_2_List(char *fn, NF_List *L) /* ... like Read_Aux_File */
   printf("Reading %s: ", fn);
   if (F == NULL) {
     puts("Cannot open (read)!");
-    exit(0);
+    exit(1);
   }
   Read_Honest_Poly(F, &L->Aux, L);
   Read_SubLat_Poly(F, L);
@@ -681,12 +681,12 @@ void Write_Aux_File(NF_List *S) {
   fflush(stdout);
   if (F == NULL) {
     puts("Cannot open!");
-    exit(0);
+    exit(1);
   }
   Write_Bin_File(F, S);
   if (ferror(F)) {
     puts("File ERROR!!");
-    exit(0);
+    exit(1);
   }
   fclose(F);
   printf(" done: %ds\n", (int)difftime(time(NULL), Tstart));
@@ -705,12 +705,12 @@ void Write_List_2_File(char *fn, NF_List *S) {
   fflush(stdout);
   if (F == NULL) {
     puts("Cannot open!");
-    exit(0);
+    exit(1);
   }
   Write_Bin_File(F, S);
   if (ferror(F)) {
     puts("File ERROR!!");
-    exit(0);
+    exit(1);
   }
   fclose(F);
   printf(" done: %ds\n", (int)difftime(time(NULL), Tstart));
@@ -786,7 +786,7 @@ void Insert_PPent_into_Pent(NF_List *S) {
   int Mpos = S->PEN, Spos = S->PPEN, pos = Mpos + Spos;
   if (S->PPEN <= 0) {
     puts("This should not happen in Insert_PPent_into_Pent");
-    exit(0);
+    exit(1);
   }
   assert(pos <= SAVE_INC + SL_Nmax);
   while (Spos--) {
@@ -837,7 +837,7 @@ void InsertPNFintoPPEntList(int *spos, int *mpos, int *lpos, int *nv, int *nuc,
 #endif
   if (*nuc + 2 + S->NewNB > S->ANB) {
     printf("increase CperR_MAX or write/read %s\n", S->iname);
-    exit(0);
+    exit(1);
   }
   while (*spos < (l--))
     S->PPE[l + 1] = S->PPE[l];
@@ -983,7 +983,7 @@ void SL_List_Insert(int *nv, int *nuc, unsigned char *uc, int *SLnum,
   unsigned char *C = &(S->NewNF[S->NewNB]);
   if (*nuc + 2 + S->NewNB > S->ANB) {
     printf("increase CperR_MAX or write/read %s\n", S->iname);
-    exit(0);
+    exit(1);
   }
   while (*SLnum < (l--))
     S->SLp[l + 1] = S->SLp[l];
@@ -1002,7 +1002,7 @@ void SL_List_Insert(int *nv, int *nuc, unsigned char *uc, int *SLnum,
     S->slSM++;
   if (S->SLN == SL_Nmax) {
     puts("Increase SL_Nmax");
-    exit(0);
+    exit(1);
   }
 }
 void SL_List_Remove(int *NV, int *nUC, /* unsigned char *UC, */
@@ -1228,7 +1228,7 @@ int Add_NF_to_List(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     _L->V = _V->nv;
   if ((_E->ne > VERT_Nmax) || (_V->nv > VERT_Nmax)) {
     printf("Increase VERT_Nmax:  f=%d v=%d\n", _E->ne, _V->nv);
-    exit(0);
+    exit(1);
   }
   if (_P->np > _L->Nmax)
     _L->Nmax = _P->np;
@@ -1748,7 +1748,7 @@ void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
       VPrint(&P->n, &E->ne, F_NF);
       puts("============= F_NF");
       puts("BASE_MAX exceeded");
-      exit(0);
+      exit(1);
     }
   }
 
@@ -1818,7 +1818,7 @@ void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
       puts("============= F_NF");
       VPrint(&P->n, NV, tNF);
       puts("============= t_NF");
-      exit(0);
+      exit(1);
     }
   }
 #endif
@@ -1921,7 +1921,7 @@ void AuxPut_hNF(FILE *F, int *v, int *nu, unsigned char *Huc, FInfoList *Io,
       return; /* remove 2nd */
     default:
       puts("inconsistent MS flags in AuxPut_hNF");
-      exit(0);
+      exit(1);
     }
 
     if (Sms) {
@@ -1955,19 +1955,19 @@ void Add_Polya_2_Polyi(char *polyi, char *polya, char *polyo) {
   Init_FInfoList(&FIa);
   if (!*polyi || !*polyo) {
     puts("With -pa you require -pi and -po or -di and -do");
-    exit(0);
+    exit(1);
   }
   if (NULL == FI) {
     printf("Cannot open %s\n", polyi);
-    exit(0);
+    exit(1);
   }
   if (NULL == FA) {
     printf("Cannot open %s\n", polya);
-    exit(0);
+    exit(1);
   }
   if (NULL == (FO = fopen(polyo, "wb"))) {
     printf("Cannot open %s", polyo);
-    exit(0);
+    exit(1);
   }
   ucSL = (unsigned char *)malloc(SL_Nmax * CperR_MAX * sizeof(char));
   assert(ucSL != NULL);
@@ -2167,7 +2167,7 @@ void Add_Polya_2_Polyi(char *polyi, char *polya, char *polyo) {
                 break;
               default:
                 puts("inconsistens mirror flags");
-                exit(0);
+                exit(1);
               }
               AuxPut_hNF(FO, &v, &nu, ucI, &FIo, &slNF, &slSM, &slNM, &slNB,
                          ucSL, SLp);
@@ -2326,7 +2326,7 @@ void ANF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
       VPrint(&P->n, &V->nv, V_NF);
       puts("============= V_NF");
       puts("BASE_MAX exceeded");
-      exit(0);
+      exit(1);
     }
   }
 #ifdef USE_UNIT_ENCODE
@@ -2362,7 +2362,7 @@ void ANF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
       puts("============= V_NF");
       VPrint(&P->n, NV, tNF);
       puts("============= t_NF");
-      exit(0);
+      exit(1);
     }
   }
 #endif
@@ -2385,7 +2385,7 @@ int Add_ANF_to_List(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     _L->V = _V->nv;
   if ((_E->ne > VERT_Nmax) || (_V->nv > VERT_Nmax)) {
     printf("Increase VERT_Nmax:  f=%d v=%d\n", _E->ne, _V->nv);
-    exit(0);
+    exit(1);
   }
   if (_P->np > _L->Nmax)
     _L->Nmax = _P->np;
@@ -2417,7 +2417,7 @@ void Gen_Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
   if (!(*polyo)) {
     puts("You have to specify an output file via -po in -a-mode!\n");
     printf("For more help use option '-h'\n");
-    exit(0);
+    exit(1);
   }
   _NFL->of = 0;
   _NFL->rf = 0;
@@ -2436,7 +2436,7 @@ void Gen_Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
       _NFL->d = P->n;
     else if (_NFL->d - P->n) {
       puts("different dim!");
-      exit(0);
+      exit(1);
     }
 
     Find_Equations(P, &V, &F);

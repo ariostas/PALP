@@ -71,12 +71,12 @@ void PrintCWSUsage(char *c) {
   puts("the first option must be -w, -c, -i, -d or -h.");
   for (i = 0; i < OSL; i++)
     puts(opt_string[i]);
-  exit(0);
+  exit(1);
 }
 
 [[noreturn]] void Die(const char *comment) {
   printf("\n%s\n", comment);
-  exit(0);
+  exit(1);
 }
 
 int Read_Weight(Weight *);
@@ -117,7 +117,7 @@ int main(int narg, char *fn[]) {
   outFILE = stdout;
   if (narg == 1) {
     printf("\nFor help type `%s -h'\n\n", fn[0]);
-    exit(0);
+    exit(1);
   }
   if ((fn[1][0] != '-') || (fn[1][1] == 'h'))
     PrintCWSUsage(fn[0]);
@@ -390,7 +390,7 @@ int ComputeAndAddAverageWeight(Equation *q, int n, RgcClassData *X) {
   for (i = 0; i < X->q[n].ne; i++) {
     if (X->q[n].e[i].c >= 0) {
       PrintQ(n, X);
-      exit(0);
+      exit(1);
     }
     q->c = -Flcm(-q->c, -X->q[n].e[i].c);
   }
@@ -536,16 +536,16 @@ void RgcWeights(int narg, char *fn[]) {
       c = fn[++n];
   if (!IsDigit(c[0])) {
     puts("-d must be followed by a number");
-    exit(0);
+    exit(1);
   }
   if (POLY_Dmax < (d = atoi(c))) {
     printf("Increase POLY_Dmax to %d\n", d);
-    exit(0);
+    exit(1);
   }
   if (narg > ++n) {
     if ((fn[n][0] != '-') || (fn[n][1] != 'r')) {
       printf("the second option has to be of the type -r\n");
-      exit(0);
+      exit(1);
     }
     c = &fn[n][2];
     r2 = atoi(c);
@@ -612,11 +612,11 @@ void Init_IP_Weights(int narg, char *fn[]) {
       c = fn[++n];
   if (!IsDigit(c[0])) {
     puts("-w must be followed by a number");
-    exit(0);
+    exit(1);
   }
   if (POLY_Dmax < (d = atoi(c))) {
     printf("Increase POLY_Dmax to %d\n", d);
-    exit(0);
+    exit(1);
   }
   if (++n < narg)
     if ((fn[n][0] != '-') && (IsDigit(fn[n][0]))) {
@@ -636,16 +636,16 @@ void Init_IP_Weights(int narg, char *fn[]) {
         tf = 1;
       else {
         printf("Illegal option %s\n", fn[n]);
-        exit(0);
+        exit(1);
       }
     }
   if (++n < narg) {
     printf("Want %s as output file?\n", fn[n]);
-    exit(0);
+    exit(1);
   }
   if (n < narg) {
     puts("Too many arguments");
-    exit(0);
+    exit(1);
   }
   if (H)
     Make_IP_Weights(d, L, H, rf, tf);
@@ -664,11 +664,11 @@ void Init_moon_Weights(int narg, char *fn[]) {
       c = fn[++n];
   if (!IsDigit(c[0])) {
     puts("-m must be followed by a number");
-    exit(0);
+    exit(1);
   }
   if (POLY_Dmax < (d = atoi(c))) {
     printf("Increase POLY_Dmax to %d\n", d);
-    exit(0);
+    exit(1);
   }
   if (++n < narg)
     if ((fn[n][0] != '-') && (IsDigit(fn[n][0]))) {
@@ -683,21 +683,21 @@ void Init_moon_Weights(int narg, char *fn[]) {
   while (++n < narg)
     if (fn[n][0] == '-') {
       printf("Illegal option %s\n", fn[n]);
-      exit(0);
+      exit(1);
     }
   if (++n < narg) {
     printf("Want %s as output file?\n", fn[n]);
-    exit(0);
+    exit(1);
   }
   if (n < narg) {
     puts("Too many arguments");
-    exit(0);
+    exit(1);
   }
   if (H)
     MakeMoonWeights(d + 1, L, H);
   else {
     puts("Please give lowest and highest d");
-    exit(0);
+    exit(1);
   }
 }
 
@@ -756,11 +756,11 @@ void Init_IP_CWS(int narg, char *fn[]) {
       c = fn[++n];
   if (!IsDigit(c[0])) {
     puts("-c must be followed by a number");
-    exit(0);
+    exit(1);
   }
   if (POLY_Dmax < (d = atoi(c))) {
     printf("Increase POLY_Dmax to %d\n", d);
-    exit(0);
+    exit(1);
   }
   if (++n < narg)
     if ((fn[n][0] == '-') && (fn[n][1] == 'n'))
@@ -1198,7 +1198,7 @@ void MakeIpWeights(int N, int from_d, int to_d, int *rFlag, int *tFlag) {
     fprintf(outFILE, "#primepartitions=%d #transpolys=%d\n", npp, nrp);
   if (!*rFlag && !*tFlag)
     fprintf(outFILE, "#primepartitions=%d #IPpolys=%d\n", npp, nrp);
-  exit(0);
+  exit(1);
 }
 void Make_IP_Weights(int d, int Dmin, int Dmax, int rFlag, int tFlag) {
   MakeIpWeights(d + 1, Dmin, Dmax, &rFlag, &tFlag);
@@ -1252,7 +1252,7 @@ void MakeMoonWeights(int N, int from_d, int to_d) {
                      &nintPP1, &nintchi, N - 2, PP1N, PP1D);
     }
   }
-  exit(0);
+  exit(1);
 }
 
 /* ----------   LG/transversal stuff  ------------ */
@@ -1553,7 +1553,7 @@ void mkold2(char *outfile, FILE *INFILE1, FILE *INFILE2, int u, int ef) {
   if (strcmp(outfile, ""))
     if ((outFILE = fopen(outfile, "w")) == NULL) {
       printf("\nUnable to open file %s for write\n", outfile);
-      exit(0);
+      exit(1);
     }
 
   Make2CWS(AUXFILE1, AUXFILE2, u, ef);
@@ -1583,7 +1583,7 @@ void mk2xxx(char *outfile, int n) {
   if (strcmp(outfile, ""))
     if ((outFILE = fopen(outfile, "w")) == NULL) {
       printf("\nUnable to open file %s for write\n", outfile);
-      exit(0);
+      exit(1);
     }
   PRINT_CWS(&CW);
   if (strcmp(outfile, ""))
@@ -1603,7 +1603,7 @@ void mk3u3u3(char *outfile, FILE *INFILE) {
   if (strcmp(outfile, ""))
     if ((outFILE = fopen(outfile, "w")) == NULL) {
       printf("\nUnable to open file %s for write\n", outfile);
-      exit(0);
+      exit(1);
     }
 
   eq[0] = eq[1] = 1;
@@ -1630,7 +1630,7 @@ void mkold_nno(char *outfile, FILE *INFILE1, FILE *INFILE2, FILE *INFILE3,
   if (strcmp(outfile, ""))
     if ((outFILE = fopen(outfile, "w")) == NULL) {
       printf("\nUnable to open file %s for write\n", outfile);
-      exit(0);
+      exit(1);
     }
 
   Make_nno_CWS(AUXFILE, u, eq);
@@ -1868,7 +1868,7 @@ void scan_dim(int nF, char *infile[], int D[]) {
   for (i = 0; i < nF; i++) {
     if ((INfile[i] = fopen(infile[i], "r")) == NULL) {
       printf("\nUnable to open file %s for read\n", infile[i]);
-      exit(0);
+      exit(1);
     }
     j = 0;
     while (READ_Weight(&W, INfile[i]))
@@ -2174,7 +2174,7 @@ void PrintCWSTypes(void) {
   printf("%s-c# -n3 [intile1] [infile2] [infile3] -t 2 1 1\n", B);
   printf("%s-c# -n3 [intile1] [infile2] [infile3] -t 2 2 1\n", B);
   printf("%s-c# -n3 [intile1] [infile2] [infile3] -t 2 2 2\n", B);
-  exit(0);
+  exit(1);
 }
 
 void Make_IP_CWS(int narg, char *fn[]) {
@@ -2216,7 +2216,7 @@ void Make_IP_CWS(int narg, char *fn[]) {
   for (i = 0; i < nF; i++) {
     if ((n >= narg) || (fn[n][0] == '-')) {
       printf("#infiles = %d < %d!\n", i, nF);
-      exit(0);
+      exit(1);
     }
     infile[i] = fn[n];
     n++;
@@ -2264,7 +2264,7 @@ void Make_IP_CWS(int narg, char *fn[]) {
     outFILE = stdout;
   else if ((outFILE = fopen(outfile, "w")) == NULL) {
     printf("\nUnable to open file %s for write\n", fn[n]);
-    exit(0);
+    exit(1);
   }
   scan_dim(nF, infile, D);
   for (i = 0; i < nF; i++) {
@@ -2374,13 +2374,13 @@ void IP_Poly_Data(int narg, char *fn[]) {
   if (narg > ++n) {
     if ((inFILE = fopen(fn[n], "r")) == NULL) {
       printf("\nUnable to open file %s for read\n", fn[n]);
-      exit(0);
+      exit(1);
     }
   }
   if (narg > ++n) {
     if ((outFILE = fopen(fn[n], "w")) == NULL) {
       printf("\nUnable to open file %s for write\n", fn[n]);
-      exit(0);
+      exit(1);
     }
   }
   while (Read_CWS_PP(&CW, _P.get()))
@@ -2474,7 +2474,7 @@ void Conv(int narg, char *fn[]) {
   for (i = 0; i < nF; i++) {
     if ((n >= narg) || (fn[n][0] == '-')) {
       printf("#infiles = %d < %d!\n", i, nF);
-      exit(0);
+      exit(1);
     }
     infile[i] = fn[n];
     n++;
@@ -2488,7 +2488,7 @@ void Conv(int narg, char *fn[]) {
     outFILE = stdout;
   else if ((outFILE = fopen(outfile, "w")) == NULL) {
     printf("\nUnable to open file %s for write\n", fn[n]);
-    exit(0);
+    exit(1);
   }
   while (READ_CWS_PP(&CW[0], &P[0], INFILE[0])) {
     while (READ_CWS_PP(&CW[1], &P[1], INFILE[1]))

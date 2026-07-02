@@ -105,7 +105,7 @@ int INCI_lex_GT(INCI *x, INCI *y) {
 }
 int INCI_LmR(INCI *x, INCI *y) {
   puts("Implement INCI_LmR");
-  exit(0);
+  exit(1);
 }
 #else
 int INCI_lex_GT(INCI *x, INCI *y) { return (*x > *y) ? 1 : 0; }
@@ -375,7 +375,7 @@ int Vec_Greater_Than(Long *X, Long *Y, int i) { /* return 1 iff `X > Y' */
       return 0;
   }
   puts("Identical points in Vec_Greater_Than !!");
-  exit(0);
+  exit(1);
   return 0;
 }
 
@@ -998,7 +998,7 @@ int Find_Equations(PolyPointList *_P, VertexNumList *_V, EqList *_F) {
   for (i = 0; i < CEq->ne; i++)
     if (INCI_abs(CEq_I[i] = Eq_To_INCI(&(CEq->e[i]), _P, _V)) < _P->n) {
       fprintf(outFILE, "Bad CEq in Find_Equations");
-      exit(0);
+      exit(1);
     }
   i = Finish_Find_Equations(_P, _V, _F, CEq.get(), F_I.data(), CEq_I.data());
   return i;
@@ -1029,7 +1029,7 @@ int IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F) {
   for (i = 0; i < CEq->ne; i++)
     if (INCI_abs(CEq_I[i] = Eq_To_INCI(&(CEq->e[i]), _P, _V)) < _P->n) {
       fprintf(outFILE, "Bad CEq in IP_Check");
-      exit(0);
+      exit(1);
     }
   _F->ne = 0;
   i = Finish_IP_Check(_P, _V, _F, CEq.get(), F_I.data(), CEq_I.data());
@@ -1172,7 +1172,7 @@ void Compute_InvMat(int n, EqList *_E, int OrdFac[VERT_Nmax],
         s += ((long long)(InvMat[k][i])) * ((long long)(_E->e[BasFac[j]].a[k]));
       if (s != *Den * (i == j)) {
         puts("something wrong in Make_Dual_Poly");
-        exit(0);
+        exit(1);
       }
     }
   }
@@ -1558,7 +1558,7 @@ int QuickAnalysis(PolyPointList *_P, BaHo *_BH, FaceInfo *_FI) {
   Make_VEPM(_P, &V, &E, PM);
   if (!Transpose_PM(PM, DPM, V.nv, E.ne)) {
     fprintf(stderr, "Transpose_PM failed because #eq=%d > VERT_Nmax\n", E.ne);
-    exit(0);
+    exit(1);
   }
   VNL_to_DEL(_P, &V, &DE);
   Make_Incidence(_P, &V, &E, _FI);

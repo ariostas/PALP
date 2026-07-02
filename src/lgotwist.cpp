@@ -1257,14 +1257,14 @@ void finishmodel() {
 }
 void ErrEx(char *c) {
   puts(c);
-  exit(0);
+  exit(1);
 }
 void ReadEOL() {
   char c;
   while ('\n' != (c = fgetc(ctx.infi)))
     if (c == EOF) {
       puts("End of File");
-      exit(0);
+      exit(1);
     }
 }
 
@@ -1296,7 +1296,7 @@ void PrintUse(char *s) {
   puts(" -t #    # of trivial pairs [1]");
   puts(" -i InFile ");
   puts(" -o OutFile");
-  exit(0);
+  exit(1);
 }
 void LgoTwistInit(int narg, char *fn[]) {
   int n = 1, t = 0, /* t-> # trivial pairs */

@@ -326,7 +326,7 @@ void TEST_rVM_VPM(int *d, int *v, int *f, Long X[POLY_Dmax][VERT_Nmax],
       puts("");
     }
     puts("");
-    exit(0);
+    exit(1);
   }
 }
 
@@ -459,7 +459,7 @@ void Eval_Poly_NF(int *d, int *v, int *f, Long VM[POLY_Dmax][VERT_Nmax],
         printf("%2d ", (int)pNF[i][j]);
       puts("");
     }
-    exit(0);
+    exit(1);
   }
 #endif
 #endif
@@ -558,7 +558,7 @@ void Aux_vNF_Line(int l, vNF *_X, Long x[][VERT_Nmax], PERM *CL, int *S,
       CL[n] = CL[*_ns]; /*  write nP to CL  */
     if (SYM_Nmax < (cf = (*_ns + np))) {
       printf("Need SYM_Nmax > %d !!\n", cf);
-      exit(0);
+      exit(1);
     }
     for (L = 0; L < np; L++)
       CL[(*_ns)++] = nP[L];
@@ -682,7 +682,7 @@ void Aux_Make_Triang(PERM *CL, int ns, Long V[][VERT_Nmax], int *n, int *nv,
     for (j = 0; j < *nv; j++)
       X[i][j] = V[i][CL->C[j]];
   if (!Aux_Make_Poly_NF(X, n, nv))
-    exit(0); /* t>0: print NFs */
+    exit(1); /* t>0: print NFs */
              /*  -1: calc CL.s */
   if (*t) {
     if (*t > 0)
@@ -691,7 +691,7 @@ void Aux_Make_Triang(PERM *CL, int ns, Long V[][VERT_Nmax], int *n, int *nv,
       CL->s = 1;
       if (*t + 1) {
         puts("t<-1 in Aux_Make_Triang");
-        exit(0);
+        exit(1);
       }
     }
   }
@@ -704,7 +704,7 @@ void Aux_Make_Triang(PERM *CL, int ns, Long V[][VERT_Nmax], int *n, int *nv,
         for (j = 0; j < *nv; j++)
           X[i][j] = V[i][CL[s].C[j]];
       if (!Aux_Make_Poly_NF(X, n, nv))
-        exit(0);
+        exit(1);
       if (Aux_XltY_Poly_NF(X, Y, n, nv))
         x = 0;
 
@@ -734,7 +734,7 @@ void Aux_Make_Triang(PERM *CL, int ns, Long V[][VERT_Nmax], int *n, int *nv,
         for (j = 0; j < *nv; j++)
           Y[i][j] = V[i][CL[s].C[j]];
       if (!Aux_Make_Poly_NF(Y, n, nv))
-        exit(0);
+        exit(1);
       if (Aux_XltY_Poly_NF(Y, X, n, nv))
         x = 1;
 
@@ -847,7 +847,7 @@ int PermChar(int n) {
     return 'A' + n - 36;
   else {
     puts("Printing permutations only for #Vert<=62 !!");
-    exit(0);
+    exit(1);
   }
   return 0;
 }
@@ -903,7 +903,7 @@ int Make_Poly_Sym_NF(PolyPointList *_P, VertexNumList *_V, EqList *_F,
   }
   if (t != *SymNum) {
     puts("Error in Poly_Sym!!");
-    exit(0);
+    exit(1);
   }
   if (traced) {
     fprintf(outFILE,
@@ -935,7 +935,7 @@ void Aux_NF_Coord(PolyPointList *_P, Long VM[POLY_Dmax][VERT_Nmax], int *C,
     for (j = 0; j < *v; j++)
       V[i][j] = VM[i][C[j]];
   if (!SL2Z_Make_Poly_NF(V, n, v, S))
-    exit(0);
+    exit(1);
   for (j = 0; j < *np; j++) {
     for (i = 0; i < *n; i++) {
       int k = *n;
@@ -970,11 +970,11 @@ void NF_Coordinates(PolyPointList *_P, VertexNumList *_V, EqList *_F)
     VertexNumList V; /* EqList in new basis */
     if (!IP_Check(_P, &V, _F)) {
       puts("IP=0 in NF_Coords");
-      exit(0);
+      exit(1);
     }
     if ((V.nv != _V->nv) || (f != _F->ne)) {
       puts("Error in NF_Coords");
-      exit(0);
+      exit(1);
     }
   }
 }
@@ -1399,7 +1399,7 @@ int InvariantSubspace(PolyPointList *P, VertexNumList *V, EqList *E) {
   pri = p;
   if (p > V->nv) {
     fprintf(outFILE, "p=%d v=%d\n", p, V->nv);
-    exit(0);
+    exit(1);
   }
   if (pri)
     fprintf(outFILE, "%d %d  #Sym=%d (<=%d)  ", P->n, V->nv, sn, EVsn);
@@ -2026,7 +2026,7 @@ int Add_Square_To_Rel(int el[4], int r, int v, Long rel[SQnum_Max][VERT_Nmax],
         rel[l][i] = N[i];
       C[l] = c;
       return r + 1;
-      /* puts("insert New before l-th line");exit(0); */
+      /* puts("insert New before l-th line");exit(1); */
     } else if (c == C[l]) {
       Long A = rel[l][c], B = N[c], g = NNgcd(A, B);
       assert(g > 0);
@@ -2088,7 +2088,7 @@ int PyramidIP(PolyPointList *P, VertexNumList *V, EqList *E, FaceInfo *FI) {
       j++;
   if (IP)
     assert(j);
-  /*     if(j>0){char c[2]; c[1]=0; c[0]='0'+j; Print_VL(P,V,c);exit(0);} */
+  /*     if(j>0){char c[2]; c[1]=0; c[0]='0'+j; Print_VL(P,V,c);exit(1);} */
   return IP;
 }
 int Divisibility_Index(PolyPointList *P, VertexNumList *V) {
@@ -2172,7 +2172,7 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
    */
   if (_FI == NULL) {
     printf("ConifoldSing: Unable to allocate _FI\n");
-    exit(0);
+    exit(1);
   }
   Make_Incidence(P, V, E, _FI);
   npol++;
@@ -2496,7 +2496,7 @@ void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E) {
                     (j + 1 < (V->nv)) ? " " : "\n");
         }
         fflush(0);
-        exit(0);
+        exit(1);
       }
 
     if (S == 0) {
@@ -2506,7 +2506,7 @@ void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E) {
         E->e[i].c = 1;
       if (bcz == 0) {
         Print_PPL(P, "Inconsistent: bary!=0 for kPsum==0");
-        exit(0);
+        exit(1);
       }
       is = InvariantSubspace(P, V, E);
       nis = !is;
@@ -2569,7 +2569,7 @@ void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E) {
           ksum, sum, bary, ssroot, ssroot - nofip);
   free(A);
   free(root);
-  exit(0);
+  exit(1);
 }
 
 void Check_New_Fiber(Long PM[][POLY_Dmax], /*int *p,*/ int *d, /*int *nw,*/
@@ -3102,7 +3102,7 @@ void IP_Simplex_Fiber(Long PM[][POLY_Dmax], int p, int d, /* need PM[i]!=0 */
   if (!CD)
     if (*nw < p - d) {
       printf("ERROR: nw=%d < codim=%d\n", *nw, p - d);
-      exit(0);
+      exit(1);
     }
   /* if(*nw>p-d) printf("WARNING: nw=%d > #pts-dim=%d\n",*nw,p-d); */
   for (i = 0; i < *nw; i++)
@@ -3115,7 +3115,7 @@ void IP_Simplex_Fiber(Long PM[][POLY_Dmax], int p, int d, /* need PM[i]!=0 */
         for (j = 0; j < p; j++)
           printf(" %ld", F->W[i][j]);
         puts("");
-        exit(0);
+        exit(1);
       }
     }
 }
@@ -3155,7 +3155,7 @@ void IP_Simplex_Decomp(Long PM[][POLY_Dmax], int p, int d, /* need PM[i]!=0 */
   if (!CD)
     if (*nw < p - d) {
       printf("ERROR: nw=%d < codim=%d\n", *nw, p - d);
-      exit(0);
+      exit(1);
     }
   /* if(*nw>p-d) printf("WARNING: nw=%d > #pts-dim=%d\n",*nw,p-d); */
   for (i = 0; i < *nw; i++)
@@ -3168,7 +3168,7 @@ void IP_Simplex_Decomp(Long PM[][POLY_Dmax], int p, int d, /* need PM[i]!=0 */
         for (j = 0; j < p; j++)
           printf(" %ld", W[i][j]);
         puts("");
-        exit(0);
+        exit(1);
       }
     }
 }
@@ -3499,7 +3499,7 @@ void IP_Simplices_Docu(void) {
   puts(" <= 1,2,3\n11,22,33: all fibrations with codimension 1,2,3");
   puts("12,23: all codim-1 fibered fibrations with codimension 1,2");
   puts("NNn with n=1,2,3: same as NN and n\n");
-  exit(0);
+  exit(1);
 }
 void Print_QuotZ(int Z[][VERT_Nmax], int *M, int p, int n) {
   int i, j;
@@ -3825,11 +3825,11 @@ void Old_QuotZ_2_SublatG(Long Z[][POLY_Dmax], int *m, int *M, int *d,
       if (Z[i][j])
         g = Fgcd(g, labs(Z[i][j]));
     if (g != 1) {
-      if (Fgcd(g, M[i]) == 1) { /*printf("g=%d M=%d\n",g,M[i]);exit(0)*/
+      if (Fgcd(g, M[i]) == 1) { /*printf("g=%d M=%d\n",g,M[i]);exit(1)*/
         ;
       } else {
         printf("Non-effective group action [%d]\n", i);
-        exit(0);
+        exit(1);
       }
     }
   }
@@ -3918,7 +3918,7 @@ void Normalize_QuotientZ(int *r, int *p, Long Z[POLY_Dmax][VERT_Nmax],
   /* for(i=0;i<*r;i++) if(Phase(Z[i],*p)%M[i])  ... don't check phase::I/O
   {	fprintf(stderr,"\nZ%d[i=%d]:",M[i],i); for(k=0;k<*p;k++)
      fprintf(stderr," %d",Z[i][k]); fprintf(stderr,
-     "\ndet!=1 in Normalize_QuotientZ\n\n");exit(0);
+     "\ndet!=1 in Normalize_QuotientZ\n\n");exit(1);
   } */					/* Print_QuotientZ(r,p,Z,M); */
   for (i = 0; i < *r; i++) {
     Long g = M[i];
@@ -3992,11 +3992,11 @@ void Test_Effective_Zaction(int *r, int *d, Long Z[POLY_Dmax][VERT_Nmax],
       if (Z[i][j])
         g = Fgcd(g, labs(Z[i][j]));
     if (g != 1) {
-      if (Fgcd(g, M[i]) == 1) { /*printf("g=%d M=%d\n",g,M[i]);exit(0)*/
+      if (Fgcd(g, M[i]) == 1) { /*printf("g=%d M=%d\n",g,M[i]);exit(1)*/
         ;
       } else {
         printf("Non-effective group action [%d]\n", i);
-        exit(0);
+        exit(1);
       }
     }
   }
@@ -4180,7 +4180,7 @@ void Test_Phase(int d, int p, Long *P[], Long Z[][VERT_Nmax], Long *M, int r,
   for (i = 0; i < d; i++)
     for (j = 0; j < p; j++)
       fprintf(stderr, "%5ld%s", P[j][i], (j == p - 1) ? "\n" : " ");
-  exit(0);
+  exit(1);
 }
 int ImprovePhase(int L, Long *A, Long *D, int *d, Long GP[][POLY_Dmax], int *p,
                  Long Z[][VERT_Nmax]) {
@@ -4389,7 +4389,7 @@ int GL_Lattice_Basis_QZ(int d, int p, Long *P[VERT_Nmax], Long *D, /* index */
               fprintf(stderr, "\n");
             }
             fprintf(stderr, "\n");
-            exit(0);
+            exit(1);
           }
     for (L = 0; L < d; L++)
       for (l = 0; l < d; l++) /* test Z.GP == D */
@@ -4413,7 +4413,7 @@ int GL_Lattice_Basis_QZ(int d, int p, Long *P[VERT_Nmax], Long *D, /* index */
     index *= D[L] = g;
     if (index != 1) {
       puts("Unexpected in GL_Lattice_Basis_QZ: index>1 for p>VERT_Nmax");
-      exit(0);
+      exit(1);
     }
   }
   *r = (index == 1) ? 0 : d;
@@ -4547,7 +4547,7 @@ Long WZ_to_GLZ(Long *W, Long *Waux, int *d, Long **G) /* allows components=0 */
       for (j = 0; j < *d; j++)
         fprintf(stderr, "%2ld%s", G[i][j], (*d - 1 == j) ? "\n" : " ");
     }
-    exit(0);
+    exit(1);
   }
   return g;
 }
@@ -4734,7 +4734,7 @@ void LatVol_IPs_degD(PolyPointList *P, VertexNumList *V, EqList *E, int g) {
         j++;
     if (j < P->n) {
       puts("-B#: IPs at degree D is only implemented for Gorenstein cones!");
-      exit(0);
+      exit(1);
     } /* parallel-epiped ... to be done */
     assert(gP != NULL);
     gP->n = P->n;
@@ -4742,7 +4742,7 @@ void LatVol_IPs_degD(PolyPointList *P, VertexNumList *V, EqList *E, int g) {
     Make_Dilat_Poly(P, V, E, g, gP);
     if (POLY_Dmax * VERT_Nmax < gP->np) {
       puts("increase dim of IP");
-      exit(0);
+      exit(1);
     }
     puts("IPs:");
     for (j = 0; j < gP->np; j++) {
@@ -4764,7 +4764,7 @@ void LatVol_IPs_degD(PolyPointList *P, VertexNumList *V, EqList *E, int g) {
   if (0) {
     puts("-B#: (I)Ps at degree D, only implemented if 0 is a vertex!");
     puts("to be done");
-    exit(0);
+    exit(1);
   } /* parallel-epiped */
 }
 
@@ -4776,7 +4776,7 @@ void IPs_degD(PolyPointList *P, VertexNumList *V, EqList *E, int g) {
       j++;
   if (j < P->n) {
     puts("-B#: IPs at degree D is only implemented for Gorenstein cones!");
-    exit(0);
+    exit(1);
   } /* parallel-epiped ... to be done */
   assert(gP != NULL);
   gP->n = P->n;
@@ -4784,7 +4784,7 @@ void IPs_degD(PolyPointList *P, VertexNumList *V, EqList *E, int g) {
   Make_Dilat_Poly(P, V, E, g, gP);
   if (POLY_Dmax * VERT_Nmax < gP->np) {
     puts("increase dim of IP");
-    exit(0);
+    exit(1);
   }
   puts("IPs:");
   for (j = 0; j < gP->np; j++) {
@@ -4892,7 +4892,7 @@ void Make_ANF(PolyPointList *P, VertexNumList *V, /* affine normal form */
   if (Check_ANF_Form(VM, d, v)) {
     Print_PPL(P, "unexpected in ANF");
     fprintf(stderr, "unexpected ANF");
-    exit(0);
+    exit(1);
   }
   Reduce_ANF_Form(VM, d, v);
   for (i = 0; i < d; i++)
@@ -5264,7 +5264,7 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
             {
               Print_LMatrix(G, "G");
               Print_LMatrix(M, "M");
-              exit(0);
+              exit(1);
             }
             goon = 0;
           }
@@ -5339,7 +5339,7 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
                   {
                     Print_LMatrix(G, "G");
                     Print_LMatrix(M, "M");
-                    exit(0);
+                    exit(1);
                   }
                   goon = 0;
                 }

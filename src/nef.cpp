@@ -110,7 +110,7 @@ void PrintNefUsage(char *c) {
   puts("");
   for (i = 0; i < OSL; i++)
     puts(opt_string[i]);
-  exit(0);
+  exit(1);
 }
 
 int READ_INT(int *n, int narg, char *fn[], char *s) {
@@ -124,7 +124,7 @@ int READ_INT(int *n, int narg, char *fn[], char *s) {
     PrintNefUsage(fn[0]);
   if (!IsDigit(*a)) {
     printf("after %s there must be digit(s)!\n", s);
-    exit(0);
+    exit(1);
   }
   return atoi(a);
 }
@@ -258,7 +258,7 @@ int main(int narg, char *fn[]) {
         F.G = 1;
       else {
         printf("Unknown option '-%c'; use -h for help\n", fn[n][1]);
-        exit(0);
+        exit(1);
       }
     }
   n--;
@@ -272,7 +272,7 @@ int main(int narg, char *fn[]) {
       inFILE = stdin;
     if (inFILE == NULL) {
       printf("Input file %s not found!\n", fn[n]);
-      exit(0);
+      exit(1);
     }
     if (narg > ++n)
       outFILE = fopen(fn[n], "w");
@@ -305,7 +305,7 @@ int main(int narg, char *fn[]) {
           printf("Please increase POLY_Dmax to at least %d = %d + %d - 1\n",
                  (_P->n + codim - 1), _P->n, codim);
           printf("(%s requires POLY_Dmax >= dim N + codim - 1)\n", fn[0]);
-          exit(0);
+          exit(1);
         }
         Make_E_Poly(outFILE, &CW, _P, _V, _E, &codim, &F, &D[0]);
       } else {
@@ -535,14 +535,14 @@ int Read_WPCICY(Weight *_W, int *_D)
   if (_W->N > POLY_Dmax) {
     printf("Please increase POLY_Dmax ");
     printf("(POLY_Dmax >= number of weights is required)\n");
-    exit(0);
+    exit(1);
   }
 
   assert((_D[0] + _D[1]) == _W->d);
 
   if (_W->N < 2) {
     puts("I need at least 2 weights!");
-    exit(0);
+    exit(1);
   }
   if (FilterFlag)
     inFILE = NULL;

@@ -38,7 +38,7 @@ int Is_Gen_CY(int index, PolyPointList *P) {
 }
 void WZerror(const char *c) {
   printf("Format error %s in Read_WZeight\n", c);
-  exit(0);
+  exit(1);
 }
 int auxString2SInt(char *c, int *n) {
   int j = 0, neg = 0;
@@ -85,7 +85,7 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
   WZ->N = i - 1;
   if (WZ->N > W_Nmax) {
     puts("Increase POLY_Dmax");
-    exit(0);
+    exit(1);
   }
   for (i = 0; i <= WZ->N; i++)
     assert(I[i] > 0);
@@ -118,7 +118,7 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
   }
   if (n == 999) {
     puts("Out of space in Read_WZeight");
-    exit(0);
+    exit(1);
   }
   i = 0;
   while (c[i] == b)
@@ -184,7 +184,7 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
       }
 #else
         Write_Weight(WZ);
-        exit(0);
+        exit(1);
       }
 #endif
     }
@@ -446,7 +446,7 @@ int Read_Weight(Weight *_W) /* read "d w_i" [ or "w_i d" if last=max ] */
   _W->N = i - 1;
   if (_W->N > W_Nmax) {
     puts("Increase POLY_Dmax");
-    exit(0);
+    exit(1);
   }
   for (i = 0; i <= _W->N; i++)
     assert(I[i] > 0);
@@ -533,7 +533,7 @@ void Write_WH(Weight *_W, BaHo *_BH, VaHo *_VH, int rc, int tc,
           for (i = 1; i < _P->n - 1; i++)
             printf("V[1,%d]=%ld  B[1,%d]=%d\n", i, (long)_VH->h[1][i], i,
                    _BH->h1[i]);
-          exit(0);
+          exit(1);
         }
     if (tc) {
       Pint chi = (_P->n % 2 ? 4 : 0);
@@ -616,7 +616,7 @@ void Ambi_2_Lattice(Long *A, AmbiLatticeBasis *B, Long *P) {
       P[p] -= P[i] * B->x[i][a];
     if (P[p] % B->x[p][a]) {
       puts("Error in BasisChange!");
-      exit(0);
+      exit(1);
     } else
       P[p] /= B->x[p][a];
   }
@@ -774,7 +774,7 @@ void WeightMakePoints(Weight *_W, AmbiPointList *_P) {
       if (!(*d_Rest % *(_W->w))) {
         if (POINT_Nmax <= _P->np) {
           puts("increase POINT_Nmax");
-          exit(0);
+          exit(1);
         }
         Y = _P->x[(_P->np)++];
         *Y = *d_Rest / *(_W->w);
@@ -801,7 +801,7 @@ int ChangeToTrianBasis(AmbiPointList *_AP, AmbiLatticeBasis *_B,
   int n, ipcount = 0, nIP = 0;
   if (_AP->N - _B->N) {
     puts("Dimensions don't match!");
-    exit(0);
+    exit(1);
   } else {
     _PP->n = _B->n;
     _PP->np = _AP->np;
@@ -828,7 +828,7 @@ int ChangeToTrianBasis(AmbiPointList *_AP, AmbiLatticeBasis *_B,
         _PP->x[n][p] -= _PP->x[n][i] * _B->x[i][a];
       if (_PP->x[n][p] % _B->x[p][a]) {
         puts("Error in BasisChange!");
-        exit(0);
+        exit(1);
       } else
         _PP->x[n][p] /= _B->x[p][a];
     }
@@ -872,7 +872,7 @@ void MakeRefWeights(int N, int from_d, int to_d) {
       Rec_RefWeights(&W, &P, Fgcd(W.d, W.w[W.N - 1]), W.d - W.w[W.N - 1], &npp,
                      &nrp, N - 2);
   fprintf(outFILE, "#primepartitions=%d #refpolys=%d\n", npp, nrp);
-  exit(0);
+  exit(1);
 }
 
 /*  =============	Landau-Ginzburg-Calculations:		===========  */
@@ -1038,7 +1038,7 @@ void Poly_Sum(PoCoLi *A, PoCoLi *B, PoCoLi *S) /* S = A+B */
         if (s) {
           if (S->n >= S->A) {
             printf("S.n>%d in S=A+B\n", S->n);
-            exit(0);
+            exit(1);
           }
           S->c[S->n] = s;
           S->e[S->n++] = B->e[b - 1];
@@ -1386,7 +1386,7 @@ void Fast_c9_VaHo(Weight *W,
           prod = rP(prod, rR(W->w[j] - W->d, W->w[j]));
       if (prod.D != 1) {
         fprintf(outFILE, "\nDenominator != 1 in Fast_c9_VaHo (LG.c)\n");
-        exit(0);
+        exit(1);
       }
       zsum1 += woG[i] * prod.N;
       zsum2 += woA[i] * prod.N;
@@ -1468,7 +1468,7 @@ int WIndex_HTrace(Weight *W, int *WI, int *T) /* T=sum(Hij), return over=H00 */
           prod = rP(prod, rR(W->w[j] - W->d, W->w[j]));
       if (prod.D != 1) {
         fprintf(outFILE, "\nDenominator != 1 in Fast_c9_VaHo (LG.c)\n");
-        exit(0);
+        exit(1);
       }
       zsum1 += woG[i] * prod.N;
       zsum2 += woA[i] * prod.N;
@@ -1506,7 +1506,7 @@ int Test_BottomUpQuot(PoCoLi *Num, PoCoLi *Den, PoCoLi *Quo, PoCoLi *Rem) {
   printf("Rem=");
   PrintPoCoLi(Rem);
   /* printf("N=%d D=%d Q=%d
-   * R=%d\n",Num.A,Den.A,Quo.A,Rem.A);exit(0);fflush(0);*/
+   * R=%d\n",Num.A,Den.A,Quo.A,Rem.A);exit(1);fflush(0);*/
   {
     PoCoLi A;
     A.A = 10000;
@@ -1528,7 +1528,8 @@ void pff(char *c) {
 
 typedef struct {
   int X, n;
-  std::vector<int> data_storage; /* divisors d[0..n-1] followed by triangular matrix rows */
+  std::vector<int>
+      data_storage; /* divisors d[0..n-1] followed by triangular matrix rows */
   std::vector<int *> mt_storage;
   int *d;
   int **mt;
@@ -1952,7 +1953,7 @@ void LGO_VaHo(Weight *W, VaHo *V) {
                 fprintf(outFILE, " q%d%ld+=%d", i, i + dQ, h[i]);
             fputs("\n", outFILE);
           }
-        /* if(!cont)exit(0); */
+        /* if(!cont)exit(1); */
         assert(0 < (a--));
       } while (Multiloop(W->m, I, &v, &J));
       assert(a == 0); /* END gen TWISTS */

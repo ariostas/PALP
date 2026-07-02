@@ -152,7 +152,7 @@ void DYNComplete_Poly(Long VPM[][VERT_Nmax], EqList *_E, int nv, DYN_PPL *_CP) {
         s += ((long long)(InvMat[k][i])) * ((long long)(_E->e[BasFac[j]].a[k]));
       if (s != Den * (i == j)) {
         puts("something wrong in Make_Dual_Poly");
-        exit(0);
+        exit(1);
       }
     }
   }
@@ -398,7 +398,7 @@ void PRINT_Fibrations(VertexNumList *_V, PolyPointList *_P, Flags *_F
 
 [[noreturn]] void Die(const char *comment) {
   printf("\n%s\n", comment);
-  exit(0);
+  exit(1);
 }
 
 void Time_Info(time_t *_Tstart, clock_t *_Cstart, const char *comment) {
@@ -512,7 +512,7 @@ int IntSqrt(int q) { /* sqrt(q) => r=1; r'=(q+r*r)/(2r); */
       return (int)r;
     else {
       printf("Error in sqrt(%d)=%d\n", q, (int)n);
-      exit(0);
+      exit(1);
     }
   }
   return 0;
@@ -955,7 +955,7 @@ void Make_S_Poly(Cone *_C, VertexNumList *_V, EqList *_E, PolyPointList *_P,
           for (d = 1; d < _PEL->L[i].dim; d++)
             printf("S[%d]: %3d   T[%d]: %3d\n", d, (int)_S[i].S[d],
                    (_PEL->L[i].dim - d), (int)_T[i].S[_PEL->L[i].dim - d]);
-          exit(0);
+          exit(1);
         }
     }
     if (!CHECK_SERRE) {
@@ -1483,7 +1483,7 @@ void AnalyseGorensteinCone(CWS *_CW, PolyPointList *_P, VertexNumList *_V,
            _P->n);
     printf("(POLY_Dmax >= dim(cone) = dim(support) + 1 required)\n");
     assert(*_codim == 1);
-    exit(0);
+    exit(1);
   }
   /* Print_PPL(_P, "_P before sorting");fflush(0); */
   Find_Equations(_P, _V, _E);

@@ -53,12 +53,12 @@ void Polyi_2_DBo(char *polyi, char *dbo) {
 
   if (!*polyi) {
     puts("With -do you require -pi or -di and -pa");
-    exit(0);
+    exit(1);
   }
 
   if (F == NULL) {
     printf("Input file %s not found\n", polyi);
-    exit(0);
+    exit(1);
   }
   dbnames.resize(dbnames.size() + File_Ext_NCmax + 1, '\0');
   dbnames[strlen(dbo)] = '\0';
@@ -125,10 +125,10 @@ void Polyi_2_DBo(char *polyi, char *dbo) {
         }
     }
   if (Finfo == stdout)
-    exit(0);
+    exit(1);
   if (ferror(Finfo)) {
     printf("File error in %s\n", dbnames.c_str());
-    exit(0);
+    exit(1);
   }
   fclose(Finfo);
   fflush(stdout);
@@ -151,7 +151,7 @@ void Polyi_2_DBo(char *polyi, char *dbo) {
         }
       if (ferror(Fv)) {
         printf("File error in %s\n", dbnames.c_str());
-        exit(0);
+        exit(1);
       }
       fclose(Fv);
     }
@@ -165,7 +165,7 @@ void Polyi_2_DBo(char *polyi, char *dbo) {
       fputc(fgetc(F), Fsl);
     if (ferror(Fsl)) {
       printf("File error in %s\n", dbnames.c_str());
-      exit(0);
+      exit(1);
     }
     fclose(Fsl);
   }
@@ -174,7 +174,7 @@ void Polyi_2_DBo(char *polyi, char *dbo) {
 
   if (ferror(F)) {
     printf("File error in %s\n", polyi);
-    exit(0);
+    exit(1);
   }
   fclose(F);
 }
@@ -233,7 +233,7 @@ void Init_DB(NF_List *_NFL) {
 
   if (ferror(DB->Finfo)) {
     printf("File error in %s\n", dbname.c_str());
-    exit(0);
+    exit(1);
   }
   fclose(DB->Finfo);
   fflush(stdout);
@@ -291,7 +291,7 @@ char Compare_Poly(int *nuc, unsigned char *uc1, unsigned char *uc2) {
   }
   default:
     puts("Sth. wrong in Compare_Poly!!!");
-    exit(0);
+    exit(1);
   }
   return 0;
 }
@@ -348,7 +348,7 @@ int Is_in_DB(int *nv, int *nuc, unsigned char *uc, NF_List *_NFL) {
             DB->Fv_pos[*nv][*nuc] + Fv_pos * (Along)((*nuc) * BLOCK_LENGTH),
             SEEK_SET)) {
     printf("Error in fseek in Is_in_DB!");
-    exit(0);
+    exit(1);
   }
   for (i = 0; i < (*nuc) * (max_Fv_piece); i++)
     Aux_poly[i] = fgetc(DB->Fv[*nv]);
@@ -394,7 +394,7 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
   FILE *FI, *FA, *FO;
   if (*polya == 0) {
     puts("-pa file required");
-    exit(0);
+    exit(1);
   }
   Init_FInfoList(&FIi);
   Init_FInfoList(&FIa);
@@ -408,11 +408,11 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
 
   if (NULL == (FI = fopen(Ifn.data(), "r"))) {
     printf("Cannot open %s", Ifn.data());
-    exit(0);
+    exit(1);
   }
   if (NULL == (FA = fopen(polya, "rb"))) {
     printf("Cannot open %s", polya);
-    exit(0);
+    exit(1);
   }
   fscanf(FI, "%d%d%d%d%d%lld%d%lld %lld %d%d%d%d", &d, &i, &j, &nu, &Ili,
          &FIi.nNF, &FIi.nSM, &FIi.nNM, &FIi.NB, &IslNF, &IslSM, &IslNM, &IslNB);
@@ -572,12 +572,12 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
         }
         if (NULL == (FI = fopen(Ifn.data(), "rb"))) {
           printf("Ifn %s failed", Ifn.data());
-          exit(0);
+          exit(1);
         }
       }
       if (NULL == (FO = fopen(Ofn.data(), "wb"))) {
         printf("Ofn %s failed", Ofn.data());
-        exit(0);
+        exit(1);
       }
 
       for (nu = 1; nu <= FIo.NUCmax; nu++)
@@ -649,7 +649,7 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
                 break;
               default:
                 puts("inconsistens mirror flags");
-                exit(0);
+                exit(1);
               }
               AuxPut_hNF(FO, &v, &nu, ucI, &FIo, &slNF, &slSM, &slNM, &slNB,
                          ucSL, SLp);
@@ -821,7 +821,7 @@ void Print_Missing_Mirror(int *d, int *v, int *nu, unsigned char *uc,
     Print_NF(outFILE, d, &(V.nv), NF);
   } else {
     puts("Only use Print_Missing_Mirror for MM!");
-    exit(0);
+    exit(1);
   }
 }
 
@@ -842,7 +842,7 @@ void Check_NF_Order(char *polyi, char *dbi, int cF,
   if ((*polyi == 0) && (*dbi == 0))
     puts("I need one of: -pi FILE or -di FILE");
   if ((*polyi == 0) + (*dbi == 0) != 1)
-    exit(0);
+    exit(1);
 
   if (*polyi) /*   read INFO PART */
   {
@@ -850,7 +850,7 @@ void Check_NF_Order(char *polyi, char *dbi, int cF,
     F = fopen(polyi, "rb");
     if (F == NULL) {
       puts("File not found");
-      exit(0);
+      exit(1);
     }
     Init_FInfoList(&L); /* start reading the file */
 
@@ -916,7 +916,7 @@ void Check_NF_Order(char *polyi, char *dbi, int cF,
     F = fopen(Ifn.data(), "r");
     if (F == NULL) {
       puts("Info File not found");
-      exit(0);
+      exit(1);
     }
     Init_FInfoList(&L); /* start reading the file */
     fscanf(F, "%d%d%d%d%d%lld%d%lld %lld %d%d%d%d", &d, &i, &j, &nu, &list_num,
@@ -955,12 +955,12 @@ void Check_NF_Order(char *polyi, char *dbi, int cF,
   printf("#hNF=%lld sum=%lld %s\n", L.nNF, tNF,
          (tNF == L.nNF) ? "o.k." : "Error");
   if (tNF != L.nNF)
-    exit(0);
+    exit(1);
   assert(!ferror(F));
   tNF = 0;
   if (tln != list_num) {
     printf("ERROR: #li=%d != %d\n", list_num, tln);
-    exit(0);
+    exit(1);
   }
 
   { /* long long np=2*L.nNF-L.nSM-L.nNM, pp2m=L.nNF-L.nSM-L.nNM;
@@ -982,7 +982,7 @@ void Check_NF_Order(char *polyi, char *dbi, int cF,
     fclose(F);
     if (NULL == (F = fopen(Ifn.data(), "rb"))) {
       printf("Open %s failed", Ifn.data());
-      exit(0);
+      exit(1);
     }
   } else
     puts("no .sl file");
@@ -1009,7 +1009,7 @@ void Check_NF_Order(char *polyi, char *dbi, int cF,
   fflush(stdout);
   if ((sl_SM != (int)tSM) || (sl_NM != (int)tNM)) {
     puts("ERROR!!");
-    exit(0);
+    exit(1);
   }
   tSM = tNM = 0; /* if(tln>1)printf("  p^2/2m=%ldkCY",tln); */
   Print_Expect(&L);
@@ -1036,7 +1036,7 @@ void Check_NF_Order(char *polyi, char *dbi, int cF,
         fclose(F);
         if (NULL == (F = fopen(Ifn.data(), "rb"))) {
           printf("Ifn %s failed", Ifn.data());
-          exit(0);
+          exit(1);
         }
       }
       for (nu = 1; nu <= L.NUCmax; nu++)
@@ -1092,7 +1092,7 @@ void Check_NF_Order(char *polyi, char *dbi, int cF,
         fclose(F);
         if (NULL == (F = fopen(Ifn.data(), "rb"))) {
           printf("Ifn %s failed", Ifn.data());
-          exit(0);
+          exit(1);
         }
       }
       for (nu = 1; nu <= L.NUCmax; nu++)
@@ -1164,20 +1164,20 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
     db = (*dbsub != 0);
   else {
     printf("Need ONE of ps=%s and ds=%s\n", polys, dbsub);
-    exit(0);
+    exit(1);
   }
   if (!*polyi || !*polyo) {
     puts("With -ps or -ds you have to specify I/O files via -pi and -po");
-    exit(0);
+    exit(1);
   }
 
   if (NULL == FI) {
     printf("Cannot open %s", polyi);
-    exit(0);
+    exit(1);
   }
   if (NULL == FO) {
     printf("Cannot open %s", polyo);
-    exit(0);
+    exit(1);
   }
   std::vector<unsigned char> ucSL_buffer(SL_Nmax * CperR_MAX * sizeof(char));
   ucSL = ucSL_buffer.data();
@@ -1192,7 +1192,7 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
     FS = fopen(Sfn, "r");
     if (FS == NULL) {
       puts("Info File not found");
-      exit(0);
+      exit(1);
     }
     {
       Along sNF, sNM; /* start reading the file */
@@ -1222,16 +1222,16 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
     tNF = 0;
     if (tln != Sli) {
       printf("ERROR: #li=%d != %d\n", Sli, tln);
-      exit(0);
+      exit(1);
     }
   } else {
     if (NULL == (FS = fopen(polys, "rb"))) {
       printf("Cannot open %s", polys);
-      exit(0);
+      exit(1);
     }
     if (fgetc(FS)) {
       puts("don't subtract aux files!");
-      exit(0);
+      exit(1);
     }
     Read_Bin_Info(FS, &s, &Sli, &SslNF, &SslSM, &SslNM, &SslNB, &FIs);
     HSpos = FTELL(FS);
@@ -1276,7 +1276,7 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
     fclose(FS);
     if (NULL == (FS = fopen(Sfn, "rb"))) {
       printf("Open %s failed", Sfn);
-      exit(0);
+      exit(1);
     }
   }
   s = 0;
@@ -1384,7 +1384,7 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
                 fclose(FS);
                 if (NULL == (FS = fopen(Sfn, "rb"))) {
                   printf("%s open failed", Sfn);
-                  exit(0);
+                  exit(1);
                 }
                 dv = v;
               }
@@ -1464,7 +1464,7 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
                 fclose(FS);
                 if (NULL == (FS = fopen(Sfn, "rb"))) {
                   printf("%s open failed", Sfn);
-                  exit(0);
+                  exit(1);
                 }
               }
           }
@@ -1516,7 +1516,7 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
                 break;
               default:
                 puts("inconsistens mirror flags");
-                exit(0);
+                exit(1);
               }
               neq++;
               u++;
@@ -1572,7 +1572,7 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
               fclose(FS);
               if (NULL == (FS = fopen(Sfn, "rb"))) {
                 printf("%s open failed", Sfn);
-                exit(0);
+                exit(1);
               }
               dv = v;
             }
@@ -1636,7 +1636,7 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
                   break;
                 default:
                   puts("inconsistent MS flags in SL-H");
-                  exit(0);
+                  exit(1);
                 }
               } /* else (SL>H): hence next H */
             }
@@ -1723,7 +1723,7 @@ void Bin2a(char *polyi, int max, PolyPointList *_P) {
 
   if (F == NULL) {
     printf("Input file %s not found\n", polyi);
-    exit(0);
+    exit(1);
   }
   d = fgetc(F);
   assert(d == 0); /* for(i=0;i<d;i++) fgetc(F); */
@@ -1803,7 +1803,7 @@ void DB_fromVF_toVT(DataBase *DB, int vf, int vt) {
       DB->nNF += DB->NFnum[v][n];
   if (!DB->nNF) {
     fprintf(stderr, "No NF with %d<=v<=%d\n", vf, vt);
-    exit(0);
+    exit(1);
   }
   while (0 == DB->nNUC[vt]) {
     vt--;
@@ -1828,7 +1828,7 @@ void Bin2aDBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P) {
   F = fopen(Ifn.data(), "r");
   if (F == NULL) {
     puts("Info File not found");
-    exit(0);
+    exit(1);
   }
   Init_FInfoList(&L); /* start reading the file */
   fscanf(F, "%d%d%d%d%d%lld%d%lld %lld %d%d%d%d", &d, &i, &j, &nu, &list_num,
@@ -1841,7 +1841,7 @@ void Bin2aDBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P) {
     fclose(F);
     if (NULL == (F = fopen(Ifn.data(), "rb"))) {
       printf("Open %s failed", Ifn.data());
-      exit(0);
+      exit(1);
     }
   } else /* puts("no .sl file"); */
   {
@@ -1945,7 +1945,7 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto,
 
   if (!*dbin || !*dbout) {
     puts("You have to specify I/O database names via -di and -do");
-    exit(0);
+    exit(1);
   }
 
   for (i = 0; i <= Hod_Dif_max; i++)
@@ -1989,7 +1989,7 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto,
 
   if (ferror(DB.Finfo)) {
     printf("File error in %s\n", dbname.data());
-    exit(0);
+    exit(1);
   }
   fclose(DB.Finfo);
   fflush(stdout);
@@ -2067,14 +2067,14 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto,
 
       if (ferror(DB.Fv[v])) {
         printf("File error in %s\n", dbname.data());
-        exit(0);
+        exit(1);
       }
       fclose(DB.Fv[v]);
       for (dh = 0; dh <= 250; dh++)
         if (nnf_vd[v][dh]) {
           if (ferror(Faux[dh])) {
             printf("File error at dh=%d\n", dh);
-            exit(0);
+            exit(1);
           }
           fclose(Faux[dh]);
         }
@@ -2137,7 +2137,7 @@ void Sort_Hodge(char *dbaux, char *dbout) {
   }
   if (ferror(Fvinfo)) {
     printf("File error in %s\n", dbaname.data());
-    exit(0);
+    exit(1);
   }
   fclose(Fvinfo);
 
@@ -2193,7 +2193,7 @@ void Sort_Hodge(char *dbaux, char *dbout) {
             fputc(c, Fh[h12]);
             if (v != c / 4) {
               printf("v=%d, hp.mv=%d", v, (int)(c / 4));
-              exit(0);
+              exit(1);
             }
             /* for (j=0;j<4;j++) {c=fgetc(Fchia); fputc(c,Fh[h12]);}
             for (j=0;j<c%64;j++) fputc(fgetc(Fchia),Fh[h12]);}*/
@@ -2213,7 +2213,7 @@ void Sort_Hodge(char *dbaux, char *dbout) {
           }
           if (ferror(Fchia)) {
             printf("File error in Fchia at dh=%d v=%d\n", dh, v);
-            exit(0);
+            exit(1);
           }
           fclose(Fchia);
         }
@@ -2225,21 +2225,21 @@ void Sort_Hodge(char *dbaux, char *dbout) {
           nnf_d[dh] -= nnf_h[h12];
           if (ferror(Fh[h12])) {
             printf("File error at dh=%d h12=%d\n", dh, h12);
-            exit(0);
+            exit(1);
           }
           fclose(Fh[h12]);
         }
       fprintf(Fhinfo, "\n");
       if (nnf_d[dh]) {
         printf("nnf_d[%d]!=sum nnf_dh[%d][h12]!", dh, dh);
-        exit(0);
+        exit(1);
       }
       printf(" sorted\n");
     }
 
   if (ferror(Fhinfo)) {
     printf("File error in Fhinfo\n");
-    exit(0);
+    exit(1);
   }
   fclose(Fhinfo);
   printf("  done (%ds)\n", (int)difftime(time(NULL), Tstart));
@@ -2282,12 +2282,12 @@ void Test_Hodge_db(char *dbname) {
     }
     if (nnf_sum != nnf_d[dh]) {
       printf("nnf_d[%d]!=sum nnf_dh[%d][h12]!", dh, dh);
-      exit(0);
+      exit(1);
     }
   }
   if (ferror(Fhinfo)) {
     printf("File error in %s\n", filename.data());
-    exit(0);
+    exit(1);
   }
   fclose(Fhinfo);
 
@@ -2335,7 +2335,7 @@ void Test_Hodge_db(char *dbname) {
           /* uc_nf_to_P(_P, &MS, &d, &mv, &nuc, uc_poly); */ }
           if (ferror(Fh)) {
             printf("File error in Fh at dh=%d h12=%d\n", dh, h12);
-            exit(0);
+            exit(1);
           }
           fclose(Fh);
         }
@@ -2494,12 +2494,12 @@ void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P) {
     }
     if (nnf_sum != nnf_d[dh]) {
       printf("nnf_d[%d]!=sum nnf_dh[%d][h12]!", dh, dh);
-      exit(0);
+      exit(1);
     }
   }
   if (ferror(Fhinfo)) {
     printf("File error in %s\n", filename.data());
-    exit(0);
+    exit(1);
   }
   fclose(Fhinfo);
 
@@ -2617,7 +2617,7 @@ void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P) {
         }
         if (ferror(Fh)) {
           printf("File error in Fh at dh=%d h12=%d\n", dh, h12);
-          exit(0);
+          exit(1);
         }
         fclose(Fh);
       }
@@ -2701,7 +2701,7 @@ void Open_DB(char *dbin, DataBase **_DB, int info) {
   }
   if (ferror(DB->Finfo)) {
     printf("File error in %s\n", dbname.data());
-    exit(0);
+    exit(1);
   }
   fclose(DB->Finfo);
   ext[0] = 'v';
@@ -2729,7 +2729,7 @@ void Close_DB(DataBase *DB) {
     if (DB->nNUC[v]) {
       if (ferror(DB->Fv[v])) {
         printf("File error at v=%d\n", v);
-        exit(0);
+        exit(1);
       }
       fclose(DB->Fv[v]);
     }
@@ -2778,13 +2778,13 @@ int Read_H_ucNF_from_DB(DataBase *DB, unsigned char *uc) /* p=next read pos */
 
 int Read_SLucNF_from_DB(void) {
   puts("Read_SLucNF_from_DB: to be implemented");
-  exit(0);
+  exit(1);
   return 0;
 }
 
 int Read_SLpoly_from_DB(void) {
   puts("Read_SLpoly_from_DB: to be implemented");
-  exit(0);
+  exit(1);
   return 0;
 }
 
@@ -2893,7 +2893,7 @@ void Aux_Print_CoverPoly(int *I, int *d, int *N, Long *X[POLY_Dmax],
           printf("%2ld ", AuxGxP(G[i], X[j], d));
         puts("");
       }
-      exit(0);
+      exit(1);
     }
   }
 }
@@ -2929,7 +2929,7 @@ void Aux_Print_SLpoly(int *I, int *d, int *N, Long *X[POLY_Dmax],
           printf("%2ld ", AuxGxP(G[i], X[j], d));
         puts("");
       }
-      exit(0);
+      exit(1);
     }
   }
 }
@@ -3005,7 +3005,7 @@ void PH_Sublat_Polys(char *dbin, int omitFIP, PolyPointList *_P, char sF) {
              for(tnv=0;tnv<V.nv;tnv++)assert(V.v[tnv]<V.nv);} */
     } else {
       puts("something wrong in PH_Sublat_Polys");
-      exit(0);
+      exit(1);
     }
     if (K) {
       Long Z[POLY_Dmax][VERT_Nmax], M[POLY_Dmax];
@@ -3057,7 +3057,7 @@ void V_Sublat_Polys(char mr, char *dbin, char *polyi, char *polyo,
   if (!(*polyo)) {
     puts("You have to specify an output file via -po in -sv-mode.");
     printf("For more help use option `-h'\n");
-    exit(0);
+    exit(1);
   }
   _L->of = 0;
   _L->rf = 0;
@@ -3146,7 +3146,7 @@ void PrintVPHMusage(void) {
   puts("	-sb ... generated by dim<=1 (edges), print if rank=2	");
   puts("	-sq ... generated by vertices,       print if rank=3	");
   puts("	    q,b currently assume that dim=4");
-  exit(0);
+  exit(1);
 }
 
 void Bin_2_ANF(char *polyi, int max, PolyPointList *_P) {
@@ -3164,7 +3164,7 @@ void Bin_2_ANF(char *polyi, int max, PolyPointList *_P) {
 
   if (F == NULL) {
     printf("Input file %s not found\n", polyi);
-    exit(0);
+    exit(1);
   }
   d = fgetc(F);
   assert(d == 0); /* for(i=0;i<d;i++) fgetc(F); */
@@ -3253,7 +3253,7 @@ void Bin_2_ANF_DBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P) {
   F = fopen(Ifn.data(), "r");
   if (F == NULL) {
     puts("Info File not found");
-    exit(0);
+    exit(1);
   }
   Init_FInfoList(&L); /* start reading the file */
   fscanf(F, "%d%d%d%d%d%lld%d%lld %lld %d%d%d%d", &d, &i, &j, &nu, &list_num,
@@ -3266,7 +3266,7 @@ void Bin_2_ANF_DBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P) {
     fclose(F);
     if (NULL == (F = fopen(Ifn.data(), "rb"))) {
       printf("Open %s failed", Ifn.data());
-      exit(0);
+      exit(1);
     }
   } else /* puts("no .sl file"); */
   {

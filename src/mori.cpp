@@ -111,7 +111,7 @@ int main(int narg, char *fn[]) {
     while ((c = fn[n][++k]) != '\0') {
       if (c == 'h') {
         PrintUsage(fn[0]);
-        exit(0);
+        exit(1);
       }
       if (c == 'f')
         Flag.FilterFlag = 1;
@@ -149,7 +149,7 @@ int main(int narg, char *fn[]) {
 
   /*if ((Flag.M)&&(!Flag.D)){
     puts("-M works only when combined with -D!");
-    exit(0);}*/
+    exit(1);}*/
   if (Flag.g + Flag.m + Flag.P + Flag.K + Flag.i + Flag.t + Flag.c + Flag.d +
           Flag.a + Flag.b + Flag.H + Flag.I ==
       0)
@@ -187,7 +187,7 @@ int main(int narg, char *fn[]) {
 
     if (inFILE == NULL) {
       printf("Input file %s not found!\n", fn[n]);
-      exit(0);
+      exit(1);
     }
 
     if (narg > ++n)
@@ -231,7 +231,7 @@ int main(int narg, char *fn[]) {
         printf("Please increase POLY_Dmax to at least %d = %d - %d - 1\n",
                (_P->np - _P->n - 1), _P->np, _P->n);
         printf("(%s -M requires POLY_Dmax >= #(points) - dim N -1)\n", fn[0]);
-        exit(0);
+        exit(1);
       }
     }
     HyperSurfDivisorsQ(_P, &V, E, &Flag);

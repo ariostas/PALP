@@ -158,7 +158,7 @@ void FE_Close_the_Hole(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     Print_VL(_P, _V, "");
     Print_EL((EqList *)_E, &_P->n, 0, "");
     Print_EL((EqList *)_CEq, &_P->n, 0, "");
-    exit(0);
+    exit(1);
   }
   P.n = _P->n;
   P.np = Hole_Verts.nv;
@@ -295,7 +295,7 @@ int Aided_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 
   if (n_irrel == 0) {
     fprintf(outFILE, "n_irrel=0 in Aided_IP_Check!");
-    exit(0);
+    exit(1);
   }
 
   /* Create E_INCI: Incidences between _E and old vertices;
@@ -596,7 +596,7 @@ void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
         }
         fprintf(outFILE, "\n");
 
-        exit(0);
+        exit(1);
       }
 
     Make_All_Subpolys(_P, new_E, &new_V, _KL, _NFL);
@@ -834,7 +834,7 @@ void Reduce_Poly(PolyPointList *_P, EqList *_E, KeepList *_KL, NF_List *_NFL,
     for (j = 0; j < _P->n; j++)
       fprintf(outFILE, "%d ", (int)RedVec[j]);
     fprintf(outFILE, "\n");
-    exit(0);
+    exit(1);
   }
 
   /*Coordinates of new_P: */
@@ -871,12 +871,12 @@ void Reduce_Poly(PolyPointList *_P, EqList *_E, KeepList *_KL, NF_List *_NFL,
     if constexpr (INCOMPLETE_SL_REDUCTION) {
       return;
     } else
-      exit(0);
+      exit(1);
   }
 
   if (!IP_Check(new_P, &V, _E)) {
     fprintf(outFILE, "Trouble in Reduce_Poly!");
-    exit(0);
+    exit(1);
   }
 
   VPM_checksum_new = rI(0);
@@ -889,7 +889,7 @@ void Reduce_Poly(PolyPointList *_P, EqList *_E, KeepList *_KL, NF_List *_NFL,
   if (VPM_checksum_new.D * VPM_checksum_old.N -
       VPM_checksum_new.N * VPM_checksum_old.D) {
     fprintf(outFILE, "Checksums don't match in Reduce_Poly!");
-    exit(0);
+    exit(1);
   }
 
   Make_All_Subpolys(new_P, _E, &V, &new_KL, _NFL);
@@ -1004,7 +1004,7 @@ void Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
   if (!(*polyo)) {
     puts("You have to specify an output file via -po in -a-mode!\n");
     printf("For more help type use option `-h'\n");
-    exit(0);
+    exit(1);
   }
   _NFL->of = 0;
   _NFL->rf = 0;
@@ -1023,11 +1023,11 @@ void Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
       _NFL->d = P->n;
     else if (_NFL->d - P->n) {
       puts("different dim!");
-      exit(0);
+      exit(1);
     }
     if (!IP_Check(P, &V, &F)) {
       puts("IP_Check failed in Ascii_to_Binary!\n");
-      exit(0);
+      exit(1);
     }
     if (Add_NF_to_List(P, &V, &F, _NFL))
       if (outFILE != stdout) {
@@ -1058,7 +1058,7 @@ void Do_the_Classification(CWS *W, PolyPointList *P, /* char *fn, */
   if (!(*polyo)) {
     puts("You have to specify an output file via -po!\n");
     printf("For more help use option '-h'\n");
-    exit(0);
+    exit(1);
   }
   _NFL->of = oFlag;
   _NFL->rf = rFlag;
@@ -1081,7 +1081,7 @@ void Do_the_Classification(CWS *W, PolyPointList *P, /* char *fn, */
       _NFL->d = P->n;
     else if (_NFL->d - P->n) {
       puts("different dim!");
-      exit(0);
+      exit(1);
     }
     if (rFlag) {
       Read_File_2_List(polyo, _NFL);
@@ -1214,12 +1214,12 @@ void Make_All_Sublat(NF_List *_L, int n, int v, subl_int diag[POLY_Dmax],
 
           if (!IP_Check(_P, &V, &F)) {
             puts("IP_Check failed in Make_All_Sublat!\n");
-            exit(0);
+            exit(1);
           }
           for (i = 0; i < F.ne; i++)
             if (F.e[i].c != 1) {
               fprintf(outFILE, "Not reflexive in Make_All_Sublat!\n");
-              exit(0);
+              exit(1);
             }
           if (*mFlag != 'r')
             Add_NF_to_List(_P, &V, &F, _L);
@@ -1370,7 +1370,7 @@ void MakePolyOnSublat(NF_List *_L, subl_int x[VERT_Nmax][VERT_Nmax], int v,
               col_max = SI_abs(x[lin][col]);
           if (!col_max) {
             printf("col_max==0!!!");
-            exit(0);
+            exit(1);
           }
           if ((chosen_col == -1) || (SI_abs(x[chosen_lin][col]) < min_entry) ||
               ((SI_abs(x[chosen_lin][col]) == min_entry) &&
@@ -1418,7 +1418,7 @@ void MakePolyOnSublat(NF_List *_L, subl_int x[VERT_Nmax][VERT_Nmax], int v,
     for (k = i + 1; k < v; k++)
       if (x[i][k]) {
         printf("error in MakePolyOnSublat!!!\n");
-        exit(0);
+        exit(1);
       }
   }
 
@@ -1428,7 +1428,7 @@ void MakePolyOnSublat(NF_List *_L, subl_int x[VERT_Nmax][VERT_Nmax], int v,
     *max_order = order;
   if (i > POLY_Dmax) {
     printf("diag has %d entries!!!\n", i);
-    exit(0);
+    exit(1);
   }
   if (order > 1)
     Make_All_Sublat(_L, i, v, diag, u, mFlag, _P);
@@ -1460,7 +1460,7 @@ void Find_Sublat_Polys(char mFlag, char *dbin, char *polyi, char *polyo,
   if (!(*polyo)) {
     puts("You have to specify an output file via -po in -sm-mode.");
     printf("For more help use option `-h'\n");
-    exit(0);
+    exit(1);
   }
   _NFL->of = 0;
   _NFL->rf = 0;
@@ -1506,7 +1506,7 @@ void Find_Sublat_Polys(char mFlag, char *dbin, char *polyi, char *polyo,
             uc_nf_to_P(_P, &MS, &(_NFL->d), &v, &nu, uc_poly);
             if (MS > 3) {
               printf("MS=%d!!!\n", MS);
-              exit(0);
+              exit(1);
             }
             assert(IP_Check(_P, &Vnl, &Fel));
             assert(v == Vnl.nv);
@@ -1525,7 +1525,7 @@ void Find_Sublat_Polys(char mFlag, char *dbin, char *polyi, char *polyo,
 
         if (ferror(dbfile)) {
           printf("File error in %s\n", dbname.c_str());
-          exit(0);
+          exit(1);
         }
         fclose(dbfile);
         printf(" %dp (%ds)\n", (int)_NFL->NP,
@@ -1799,7 +1799,7 @@ int Find_RSP_Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
       for (k=0;k<_P->n;k++) fprintf(outFILE,"%d ", (int) test_E.e[i].a[k]);
       fprintf(outFILE," %d\n", (int) test_E.e[i].c);}
     fprintf(outFILE,"\n");
-    exit(0);} */
+    exit(1);} */
 
   if (IP) {
     VertexNumList new_V;
@@ -1849,7 +1849,7 @@ int Start_Find_Ref_Subpoly(PolyPointList *_P) {
 
   if (!IP_Check(_P, &V, &E)) {
     fprintf(outFILE, "IP_check negative!\n");
-    exit(0);
+    exit(1);
   }
 
   KL.nk = 0;

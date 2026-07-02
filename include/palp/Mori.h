@@ -81,7 +81,7 @@ void GKZsubdivide(Inci64 *F, int f, PolyPointList *P, int p, int *Tp, int *ntp,
 List maximal 2ndary fans of facets with descending dimensions for all compatible
 max triangulations make (induced) triangulation of facets. Depending in dim of
 the 2ndary fan triangulates circuits calling either Triang1dSFan(),
-Triang2dSFan() or Triang2dSFan(). If dim (2ndary fan) > 3 then exit(0);
+Triang2dSFan() or Triang2dSFan(). If dim (2ndary fan) > 3 then exit(1);
 */
 
 void InterSectionRing(Inci64 *Tri, int *t, PolyPointList *P, int p,

@@ -222,7 +222,7 @@ void DivClassBasis(int SF, PolyPointList *P, int v, const char *D,
   }
 
   puts("IMPROVE CODE: no Vol=1 simplex in DivClassBasis()");
-  exit(0);
+  exit(1);
 }
 
 void OLD_LinRelLatticeBasis(int SF, PolyPointList *P, int v, char *D, char *B) {
@@ -302,7 +302,7 @@ void OLD_LinRelLatticeBasis(int SF, PolyPointList *P, int v, char *D, char *B) {
           }
   }
   puts("IMPROVE CODE: no Vol=1 simplex in LinRelLatticeBasis!!!");
-  exit(0);
+  exit(1);
 }
 
 /*  ideal IRingNorm = (Q*U - Di.Dj.Dk); on the CY where
@@ -362,7 +362,7 @@ void Inci64_2_VNL(Inci64 X, VertexNumList *V, int n) {
 
 void Print_Inci64_list(int n, Inci64 *I, int p) {
   printf("To be done: Print_Inci64_list n=%d p=%d I=%lld\n", n, p, *I);
-  exit(0);
+  exit(1);
 }
 
 namespace {
@@ -413,7 +413,7 @@ int Make_triCD2F(triang *T, Inci64 *cd2I) {
     T->n = cd2n;
     T->I = cd2I;
     PRNtriang(T, "Codim-2 faces:");
-    exit(0);
+    exit(1);
   }
   return cd2n;
 }
@@ -459,7 +459,7 @@ int Check_Mori(PolyPointList *P, int p, triang *T) { // strongly convex(?)
         assert(b < d);
         if (0 == Z[b]) {
           printf("Error: Z[b]==0 for I[%d]&I[%d] !\n", j, i);
-          exit(0);
+          exit(1);
         }
         if (Z[b] > 0)
           for (a = 0; a <= d; a++)
@@ -488,17 +488,17 @@ int Check_Mori(PolyPointList *P, int p, triang *T) { // strongly convex(?)
         GR.x[i][j] = VxV(G.x[j], R.x[i], p);
     Print_LMatrix(GR, "GR");
     printf("rank=%d != p-d !!!\n", r);
-    exit(0);
+    exit(1);
   }
   // Print_LMatrix(R,"Matrix of all rays");
   if (UT->np >= POINT_Nmax) {
     fprintf(outFILE, "need POINT_Nmax>=%d\n", UT->np + 1);
-    exit(0);
+    exit(1);
   }
   UT->n = r;
   if (r > POLY_Dmax) {
     fprintf(outFILE, "need POLY_Dmax>=%d\n", UT->n);
-    exit(0);
+    exit(1);
   }
   for (i = 0; i < ngen; i++)
     for (j = 0; j < r; j++)
@@ -565,7 +565,7 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I) {
         assert(b < d);
         if (0 == Z[b]) {
           printf("Error: Z[b]==0 for I[%d]&I[%d] !\n", j, i);
-          exit(0);
+          exit(1);
         }
         if (Z[b] > 0)
           for (a = 0; a <= d; a++)
@@ -594,17 +594,17 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I) {
         GR.x[i][j] = VxV(G.x[j], R.x[i], p);
     Print_LMatrix(GR, "GR");
     printf("rank=%d != p-d !!!\n", r);
-    exit(0);
+    exit(1);
   }
   // Print_LMatrix(R,"Matrix of all rays");
   if (UT->np >= POINT_Nmax) {
     fprintf(outFILE, "need POINT_Nmax>=%d\n", UT->np + 1);
-    exit(0);
+    exit(1);
   }
   UT->n = r;
   if (r > POLY_Dmax) {
     fprintf(outFILE, "need POLY_Dmax>=%d\n", UT->n);
-    exit(0);
+    exit(1);
   }
   for (i = 0; i < ngen; i++)
     for (j = 0; j < r; j++)
@@ -624,7 +624,7 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I) {
     puts("MORI CONE not strictly convex:");
     Print_Inci64_list(nI, I, p);
     puts("... non-convex triangulation?\n");
-    exit(0);
+    exit(1);
   }
 
   /* The extremal rays of the Mori cone are those that have maximal incidences *
@@ -639,7 +639,7 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I) {
     } /* compute Eq(0)-INCIs for Vs */
   if (e0 > VERT_Nmax) {
     fprintf(outFILE, "need VERT_Nmax >= %d\n", e0);
-    exit(0);
+    exit(1);
   }
   // printf("p=%d nm=%d\n",p,nm);
   for (i = 0; i < nv; i++) {
@@ -1562,7 +1562,7 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
           break;
         default:
           puts("#(intersect.edges)>2 in Triang3dSFan() TO DO");
-          exit(0);
+          exit(1);
         }
       assert(2 * nse == noe);
       assert(2 - y + nse <= VERT_Nmax); // Euler == y-nse+ncr == 2
@@ -1941,7 +1941,7 @@ void GKZsubdivide(Inci64 *F, int f, PolyPointList *P, int p, int *Tp, int *ntp,
             break;
           default:
             printf("dim(2ndaryFan)=%d: to be done!\n", d2);
-            exit(0);
+            exit(1);
           }
 #if (TRACE_TRIANGULATION)
         if (j < nmf)
@@ -2105,7 +2105,7 @@ void Subdivide(PolyPointList *P, int v, Inci64 I[], int p, Inci64 *T, int *t,
       printf("Too many (%d) non-vertex points (at most 3 were expected). "
              "Extension to be done!\n",
              i - v + 1);
-      exit(0);
+      exit(1);
     }
     assert(c[i - v] > 1);
     if (c[i - v] == 2)
@@ -2413,7 +2413,7 @@ void IFerr(void) {
 void FE(char *c) {
   puts("Input format error in ");
   puts(c);
-  exit(0);
+  exit(1);
 }
 
 /*needed from Read_Tri*/
@@ -2455,7 +2455,7 @@ Inci64 Read_INCI(int p) {
     printf("Input format error: INCI string too %s\n\n",
            (p > 0) ? "short" : "long");
     fprintf(outFILE, "Type -h for help.\n");
-    exit(0);
+    exit(1);
   }
   ungetc(c, inFILE);
   return X;
@@ -2508,7 +2508,7 @@ void Test_INCI(int *nI, Inci64 *ILi, int p) {
   if ((V.nv != 1) || (V.v[0] != 0)) {
     IDerr();
     puts("INCI intersection must be 10...0");
-    exit(0);
+    exit(1);
   }
   X = ILi[0];
   for (i = 1; i < *nI; i++)
@@ -2517,7 +2517,7 @@ void Test_INCI(int *nI, Inci64 *ILi, int p) {
   if (V.nv != p) {
     IDerr();
     puts("INCI union must be 11...1");
-    exit(0);
+    exit(1);
   }
 }
 
@@ -2601,7 +2601,7 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
             printf("%d ", V.v[a]);
           puts("=Ij ... error");
           Print_INCI_list(nI, I, p);
-          exit(0);
+          exit(1);
         }
         if (pli[k] > V.v[k])
           pli[0] = V.v[x = k]; /* pli[x-1] < pli[0] < pli[x] */
@@ -2631,7 +2631,7 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
             fflush(0);
             assert(pli[a] < p);
           }
-          exit(0);
+          exit(1);
         }
         if (Z[0] > 0)
           for (a = 0; a <= d; a++)
@@ -2659,17 +2659,17 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
         GR.x[i][j] = VxV(G.x[j], R.x[i], p);
     Print_LMatrix(GR, "GR");
     printf("rank=%d != P.np-P.n-1 !!!\n", r);
-    exit(0);
+    exit(1);
   }
   // Print_LMatrix(R,"Matrix of all rays");
   if (UT->np >= POINT_Nmax) {
     fprintf(outFILE, "need POINT_Nmax>=%d\n", UT->np + 1);
-    exit(0);
+    exit(1);
   }
   UT->n = r;
   if (r > POLY_Dmax) {
     fprintf(outFILE, "need POLY_Dmax>=%d\n", UT->n);
-    exit(0);
+    exit(1);
   }
   for (i = 0; i < ngen; i++)
     for (j = 0; j < r; j++)
@@ -2690,7 +2690,7 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
     puts("Suspected INCI data error:");
     Print_INCI_list(nI, I, p);
     puts("... non-convex triangulation?\n");
-    exit(0);
+    exit(1);
   }
   for (i = 0; i < nv; i++)
     IE[i] = Inci64_0();
@@ -2702,7 +2702,7 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
     } /* compute Eq(0)-INCIs for Vs */
   if (e0 > VERT_Nmax) {
     fprintf(outFILE, "need VERT_Nmax >= %d\n", e0);
-    exit(0);
+    exit(1);
   }
   // printf("p=%d nm=%d\n",p,nm);
   for (i = 0; i < nv; i++) {
