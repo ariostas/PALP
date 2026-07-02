@@ -3,6 +3,9 @@
 
 #include <array>
 #include <cassert>
+#include <climits>
+#include <cstdlib>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -1434,9 +1437,18 @@ Long Simp_Vol_Barycent(PolyPointList *A, Long VM[][VERT_Nmax], Long *B,
   assert(A->np == A->n + 1);
   Aux_Make_Poly_NF(VM, &A->n, &A->n);
   I = 1;
-  for (i = 0; i < A->n; i++)
+  for (i = 0; i < A->n; i++) {
+    Long absVal = VM[i][i] >= 0 ? VM[i][i] : -VM[i][i];
+    if (absVal > 1 && I > std::numeric_limits<Long>::max() / absVal) {
+      fputs("Integer overflow in Simp_Vol_Barycent\n", stderr);
+      exit(1);
+    }
     I *= VM[i][i];
-  assert(I > 0);
+  }
+  if (I <= 0) {
+    fputs("Non-positive simplex volume in Simp_Vol_Barycent\n", stderr);
+    exit(1);
+  }
   return I;
 }
 Long SimplexVolume(Long *V[POLY_Dmax + 1], int d) {
@@ -1446,9 +1458,18 @@ Long SimplexVolume(Long *V[POLY_Dmax + 1], int d) {
     for (p = 0; p < d; p++)
       VM[i][p] = V[p][i];
   Aux_Make_Poly_NF(VM, &d, &d);
-  for (i = 0; i < d; i++)
+  for (i = 0; i < d; i++) {
+    Long absVal = VM[i][i] >= 0 ? VM[i][i] : -VM[i][i];
+    if (absVal > 1 && I > std::numeric_limits<Long>::max() / absVal) {
+      fputs("Integer overflow in SimplexVolume\n", stderr);
+      exit(1);
+    }
     I *= VM[i][i];
-  assert(I >= 0);
+  }
+  if (I < 0) {
+    fputs("Negative simplex volume in SimplexVolume\n", stderr);
+    exit(1);
+  }
   return I;
 }
 void Print_GLZ(GL_Long G[][POLY_Dmax], int d, const char *c);

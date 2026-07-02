@@ -53,7 +53,10 @@ long Mod(long a, long b) { return b ? a % b : a; }
 long Min(long a, long b) { return a < b ? a : b; }
 long Max(long a, long b) { return a > b ? a : b; }
 long Abs(long a) { return a < 0 ? -a : a; }
-long Lcm(long a, long b) { return a * (b / gcd(a, b)); }
+long Lcm(long a, long b) {
+  long g = gcd(a, b);
+  return g ? (a / g) * b : 0;
+}
 } // namespace
 
 typedef struct {
