@@ -1525,7 +1525,10 @@ Long Aux_Vol_Barycent(PolyPointList *A, VertexNumList *V, EqList *E, Long *_B,
     for (i = 0; i < D; i++)
       if (ZB[i] % g)
         g = NNgcd(g, ZB[i]);
-    assert(g > 0);
+    if (g <= 0) {
+      fputs("Internal error: non-positive gcd in Aux_Vol_Barycent\n", stderr);
+      exit(1);
+    }
     Ne /= g;
     for (i = 0; i < D; i++)
       ZB[i] = Ze[i] * Ne + ZB[i] / g; /* _B+=sum _N/V ZB/Ne */
@@ -1982,7 +1985,11 @@ int Add_Square_To_Rel(int el[4], int r, int v, Long rel[SQnum_Max][VERT_Nmax],
       /* puts("insert New before l-th line");exit(1); */
     } else if (c == C[l]) {
       Long A = rel[l][c], B = N[c], g = NNgcd(A, B);
-      assert(g > 0);
+      if (g <= 0) {
+        fputs("Internal error: non-positive gcd in Add_Square_To_Rel\n",
+              stderr);
+        exit(1);
+      }
       A /= g;
       B /= g;
       j = c;
@@ -3717,7 +3724,11 @@ void Normalize_QuotientZ(int *r, int *p, Long Z[POLY_Dmax][VERT_Nmax],
   } */					/* Print_QuotientZ(r,p,Z,M); */
   for (i = 0; i < *r; i++) {
     Long g = M[i];
-    assert(g > 0);
+    if (g <= 0) {
+      fputs("Internal error: non-positive modulus in Normalize_QuotientZ\n",
+            stderr);
+      exit(1);
+    }
     for (k = 0; k < *p; k++)
       g = NNgcd(g, Z[i][k]);
     if (g > 1) {
