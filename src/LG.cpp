@@ -1528,7 +1528,8 @@ void pff(char *c) {
 
 typedef struct {
   int X, n;
-  std::vector<int> d_storage;
+  std::vector<int> data_storage; /* divisors d[0..n-1] followed by triangular matrix rows */
+  std::vector<int *> mt_storage;
   int *d;
   int **mt;
 } /* mt[i][j]=mobius(j,i) */ MobiusData;
@@ -1540,10 +1541,12 @@ void MakeMobius(MobiusData *M, int X) /* d[i] divisors, mt[i][j] 0<=j<=i<=n */
     if (X % i == 0)
       n++;
   M->n = n = 2 * n + (X == i * i); /* #(Div(X)) */
-  M->d_storage.resize(((n * (n + 3)) / 2) + n);
-  M->d = M->d_storage.data();
-  M->mt = (int **)&M->d[(n * (n + 3)) / 2];
-  M->mt[0] = &(M->d[n]);
+  /* n divisors + triangular n*(n+1)/2 matrix entries */
+  M->data_storage.resize(n + (n * (n + 1)) / 2);
+  M->mt_storage.resize(n);
+  M->d = M->data_storage.data();
+  M->mt = M->mt_storage.data();
+  M->mt[0] = &M->d[n];
   for (i = 1; i < n; i++)
     M->mt[i] = &M->mt[i - 1][i];
   for (i = 1; i <= X / i; i++)
@@ -1565,16 +1568,19 @@ void MakeMobius(MobiusData *M, int X) /* d[i] divisors, mt[i][j] 0<=j<=i<=n */
 #ifdef PRINT_MOBIUS_FUNCTION
   printf("Div(%d)=", X);
   for (i = 0; i < n; i++)
-    printf("%d ", d[i]);
+    printf("%d ", M->d[i]);
   for (i = 0; i < n; i++) {
-    printf("m[%d]=", d[i]);
+    printf("m[%d]=", M->d[i]);
     for (j = 0; j <= i; j++)
       printf("%d ", M->mt[i][j]);
   };
   puts("");
 #endif
 }
-void FreeMobius(MobiusData *M) { M->d_storage.clear(); }
+void FreeMobius(MobiusData *M) {
+  M->data_storage.clear();
+  M->mt_storage.clear();
+}
 void Calc_VaHo(Weight *W, VaHo *V);
 void PoincarePoly(int N, int *w, int d, PoCoLi *P, PoCoLi *Z, PoCoLi *R);
 void Aux_Phase_Poly(PoCoLi *P, int w, int d, int r, int s, int x);

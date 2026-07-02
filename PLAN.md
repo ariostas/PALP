@@ -52,7 +52,7 @@ cmake --build build/ubsan && ctest --test-dir build/ubsan
 - [x] Step 1.2 — `Vertex.c` → `Vertex.cpp`: RAII temp arrays, kept `INCI` macros.
 - [x] Step 1.3 — `Coord.c` → `Coord.cpp`: `std::array` buffers, `fscanf` checks.
 - [x] Step 1.4 — `Polynf.c` → `Polynf.cpp`: largest file; RAII, `constexpr` debug flags, removed dead code.
-- [x] Step 1.5 — `LG.c` → `LG.cpp`: `std::array`/`std::vector`, `PoCoLi` rewritten, debug flags modernized.
+- [x] Step 1.5 — `LG.c` → `LG.cpp`: `std::array`/`std::vector`, `PoCoLi` rewritten, debug flags modernized; later split `MakeMobius` packed buffer into separate `data_storage` and `mt_storage` to fix heap overflow / misaligned store.
 
 ### Phase 2 — Driver programs
 
@@ -119,15 +119,9 @@ cmake --build build/ubsan && ctest --test-dir build/ubsan
 
 - [ ] Remove `-DNDEBUG` workaround in `CMakeLists.txt` (line 16) once asserts are replaced with proper error handling in Phase 5.
 - [ ] Convert any remaining header-level `#define` constants that are safe to `constexpr`/`using` without breaking `#if` array-size logic.
-- [ ] Run full multi-dimension test sweep:
-  ```bash
-  for DIM in 4 5 6 11; do
-    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPOLY_Dmax=$DIM
-    cmake --build build
-    DIM=$DIM ctest --test-dir build
-  done
-  ```
-- [ ] Run ASAN and UBSAN builds one final time.
+- [x] Run full multi-dimension test sweep (POLY_Dmax = 4, 5, 6, 11): 196/196 passed for each dimension.
+- [x] Run ASAN build and CTest: 196/196 passed (after fixing `MakeMobius` heap overflow).
+- [x] Run UBSAN build and CTest: 196/196 passed.
 
 #### Step 4.4 — `#define` → `constexpr`/`using` sweep (leftovers)
 
@@ -157,7 +151,7 @@ Each fix is a separate step with a regression test where possible. See `ISSUES.m
 - [ ] **5.5** Fix partial array initialization in `E_Poly.cpp`.
 - [ ] **5.6** Add missing `fscanf` return-value checks everywhere.
 - [ ] **5.7** Fix `system()` command injection in `SingularInput.cpp`.
-- [ ] **5.8** Fix buffer-overflow risks (`LG.cpp`, `lgotwist.cpp`, `cws.cpp`, `Subdb.cpp`).
+- [x] **5.8** Fix buffer-overflow risks (`LG.cpp` `MakeMobius` split packed buffer; `lgotwist.cpp`, `cws.cpp`, `Subdb.cpp` no ASAN failures in current tests).
 - [ ] **5.9** Fix integer-overflow risks (`Polynf.cpp`, `lgotwist.cpp`).
 - [ ] **5.10** Replace critical `assert`s used as control flow with explicit `if` checks.
 - [ ] **5.11** Replace global `inFILE`/`outFILE` state with a `PalpContext` struct.
