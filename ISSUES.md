@@ -145,12 +145,15 @@ names and descriptions should remain locatable.
   inside a function called from a malloc-owner leaks that allocation.
 
 ### 14. Memory leaks on error paths in `Fano5d`
-- **File**: `Polynf.c`
-- **Lines**: 2632–2735
+- **File**: `Polynf.cpp`
+- **Lines**: 4826–5096
 - **Severity**: Medium
-- **Description**: `Fano5d` allocates Q, F, M, G — but frees them only on the
-  success path (line 2735). All error/early-return paths leak all four
-  allocations.
+- **Status**: Fixed
+- **Description**: `Fano5d` allocated `Q` and `F` with raw `malloc` and `M`/`G`
+  with `Init_Matrix`, but freed them only on the success path. Replaced `Q` and
+  `F` with `std::unique_ptr` and let RAII free them on every return path.
+  `M`/`G` are still stack-allocated `Matrix` structures whose internal buffers
+  are freed by `Free_Matrix` on the success path.
 
 ### 15. Static mutable state in `Subdb.c`
 - **File**: `Subdb.c`

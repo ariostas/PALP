@@ -146,18 +146,19 @@ Each fix is a separate step with a regression test where possible. See `ISSUES.m
 
 - [x] **5.1** Fix `assert(++m < binco)` side effect in `MoriCone.cpp` (no remaining `assert` with `++`/`--` side effects in MoriCone; other files still have some).
 - [x] **5.2** Replace `exit(0)` with `exit(1)` on all error paths.
-- [ ] **5.3** Fix memory leaks (`Polynf.cpp` error paths, `Vertex.cpp`, `mori.cpp`).
+- [x] **5.3** Fix memory leaks in `Fano5d` (`Polynf.cpp`).
+- [ ] **5.3a** Fix memory leaks in `mori.cpp` main loop (`CW`, `E`, `DE`, `_P`, `_DP`, `PM`, `DPM`).
 - [x] **5.4** Fix `realloc` losing old pointer in `E_Poly.cpp` `DYNadd_for_completion`.
 - [x] **5.5** Fix partial array initialization in `E_Poly.cpp`.
 - [ ] **5.6** Add missing `fscanf` return-value checks everywhere.
 - [x] **5.7** Fix `system()` command injection in `SingularInput.cpp`.
 - [x] **5.8** Fix buffer-overflow risks (`LG.cpp` `MakeMobius` split packed buffer; `lgotwist.cpp`, `cws.cpp`, `Subdb.cpp` no ASAN failures in current tests).
 - [x] **5.9** Fix integer-overflow risks (`Polynf.cpp` volume product checks, `lgotwist.cpp` `Lcm`).
-- [ ] **5.10** Replace critical `assert`s used as control flow with explicit `if` checks.
+- [x] **5.10** Replace critical `assert`s used as control flow with explicit `if` checks (`Vertex.cpp`).
 - [ ] **5.11** Replace global `inFILE`/`outFILE` state with a `PalpContext` struct.
 - [x] **5.12** Remove dead code (`FileRW`, `OLD_code`, debug prints, `TEST` toggles).
 - [x] **5.13** Fix remaining `assert`-as-control-flow bugs (`Polynf.cpp` division-by-zero, `Vertex.cpp` Euler check, `MoriCone.cpp` Inci64 limit, `LG.cpp` phase GCD checks).
-- [ ] **5.14** Replace critical `assert`s that guard mathematical correctness with hard errors (remaining bounds/div-zero checks across codebase).
+- [x] **5.14** Replace critical `assert`s that guard mathematical correctness with hard errors (`Vertex.cpp`).
 
 ---
 

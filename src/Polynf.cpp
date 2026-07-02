@@ -4830,8 +4830,6 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
   int CC[FPcirNmax][FanoProjNPmax];
   static int FPc;
   INCIbits FI[VERT_Nmax], CI[FPcirNmax];
-  PolyPointList *Q;
-  EqList *F;
   Matrix G, M; /* assert(d==4); */
   if (FanoProjNPmax <= np)
     return 0;
@@ -4966,10 +4964,12 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
     puts("");
   }
 
+  auto Q_up = std::make_unique<PolyPointList>();
+  auto F_up = std::make_unique<EqList>();
+  PolyPointList *Q = Q_up.get();
+  EqList *F = F_up.get();
   Init_Matrix(&M, d, d);
-  Q = (PolyPointList *)malloc(sizeof(PolyPointList));
   Init_Matrix(&G, d, d);
-  F = (EqList *)malloc(sizeof(EqList));
   Q->n = P->n + 1;
   for (n = 0; n < d; n++)
     for (z = 0; z < d; z++)
@@ -5089,8 +5089,6 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
     } /* ENDof circuit facet case  */
   } /* ENDof go over CELLS */
 
-  free(Q);
-  free(F);
   Free_Matrix(&M);
   Free_Matrix(&G);
   return 1;
