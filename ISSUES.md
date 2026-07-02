@@ -184,20 +184,22 @@ names and descriptions should remain locatable.
 ## Integer / type issues
 
 ### 19. Integer overflow in volume computation
-- **File**: `Polynf.c`
-- **Lines**: 855, 861
+- **File**: `Polynf.cpp`
+- **Lines**: ~1438, ~1450
 - **Severity**: Medium
-- **Description**: `I *= VM[i][i]` — product of diagonal entries can overflow
-  `Long` for large polytopes. No overflow check. Could produce wrong simplex
-  volumes, affecting fibration analysis.
+- **Status**: Fixed
+- **Description**: `I *= VM[i][i]` — product of diagonal entries could overflow
+  `Long`. Added overflow checks before each multiplication and hard-error
+  `exit(1)` if the intermediate product would exceed `std::numeric_limits<Long>::max()`.
 
 ### 20. `lcm` macro overflow
-- **File**: `lgotwist.c`
-- **Line**: 52
+- **File**: `lgotwist.cpp`
+- **Line**: ~56
 - **Severity**: Medium
-- **Description**: `#define lcm(a,b) ((a)*(b)/gcd((a),(b)))` — the product
-  `a*b` is computed before the division by `gcd`, risking overflow even when
-  the result would fit. Should divide first: `((a)/gcd(a,b))*(b)`.
+- **Status**: Fixed
+- **Description**: `Lcm(a,b)` computed `a * (b / gcd(a,b))`, risking overflow
+  even when the result would fit. Rewrote to divide first: `(a / gcd) * b`,
+  and handle `gcd == 0`.
 
 ### 21. `printf` format truncation
 - **File**: `Rat.c`
