@@ -7,15 +7,7 @@
 #include <vector>
 
 namespace {
-constexpr bool TEST_Polynf = false;   /* GLZ matrix checks */
-constexpr bool TEST_OUT = false;      /* IPS recursion diagnostics */
-constexpr bool TEST_ImpPhase = false; /* IP-simplex phase diagnostics */
-constexpr bool TEST_RK = false;       /* rank checks */
-constexpr bool TEST_QZ = false;       /* quotient Z checks */
-constexpr bool TEST_out = false;      /* lowercase alias diagnostics */
-} // namespace
 
-namespace {
 constexpr int SORT_CWS = 0;
 constexpr int FIB_PERM = 27; /* print permutation for p<=# */
 
@@ -1214,16 +1206,6 @@ GL_Long GL_V_to_GLZ(GL_Long *V, GL_Long *G[POLY_Dmax], int d) {
   }
   if (g < 0)
     g = -g;
-  if constexpr (TEST_OUT) {
-    for (i = 0; i < d; i++) {
-      printf("G[%d]= ", i);
-      for (j = 0; j < d; j++)
-        printf("%2d ", G[i][j]);
-      printf("    V=%d\n", V[i]);
-    }
-    puts("testing GLZ in GL_V_to_GLZ");
-    fflush(0);
-  }
   if (TEST_GLZmatrix_ENABLED) {
     int x, y;
     TEST_GLZmatrix(G, d);
@@ -1287,20 +1269,6 @@ int TriMat_to_Weight(GL_Long T[][POLY_Dmax], int *p, int r, int *s, int *nw,
   for (i = 0; i <= r; i++)
     X[s[i]] = x[i];
   return 1;
-  if constexpr (TEST_OUT) {
-    for (i = 0; i < r; i++) {
-      printf("r=%d nw=%d:  ", r, *nw);
-      for (j = 0; j <= r; j++)
-        printf(" %2d", T[j][i]);
-      puts("");
-    }
-    for (i = 0; i <= r; i++)
-      printf(" %2d", x[i]);
-    printf("  =W  p=%d  S=", *p);
-    for (i = 0; i <= r; i++)
-      printf(" %2d", s[i]);
-    puts("");
-  }
 }
 Long XmY_vecdiff(Long *X, Long *Y, int n) {
   Long d;
@@ -1599,13 +1567,6 @@ Long LatVol_Barycent(PolyPointList *P, VertexNumList *V, /* bary=B/N */
     for (j = 0; j < P->n; j++)
       A->x[i][j] = P->x[V->v[i]][j];
   vol = Aux_Vol_Barycent(A.get(), &aV, e, B, N);
-  if constexpr (TEST_OUT) {
-    Print_PPL(P, "result for:");
-    printf("vol=%d, B=", vol);
-    for (i = 0; i < P->n; i++)
-      printf("%d ", B[i]);
-    printf("/ %d\n", *N);
-  }
   for (i = 0; i < P->n; i++)
     if (B[i])
       break;
@@ -2002,14 +1963,6 @@ int Add_Square_To_Rel(int el[4], int r, int v, Long rel[SQnum_Max][VERT_Nmax],
     rel[0][el[2]] = rel[0][el[3]] = -1;
     return 1;
   } /* initialize */
-  if constexpr (TEST_RK) {
-    printf("rk=%d  el=%ld %ld %ld %ld\n", r, el[0], el[1], el[2], el[3]);
-    for (i = 0; i < r; i++) {
-      for (j = 0; j < v; j++)
-        printf(" %2d", rel[i][j]);
-      printf(" =rel-in C=%d\n", C[i]);
-    }
-  }
   for (i = 0; i < v; i++)
     N[i] = 0;
   N[el[0]] = N[el[1]] = 1;
@@ -2032,27 +1985,11 @@ int Add_Square_To_Rel(int el[4], int r, int v, Long rel[SQnum_Max][VERT_Nmax],
       assert(g > 0);
       A /= g;
       B /= g;
-      if constexpr (TEST_RK) {
-        printf("reduce New with %d-th line: N= A/g*N-B/g*rel find new c:\n", l);
-        for (j = 0; j < v; j++)
-          printf(" %2d", N[j]);
-        printf(" =N-init c=%d\n", c);
-      }
       j = c;
       for (c = 0; j < v; j++)
         if ((N[j] = A * N[j] - B * rel[l][j]))
           if (c == 0)
             c = j;
-      if constexpr (TEST_RK) {
-        for (j = 0; j < v; j++)
-          printf(" %2d", N[j]);
-        printf(" =N-reduced c=%d\n", c);
-        for (i = 0; i <= r; i++) {
-          for (j = 0; j < v; j++)
-            printf("%2d ", rel[i][j]);
-          puts("out");
-        }
-      }
       if (c == 0) { /* puts("no rank increase"); */
         return r;
       }
@@ -2577,15 +2514,6 @@ void IPS_Rec_New_Vertex(Long PM[][POLY_Dmax], int *p, int *d, int *nw,
     for (j = r; j < *d; j++)
       if (X[j])
         break;
-    if constexpr (TEST_OUT) {
-      printf("X=T[r=%d]:", r);
-      for (i = 0; i < *d; i++)
-        printf(" %d", X[i]);
-      printf(" j=%d   s=", j);
-      for (i = 0; i <= r; i++)
-        printf(" %d", s[i]);
-      puts("");
-    }
     if (j < *d) {
       X[r] = GL_V_to_GLZ(&X[r], GN, *d - r);
       for (i = r + 1; i < *d; i++)
@@ -2596,15 +2524,6 @@ void IPS_Rec_New_Vertex(Long PM[][POLY_Dmax], int *p, int *d, int *nw,
           for (k = 0; k < *d - r; k++)
             G[r][i][j] += GN[i - r][k] * G[r - 1][r + k][j];
         }
-      if constexpr (TEST_Polynf) {
-        TEST_GLZmatrix(G[r], *d);
-        for (i = 0; i < *d; i++) {
-          Long Z = 0;
-          for (j = 0; j < *d; j++)
-            Z += G[r][i][j] * P[j];
-          assert(Z == X[i]);
-        }
-      }
       IPS_Rec_New_Vertex(PM, p, d, nw, W, Wmax, G, GI, GN, T, s, r + 1, FW, CD);
     } else if (*CD == 0)
       TriMat_to_WeightZ(T, d, p, r, s, nw, W, Wmax, FW);
@@ -3214,35 +3133,8 @@ void Print_Fiber_PolyData(PolyPointList *P, VertexNumList *V, Long *W, int w,
           X[i][s] = P->x[p][i];
         s++;
       }
-    if constexpr (TEST_OUT) {
-      {
-        int j;
-        puts("");
-        for (i = 0; i < D; i++) {
-          printf("X=");
-          for (j = 0; j < s; j++)
-            printf("%2d ", X[i][j]);
-          puts("");
-        }
-      }
-    }
     PM_to_GLZ_for_UTriang(X, &D, &s, G);
     INV_GLZmatrix(G, &D, Ginv);
-    if constexpr (TEST_OUT) {
-      {
-        int j;
-        puts("");
-        for (i = 0; i < D; i++) {
-          printf("G[%d]= ", i);
-          for (j = 0; j < D; j++)
-            printf("%2d ", G[i][j]);
-          printf("    X=");
-          for (j = 0; j < s; j++)
-            printf("%2d ", X[i][j]);
-          puts("");
-        }
-      }
-    }
     for (p = 0; p < V->nv; p++)
       for (i = 0; i < D; i++) {
         GL_Long x = 0;
@@ -3316,10 +3208,6 @@ void Print_Fiber_PolyData(PolyPointList *P, VertexNumList *V, Long *W, int w,
     Nmv = e.ne;
     Nnp = F->np;
     Nnv = v.nv;
-    if constexpr (TEST_OUT) {
-      puts("\nFiber:");
-      Print_PPL(F, "Fiber");
-    }
     if (ref) {
       Long PM[VERT_Nmax][VERT_Nmax];
       Aux_Make_Dual_Poly(F, &v, &e);
@@ -3745,13 +3633,6 @@ void Old_QuotZ_2_SublatG(Long Z[][POLY_Dmax], int *m, int *M, int *d,
   int i, j, k, r;
   GL_Long GT[POLY_Dmax][POLY_Dmax], Ginv[POLY_Dmax][POLY_Dmax];
   Long g, A[POLY_Dmax][VERT_Nmax];
-  if constexpr (TEST_QZ) {
-    for (i = 0; i < *m; i++) {
-      for (j = 0; j < *d; j++)
-        printf("%2d  ", Z[i][j]);
-      printf("/%d  input\n", M[i]);
-    }
-  }
   for (i = 0; i < *m; i++) {
     g = labs(Z[i][0]);
     for (j = 1; j < *d; j++)
@@ -3806,25 +3687,6 @@ void Old_QuotZ_2_SublatG(Long Z[][POLY_Dmax], int *m, int *M, int *d,
   for (i = 0; i < *d; i++)
     for (j = 0; j < *d; j++)
       G[i][j] = Ginv[j][i]; /* Z*G lower trian */
-  if constexpr (TEST_QZ) {
-    printf("rank=%d  m=%d\n", r, *m);
-    for (i = 0; i < *m; i++) {
-      for (j = 0; j < *d; j++)
-        printf("%2d  ", Z[i][j]);
-      printf("/%d  normalized\n", M[i]);
-    }
-    for (i = 0; i < *m; i++) {
-      for (j = 0; j < *d; j++)
-        printf("%2d  ", GxP(GT[j], Z[i], d));
-      printf("/%d  Z*G diagonal\n", M[i]);
-    }
-    for (i = 0; i < *d; i++) {
-      for (j = 0; j < *d; j++)
-        printf("%2d  ", G[i][j]);
-      printf("=G[%d]\n", i);
-    }
-    /*   *m=0; for(i=0;i<*d;i++)for(j=0;j<*d;j++)G[i][j]=(i==j); */
-  }
   assert((*m) == r);
 }
 
@@ -3950,25 +3812,6 @@ void QuotZ_2_SublatG(Long Z[][VERT_Nmax], int *m, Long *M, int *d,
   for (i = 0; i < *d; i++)
     for (j = 0; j < *d; j++)
       G[i][j] = Ginv[j][i]; /* Z*G lower trian */
-  if constexpr (TEST_QZ) {
-    printf("rank=%d  m=%d\n", r, *m);
-    for (i = 0; i < *m; i++) {
-      for (j = 0; j < *d; j++)
-        printf("%2d  ", Z[i][j]);
-      printf("/%d  normalized\n", M[i]);
-    }
-    for (i = 0; i < *m; i++) {
-      for (j = 0; j < *d; j++)
-        printf("%2d  ", GxP(GT[j], Z[i], d));
-      printf("/%d  Z*G diagonal\n", M[i]);
-    }
-    for (i = 0; i < *d; i++) {
-      for (j = 0; j < *d; j++)
-        printf("%2d  ", G[i][j]);
-      printf("=G[%d]\n", i);
-    }
-    /*   *m=0; for(i=0;i<*d;i++)for(j=0;j<*d;j++)G[i][j]=(i==j); */
-  }
   assert((*m) == r);
 }
 
@@ -3997,20 +3840,6 @@ int PM_2_QuotientZ(Long PM[VERT_Nmax][POLY_Dmax], int *d, int *p,
           PM[j][i] += G[i][I] * Z[I][j];
       }
   I = GL_Lattice_Basis_QZ(*n, *p, P, D, Z, M, &rk, G, B);
-  if constexpr (TEST_OUT) {
-    puts("PM_2_QuotientZ:\n");
-    for (i = 0; i < rk; i++)
-      printf("%d ", M[i]);
-    printf("  index=%d\n", I);
-    for (i = 0; i < rk; i++) {
-      for (j = 0; j < *p; j++)
-        printf("%3d ", GxP(G[i], PM[j], d));
-      printf("=GxP Z%d=", M[i]);
-      for (j = 0; j < *p; j++)
-        printf(" %2d", Z[i][j]);
-      puts("");
-    }
-  }
   *n = rk;
   return I;
 }
@@ -4021,28 +3850,8 @@ void Aux_Mat_2_QuotientZ(GL_Long T[][POLY_Dmax], int *D, int *np, int *d,
   for (i = 0; i < *D; i++)
     for (j = 0; j < p; j++)
       PM[j][i] = T[j][i];
-  if constexpr (TEST_out) {
-    {
-      int i, j, dd = *D, pp = p;
-      for (i = 0; i < dd; i++) {
-        for (j = 0; j < pp; j++)
-          printf("%3d", PM[j][i]);
-        puts(" =PM2in");
-      }
-    }
-  }
   PM_2_QuotientZ(PM, D, &p, Z, M, &rk);
   assert(F->nw > 0);
-  if constexpr (TEST_out) {
-    {
-      int i, j, dd = rk, pp = p;
-      for (i = 0; i < dd; i++) {
-        for (j = 0; j < pp; j++)
-          printf("%3d", PM[j][i]);
-        puts(" =PM2out");
-      }
-    }
-  }
   F->n0[F->nw - 1] = (F->nw > 1) ? (F->n0[F->nw - 2] + F->nz[F->nw - 2]) : 0;
   F->nz[F->nw - 1] = rk;
   assert(F->n0[F->nw - 1] + F->nz[F->nw - 1] <= FIB_Nmax);
@@ -4060,15 +3869,6 @@ void Aux_Mat_2_QuotientZ(GL_Long T[][POLY_Dmax], int *D, int *np, int *d,
   for (i = 0; i < rk; i++)
     for (j = 0; j < p; j++)
       z[i][s[j]] = Z[i][j];
-  if constexpr (TEST_out) {
-    printf("F->nw=%d\n", F->nw);
-    for (i = 0; i < rk; i++) {
-      printf("Z%d:", M[i]);
-      for (j = 0; j < p; j++)
-        printf(" %2d", Z[i][j]);
-      puts("");
-    }
-  }
   return;
 }
 int TriMat_to_WeightZ(GL_Long T[][POLY_Dmax], int *d, int *p, int r, int *s,
@@ -4139,12 +3939,6 @@ int ImprovePhase(int L, Long *A, Long *D, int *d, Long GP[][POLY_Dmax], int *p,
     if ((r = x / ms))
       for (l = 0; l < *p; l++)
         z[l] -= r * b * A[l];
-    if constexpr (TEST_ImpPhase) {
-      for (l = 0; l < *p; l++)
-        printf("%2d ", A[l]);
-      printf("=lr[%d]   s=%d\n", j, s);
-      printf("ms=%d m=%d s=%d a=%d b=%d r=%d x=%d\n", ms, m, s, a, b, r, x);
-    }
     x = Phase(z, *p) % m;
     if (x == 0)
       return 1;
@@ -4228,14 +4022,6 @@ int GL_Lattice_Basis_QZ(int d, int p, Long *P[VERT_Nmax], Long *D, /* index */
         V[l] = 0;
         for (c = 0; c < p; c++)
           V[l] += A[c] * GP[c][l];
-      }
-      if constexpr (TEST_Polynf) {
-        for (l = L + 1; l < d; l++) {
-          V[l] = 0;
-          for (c = 0; c < p; c++)
-            V[l] += A[c] * GxP(G[l], P[c], &d);
-          assert(V[l] == 0);
-        }
       }
       assert(V[L] == g);
       for (c = 0; c < p; c++)
@@ -4350,12 +4136,6 @@ int GL_Lattice_Basis_QZ(int d, int p, Long *P[VERT_Nmax], Long *D, /* index */
     }
   }
   *r = (index == 1) ? 0 : d;
-  if constexpr (TEST_Polynf) {
-    if (tz)
-      for (L = 0; L < d; L++)
-        for (C = 0; C < p; C++)
-          assert(GP[C][L] % D[L] == 0);
-  }
   for (L = 0; L < d; L++)
     M[L] = D[L];
   Normalize_QuotientZ(r, &p, Z, M);
@@ -4573,15 +4353,6 @@ int VP_2_CWS(Long *V[], int n, int v, CWS *CW) {
     for (j = 0; j < v; j++)
       CW->W[CW->nw][j] = W[R][j];
     CW->d[CW->nw] = d[R];
-    if constexpr (TEST_OUT) {
-      for (i = 0; i < v; i++)
-        printf("%d ", W[R][i]);
-      printf("=W  Y=");
-      for (i = CW->nw; i < v; i++)
-        printf("%d ", Y[i]);
-      puts("");
-      Print_xxG(C, &v, "C");
-    }
     WZ_to_GLZ(&Y[CW->nw], X, &cd, B);
     C_to_BrxC(B, C, X, &cd, &v);
     CW->nw++;
@@ -5193,12 +4964,6 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
           for (i = 0; i < d; i++)
             s += G.x[l][i] * P->x[X[k]][i];
           if (s != (k == l)) {
-            if (TESTfano == 1) /* >> test UnitBasis << */
-            {
-              Print_LMatrix(G, "G");
-              Print_LMatrix(M, "M");
-              exit(1);
-            }
             goon = 0;
           }
         }
@@ -5217,8 +4982,6 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
           while (getNI(l, I))
             l++;
           DP[k] = D[l];
-          if (TESTfano == 1)
-            printf("l=%d ", l);
           for (i = 0; i < d; i++) {
             Q->x[k][i] = 0;
             for (j = 0; j < d; j++)
@@ -5226,14 +4989,7 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
           }
           l++;
         }
-        if (TESTfano == 1) {
-          puts("");
-          Print_PPL(Q, "fano");
-        } else if (TESTfano == 2) {
-          Q->n--;
-          Print_PPL(Q, "fanoP");
-          Q->n++;
-        } else if (inFILE != stdin)
+        if (inFILE != stdin)
           Make_Fano5d(Q, DP, F, symDP, nc, CC);
       }
     } /* ENDof base change */
@@ -5268,12 +5024,6 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
                 for (i = 0; i < d; i++)
                   s += G.x[l][i] * P->x[Y[k]][i];
                 if (s != (k == l)) {
-                  if (TESTfano == 1) /* >> test UnitBasis << */
-                  {
-                    Print_LMatrix(G, "G");
-                    Print_LMatrix(M, "M");
-                    exit(1);
-                  }
                   goon = 0;
                 }
               }
@@ -5292,8 +5042,6 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
                 while (getNI(l, I))
                   l++;
                 DP[k] = D[l];
-                if (TESTfano == 1)
-                  printf("l=%d ", l);
                 for (i = 0; i < d; i++) {
                   Q->x[k][i] = 0;
                   for (j = 0; j < d; j++)
@@ -5301,24 +5049,11 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
                 }
                 l++;
               }
-              if (TESTfano == 1) {
-                puts("");
-                Print_PPL(Q, "fano");
-              } else if (TESTfano == 2) {
-                Q->n--;
-                Print_PPL(Q, "fanoP");
-                Q->n++;
-              } else if (inFILE != stdin)
+              if (inFILE != stdin)
                 Make_Fano5d(Q, DP, F, symDP, nc, CC);
             }
           }
         } /* ENDof base change */
-      if (TESTfano == 1) {
-        for (c++; c < nc; c++)
-          if ((CI[c] & FI[e]) == CI[c])
-            break;
-        assert(c == nc);
-      }
     } /* ENDof circuit facet case  */
   } /* ENDof go over CELLS */
 
@@ -5652,19 +5387,9 @@ int Make_Fano5d(PolyPointList *P, int *Dpt, EqList *E, /* nc=#Circuits */
   int d = P->n - 1, np = P->np; /*Achtung, anders als oben wirklich ALLE
                                                      Gitterpunkte von P*/
 
-  if constexpr (ALL_FANOS_BUT_INEFFICIENT) {
-    int maxVnumber = 3 * P->n;
-  } else {
-    int maxVnumber = 3 * P->n - 1;
-    /* Reicht da jede n-dim. Fano <= 3n-1 Ecken hat; mit
-\tgenau einer bekannten Ausnahme mit 3n Ecken, falls n gerade ist */
-  }
-
-  int maxVnumber; /* unify declarations: both branches set it */
-  if constexpr (ALL_FANOS_BUT_INEFFICIENT)
-    maxVnumber = 3 * P->n;
-  else
-    maxVnumber = 3 * P->n - 1;
+  int maxVnumber = ALL_FANOS_BUT_INEFFICIENT ? 3 * P->n : 3 * P->n - 1;
+  /* Reicht da jede n-dim. Fano <= 3n-1 Ecken hat; mit
+     genau einer bekannten Ausnahme mit 3n Ecken, falls n gerade ist */
 
   /*Circuits sind (bei np=6) entweder von Form 1 0 0 1 -2 Schluss 0 (np=6)
                                 oder 1 -1 1 0 -1 Schluss 1*/
