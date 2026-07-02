@@ -98,12 +98,15 @@ names and descriptions should remain locatable.
   `exit(1)` or a proper exception.
 
 ### 9. Memory leaks in `mori.c` main loop
-- **File**: `mori.c`
-- **Lines**: 78–88
+- **File**: `mori.cpp`
+- **Lines**: 89–103
 - **Severity**: High
-- **Description**: All allocations (`CW`, `E`, `DE`, `_P`, `_DP`, `PM`, `DPM`)
-  are never freed — memory leak on every input iteration of the `while` loop.
-  The program returns 0 at the end without freeing anything.
+- **Status**: Fixed
+- **Description**: `CW`, `E`, `DE`, `_P`, and `_DP` were raw heap allocations.
+  During migration they were converted to `std::unique_ptr`, so memory is
+  released automatically when the pointers go out of scope. `PM` and `DPM`
+  are stack-allocated `PairMat` arrays (typedef'd as `Long[EQUA_Nmax][VERT_Nmax]`)
+  and do not leak.
 
 ### 10. Huge struct never freed in `RgcWeights` — RESOLVED by migration
 - **File**: `cws.cpp`

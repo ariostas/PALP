@@ -147,7 +147,7 @@ Each fix is a separate step with a regression test where possible. See `ISSUES.m
 - [x] **5.1** Fix `assert(++m < binco)` side effect in `MoriCone.cpp` (no remaining `assert` with `++`/`--` side effects in MoriCone; other files still have some).
 - [x] **5.2** Replace `exit(0)` with `exit(1)` on all error paths.
 - [x] **5.3** Fix memory leaks in `Fano5d` (`Polynf.cpp`).
-- [ ] **5.3a** Fix memory leaks in `mori.cpp` main loop (`CW`, `E`, `DE`, `_P`, `_DP`, `PM`, `DPM`).
+- [x] **5.3a** Fix memory leaks in `mori.cpp` main loop (`CW`, `E`, `DE`, `_P`, `_DP`; `PM`/`DPM` are stack arrays).
 - [x] **5.4** Fix `realloc` losing old pointer in `E_Poly.cpp` `DYNadd_for_completion`.
 - [x] **5.5** Fix partial array initialization in `E_Poly.cpp`.
 - [ ] **5.6** Add missing `fscanf` return-value checks everywhere.

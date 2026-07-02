@@ -2193,22 +2193,6 @@ void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
   else if (_Flag->g || _Flag->m || _Flag->b || _Flag->i || _Flag->c ||
            _Flag->t || _Flag->d || _Flag->H)
     Subdivide(_P, V->nv, I, cp, T, &t, _Flag, F.get());
-  if (0) { /* seems to be left-over rubbish  */
-    PolyPointList *DP = (PolyPointList *)malloc(sizeof(PolyPointList));
-    EqList *DE = (EqList *)malloc(sizeof(EqList));
-    PairMat PM, DPM;
-
-    Make_Dual_Poly(_P, V, E, DP);
-    Make_VEPM(_P, V, E, PM);
-    VNL_to_DEL(_P, V, DE);
-    assert(Transpose_PM(PM, DPM, V->nv, E->ne));
-    Complete_Poly(DPM, DE, E->ne, DP);
-    // for(i=0;i<cp;i++)
-    //   Dh2[i]=SectionCount(_P,i,DP)-1;
-    free(DP);
-    free(DE); // for(i=0;i<cp;i++)printf("%d ",Dh2[i]);puts("=h02");
-    Subdivide(_P, V->nv, I, cp, T, &t, _Flag, F.get());
-  }
 }
 
 /****************************************************************
