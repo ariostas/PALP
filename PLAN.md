@@ -144,7 +144,7 @@ Symbols left as macros because they are required by `#if`/`#ifdef` array sizing 
 
 Each fix is a separate step with a regression test where possible. See `ISSUES.md` for details.
 
-- [ ] **5.1** Fix `assert(++m < binco)` side effect in `MoriCone.cpp`.
+- [x] **5.1** Fix `assert(++m < binco)` side effect in `MoriCone.cpp` (no remaining `assert` with `++`/`--` side effects in MoriCone; other files still have some).
 - [ ] **5.2** Replace `exit(0)` with `exit(1)` on all error paths.
 - [ ] **5.3** Fix memory leaks (`Polynf.cpp` error paths, ASAN verification).
 - [ ] **5.4** Fix `realloc` losing old pointer in `E_Poly.cpp` `DYNadd_for_completion`.

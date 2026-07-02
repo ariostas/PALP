@@ -31,7 +31,7 @@ FILE *inFILE, *outFILE;
 void PrintExtOptions(void) {
   puts("Extended/experimental options:");
   puts("           -d1 -d2 [-po]      combined mirror info (projected");
-  exit(0);
+  exit(1);
 }
 void LocalPrintUsage(char *c, char hc) {
   printf("This is  `%s', a program for classifying reflexive polytopes\n", c);
@@ -299,7 +299,7 @@ int main(int narg, char *fn[]) {
   PolyPointList *_P;
   if (narg == 1) {
     printf("For help type `%s -h'\n", fn[0]);
-    exit(0);
+    exit(1);
   }
   _P_up = std::make_unique<PolyPointList>();
   _P = _P_up.get();
@@ -311,7 +311,7 @@ int main(int narg, char *fn[]) {
       switch (fn[n][1]) {
       case 'h':
         LocalPrintUsage(fn[0], 'g');
-        exit(0);
+        exit(1);
       case 'f':
       case 0:
         FilterFlag = 1;
@@ -352,7 +352,7 @@ int main(int narg, char *fn[]) {
       case 'H': {
 #if (POLY_Dmax != 4)
         puts("For using Hodge-DB-routines set POLY_Dmax=4!");
-        exit(0);
+        exit(1);
 #endif
         HFlag = fn[n][2];
         if (HFlag == 'e')
@@ -369,7 +369,7 @@ int main(int narg, char *fn[]) {
           polyo = (fn[n][3]) ? &fn[n][3] : fn[++n];
         else {
           LocalPrintUsage(fn[0], 'g');
-          exit(0);
+          exit(1);
         }
       } break;
       case 'd': {
@@ -381,7 +381,7 @@ int main(int narg, char *fn[]) {
           dbout = (fn[n][3]) ? &fn[n][3] : fn[++n];
         else {
           LocalPrintUsage(fn[0], 'g');
-          exit(0);
+          exit(1);
         }
       } break;
       case 'o':
@@ -413,7 +413,7 @@ int main(int narg, char *fn[]) {
         break;
       default:
         printf("Unknown flag %s !!\n", fn[n]);
-        exit(0);
+        exit(1);
       }
   n--;
 
@@ -427,7 +427,7 @@ int main(int narg, char *fn[]) {
       inFILE = stdin;
     if (inFILE == NULL) {
       printf("Input file %s not found!\n", fn[n]);
-      exit(0);
+      exit(1);
     }
     if (narg > ++n)
       outFILE = fopen(fn[n], "w");
