@@ -136,7 +136,7 @@ int main(int narg, char *fn[]) {
         Einstein = 1;
       else if (c == 'h') {
         PrintUsage(fn[0]);
-        exit(0);
+        exit(1);
       } else if (c == 'f')
         FilterFlag = 1;
       else if (c == 'g')
@@ -198,7 +198,7 @@ int main(int narg, char *fn[]) {
         d = 1;
       } else {
         printf("Unknown option '-%c'; use -h for help\n", c);
-        exit(0);
+        exit(1);
       }
     }
   }
@@ -220,7 +220,7 @@ int main(int narg, char *fn[]) {
                        PS + VS + (1 - ZS) ==
                    0)) {
     puts("\n-T: Please specify desired output, e.g. via -v or -p \n");
-    exit(0);
+    exit(1);
   }
   if (FilterFlag) {
     inFILE = NULL;
@@ -232,7 +232,7 @@ int main(int narg, char *fn[]) {
       inFILE = stdin;
     if (inFILE == NULL) {
       printf("Input file %s not found!\n", fn[n]);
-      exit(0);
+      exit(1);
     }
     if (narg > ++n)
       outFILE = fopen(fn[n], "w");
@@ -302,7 +302,7 @@ int main(int narg, char *fn[]) {
         if (0 == Transpose_PM(PM, DPM, V.nv, E->ne)) {
           fprintf(stderr, "Transpose_PM failed because #eq=%d > VERT_Nmax\n",
                   E->ne);
-          exit(0);
+          exit(1);
         }
         VNL_to_DEL(_P, &V, DE);
         Complete_Poly(DPM, DE, E->ne, _DP);
