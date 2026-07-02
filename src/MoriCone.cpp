@@ -611,7 +611,10 @@ void Triang_from_SR(triang *TR, triang *SR) { /* consistency check ... */
       k, l, r;
   Inci64 *S = SR->I, *T = TR->I, *A, *M, *N;
   long long binco = TR->v; /* Bino.Coeff */
-  assert(p <= 64);
+  if (p > 64) {
+    fputs("Too many vertices for Inci64 triangulation (max 64)\n", stderr);
+    exit(1);
+  }
   if (j > d)
     j = d + 1;
   while (i < j) {
@@ -665,7 +668,10 @@ void StanleyReisner(triang *SR,
   Inci64 *S = SR->I, *I = T->I, *A, *M, *N, U = 1;
   long long binco = T->v; /* Binom.Coeff */
   int i = 1, p = T->v, j = p / 2, d = T->d, nI = T->n, s = 0, m = 0, k, l, r;
-  assert(p <= 64);
+  if (p > 64) {
+    fputs("Too many vertices for Inci64 triangulation (max 64)\n", stderr);
+    exit(1);
+  }
   if (j > d)
     j = d + 1;
   while (i < j) {
