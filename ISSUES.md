@@ -66,12 +66,13 @@ names and descriptions should remain locatable.
   full zeroing.
 
 ### 6. `assert` guarding division by zero
-- **File**: `Polynf.c`
-- **Line**: 894
+- **File**: `Polynf.cpp`
+- **Line**: ~1528, ~1985, ~3720
 - **Severity**: High
-- **Description**: `assert(g > 0)` is followed by division by `g`. If assert
-  is disabled (`NDEBUG`), division by zero occurs. Should be an explicit
-  `if (g <= 0) { /* error */ }` check, not an assert.
+- **Status**: Fixed
+- **Description**: `assert(g > 0)` was followed by division by `g`. Converted
+  to explicit `if (g <= 0) { fputs(...); exit(1); }` checks in
+  `Aux_Vol_Barycent`, `Add_Square_To_Rel`, and `Normalize_QuotientZ`.
 
 ### 7. Dead function: `FileRW()`
 - **File**: `cws.c`
@@ -312,10 +313,12 @@ names and descriptions should remain locatable.
   be removed or gated behind a debug flag.
 
 ### 35. Debug `printf` in production
-- **File**: `MoriCone.c`
+- **File**: `MoriCone.cpp`
 - **Line**: 949
 - **Severity**: Low
-- **Description**: `printf` debug statement left in production code.
+- **Status**: Fixed (as part of TRACE_TRIANGULATION cleanup)
+- **Description**: `printf` debug statement left in production code. Removed with the
+  `#if TRACE_TRIANGULATION` cleanup in `MoriCone.cpp`.
 
 ### 36. Dead code blocks
 - **File**: `MoriCone.c`
@@ -397,13 +400,13 @@ names and descriptions should remain locatable.
 ## Algorithmic concerns (verify mathematical correctness)
 
 ### 45. `Inci64` limited to 64 points
-- **File**: `MoriCone.c`
-- **Lines**: 402, 418
+- **File**: `MoriCone.cpp`
+- **Lines**: ~614, ~668
 - **Severity**: High
-- **Description**: `p <= 64` assert — `Inci64` (unsigned long long) limited to
-  64 points. If a polytope has more than 64 points, silent failure or wrong
-  triangulation results. The assert is the only protection; with `NDEBUG`, it
-  disappears entirely.
+- **Status**: Fixed
+- **Description**: `p <= 64` asserts in `Triang_from_SR` and `StanleyReisner`
+  converted to hard errors (`fputs(..., stderr); exit(1);`) so the limit remains
+  enforced even if asserts are disabled.
 
 ### 46. `binco` cap at 2999
 - **File**: `MoriCone.c`
@@ -424,9 +427,9 @@ names and descriptions should remain locatable.
   be addressed.
 
 ### 48. Euler characteristic check via `assert`
-- **File**: `Vertex.c`
-- **Line**: 154
+- **File**: `Vertex.cpp`
+- **Line**: ~260
 - **Severity**: Medium
-- **Description**: `assert(M == 2*(d%2))` — if this assert is disabled, incorrect
-  face counts go undetected, producing wrong Hodge numbers silently. This is
-  a mathematical correctness check that should be a hard error, not an assert.
+- **Status**: Fixed
+- **Description**: `assert(M == 2*(d%2))` in face-incidence construction converted
+  to a hard error: prints the F-vector, polytope, and face info, then `exit(1)`.

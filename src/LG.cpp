@@ -1725,17 +1725,13 @@ void LGO_VaHo(Weight *W, VaHo *V) {
             }
             g = Egcd(rj, X, &A, &B);
             sj = (sj * A) % X;
-            assert(rj > 0);
-            assert(g > 0);
-            assert(sj % g == 0);
-            if (sj % g) {
+            if (rj <= 0 || g <= 0 || sj % g != 0) {
               g = 0;
               break;
             }
             rj = g;
             g = Egcd(r, rj, &A, &B);
-            assert(g > 0);
-            if ((s * rj - sj * r) % (g * X)) {
+            if (g <= 0 || (s * rj - sj * r) % (g * X)) {
               g = 0;
               break;
             }
@@ -1747,228 +1743,230 @@ void LGO_VaHo(Weight *W, VaHo *V) {
             }
           }
           assert((j < J) == (g == 0));
-          if (g == 0)
-            Quo.n = 0;
-          else if (g == X)
-            Init1_xN(&Num, d - w);
-          else { /* assert(g>1); */
-            Aux_Phase_Poly(&Num, w, d, r, s, X / g);
-          }
-          if (g) {
-            Init1_xN(&Den, w * (X / g));
-            BottomUpQuot(&Num, &Den, &Quo, &Rem);
-            for (i = 0; i < Quo.n; i++)
-              if ((q = (QL + Quo.e[i])) % d == 0) {
-                h[q / d] += Quo.c[i];
-                hn = 1;
-              }
-          }
+        if (g == 0)
+          Quo.n = 0;
+        else if (g == X)
+          Init1_xN(&Num, d - w);
+        else { /* assert(g>1); */
+          Aux_Phase_Poly(&Num, w, d, r, s, X / g);
         }
-        if (N > 1) /* N>1: S[] sector -> SN[] new sector PoCoLi */
-        {
-          int u, b, l, L[POLY_Dmax], w[W_Nmax], o[W_Nmax], io[W_Nmax], mm = 1;
-          for (i = 0; i < N; i++)
-            for (j = i + 1; j < N; j++) /* sort invariant weights */
-              if (W->w[n[j]] < W->w[n[i]])
-                swap(&n[i], &n[j]);
-          for (i = 0; i < N; i++) {
-            w[i] = W->w[n[i]];
-            o[i] = 1;
-            for (j = 0; j < J; j++) {
-              u = NNgcd(W->z[j][n[i]], W->m[j]);
-              u = W->m[j] / u;
-              o[i] = u * o[i] / Fgcd(o[i], u);
+        if (g) {
+          Init1_xN(&Den, w * (X / g));
+          BottomUpQuot(&Num, &Den, &Quo, &Rem);
+          for (i = 0; i < Quo.n; i++)
+            if ((q = (QL + Quo.e[i])) % d == 0) {
+              h[q / d] += Quo.c[i];
+              hn = 1;
             }
-            mm = mm * o[i] / Fgcd(mm, o[i]);
+        }
+      }
+      if (N > 1) /* N>1: S[] sector -> SN[] new sector PoCoLi */
+      {
+        int u, b, l, L[POLY_Dmax], w[W_Nmax], o[W_Nmax], io[W_Nmax], mm = 1;
+        for (i = 0; i < N; i++)
+          for (j = i + 1; j < N; j++) /* sort invariant weights */
+            if (W->w[n[j]] < W->w[n[i]])
+              swap(&n[i], &n[j]);
+        for (i = 0; i < N; i++) {
+          w[i] = W->w[n[i]];
+          o[i] = 1;
+          for (j = 0; j < J; j++) {
+            u = NNgcd(W->z[j][n[i]], W->m[j]);
+            u = W->m[j] / u;
+            o[i] = u * o[i] / Fgcd(o[i], u);
           }
-          /* phase(g.s.) = gs/mm; mm=lcm(o[i]); phase(X(n(i))=z[i]/o[i];     */
+          mm = mm * o[i] / Fgcd(mm, o[i]);
+        }
+        /* phase(g.s.) = gs/mm; mm=lcm(o[i]); phase(X(n(i))=z[i]/o[i];     */
 
-          /*  BEGIN GROUP PROJECTION */
-          if (mm > 1) {
-            int *mo, m, ego = 1; /* effective group order */
-            PoCoLi *A, *B, *C, Ax;
-            Ax.A = Quo.A;
-            AllocPoCoLi(&Ax);
-            Num.n = 0;
-            for (j = 0; j < J; j++) {
-              int g = W->z[j][n[0]];
-              for (i = 1; i < N; i++)
-                g = NNgcd(g, W->z[j][n[i]]);
-              M[j] = W->m[j] / NNgcd(g, W->m[j]);
+        /*  BEGIN GROUP PROJECTION */
+        if (mm > 1) {
+          int *mo, m, ego = 1; /* effective group order */
+          PoCoLi *A, *B, *C, Ax;
+          Ax.A = Quo.A;
+          AllocPoCoLi(&Ax);
+          Num.n = 0;
+          for (j = 0; j < J; j++) {
+            int g = W->z[j][n[0]];
+            for (i = 1; i < N; i++)
+              g = NNgcd(g, W->z[j][n[i]]);
+            M[j] = W->m[j] / NNgcd(g, W->m[j]);
+          }
+          for (m = 0; m < MX.n; m++)
+            if (mm <= MX.d[m])
+              break;
+          assert(mm == MX.d[m]);
+          mo = MX.mt[m];
+          l = 0;
+          for (j = 0; j < m; j++)
+            if (mo[j] == 1)
+              l++;
+            else if (mo[j] == -1)
+              l++;
+            else
+              assert(mo[j] == 0);
+
+          b = ego = Init_Multiloop(M, L, &u, &J);
+          do { /* BEGIN make group */
+            int gs = 0, z[W_Nmax];
+            for (i = 0; i < N; i++) {
+              z[i] = 0; /* g.s. phases */
+              for (j = 0; j < J; j++)
+                z[i] += L[j] * ((W->z[j][n[i]] * o[i]) / W->m[j]);
+              io[i] = mm / o[i];
+              gs += io[i] * z[i];
             }
-            for (m = 0; m < MX.n; m++)
-              if (mm <= MX.d[m])
-                break;
-            assert(mm == MX.d[m]);
-            mo = MX.mt[m];
-            l = 0;
-            for (j = 0; j < m; j++)
-              if (mo[j] == 1)
-                l++;
-              else if (mo[j] == -1)
-                l++;
+            gs %= mm;
+            assert(gs >= 0);
+            SO = S;
+            SN = &S[mm]; /* for each projection group element */
+            for (s = 0; s < mm; s++) {
+              int ds = gs + s;
+              S[s].A = 2 * mm; /* init SO */
+              AllocPoCoLi(&S[s]);
+              if (ds % io[0])
+                S[s].n = 0;
+              else if (*o > 1)
+                Aux_Phase_Poly(&S[s], w[0], d, z[0], -ds / io[0], o[0]);
               else
-                assert(mo[j] == 0);
-
-            b = ego = Init_Multiloop(M, L, &u, &J);
-            do { /* BEGIN make group */
-              int gs = 0, z[W_Nmax];
-              for (i = 0; i < N; i++) {
-                z[i] = 0; /* g.s. phases */
-                for (j = 0; j < J; j++)
-                  z[i] += L[j] * ((W->z[j][n[i]] * o[i]) / W->m[j]);
-                io[i] = mm / o[i];
-                gs += io[i] * z[i];
-              }
-              gs %= mm;
-              assert(gs >= 0);
-              SO = S;
-              SN = &S[mm]; /* for each projection group element */
-              for (s = 0; s < mm; s++) {
-                int ds = gs + s;
-                S[s].A = 2 * mm; /* init SO */
-                AllocPoCoLi(&S[s]);
-                if (ds % io[0])
-                  S[s].n = 0;
-                else if (*o > 1)
-                  Aux_Phase_Poly(&S[s], w[0], d, z[0], -ds / io[0], o[0]);
-                else
-                  Init1_xN(&S[s], d - w[0]);
-              }
-              for (i = 1; i < N; i++) {
-                PoCoLi *Saux = SO, *ac;
-                int t;
-                for (t = 0; t < mm; t++) {
-                  A = &Ax;
-                  B = &Quo;
-                  C = &Rem;
-                  C->n = 0;
-                  for (s = 0; s < mm; s++)
-                    if (s % io[i] == 0) {
-                      if (o[i] > 1)
-                        Aux_Phase_Poly(A, w[i], d, z[i], -s / io[i], o[i]);
-                      else
-                        Init1_xN(A, d - w[i]);
-                      PolyProd(&SO[(mm + t - s) % mm], A, B);
-                      Poly_Sum(B, C, A);
-                      ac = A;
-                      A = C;
-                      C = ac;
-                    }
-                  SN[t].A = C->A;
-                  AllocPoCoLi(&SN[t]);
-                  PolyCopy(C, &SN[t]);
-                }
-                for (t = 0; t < mm; t++)
-                  Free_PoCoLi(&SO[t]);
-                SO = SN;
-                SN = Saux;
-              } /* S[s] finished */
-
-              /* if(pntw)for(s=0;s<mm;s++){
-              printf("gs=%d S[%d]= ",gs,s);PrintPoCoLi(&SO[s]);} */
-
-              Poly_Sum(&SO[0], &Num, &Rem);
-              B = &Num;
-              A = &Rem;
-              for (j = 0; j < m; j++)
-                if (mo[j] == 1) {
-                  Poly_Sum(A, &SO[MX.d[j]], B);
-                  C = A;
-                  A = B;
-                  B = C;
-                } else if (mo[j] == -1) {
-                  Poly_Dif(A, &SO[MX.d[j]], B);
-                  C = A;
-                  A = B;
-                  B = C;
-                }
-              assert((A == &Num) == (l % 2));
-              if (l % 2 == 0)
-                PolyCopy(A, &Num);
-              for (s = 0; s < mm; s++) {
-                Free_PoCoLi(&SO[s]);
-              }
-              assert(0 < (b--));
-            } while (Multiloop(M, L, &u, &J));
-            assert(b == 0);
-
-            for (i = 0; i < Num.n; i++) {
-              assert(0 == Num.c[i] % ego);
-              Num.c[i] /= ego;
+                Init1_xN(&S[s], d - w[0]);
             }
+            for (i = 1; i < N; i++) {
+              PoCoLi *Saux = SO, *ac;
+              int t;
+              for (t = 0; t < mm; t++) {
+                A = &Ax;
+                B = &Quo;
+                C = &Rem;
+                C->n = 0;
+                for (s = 0; s < mm; s++)
+                  if (s % io[i] == 0) {
+                    if (o[i] > 1)
+                      Aux_Phase_Poly(A, w[i], d, z[i], -s / io[i], o[i]);
+                    else
+                      Init1_xN(A, d - w[i]);
+                    PolyProd(&SO[(mm + t - s) % mm], A, B);
+                    Poly_Sum(B, C, A);
+                    ac = A;
+                    A = C;
+                    C = ac;
+                  }
+                SN[t].A = C->A;
+                AllocPoCoLi(&SN[t]);
+                PolyCopy(C, &SN[t]);
+              }
+              for (t = 0; t < mm; t++)
+                Free_PoCoLi(&SO[t]);
+              SO = SN;
+              SN = Saux;
+            } /* S[s] finished */
 
-            /* if(pntw){printf("Num[%d:%d,%d]=",k,I[0],I[1]);
-               PrintPoCoLi(&Num);fflush(0);} */
+            /* if(pntw)for(s=0;s<mm;s++){
+            printf("gs=%d S[%d]= ",gs,s);PrintPoCoLi(&SO[s]);} */
 
-            A = &Num;
-            B = &Quo;
-            if (Num.n)
-              for (i = 0; i < N; i++) {
-                Init1_xN(&Den, w[i] * o[i]);
-                BottomUpQuot(A, &Den, B, &Rem);
+            Poly_Sum(&SO[0], &Num, &Rem);
+            B = &Num;
+            A = &Rem;
+            for (j = 0; j < m; j++)
+              if (mo[j] == 1) {
+                Poly_Sum(A, &SO[MX.d[j]], B);
+                C = A;
+                A = B;
+                B = C;
+              } else if (mo[j] == -1) {
+                Poly_Dif(A, &SO[MX.d[j]], B);
                 C = A;
                 A = B;
                 B = C;
               }
-            for (i = 0; i < A->n; i++)
-              if ((q = (QL + A->e[i])) % d == 0) {
-                h[q / d] += A->c[i];
-                hn = 1;
-              }
+            assert((A == &Num) == (l % 2));
+            if (l % 2 == 0)
+              PolyCopy(A, &Num);
+            for (s = 0; s < mm; s++) {
+              Free_PoCoLi(&SO[s]);
+            }
+            assert(0 < (b--));
+          } while (Multiloop(M, L, &u, &J));
+          assert(b == 0);
 
-            /* if(pntw){printf("Quo[%d:%d,%d]=",k,I[0],I[1]);
-                    PrintPoCoLi(A);fflush(0);} */
-
-            Free_PoCoLi(&Ax); /*  END GROUP PROJECTION */
-          } else {
-            PoincarePoly(N, w, d, &Quo, &Num, &Den);
-            for (i = 0; i < Quo.n; i++)
-              if ((q = (QL + Quo.e[i])) % d == 0) {
-                h[q / d] += Quo.c[i];
-                hn = 1;
-              } /*END of no projection */
+          for (i = 0; i < Num.n; i++) {
+            assert(0 == Num.c[i] % ego);
+            Num.c[i] /= ego;
           }
-        } /* N>1 CASE FINISHED */
 
-        if (hn)
+          /* if(pntw){printf("Num[%d:%d,%d]=",k,I[0],I[1]);
+             PrintPoCoLi(&Num);fflush(0);} */
+
+          A = &Num;
+          B = &Quo;
+          if (Num.n)
+            for (i = 0; i < N; i++) {
+              Init1_xN(&Den, w[i] * o[i]);
+              BottomUpQuot(A, &Den, B, &Rem);
+              C = A;
+              A = B;
+              B = C;
+            }
+          for (i = 0; i < A->n; i++)
+            if ((q = (QL + A->e[i])) % d == 0) {
+              h[q / d] += A->c[i];
+              hn = 1;
+            }
+
+          /* if(pntw){printf("Quo[%d:%d,%d]=",k,I[0],I[1]);
+                  PrintPoCoLi(A);fflush(0);} */
+
+          Free_PoCoLi(&Ax); /*  END GROUP PROJECTION */
+        } else {
+          PoincarePoly(N, w, d, &Quo, &Num, &Den);
+          for (i = 0; i < Quo.n; i++)
+            if ((q = (QL + Quo.e[i])) % d == 0) {
+              h[q / d] += Quo.c[i];
+              hn = 1;
+            } /*END of no projection */
+        }
+      } /* N>1 CASE FINISHED */
+
+      if (hn)
+        for (i = 0; i <= D; i++)
+          if (h[i])
+            V->h[D - i][i + dQ] += h[i];
+      if (V->sts)
+        if (hn) {
+          fprintf(outFILE, "sec[%d", k);
+          for (j = 0; j < J; j++)
+            fprintf(outFILE, "%s%d", j ? "," : ":", I[j]);
+          fputs("]", outFILE);
+          fprintf(outFILE, " th=%2ld", th[0]);
+          for (i = 1; i < W->N; i++)
+            fprintf(outFILE, " %2ld", th[i]); /*fprintf(outFILE,"/%d ",U);*/
+          /*fprintf(outFILE," %d*ph=",U);for(i=0;i<J;i++)printf("%d ",ph[i]);
+           */
+          fprintf(outFILE, "  QL=%2ld/%d dQ=%2ld ", QL, d, dQ);
+          /*fprintf(outFILE,"N=%d ",N);*/
           for (i = 0; i <= D; i++)
             if (h[i])
-              V->h[D - i][i + dQ] += h[i];
-        if (V->sts)
-          if (hn) {
-            fprintf(outFILE, "sec[%d", k);
-            for (j = 0; j < J; j++)
-              fprintf(outFILE, "%s%d", j ? "," : ":", I[j]);
-            fputs("]", outFILE);
-            fprintf(outFILE, " th=%2ld", th[0]);
-            for (i = 1; i < W->N; i++)
-              fprintf(outFILE, " %2ld", th[i]); /*fprintf(outFILE,"/%d ",U);*/
-            /*fprintf(outFILE," %d*ph=",U);for(i=0;i<J;i++)printf("%d ",ph[i]);
-             */
-            fprintf(outFILE, "  QL=%2ld/%d dQ=%2ld ", QL, d, dQ);
-            /*fprintf(outFILE,"N=%d ",N);*/
-            for (i = 0; i <= D; i++)
-              if (h[i])
-                fprintf(outFILE, " q%d%ld+=%d", i, i + dQ, h[i]);
-            fputs("\n", outFILE);
-          }
-        /* if(!cont)exit(1); */
-        assert(0 < (a--));
-      } while (Multiloop(W->m, I, &v, &J));
-      assert(a == 0); /* END gen TWISTS */
+              fprintf(outFILE, " q%d%ld+=%d", i, i + dQ, h[i]);
+          fputs("\n", outFILE);
+        }
+      /* if(!cont)exit(1); */
+      assert(0 < (a--));
     }
-    FreeMobius(&MX);
-    Free_PoCoLi(&Rem);
-    Free_PoCoLi(&Quo);
-    assert(Hodge_Test(V));
-    Free_PoCoLi(&Den);
-    Free_PoCoLi(&Num);
-    assert(1 == WIndex_HTrace(W, &WI, &T));
-    assert(Index_Trace_Test(V, WI, T));
-    if (V->sts)
-      printf("WittenIndex=%d, Trace=%d\n", WI, T);
+    while (Multiloop(W->m, I, &v, &J))
+      ;
+    assert(a == 0); /* END gen TWISTS */
   }
+  FreeMobius(&MX);
+  Free_PoCoLi(&Rem);
+  Free_PoCoLi(&Quo);
+  assert(Hodge_Test(V));
+  Free_PoCoLi(&Den);
+  Free_PoCoLi(&Num);
+  assert(1 == WIndex_HTrace(W, &WI, &T));
+  assert(Index_Trace_Test(V, WI, T));
+  if (V->sts)
+    printf("WittenIndex=%d, Trace=%d\n", WI, T);
+}
 }
 /* T=\x*t: (1-T^(d-w))/(1-T^w)=(1-T^(d-w))*(1+T^w+T^2w+...+T^(x-1)w)/(1-T^wx)*
  * phase(\x)=r/x. All terms in numerator with phase s/x, p=0,...,x-1 =>	     *
