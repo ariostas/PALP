@@ -123,13 +123,14 @@ names and descriptions should remain locatable.
   on `malloc` return. Subsequent use of `he` could segfault.
 
 ### 12. Command injection via `system()`
-- **File**: `SingularInput.c`
-- **Line**: 584
+- **File**: `SingularInput.cpp`
+- **Line**: ~99–601
 - **Severity**: Medium
-- **Description**: `system(SingularCall)` — the command string incorporates
-  `getenv("TMPDIR")` which could contain shell metacharacters. Also, the
-  return value only prints a message; the error is not propagated. Should
-  sanitize the temp directory path or use `execve`-style calls.
+- **Status**: Fixed
+- **Description**: `system(SingularCall)` used a command string built from
+  `TMPDIR` and the temp file path, allowing shell metacharacters. Replaced with
+  `fork`/`dup2`/`execvp` of `Singular` with explicit argv (`-q`, script file),
+  and added a check for `mkstemp` failure.
 
 ---
 

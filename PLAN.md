@@ -146,11 +146,11 @@ Each fix is a separate step with a regression test where possible. See `ISSUES.m
 
 - [x] **5.1** Fix `assert(++m < binco)` side effect in `MoriCone.cpp` (no remaining `assert` with `++`/`--` side effects in MoriCone; other files still have some).
 - [x] **5.2** Replace `exit(0)` with `exit(1)` on all error paths.
-- [ ] **5.3** Fix memory leaks (`Polynf.cpp` error paths, ASAN verification).
-- [ ] **5.4** Fix `realloc` losing old pointer in `E_Poly.cpp` `DYNadd_for_completion`.
-- [ ] **5.5** Fix partial array initialization in `E_Poly.cpp`.
+- [ ] **5.3** Fix memory leaks (`Polynf.cpp` error paths, `Vertex.cpp`, `mori.cpp`).
+- [x] **5.4** Fix `realloc` losing old pointer in `E_Poly.cpp` `DYNadd_for_completion`.
+- [x] **5.5** Fix partial array initialization in `E_Poly.cpp`.
 - [ ] **5.6** Add missing `fscanf` return-value checks everywhere.
-- [ ] **5.7** Fix `system()` command injection in `SingularInput.cpp`.
+- [x] **5.7** Fix `system()` command injection in `SingularInput.cpp`.
 - [x] **5.8** Fix buffer-overflow risks (`LG.cpp` `MakeMobius` split packed buffer; `lgotwist.cpp`, `cws.cpp`, `Subdb.cpp` no ASAN failures in current tests).
 - [x] **5.9** Fix integer-overflow risks (`Polynf.cpp` volume product checks, `lgotwist.cpp` `Lcm`).
 - [ ] **5.10** Replace critical `assert`s used as control flow with explicit `if` checks.

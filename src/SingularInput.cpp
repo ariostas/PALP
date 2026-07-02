@@ -11,11 +11,17 @@
 /* ======================================================== */
 /* =========            H E A D E R s             ========= */
 
-#include <unistd.h> /* close */
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h> /* close, dup2, fork, execvp */
 
 #include <palp/Global.h>
 #include <palp/Mori.h>
 
+#include <array>
+#include <cstdio>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -93,10 +99,18 @@ void HyperSurfSingular(PolyPointList *P, triang *T, triang *SR,
   std::string SFname = std::string(tmpdir) + "/SFnameXXXXXX";
 
   int SF = mkstemp(SFname.data());
-  assert(-1 != SF);
+  if (SF == -1) {
+    fprintf(stderr, "Failed to create temporary file in %s\n", tmpdir);
+    exit(1);
+  }
 
-  /* Construct the singular command. */
-  std::string SingularCall = std::string("Singular -q < ") + SFname;
+  /* Construct the singular command using argv (avoids shell injection). */
+  std::vector<const char *> singularArgv;
+  singularArgv.reserve(4);
+  singularArgv.push_back("Singular");
+  singularArgv.push_back("-q");
+  singularArgv.push_back(SFname.c_str());
+  singularArgv.push_back(nullptr);
 
   dprintf(SF, "LIB \"general.lib\";\n");
   dprintf(SF, "option(noredefine);\n");
@@ -598,9 +612,33 @@ void HyperSurfSingular(PolyPointList *P, triang *T, triang *SR,
   dprintf(SF, "quit;\n");
   close(SF);
 
-  if (system(SingularCall.c_str())) {
-    puts("Check Singular installation");
+  pid_t pid = fork();
+  if (pid == -1) {
+    perror("fork");
+    close(SF);
+    remove(SFname.c_str());
     exit(1);
   }
+  if (pid == 0) {
+    /* Child: redirect stdin from the temporary script and exec Singular. */
+    int fd = open(SFname.c_str(), O_RDONLY);
+    if (fd == -1 || dup2(fd, STDIN_FILENO) == -1 || close(fd) == -1) {
+      perror("SingularInput child");
+      _exit(1);
+    }
+    execvp(singularArgv[0], const_cast<char *const *>(singularArgv.data()));
+    perror("execvp Singular");
+    _exit(1);
+  }
+  /* Parent: wait for child and check exit status. */
+  int status;
+  if (waitpid(pid, &status, 0) == -1 || !WIFEXITED(status) ||
+      WEXITSTATUS(status) != 0) {
+    puts("Check Singular installation");
+    close(SF);
+    remove(SFname.c_str());
+    exit(1);
+  }
+  close(SF);
   remove(SFname.c_str());
 }
