@@ -155,7 +155,9 @@ Each fix is a separate step with a regression test where possible. See `ISSUES.m
 - [ ] **5.9** Fix integer-overflow risks (`Polynf.cpp`, `lgotwist.cpp`).
 - [ ] **5.10** Replace critical `assert`s used as control flow with explicit `if` checks.
 - [ ] **5.11** Replace global `inFILE`/`outFILE` state with a `PalpContext` struct.
-- [ ] **5.12** Remove dead code (`FileRW`, `OLD_code`, debug prints, `TEST` toggles).
+- [x] **5.12** Remove dead code (`FileRW`, `OLD_code`, debug prints, `TEST` toggles).
+- [ ] **5.13** Fix remaining `assert`-as-control-flow bugs (e.g. division by zero in `Polynf.cpp` issue #6, `Inci64` limits issue #45, Euler check issue #48).
+- [ ] **5.14** Replace critical `assert`s that guard mathematical correctness with hard errors.
 
 ---
 
