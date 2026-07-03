@@ -291,7 +291,10 @@ int Bisection_PTL(PartList *_PTL, int s[], int S[]) {
     else
       min_pos = max_pos;
   }
-  assert(c == 0);
+  if (c != 0) {
+    fputs("Error: Bisection_PTL partition not found\n", stderr);
+    exit(1);
+  }
   return s[pos];
 }
 
@@ -536,7 +539,11 @@ void Initial_Conditions(MMatrix *_M, XMatrix *_Y, M_Rank *_MR, Step *_step,
     _VF->s[i] = 0;
   _VF->s[_FVl->vl[0].v[0]] = 1;
   _MR->m[0] = 1;
-  assert((_Y[0].X[0][0] == 1) || (_Y[0].X[0][0] == -1));
+  if ((_Y[0].X[0][0] != 1) && (_Y[0].X[0][0] != -1)) {
+    fprintf(stderr, "Error: Init_Matrix first coordinate is %ld, expected ±1\n",
+            (long)_Y[0].X[0][0]);
+    exit(1);
+  }
   for (i = 0; i < *_codim; i++)
     _M[0].M[0][i] = 0;
   _M[0].M[0][0] = _Y[0].X[0][0];
@@ -751,7 +758,10 @@ void Select_Sv(int S[], V_Flag *_VF, MMatrix *_M, GMatrix *_G, XMatrix *_X,
     }
     if (Codim_Check(S, &_M[step.f - 1].codim, &_FVl->Nv))
       if (Convex_Check(_M, _G, _X, S, _FVl, _F)) {
-        assert(_PTL->n < Nef_Max);
+        if (_PTL->n >= Nef_Max) {
+          fputs("Error: Recursive_Nef partition list overflow\n", stderr);
+          exit(1);
+        }
         for (i = 0; i < _FVl->Nv; i++)
           _PTL->S[_PTL->n][i] = S[i];
         _PTL->n += 1;
