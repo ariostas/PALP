@@ -202,8 +202,15 @@ int main(int narg, char *fn[]) {
       continue;
     }
     if (Flag.D == 0) { /* dualize: _P should become the N-polytope! */
-      assert(EL_to_PPL(E, _P, &_P->n));
-      assert(Ref_Check(_P, &V, E));
+      if (!EL_to_PPL(E, _P, &_P->n)) {
+        fputs("Error: mori could not convert equation list to N-polytope\n",
+              stderr);
+        exit(1);
+      }
+      if (!Ref_Check(_P, &V, E)) {
+        fputs("Error: mori N-polytope is not reflexive\n", stderr);
+        exit(1);
+      }
     }
     Sort_VL(&V);
     if (!(Flag.D && Flag.M)) {
