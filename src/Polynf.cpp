@@ -172,7 +172,10 @@ GL_Long GL_W_to_GLZ(GL_Long *W, int d, GL_Long **GLZ) {
   int i, j;
   GL_Long G, *E = *GLZ, *B = GLZ[1];
   for (i = 0; i < d; i++)
-    assert(W[i] != 0);
+    if (W[i] == 0) {
+      fputs("Error: GL_W_to_GLZ received a zero weight\n", stderr);
+      exit(1);
+    }
   for (i = 1; i < d; i++)
     for (j = 0; j < d; j++)
       GLZ[i][j] = 0;
@@ -231,7 +234,10 @@ int GLZ_Make_Trian_NF(Long X[][VERT_Nmax], int *n, int *nv,
           p[N++] = i;
         }
     }
-    assert(N);
+    if (N == 0) {
+      fputs("Error: GLZ_Make_Trian_NF found no non-zero column\n", stderr);
+      exit(1);
+    }
     if (N == 1) {
       g = W[0];
       _G[0][0] = 1;
@@ -1143,7 +1149,10 @@ void TEST_GLZmatrix(GL_Long *G[POLY_Dmax], int d) {
   GLZ_Make_Trian_NF(X, &d, &d, Ginv);
   for (x = 0; x < d; x++)
     for (y = 0; y < d; y++)
-      assert(X[x][y] == (x == y));
+      if (X[x][y] != (x == y)) {
+        fputs("Error: TEST_GLZmatrix inverse verification failed\n", stderr);
+        exit(1);
+      }
 }
 void INV_GLZmatrix(GL_Long G[][POLY_Dmax], int *d, GL_Long Ginv[][POLY_Dmax]) {
   int x, y;
@@ -1164,7 +1173,7 @@ NoGLZ:
       fprintf(stderr, " %5ld", G[x][y]);
     puts("");
   }
-  assert(0);
+  exit(1);
 }
 GL_Long GL_V_to_GLZ(GL_Long *V, GL_Long *G[POLY_Dmax], int d) {
   int i, j, p = 0, z = 0, P[POLY_Dmax], Z[POLY_Dmax];
@@ -1175,7 +1184,10 @@ GL_Long GL_V_to_GLZ(GL_Long *V, GL_Long *G[POLY_Dmax], int d) {
       p++;
     } else
       Z[z++] = i;
-  assert(z + p == d);
+  if (z + p != d) {
+    fputs("Error: GL_V_to_GLZ non-zero/zero split mismatch\n", stderr);
+    exit(1);
+  }
   if (p > 1) {
     g = GL_W_to_GLZ(W, p, G);
     if (g < 0)
@@ -1199,7 +1211,10 @@ GL_Long GL_V_to_GLZ(GL_Long *V, GL_Long *G[POLY_Dmax], int d) {
     for (j = 0; j < d; j++)
       for (i = 0; i < d; i++)
         G[i][j] = (i == j);
-    assert(p);
+    if (p == 0) {
+      fputs("Error: GL_V_to_GLZ zero vector\n", stderr);
+      exit(1);
+    }
     if (P[0]) {
       G[P[0]][P[0]] = G[0][0] = 0;
       G[0][P[0]] = G[P[0]][0] = (V[P[0]] > 0) ? 1 : -1;
@@ -1216,10 +1231,18 @@ GL_Long GL_V_to_GLZ(GL_Long *V, GL_Long *G[POLY_Dmax], int d) {
       Long Y = 0;
       for (y = 0; y < d; y++)
         Y += G[x][y] * V[y];
-      if (x)
-        assert(Y == 0);
-      else
-        assert(Y > 0);
+      if (x) {
+        if (Y != 0) {
+          fputs("Error: TEST_GLZmatrix non-zero component expected zero\n",
+                stderr);
+          exit(1);
+        }
+      } else {
+        if (Y <= 0) {
+          fputs("Error: TEST_GLZmatrix first component not positive\n", stderr);
+          exit(1);
+        }
+      }
     }
   }
   return g;
@@ -1266,7 +1289,10 @@ int TriMat_to_Weight(GL_Long T[][POLY_Dmax], int *p, int r, int *s, int *nw,
       for (i = j + 1; i <= r; i++)
         x[i] *= a;
   }
-  assert((*nw)++ < *Wmax);
+  if ((*nw)++ >= *Wmax) {
+    fputs("Error: TriMat_to_Weight exceeds weight buffer\n", stderr);
+    exit(1);
+  }
   for (i = 0; i < *p; i++)
     X[i] = 0;
   for (i = 0; i <= r; i++)
@@ -1361,7 +1387,11 @@ int InvariantSubspace(PolyPointList *P, VertexNumList *V, EqList *E) {
     }
     if (g > 0) {
       for (i = 0; i < P->n; i++) {
-        assert(0 == (X[i] % g));
+        if (0 != (X[i] % g)) {
+          fputs("Error: InvariantSubspace vector not divisible by gcd\n",
+                stderr);
+          exit(1);
+        }
         Inv[i][p] = X[i] / g;
       }
       p++;
@@ -1385,8 +1415,13 @@ int InvariantSubspace(PolyPointList *P, VertexNumList *V, EqList *E) {
           VM[i][j] = 0;
           for (v = 0; v < P->n; v++)
             VM[i][j] += G[i][v] * Inv[v][j];
-          if (i >= r)
-            assert(VM[i][j] == 0);
+          if (i >= r) {
+            if (VM[i][j] != 0) {
+              fputs("Error: InvariantSubspace lower-triangular part not zero\n",
+                    stderr);
+              exit(1);
+            }
+          }
         }
       fprintf(outFILE, "InvSubspace: dim=%d <(", r);
       INV_GLZmatrix(G, &P->n, B);
@@ -1434,7 +1469,10 @@ Long Simp_Vol_Barycent(PolyPointList *A, Long VM[][VERT_Nmax], Long *B,
   for (i = 1; i < A->np; i++)
     for (j = 0; j < A->n; j++)
       VM[j][i - 1] = A->x[i][j] - A->x[0][j];
-  assert(A->np == A->n + 1);
+  if (A->np != A->n + 1) {
+    fputs("Error: Simp_Vol_Barycent expects a simplex\n", stderr);
+    exit(1);
+  }
   Aux_Make_Poly_NF(VM, &A->n, &A->n);
   I = 1;
   for (i = 0; i < A->n; i++) {
@@ -1489,7 +1527,10 @@ Long Aux_Vol_Barycent(PolyPointList *A, VertexNumList *V, EqList *E, Long *_B,
       A->x[j][i] -= _B[i];
   }
   Find_Equations(A, V, E);
-  assert(A->np == V->nv);
+  if (A->np != V->nv) {
+    fputs("Error: Aux_Vol_Barycent point-vertex count mismatch\n", stderr);
+    exit(1);
+  }
   for (e = 0; e < D; e++)
     B[e] = 0;
   for (i = 0; i < p; i++)
@@ -1498,7 +1539,10 @@ Long Aux_Vol_Barycent(PolyPointList *A, VertexNumList *V, EqList *E, Long *_B,
   for (e = 0; e < E->ne; e++)
     if (E->e[e].c) {
       Eq[ne++] = E->e[e];
-      assert(E->e[e].c > 0);
+      if (E->e[e].c <= 0) {
+        fputs("Error: Aux_Vol_Barycent non-positive facet constant\n", stderr);
+        exit(1);
+      }
     }
   for (e = 0; e < ne; e++) {
     Long Ze[POLY_Dmax], Ve, Be[POLY_Dmax], Ne, ZB[POLY_Dmax];
@@ -1515,7 +1559,11 @@ Long Aux_Vol_Barycent(PolyPointList *A, VertexNumList *V, EqList *E, Long *_B,
     for (i = 0; i < f; i++)
       for (j = 0; j < D; j++)
         F[j][i] -= Ze[j];
-    assert(D - 1 == PM_to_GLZ_for_UTriang(F, &D, &f, G));
+    if (D - 1 != PM_to_GLZ_for_UTriang(F, &D, &f, G)) {
+      fputs("Error: Aux_Vol_Barycent facet lattice basis rank mismatch\n",
+            stderr);
+      exit(1);
+    }
     A->n = D - 1;
     A->np = f;
     for (i = 0; i < A->np; i++)
@@ -1529,7 +1577,12 @@ Long Aux_Vol_Barycent(PolyPointList *A, VertexNumList *V, EqList *E, Long *_B,
       for (f = 0; f < D; f++)
         A->x[i][j] += /*test*/
             G[j][f] * F[f][i];
-      assert(A->x[i][j] == 0);
+      if (A->x[i][j] != 0) {
+        fputs("Error: Aux_Vol_Barycent coordinate in eliminated direction not "
+              "zero\n",
+              stderr);
+        exit(1);
+      }
     }
     INV_GLZmatrix(G, &D, GI);
     /* if(D==4){Print_PPL(A,"GxP");Print_GLZ(GI,D,"GI");} */
@@ -1652,7 +1705,10 @@ typedef struct {
 void Init_Matrix(Matrix *M, int v, int d) { /* v=#vec, d=dim */
   int i;
   M->x = (Long **)malloc(v * (sizeof(Long *) + d * sizeof(Long)));
-  assert(M->x != NULL);
+  if (M->x == NULL) {
+    fputs("Error: failed to allocate Matrix in Init_Matrix\n", stderr);
+    exit(1);
+  }
   M->d = d;
   M->v = v;
   M->x[0] = (Long *)(&(M->x[v]));
@@ -1692,7 +1748,10 @@ Long V_to_GLZ(Long *V, Matrix G) { /* V may contain NULLs, return gcd */
       p++;
     } else
       Z[z++] = i;
-  assert(z + p == G.d);
+  if (z + p != G.d) {
+    fputs("Error: V_to_GLZ non-zero/zero split mismatch\n", stderr);
+    exit(1);
+  }
   if (p > 1) {
     g = W_to_GLZ(W, &p, G.x);
     if (g < 0)
@@ -1716,7 +1775,10 @@ Long V_to_GLZ(Long *V, Matrix G) { /* V may contain NULLs, return gcd */
     for (j = 0; j < d; j++)
       for (i = 0; i < d; i++)
         G.x[i][j] = (i == j);
-    assert(p);
+    if (p == 0) {
+      fputs("Error: V_to_GLZ zero vector\n", stderr);
+      exit(1);
+    }
     if (P[0]) {
       G.x[P[0]][P[0]] = G.x[0][0] = 0;
       G.x[0][P[0]] = G.x[P[0]][0] = (V[P[0]] > 0) ? 1 : -1;
@@ -1726,14 +1788,23 @@ Long V_to_GLZ(Long *V, Matrix G) { /* V may contain NULLs, return gcd */
   }
   if (g < 0)
     g = -g;
-  for (j = 0; j < d; j++)
-    assert(VxV(V, G.x[j], d) == ((j == 0) * g));
+  for (j = 0; j < d; j++) {
+    Long expected = (j == 0) ? g : 0;
+    if (VxV(V, G.x[j], d) != expected) {
+      fputs("Error: V_to_GLZ output is not a basis for the input vector\n",
+            stderr);
+      exit(1);
+    }
+  }
   return g;
 }
 void Aux_G_2_BxG(Matrix G, Matrix B) { /* don't use INV_GLZ::infinite loop */
   int l, c, d = G.d, L = d - B.d;
   Long *X = B.x[d - 1];
-  assert(L > 0);
+  if (L <= 0) {
+    fputs("Error: Aux_G_2_BxG needs positive dimension difference\n", stderr);
+    exit(1);
+  }
   for (c = 0; c < d; c++) {
     for (l = L; l < d; l++) {
       int j;
@@ -1759,8 +1830,10 @@ int Make_G_for_GxMT_UT(Matrix M, Matrix G) { /* GxM upper trian, return rank */
   int i, j, r = 0, v = M.v, d = M.d;
   Matrix B;
   auto V = std::make_unique<Long[]>(d);
-  assert(G.v == d);
-  assert(G.d == d);
+  if ((G.v != d) || (G.d != d)) {
+    fputs("Error: Make_G_for_GxMT_UT matrix dimension mismatch\n", stderr);
+    exit(1);
+  }
   Init_Matrix(&B, d, d);
   for (i = 0; i < d; i++)
     for (j = 0; j < d; j++)
@@ -1795,7 +1868,10 @@ void Circuit(int d, Long **P,
   for (i = 0; i <= d; i++)
     for (j = 0; j < d; j++)
       T.x[j][i] = P[i][j];
-  assert(T.d == T.v + 1);
+  if (T.d != T.v + 1) {
+    fputs("Error: Circuit dimension mismatch\n", stderr);
+    exit(1);
+  }
   if (T.v != Make_G_for_GxMT_UT(T, G)) {
     puts("Error in Circuit");
     Print_LMatrix(G, "GLZ");
@@ -1880,7 +1956,10 @@ int AffRelSimplexVolume(Long *X[POLY_Dmax], int v, int d) /* S-dim=v<=dim */
       r++;
     }
   }
-  assert(r == v);
+  if (r != v) {
+    fputs("Error: AffRelSimplexVolume rank mismatch\n", stderr);
+    exit(1);
+  }
   return det;
 }
 
@@ -1912,18 +1991,35 @@ int LinRelSimplexVolume(Long *X[POLY_Dmax], int v, int d) /* S-dim=v<=dim */
       r++;
     }
   } /* if(r!=v){printf("r=%d v=%d\n",r,v);} */
-  assert(r == v);
+  if (r != v) {
+    fputs("Error: LinRelSimplexVolume rank mismatch\n", stderr);
+    exit(1);
+  }
 #ifndef TEST_VOL
-  assert(det == AffRelSimplexVolume(X, v, d));
+  {
+    int affDet = AffRelSimplexVolume(X, v, d);
+    if (det != affDet) {
+      fprintf(stderr, "Error: LinRelSimplexVolume det=%d != AffRel=%d\n", det,
+              affDet);
+      exit(1);
+    }
+  }
   if (v == 2) {
     Long Y[POLY_Dmax];
-    assert(d > 1);
+    if (d <= 1) {
+      fputs("Error: LinRelSimplexVolume edge check needs d > 1\n", stderr);
+      exit(1);
+    }
     for (i = 0; i < d; i++)
       Y[i] = X[0][i] - X[1][i];
     r = NNgcd(Y[0], Y[1]);
     for (i = 2; i < d; i++)
       r = NNgcd(r, Y[i]);
-    assert(r == det);
+    if (r != det) {
+      fprintf(stderr, "Error: LinRelSimplexVolume edge length=%d != det=%d\n",
+              r, det);
+      exit(1);
+    }
   }
 #endif
   return det;
@@ -1937,17 +2033,26 @@ void PrettyPrintDualVert(PolyPointList *P, int vn, EqList *E, int dpn) {
       fprintf(outFILE, "%2ld ", E->e[i].a[j]);
     fprintf(outFILE, "%2ld\n", E->e[i].a[j]);
   }
-  for (i = 0; i < E->ne; i++)
-    assert(E->e[i].c == 1);
+  for (i = 0; i < E->ne; i++) {
+    if (E->e[i].c != 1) {
+      fputs("Error: PrettyPrintDualVert facet constant is not 1\n", stderr);
+      exit(1);
+    }
+  }
 }
 void PrintFanoVert(PolyPointList *P, VertexNumList *V) {
   Long *Z = P->x[0], *N[4 * VERT_Nmax];
   int i, j, n = 0;
-  assert(P->n == 4);
+  if (P->n != 4) {
+    fputs("Error: PrintFanoVert only supports 4D polytopes\n", stderr);
+    exit(1);
+  }
   for (i = 0; i < V->nv; i++) {
-    if (V->v[i] >= V->nv)
+    if (V->v[i] >= V->nv) {
       printf("Please do not use weight input with option '-C2'!\n");
-    assert(V->v[i] < V->nv);
+      fputs("Error: PrintFanoVert vertex index out of range\n", stderr);
+      exit(1);
+    }
   }
   for (i = V->nv; i < P->np; i++) {
     Long *X = P->x[i];
@@ -1978,7 +2083,10 @@ int Add_Square_To_Rel(int el[4], int r, int v, Long rel[SQnum_Max][VERT_Nmax],
                       int C[SQnum_Max]) {
   int i, j, l, c = el[0];
   Long N[VERT_Nmax];
-  assert((el[0] < v) && (el[1] < v) && (el[2] < v) && (el[3] < v));
+  if ((el[0] >= v) || (el[1] >= v) || (el[2] >= v) || (el[3] >= v)) {
+    fputs("Error: Add_Square_To_Rel element index out of range\n", stderr);
+    exit(1);
+  }
   if (r == 0) {
     C[0] = el[0];
     for (i = 0; i < v; i++)
@@ -1993,7 +2101,10 @@ int Add_Square_To_Rel(int el[4], int r, int v, Long rel[SQnum_Max][VERT_Nmax],
   N[el[2]] = N[el[3]] = -1;
   for (l = 0; l < r; l++) {
     if (c < C[l]) {
-      assert(r < SQnum_Max);
+      if (r >= SQnum_Max) {
+        fputs("Error: Add_Square_To_Rel relation list overflow\n", stderr);
+        exit(1);
+      }
       for (j = r; j > l; j--) {
         for (i = 0; i < v; i++)
           rel[j][i] = rel[j - 1][i];
@@ -2023,7 +2134,11 @@ int Add_Square_To_Rel(int el[4], int r, int v, Long rel[SQnum_Max][VERT_Nmax],
       }
     }
   }
-  assert(r < SQnum_Max);
+  if (r >= SQnum_Max) {
+    fputs("Error: Add_Square_To_Rel relation list overflow at append\n",
+          stderr);
+    exit(1);
+  }
   for (i = 0; i < v; i++)
     rel[r][i] = N[i];
   C[r] = c;
@@ -2046,20 +2161,29 @@ int PyramidIP(PolyPointList *P, VertexNumList *V, EqList *E, FaceInfo *FI) {
             if ((X[3] - Xi[3]) % 2 == 0)
               IP++;
   }
-  assert(IP < 2);
+  if (IP >= 2) {
+    fputs("Error: PyramidIP found multiple pyramid interior points\n", stderr);
+    exit(1);
+  }
   j = 0;
   for (i = 0; i < FI->nf[3]; i++)
     if (FI->nip[3][i])
       j++;
-  if (IP)
-    assert(j);
+  if (IP && (j == 0)) {
+    fputs("Error: PyramidIP detected interior point but no 3-face IPs\n",
+          stderr);
+    exit(1);
+  }
   /*     if(j>0){char c[2]; c[1]=0; c[0]='0'+j; Print_VL(P,V,c);exit(1);} */
   return IP;
 }
 int Divisibility_Index(PolyPointList *P, VertexNumList *V) {
   int i, j;
   Long g = 0, x;
-  assert(V->nv > 1);
+  if (V->nv <= 1) {
+    fputs("Error: Divisibility_Index needs at least two vertices\n", stderr);
+    exit(1);
+  }
   for (i = 0; i < P->n; i++)
     if (!g)
       g = labs(P->x[V->v[1]][i] - P->x[V->v[0]][i]);
@@ -2092,7 +2216,13 @@ int Obstructed_Conifold_Deformations(int S[SQnum_Max][4], int M[SQnum_Max],
           el[j] = S[i][j];
         rk = Add_Square_To_Rel(el, rk, v, rel, C);
       }
-      assert(rk <= R);
+      if (rk > R) {
+        fprintf(stderr,
+                "Error: Obstructed_Conifold_Deformations relation rank %d "
+                "exceeds expected %d\n",
+                rk, R);
+        exit(1);
+      }
       if (rk < R)
         bad++;
     }
@@ -2112,14 +2242,20 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
   INCI *FInc;
   int PIC, S[SQnum_Max][4], M[SQnum_Max];
   FaceInfo *_FI = (FaceInfo *)malloc(sizeof(FaceInfo));
-  assert(P->n == 4);
+  if (P->n != 4) {
+    fputs("Error: ConifoldSing only supports 4D polytopes\n", stderr);
+    exit(1);
+  }
   if (divby == 0) {
     if constexpr (FANO_CONIFOLD)
       divby = 2;
     else
       divby = 1;
   } /* set default */
-  assert(divby / 100 <= 2);
+  if (divby / 100 > 2) {
+    fputs("Error: ConifoldSing invalid divby hundreds digit\n", stderr);
+    exit(1);
+  }
   if (divby > 99) {
     PIC = divby % 100;
     CF = divby / 100;
@@ -2156,7 +2292,10 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
       printf("e<3: nf=%d I=", nf);
       Print_INCI(FInc[j]);
     }
-    assert(f > 2);
+    if (f <= 2) {
+      fputs("Error: ConifoldSing 2-face has fewer than 3 edges\n", stderr);
+      exit(1);
+    }
     if (f > 4) {
       five++; /* more than 4 vertices */
       free(_FI);
@@ -2169,7 +2308,10 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
         el[e++] = i;
       I = INCI_D2(I);
     }
-    assert(e == f);
+    if (e != f) {
+      fputs("Error: ConifoldSing edge count mismatch in 2-face\n", stderr);
+      exit(1);
+    }
     for (i = 0; i < e; i++)
       X[i] = E->e[el[i]].a;
     if (e == 4) {
@@ -2216,10 +2358,15 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
         el[3] = el[1];
         el[1] = el[2];
         el[2] = el[0];
-      } else
-        assert(0);
+      } else {
+        fputs("Error: ConifoldSing invalid square configuration\n", stderr);
+        exit(1);
+      }
       el[0] = i;
-      assert((i < el[1]) && (i < el[2]) && (i < el[2]));
+      if ((i >= el[1]) || (i >= el[2])) {
+        fputs("Error: ConifoldSing square element ordering failure\n", stderr);
+        exit(1);
+      }
       rk = Add_Square_To_Rel(el, rk, E->ne, rel, C);
       for (i = 0; i < 4; i++)
         S[nsq][i] = el[i];
@@ -2230,15 +2377,27 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
           vv[mul++] = V->v[i];
         ID = INCI_D2(ID);
       }
-      assert(mul == 2);
+      if (mul != 2) {
+        fputs("Error: ConifoldSing expected two vertices on 2-face\n", stderr);
+        exit(1);
+      }
       mul = P->x[vv[1]][0] - P->x[vv[0]][0];
       for (i = 1; i < P->n; i++) {
         mul = NNgcd(mul, P->x[vv[1]][i] - P->x[vv[0]][i]);
       }
-      assert(mul == 1 + _FI->nip[1][j]);
+      if (mul != 1 + _FI->nip[1][j]) {
+        fprintf(stderr,
+                "Error: ConifoldSing edge multiplicity %d != 1 + nip %d\n", mul,
+                1 + _FI->nip[1][j]);
+        exit(1);
+      }
       M[nsq] = mul;
       if (CF == 2) {
-        assert(mul % 2 == 0);
+        if (mul % 2 != 0) {
+          fputs("Error: ConifoldSing Fano case expects even multiplicity\n",
+                stderr);
+          exit(1);
+        }
         mul /= 2;
       }
       ndpt += mul;
@@ -2255,9 +2414,11 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
         h12 =
             1 + ndpt - rk - py, /* 1 + doublePts - rk - facetIP(\D')=pyramid */
         vol = LatVol_Barycent(P, V, xB, &xN);
-    if (0 != vol % 16)
+    if (0 != vol % 16) {
       printf("option '-C2' requires polytopes divisible by 2 as input!\n");
-    assert(0 == vol % 16);
+      fputs("Error: ConifoldSing Fano volume not divisible by 16\n", stderr);
+      exit(1);
+    }
     vol /= 16;                      /* degree */
     if ((PIC == 0) || (PIC == pic)) /* restrict output to PIC=pic */
     {
@@ -2282,8 +2443,9 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
     Long xB[POLY_Dmax], xN, vol = LatVol_Barycent(P, V, xB, &xN),
                             c2h = 12 * (P->np - 1) - 2 * vol;
     /*  VertexNumList dV; EqList *auxE=(EqList *) malloc(sizeof(EqList));
-        int volN;assert(auxE!=NULL);Find_Equations(dP,&dV,auxE);free(auxE);
-        assert(dV.nv==E->ne); volN=LatVol_Barycent(dP,&dV,xB,&xN);
+        int volN;
+        if (auxE == NULL) { ... } Find_Equations(dP,&dV,auxE);free(auxE);
+        if (dV.nv != E->ne) { ... } volN=LatVol_Barycent(dP,&dV,xB,&xN);
      */
     BH.mp = P->np;
     BH.mv = V->nv;
@@ -2298,9 +2460,17 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
         free(_FI);
         return 0;
       } /* ndpt=0 for pic=1 */
-    assert(c2h % Ind == 0);
+    if (c2h % Ind != 0) {
+      fprintf(stderr, "Error: CY c2H=%ld not divisible by index %d\n", c2h,
+              Ind);
+      exit(1);
+    }
     c2h /= Ind;
-    assert(vol % I3 == 0);
+    if (vol % I3 != 0) {
+      fprintf(stderr, "Error: CY volume=%ld not divisible by index^3=%d\n", vol,
+              I3);
+      exit(1);
+    }
     if ((PIC == 0) || (PIC == pic)) /* restrict output to PIC=pic */
     {
       printf("pic=%d h12=%d E=%d ", pic, cs, 2 * (pic - cs));
@@ -2322,8 +2492,14 @@ void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E) {
   PolyPointList *A = (PolyPointList *)malloc(sizeof(PolyPointList));
   Long S, **root = (Long **)malloc(POINT_Nmax * sizeof(Long **)), *d = NULL,
           PM[VERT_Nmax][VERT_Nmax];
-  assert(A != NULL);
-  assert(root != NULL);
+  if (A == NULL) {
+    fputs("Error: Einstein_Metric failed to allocate PolyPointList\n", stderr);
+    exit(1);
+  }
+  if (root == NULL) {
+    fputs("Error: Einstein_Metric failed to allocate root array\n", stderr);
+    exit(1);
+  }
   while (Read_CWS_PP(CW, P)) /* nis=noinvss s=sum ks=ksum bcz=bary0 ssr(oot) */
   {
     Long C[POLY_Dmax], N;
@@ -2344,8 +2520,10 @@ void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E) {
         continue;
     } else if (NR)
       Find_Equations(P, V, E);
-    else
-      assert(Ref_Check(P, V, E));
+    else if (!Ref_Check(P, V, E)) {
+      fputs("Error: Einstein_Metric input polytope not reflexive\n", stderr);
+      exit(1);
+    }
     if constexpr (SMOOTH) {
       if (!SimpUnimod(P, V, E, 1))
         continue;
@@ -2353,9 +2531,11 @@ void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E) {
     }
     Sort_VL(V);
     for (i = 0; i < V->nv; i++) {
-      if (V->v[i] >= V->nv)
+      if (V->v[i] >= V->nv) {
         printf("Please do not use weight input with option '-E'!\n");
-      assert(V->v[i] < V->nv);
+        fputs("Error: Einstein_Metric vertex index out of range\n", stderr);
+        exit(1);
+      }
     }
     if (NR)
       for (i = 0; i < E->ne; i++)
@@ -2466,7 +2646,11 @@ void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E) {
       nis = !is;
       if (nis)
         sym++;
-      assert(bcz);
+      if (!bcz) {
+        fputs("Error: Einstein_Metric expected zero barycenter for kPsum==0\n",
+              stderr);
+        exit(1);
+      }
     } /* else if(bcz) Print_PPL(P,"bary=0 for kPsum!=0"); */
 
     strcat(c, "PPL:");
@@ -2572,7 +2756,10 @@ int Fiber_Ref_Check(Long PM[][POLY_Dmax], int *d, /*int *p,*/ int *v,
   for (i = 0; i < *v; i++)
     for (j = 0; j < *d; j++)
       A->x[i][j] = GxP(G[j], PM[i], d); /* reflexivity of projection */
-  assert(Ref_Check(A, &V, &E));
+  if (!Ref_Check(A, &V, &E)) {
+    fputs("Error: Fiber_Ref_Check projected fiber not reflexive\n", stderr);
+    exit(1);
+  }
   EL_to_PPL(&E, A, d);
   A->n = r;
   Remove_Identical_Points(A);
@@ -2604,7 +2791,10 @@ void Add_Ref_Fibers(Long PM[][POLY_Dmax], int *d, int *v, int *s,
       return;
   }
   if (Fiber_Ref_Check(PM, d, /*p,*/ v, G[*n], /*Ginv,X,*/ A, r)) {
-    assert(*n < VERT_Nmax);
+    if (*n >= VERT_Nmax) {
+      fputs("Error: Add_Ref_Fibers fiber list overflow\n", stderr);
+      exit(1);
+    }
     (*n)++;
   }
 }
@@ -2682,10 +2872,16 @@ void AuxDPolyData(PolyPointList *P, PolyPointList *A, int *v, int *n, int *f) {
   Long X[VERT_Nmax][VERT_Nmax];
   EqList E;
   VertexNumList V;
-  assert(Ref_Check(P, &V, &E));
+  if (!Ref_Check(P, &V, &E)) {
+    fputs("Error: AuxDPolyData P is not reflexive\n", stderr);
+    exit(1);
+  }
   *v = V.nv;
   EL_to_PPL(&E, A, &P->n);
-  assert(Ref_Check(A, &V, &E));
+  if (!Ref_Check(A, &V, &E)) {
+    fputs("Error: AuxDPolyData dual A is not reflexive\n", stderr);
+    exit(1);
+  }
   *f = V.nv;
   Make_VEPM(A, &V, &E, X);
   Complete_Poly(X, &E, V.nv, A);
@@ -2695,7 +2891,12 @@ void Test_EK3_Fibration(PolyPointList *P, int edim,
                         GL_Long G[POLY_Dmax][POLY_Dmax]) {
   int s[VERT_Nmax], t[VERT_Nmax], d = P->n, p = P->np - 1;
   PolyPointList *A;
-  assert(NULL != (A = (PolyPointList *)malloc(sizeof(PolyPointList))));
+  A = (PolyPointList *)malloc(sizeof(PolyPointList));
+  if (A == NULL) {
+    fputs("Error: Test_EK3_Fibration failed to allocate PolyPointList\n",
+          stderr);
+    exit(1);
+  }
   {
     int i, j, e, k, v, n, f;
     Long PM[VERT_Nmax][POLY_Dmax];
@@ -2764,8 +2965,15 @@ void Print_Elliptic_K3_Fibrations(PolyPointList *P, int edim,
                                   int nk) {
   int x, s[VERT_Nmax], t[VERT_Nmax], d = P->n, p = P->np - 1;
   PolyPointList *A = NULL;
-  if (nk)
-    assert(NULL != (A = (PolyPointList *)malloc(sizeof(PolyPointList))));
+  if (nk) {
+    A = (PolyPointList *)malloc(sizeof(PolyPointList));
+    if (A == NULL) {
+      fputs("Error: Print_Elliptic_K3_Fibrations failed to allocate "
+            "PolyPointList\n",
+            stderr);
+      exit(1);
+    }
+  }
   for (x = 0; x < nk; x++) {
     int i, j, e, k, v, n, f;
     Long PM[VERT_Nmax][POLY_Dmax];
@@ -2835,7 +3043,10 @@ void All_CDn_Fibrations(PolyPointList *P, int nv, int cd) {
   int x, fdim = P->n - cd;
   ek3fli *F = (ek3fli *)malloc(sizeof(ek3fli));
   PolyPointList *A = &F->F;
-  assert(F != NULL);
+  if (F == NULL) {
+    fputs("Error: All_CDn_Fibrations failed to allocate ek3fli\n", stderr);
+    exit(1);
+  }
   Reflexive_Fibrations(P, nv, F, fdim);
   for (x = 0; x < F->nf; x++) {
     int i, j, s[VERT_Nmax], t[VERT_Nmax], d = P->n, p = P->np - 1, fn, v, n, f;
@@ -2900,7 +3111,10 @@ void Elliptic_K3_Fibration(PolyPointList *P, int nv, int edim) {
   int c, e, *d = &P->n, /*p=P->np-1,*/ cd = P->n - edim, nb = 0, nk = 0;
   GL_Long GE[POLY_Dmax][POLY_Dmax], *ge[POLY_Dmax];
   ek3fli *F = (ek3fli *)malloc(sizeof(ek3fli));
-  assert(F != NULL);
+  if (F == NULL) {
+    fputs("Error: Elliptic_K3_Fibration failed to allocate ek3fli\n", stderr);
+    exit(1);
+  }
   Reflexive_Fibrations(P, nv, F, edim);
   for (c = 0; c < *d; c++)
     ge[c] = GE[c];
@@ -2946,7 +3160,11 @@ void Elliptic_K3_Fibration(PolyPointList *P, int nv, int edim) {
           if (Fiber_Ref_Check(P->x, d, /*&p,*/ &nv, GE, /*Binv,VV,*/
                               &F->F, edim + 1)) {
             nb++;
-            assert(nb < VERT_Nmax);
+            if (nb >= VERT_Nmax) {
+              fputs("Error: Elliptic_K3_Fibration K3 fiber list overflow\n",
+                    stderr);
+              exit(1);
+            }
           } /* < VERT_Nmax K3 per ell */
         } /* printf("e=%d  c=%d  np=%d  nb=%d\n",e,c,P->np,nb); */
       } /* printf("e=%d c=%d nb=%d  ",e,c,nb); */
@@ -2962,7 +3180,12 @@ void Elliptic_K3_Fibration(PolyPointList *P, int nv, int edim) {
             b[i] = F->B[n][i];
           }
           G_2_BxG(ge, b, d, &edim);
-          assert(++nk < VERT_Nmax);
+          nk++;
+          if (nk >= VERT_Nmax) {
+            fputs("Error: Elliptic_K3_Fibration K3 fiber total overflow\n",
+                  stderr);
+            exit(1);
+          }
           /* 	printf("\nTest_EK3: e=%d nf=%d  n=%d nb=%d\n",e,F->nf,n,nb);
                   Test_EK3_Fibration(P,edim,F->GK[nk-1]); */
         }
@@ -2983,8 +3206,11 @@ void IP_Simplex_Fiber(Long PM[][POLY_Dmax], int p, int d, /* need PM[i]!=0 */
       GX[(POLY_Dmax * (POLY_Dmax + 3)) / 2][POLY_Dmax];
   *nw = 0; /*s[-1]=-1;*/
   for (j = 0; j < d; j++)
-    GN[j] = GX[j];        /* init GLZ pointers */
-  assert(p <= VERT_Nmax); /* G=G-list GN=G-new GI=ptr. at lines of GX=space */
+    GN[j] = GX[j]; /* init GLZ pointers */
+  if (p > VERT_Nmax) {
+    fputs("Error: IP_Simplex_Fiber point count exceeds VERT_Nmax\n", stderr);
+    exit(1);
+  } /* G=G-list GN=G-new GI=ptr. at lines of GX=space */
   F->nf = 0;
   for (n = 0; n < d; n++) {
     for (i = 0; i < d; i++)
@@ -3037,8 +3263,11 @@ void IP_Simplex_Decomp(Long PM[][POLY_Dmax], int p, int d, /* need PM[i]!=0 */
       GX[(POLY_Dmax * (POLY_Dmax + 3)) / 2][POLY_Dmax];
   *nw = 0; /*s[-1]=-1;*/
   for (j = 0; j < d; j++)
-    GN[j] = GX[j];        /* init GLZ pointers */
-  assert(p <= VERT_Nmax); /* G=G-list GN=G-new GI=ptr. at lines of GX=space */
+    GN[j] = GX[j]; /* init GLZ pointers */
+  if (p > VERT_Nmax) {
+    fputs("Error: IP_Simplex_Decomp point count exceeds VERT_Nmax\n", stderr);
+    exit(1);
+  } /* G=G-list GN=G-new GI=ptr. at lines of GX=space */
   for (n = 0; n < d; n++) {
     for (i = 0; i < d; i++)
       if (i < n)
@@ -3082,7 +3311,10 @@ void IP_Simplex_Decomp(Long PM[][POLY_Dmax], int p, int d, /* need PM[i]!=0 */
 void Aux_Make_Dual_Poly(PolyPointList *P, VertexNumList *V, EqList *E) {
   Long VM[VERT_Nmax][POLY_Dmax];
   int i, j, d = P->n, e = E->ne, v = V->nv;
-  assert(e <= VERT_Nmax);
+  if (e > VERT_Nmax) {
+    fputs("Error: Aux_Make_Dual_Poly facet count exceeds VERT_Nmax\n", stderr);
+    exit(1);
+  }
   P->np = V->nv = e;
   E->ne = v;
   for (i = 0; i < v; i++)
@@ -3098,7 +3330,10 @@ void Aux_Make_Dual_Poly(PolyPointList *P, VertexNumList *V, EqList *E) {
       E->e[i].a[j] = VM[i][j];
     E->e[i].c = 1;
   }
-  assert(Ref_Check(P, V, E));
+  if (!Ref_Check(P, V, E)) {
+    fputs("Error: Aux_Make_Dual_Poly output is not reflexive\n", stderr);
+    exit(1);
+  }
 }
 void Aux_IPS_Print_Poly(PolyPointList *_P, VertexNumList *_V, int np, int nw,
                         int VS, int CD) {
@@ -3154,7 +3389,11 @@ void Print_Fiber_PolyData(PolyPointList *P, VertexNumList *V, Long *W, int w,
     EqList e;
     VertexNumList v;
     PolyPointList *F = (PolyPointList *)malloc(sizeof(PolyPointList));
-    assert(F != NULL);
+    if (F == NULL) {
+      fputs("Error: Print_Fiber_PolyData failed to allocate PolyPointList\n",
+            stderr);
+      exit(1);
+    }
     for (p = 0; p < w; p++)
       if (W[p]) {
         for (i = 0; i < D; i++)
@@ -3172,7 +3411,11 @@ void Print_Fiber_PolyData(PolyPointList *P, VertexNumList *V, Long *W, int w,
       }
     F->np = P->np;
     F->n = D;
-    assert(Ref_Check(F, &v, &e));
+    if (!Ref_Check(F, &v, &e)) {
+      fputs("Error: Print_Fiber_PolyData projected fiber not reflexive\n",
+            stderr);
+      exit(1);
+    }
     Aux_Make_Dual_Poly(F, &v, &e);
     Make_VEPM(F, &v, &e, X);
     Complete_Poly(X, &e, v.nv, F);
@@ -3290,12 +3533,19 @@ void Check_New_Fiber(Long PM[][POLY_Dmax], int *d, int *s, int r, FibW *F) {
   {
     VertexNumList V;
     EqList E;
-    assert(Ref_Check(F->P, &V, &E));
+    if (!Ref_Check(F->P, &V, &E)) {
+      fputs("Error: Check_New_Fiber projected polytope not reflexive\n",
+            stderr);
+      exit(1);
+    }
     EL_to_PPL(&E, F->P, d);
     F->P->n = r;
     Remove_Identical_Points(F->P);
     if (Ref_Check(F->P, &V, &E)) {
-      assert(*n < VERT_Nmax);
+      if (*n >= VERT_Nmax) {
+        fputs("Error: Check_New_Fiber fiber list overflow\n", stderr);
+        exit(1);
+      }
       F->f[*n] = F->nw - 1;
       F->r[*n] = r;
       (*n)++;
@@ -3322,7 +3572,10 @@ void Print_Fibrations(PolyPointList *P, FibW *F) {
     }
     F->P->np = c;
     F->P->n = r;
-    assert(Ref_Check(F->P, &V, &E));
+    if (!Ref_Check(F->P, &V, &E)) {
+      fputs("Error: Print_Fibrations fiber polytope not reflexive\n", stderr);
+      exit(1);
+    }
     for (i = 0; i < P->np - 1; i++)
       C[i] = '_';
     for (i = 0; i < c; i++)
@@ -3334,7 +3587,11 @@ void Print_Fibrations(PolyPointList *P, FibW *F) {
     N = F->P->np + 1;
     fprintf(outFILE, "  cd=%d  ", *d - r);
     EL_to_PPL(&E, F->P, &r);
-    assert(Ref_Check(F->P, &V, &E));
+    if (!Ref_Check(F->P, &V, &E)) {
+      fputs("Error: Print_Fibrations dual fiber polytope not reflexive\n",
+            stderr);
+      exit(1);
+    }
     {
       Long X[VERT_Nmax][VERT_Nmax];
       Make_VEPM(F->P, &V, &E, X);
@@ -3375,7 +3632,10 @@ void IP_Simplices(PolyPointList *_P, int nv, int PS, int VS, int CDin) {
   int i, j, CD = 0, np = _P->np - 1;
   FibW *F = (FibW *)malloc(sizeof(FibW));
   VertexNumList V;
-  assert(F != NULL);
+  if (F == NULL) {
+    fputs("Error: IP_Simplices failed to allocate FibW\n", stderr);
+    exit(1);
+  }
   F->ZS = ((PS < 0) || (VS < 0));
   for (i = nv; i < _P->np - 1; i++)
     if (Vec_is_zero(_P->x[i], _P->n)) {
@@ -3411,7 +3671,10 @@ void IP_Simplices(PolyPointList *_P, int nv, int PS, int VS, int CDin) {
       V.nv = nv;
     } else {
       EqList E;
-      assert(Ref_Check(_P, &V, &E));
+      if (!Ref_Check(_P, &V, &E)) {
+        fputs("Error: IP_Simplices input polytope not reflexive\n", stderr);
+        exit(1);
+      }
       nv = V.nv - 1;
       for (i = 0; i < nv; i++)
         for (j = i + 1; j < V.nv; j++)
@@ -3457,7 +3720,11 @@ void IP_Simplices(PolyPointList *_P, int nv, int PS, int VS, int CDin) {
   }
   if (CD) {
     F->P = (PolyPointList *)malloc(sizeof(PolyPointList));
-    assert(F->P != NULL);
+    if (F->P == NULL) {
+      fputs("Error: IP_Simplices failed to allocate fiber PolyPointList\n",
+            stderr);
+      exit(1);
+    }
     F->PS = PS;
     F->nv = nv;
   }
@@ -3529,7 +3796,10 @@ void IP_Fiber_Data(PolyPointList *PD, PolyPointList *AuxP,
                    int *nf, int CD) {
   int i, j, k;
   FibW *F = (FibW *)malloc(sizeof(FibW));
-  assert(NULL != F);
+  if (F == NULL) {
+    fputs("Error: IP_Fiber_Data failed to allocate FibW\n", stderr);
+    exit(1);
+  }
   F->P = AuxP;
   F->PS = F->ZS = 0;
   F->nv = nv;
@@ -3570,8 +3840,15 @@ void Normalize_Diagonal(int *d, Long *D, GL_Long **G) {
           G[a][i] = L;
         }
       }
-  for (i = 1; i < *d; i++)
-    assert((D[i] % D[i - 1]) == 0);
+  for (i = 1; i < *d; i++) {
+    if (D[i] % D[i - 1] != 0) {
+      fprintf(stderr,
+              "Error: Normalize_Diagonal D[%d]=%ld not divisible by "
+              "D[%d]=%ld\n",
+              i, D[i], i - 1, D[i - 1]);
+      exit(1);
+    }
+  }
 }
 int GL_Lattice_Basis(int d, int p, Long *P[POLY_Dmax], /* return index */
                      GL_Long GM[][POLY_Dmax], Long *D,
@@ -3622,7 +3899,13 @@ int GL_Lattice_Basis(int d, int p, Long *P[POLY_Dmax], /* return index */
           V[L] = Egcd(g, a, &vg, &va);
           for (l = L + 1; l < d; l++)
             V[l] = va * GxP(G[l], P[C], &d);
-          assert(0 == g % (vg = GL_V_to_GLZ(&V[L], B, d - L)));
+          vg = GL_V_to_GLZ(&V[L], B, d - L);
+          if (g % vg != 0) {
+            fputs("Error: GL_Lattice_Basis improvement gcd unexpected "
+                  "remainder\n",
+                  stderr);
+            exit(1);
+          }
           g = vg;
           c = C;
           C = 0;
@@ -3633,7 +3916,12 @@ int GL_Lattice_Basis(int d, int p, Long *P[POLY_Dmax], /* return index */
     index *= g;
   }
   g = 0;
-  assert(L == d - 1);
+  if (L != d - 1) {
+    fprintf(stderr,
+            "Error: GL_Lattice_Basis loop finished at L=%d, expected %d\n", L,
+            d - 1);
+    exit(1);
+  }
   for (C = 0; C < p; C++)
     if ((a = labs(GxP(G[L], P[C], &d))))
       g = (g) ? Fgcd(g, a) : a;
@@ -3699,9 +3987,18 @@ void Old_QuotZ_2_SublatG(Long Z[][POLY_Dmax], int *m, int *M, int *d,
     }
   while (M[*m - 1] == 1)
     (*m)--;
-  assert(*m > 0);
-  for (i = 0; i < *m; i++)
-    assert(M[i] > 1);
+  if (*m <= 0) {
+    fputs("Error: Old_QuotZ_2_SublatG all group orders reduced to 1\n", stderr);
+    exit(1);
+  }
+  for (i = 0; i < *m; i++) {
+    if (M[i] <= 1) {
+      fprintf(stderr,
+              "Error: Old_QuotZ_2_SublatG group order M[%d]=%d not > 1\n", i,
+              M[i]);
+      exit(1);
+    }
+  }
   for (i = 0; i < *m; i++) {
     Long *Zi = Z[i];
     for (j = 0; j < *d; j++) {
@@ -3715,7 +4012,10 @@ void Old_QuotZ_2_SublatG(Long Z[][POLY_Dmax], int *m, int *M, int *d,
   for (i = 0; i < *d; i++)
     for (j = 0; j < *d; j++)
       G[i][j] = Ginv[j][i]; /* Z*G lower trian */
-  assert((*m) == r);
+  if ((*m) != r) {
+    fprintf(stderr, "Error: Old_QuotZ_2_SublatG rank %d != m %d\n", r, *m);
+    exit(1);
+  }
 }
 
 /*	g=gcd(M1,M2),  L=lcm(M1,M2)=M1.m2=m1.M2=m1.m2.g, a*m1+b*m2=1        *
@@ -3768,8 +4068,13 @@ void Normalize_QuotientZ(int *r, int *p, Long Z[POLY_Dmax][VERT_Nmax],
         M[j] = M[i];
       }
       j++;
-    } else
-      assert(M[i] == 1);
+    } else {
+      if (M[i] != 1) {
+        fprintf(stderr, "Error: Normalize_QuotientZ unexpected modulus %ld\n",
+                M[i]);
+        exit(1);
+      }
+    }
   *r = j; /* drop trivial factors */
   for (i = 0; i < *r; i++) {
     Long *z = Z[i];
@@ -3790,11 +4095,22 @@ void Normalize_QuotientZ(int *r, int *p, Long Z[POLY_Dmax][VERT_Nmax],
         if (g > 1) /* compute G2 */
         {
           Long A, B;
-          assert(1 == Egcd(mi, mj, &A, &B));
+          if (1 != Egcd(mi, mj, &A, &B)) {
+            fputs("Error: Normalize_QuotientZ Egcd failed to produce unit "
+                  "coefficients\n",
+                  stderr);
+            exit(1);
+          }
           M[j] = g;
           for (k = 0; k < *p; k++) {
             Zj[k] -= A * Zi[k];
-            assert(0 == (Zj[k] % mj));
+            if (0 != (Zj[k] % mj)) {
+              fprintf(stderr,
+                      "Error: Normalize_QuotientZ generator not divisible by "
+                      "%d\n",
+                      mj);
+              exit(1);
+            }
             Zj[k] /= mj;
             if ((Zj[k] %= g) < 0)
               Zj[k] += g;
@@ -3844,7 +4160,10 @@ void QuotZ_2_SublatG(Long Z[][VERT_Nmax], int *m, Long *M, int *d,
   for (i = 0; i < *d; i++)
     for (j = 0; j < *d; j++)
       G[i][j] = Ginv[j][i]; /* Z*G lower trian */
-  assert((*m) == r);
+  if ((*m) != r) {
+    fprintf(stderr, "Error: QuotZ_2_SublatG rank %d != m %d\n", r, *m);
+    exit(1);
+  }
 }
 
 int GL_Lattice_Basis_QZ(int d, int p, Long *P[VERT_Nmax], Long *D, /* index */
@@ -3883,10 +4202,16 @@ void Aux_Mat_2_QuotientZ(GL_Long T[][POLY_Dmax], int *D, int *np, int *d,
     for (j = 0; j < p; j++)
       PM[j][i] = T[j][i];
   PM_2_QuotientZ(PM, D, &p, Z, M, &rk);
-  assert(F->nw > 0);
+  if (F->nw <= 0) {
+    fputs("Error: Aux_Mat_2_QuotientZ called with no weights\n", stderr);
+    exit(1);
+  }
   F->n0[F->nw - 1] = (F->nw > 1) ? (F->n0[F->nw - 2] + F->nz[F->nw - 2]) : 0;
   F->nz[F->nw - 1] = rk;
-  assert(F->n0[F->nw - 1] + F->nz[F->nw - 1] <= FIB_Nmax);
+  if (F->n0[F->nw - 1] + F->nz[F->nw - 1] > FIB_Nmax) {
+    fputs("Error: Aux_Mat_2_QuotientZ quotient storage overflow\n", stderr);
+    exit(1);
+  }
   j = F->n0[F->nw - 1];
   for (i = 0; i < rk; i++) {
     z[i] = F->Z[j + i];
@@ -4036,7 +4361,13 @@ int GL_Lattice_Basis_QZ(int d, int p, Long *P[VERT_Nmax], Long *D, /* index */
           }
           for (l = L + 1; l < d; l++)
             V[l] = va * GxP(G[l], P[C], &d);
-          assert(0 == g % (vg = GL_V_to_GLZ(&V[L], B, d - L)));
+          vg = GL_V_to_GLZ(&V[L], B, d - L);
+          if (g % vg != 0) {
+            fputs("Error: GL_Lattice_Basis_QZ improvement gcd unexpected "
+                  "remainder\n",
+                  stderr);
+            exit(1);
+          }
           g = vg;
           c = C;
           C = 0;
@@ -4055,7 +4386,13 @@ int GL_Lattice_Basis_QZ(int d, int p, Long *P[VERT_Nmax], Long *D, /* index */
         for (c = 0; c < p; c++)
           V[l] += A[c] * GP[c][l];
       }
-      assert(V[L] == g);
+      if (V[L] != g) {
+        fprintf(stderr,
+                "Error: GL_Lattice_Basis_QZ lattice projection V[%d]=%ld != "
+                "g=%ld\n",
+                L, V[L], g);
+        exit(1);
+      }
       for (c = 0; c < p; c++)
         Y[c] = A[c];
       for (l = 0; l < L; l++) {
@@ -4069,7 +4406,12 @@ int GL_Lattice_Basis_QZ(int d, int p, Long *P[VERT_Nmax], Long *D, /* index */
       }
     }
   }
-  assert(L == d - 1); /* for(C=0;C<p;C++) GP[C][L]=GxP(G[L],P[C],&d); */
+  if (L != d - 1) {
+    fprintf(stderr,
+            "Error: GL_Lattice_Basis_QZ loop finished at L=%d, expected %d\n",
+            L, d - 1);
+    exit(1);
+  } /* for(C=0;C<p;C++) GP[C][L]=GxP(G[L],P[C],&d); */
 
   if (tz) {
     int c, l;
@@ -4078,8 +4420,13 @@ int GL_Lattice_Basis_QZ(int d, int p, Long *P[VERT_Nmax], Long *D, /* index */
       GP[C][L] = GxP(G[L], P[C], &d);
     Y = Z[L];
     C = 0;
-    while (!GP[C][L])
-      assert(C++ < p);
+    while (!GP[C][L]) {
+      if (C++ >= p) {
+        fputs("Error: GL_Lattice_Basis_QZ found no non-zero last projection\n",
+              stderr);
+        exit(1);
+      }
+    }
     g = GP[C][L];
     for (c = 0; c < p; c++)
       A[c] = 0;
@@ -4148,7 +4495,14 @@ int GL_Lattice_Basis_QZ(int d, int p, Long *P[VERT_Nmax], Long *D, /* index */
         g = 0;
         for (c = 0; c < p; c++)
           g += Z[L][c] * GP[c][l];
-        assert(g == D[l] * (l == L));
+        Long expected = D[l] * (l == L);
+        if (g != expected) {
+          fprintf(stderr,
+                  "Error: GL_Lattice_Basis_QZ Z.GP product mismatch at L=%d "
+                  "l=%d: got %ld expected %ld\n",
+                  L, l, g, expected);
+          exit(1);
+        }
       }
     for (l = 0; l < d; l++) {
       if (D[l] > 1)
@@ -4257,7 +4611,11 @@ Long WZ_to_GLZ(Long *W, Long *Waux, int *d, Long **G) /* allows components=0 */
     J = 0;
     while (W[J])
       J++;
-    assert(J < *d);
+    if (J >= *d) {
+      fputs("Error: WZ_to_GLZ could not find a zero weight component\n",
+            stderr);
+      exit(1);
+    }
     for (j = r - 1; J <= j; j--)
       for (i = 0; i < r; i++)
         G[i][Waux[j]] = G[i][j]; /* nonzero */
@@ -4273,7 +4631,11 @@ Long WZ_to_GLZ(Long *W, Long *Waux, int *d, Long **G) /* allows components=0 */
         G[i][j] = 0; /* trivial lines */
     for (i = r; i < *d; i++)
       G[i][Waux[i - r]] = 1;
-    assert(J + r == (*d));
+    if (J + r != (*d)) {
+      fprintf(stderr, "Error: WZ_to_GLZ zero count J=%d + r=%d != d=%d\n", J, r,
+              *d);
+      exit(1);
+    }
   }
   for (i = 0; i < *d; i++) {
     Long t = 0;
@@ -4389,11 +4751,19 @@ int VP_2_CWS(Long *V[], int n, int v, CWS *CW) {
     C_to_BrxC(B, C, X, &cd, &v);
     CW->nw++;
     /*Print_XXG(B,&cd,"B"); Print_xxG(C,&v,"BxC");*/
-    assert(CW->nw <= v - n);
+    if (CW->nw > v - n) {
+      fprintf(stderr, "Error: VP_2_CWS weight count %d exceeds expected %d\n",
+              CW->nw, v - n);
+      exit(1);
+    }
     if (CW->nw == v - n)
       break;
   }
-  assert(CW->nw == v - n);
+  if (CW->nw != v - n) {
+    fprintf(stderr, "Error: VP_2_CWS final weight count %d != expected %d\n",
+            CW->nw, v - n);
+    exit(1);
+  }
   Sublattice_Basis(n, v, V, Z, M, &r, G, D);
   for (i = 0; i < r; i++) {
     for (j = 0; j < v; j++)
@@ -4420,7 +4790,11 @@ void Aux_Complete_Poly(PolyPointList *P, VertexNumList *V, EqList *E) /* ??? */
 {
   int e, v;
   Long MaxDist[EQUA_Nmax][VERT_Nmax];
-  assert(E->ne > P->n); /* check spanning of dimension */
+  if (E->ne <= P->n) {
+    fputs("Error: Aux_Complete_Poly equations do not span the dimension\n",
+          stderr);
+    exit(1);
+  }
   for (e = 0; e < E->ne; e++) {
     MaxDist[e][0] = Eval_Eq_on_V(&E->e[e], P->x[V->v[0]], P->n);
     for (v = 1; v < V->nv; v++) {
@@ -4437,12 +4811,20 @@ void Make_Dilat_Poly(PolyPointList *P, VertexNumList *V, EqList *E, int k,
   int e, v;
   Long MaxDist[EQUA_Nmax][VERT_Nmax];
   kP->np = 0;
-  assert(E->ne > P->n); /* check spanning of dimension */
+  if (E->ne <= P->n) {
+    fputs("Error: Make_Dilat_Poly equations do not span the dimension\n",
+          stderr);
+    exit(1);
+  }
   for (e = 0; e < E->ne; e++) {
     MaxDist[e][0] = Eval_Eq_on_V(&E->e[e], P->x[V->v[0]], P->n);
     for (v = 1; v < V->nv; v++) {
       Long X = Eval_Eq_on_V(&E->e[e], P->x[V->v[v]], P->n);
-      assert(X >= 0);
+      if (X < 0) {
+        fputs("Error: Make_Dilat_Poly negative evaluation on a vertex\n",
+              stderr);
+        exit(1);
+      }
       if (X > MaxDist[e][0])
         MaxDist[e][0] = X;
     }
@@ -4472,7 +4854,10 @@ void LatVol_IPs_degD(PolyPointList *P, VertexNumList *V, EqList *E, int g) {
       puts("-B#: IPs at degree D is only implemented for Gorenstein cones!");
       exit(1);
     } /* parallel-epiped ... to be done */
-    assert(gP != NULL);
+    if (gP == NULL) {
+      fputs("Error: LatVol_IPs_degD failed to allocate gP\n", stderr);
+      exit(1);
+    }
     gP->n = P->n;
     gP->np = 0;
     Make_Dilat_Poly(P, V, E, g, gP);
@@ -4514,7 +4899,10 @@ void IPs_degD(PolyPointList *P, VertexNumList *V, EqList *E, int g) {
     puts("-B#: IPs at degree D is only implemented for Gorenstein cones!");
     exit(1);
   } /* parallel-epiped ... to be done */
-  assert(gP != NULL);
+  if (gP == NULL) {
+    fputs("Error: IPs_degD failed to allocate gP\n", stderr);
+    exit(1);
+  }
   gP->n = P->n;
   gP->np = 0;
   Make_Dilat_Poly(P, V, E, g, gP);
@@ -4598,9 +4986,18 @@ void Reduce_ANF_Form(Long VM[][VERT_Nmax], int d, int v) {
 void Make_ANF(PolyPointList *P, VertexNumList *V, /* affine normal form */
               EqList *E, Long VM[POLY_Dmax][VERT_Nmax]) {
   int i, j, d = P->n, v = V->nv, e = E->ne, p = P->np;
-  assert(V->nv < VERT_Nmax);
-  assert(P->n < POLY_Dmax);
-  assert(P->np < POINT_Nmax);
+  if (V->nv >= VERT_Nmax) {
+    fputs("Error: Make_ANF vertex count exceeds VERT_Nmax\n", stderr);
+    exit(1);
+  }
+  if (P->n >= POLY_Dmax) {
+    fputs("Error: Make_ANF dimension exceeds POLY_Dmax\n", stderr);
+    exit(1);
+  }
+  if (P->np >= POINT_Nmax) {
+    fputs("Error: Make_ANF point count exceeds POINT_Nmax\n", stderr);
+    exit(1);
+  }
 
   /* Print_PPL(P,"in");Print_VL(P,V,"vertices");Print_EL(E,&P->n,0,"eq-in");
      PairMat PM; Make_VEPM(P,V,E,PM); Print_Matrix(PM, E->ne, V->nv,"PM");*/
@@ -4682,7 +5079,9 @@ void Print_Facets(PolyPointList *P, VertexNumList *V, EqList *E) {
         fputs("", stderr);
       }
       EPrint_VL(P, V, 0);
-      assert(0);
+      fputs("Error: Print_Facets facet normal form is not horizontal\n",
+            stderr);
+      exit(1);
     }
     Print_Matrix(VM, P->n - 1, c, "");
   }
@@ -4691,7 +5090,10 @@ void Print_Facets(PolyPointList *P, VertexNumList *V, EqList *E) {
 void Make_Facet(PolyPointList *P, VertexNumList *V, EqList *E, int e,
                 Long VM[POLY_Dmax][VERT_Nmax], int *cc) {
   /* writes the e'th facet to VM, cc...      */
-  assert(e < E->ne);
+  if (e >= E->ne) {
+    fputs("Error: Make_Facet facet index out of range\n", stderr);
+    exit(1);
+  }
   int c = 0, err = 0, v, j;
   for (v = 0; v < V->nv; v++)
     if (0 == Eval_Eq_on_V(&E->e[e], P->x[V->v[v]], P->n)) {
@@ -4733,7 +5135,10 @@ int FindOctahedron(PolyPointList *P, VertexNumList *V, EqList *E) {
         if (P->x[l][i] + P->x[n][i])
           break;
       if (i == P->n) {
-        assert(x < 90 * VERT_Nmax);
+        if (x >= 90 * VERT_Nmax) {
+          fputs("Error: FindOctahedron antipodal pair list overflow\n", stderr);
+          exit(1);
+        }
         X[x++] = n;
       }
     }
@@ -4753,7 +5158,11 @@ int FindOctahedron(PolyPointList *P, VertexNumList *V, EqList *E) {
 int CodimTwoFaceNum(PolyPointList *P, VertexNumList *V, EqList *E) {
   int i, j, n = 0, LiVj[FACE_Nmax];
   INCI FI[FACE_Nmax], EI[2 * VERT_Nmax];
-  assert(E->ne <= 2 * VERT_Nmax);
+  if (E->ne > 2 * VERT_Nmax) {
+    fputs("Error: CodimTwoFaceNum equation count exceeds 2*VERT_Nmax\n",
+          stderr);
+    exit(1);
+  }
   for (i = 0; i < E->ne; i++)
     EI[i] = Eq_To_INCI(&E->e[i], P, V); /* EqInci=facet */
   for (i = 1; i < E->ne; i++)
@@ -4773,7 +5182,10 @@ int CodimTwoFaceNum(PolyPointList *P, VertexNumList *V, EqList *E) {
           break; /* x<y :: break */
       }
       if (n == k) {
-        assert(k < FACE_Nmax);
+        if (k >= FACE_Nmax) {
+          fputs("Error: CodimTwoFaceNum face list overflow\n", stderr);
+          exit(1);
+        }
         LiVj[n] = i + j * V->nv;
         FI[n++] = x;
       }
@@ -4793,7 +5205,10 @@ int CodimTwoFaceNum(PolyPointList *P, VertexNumList *V, EqList *E) {
         edge = x;
     }
     printf("|edge|<=%ld\n", edge);
-    assert(edge > 0);
+    if (edge <= 0) {
+      fputs("Error: CodimTwoFaceNum edge length is not positive\n", stderr);
+      exit(1);
+    }
 
     if (0 == FindOctahedron(P, V, E))
       Print_PPL(P, "contains no octahedron");
@@ -4833,8 +5248,14 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
   Matrix G, M; /* assert(d==4); */
   if (FanoProjNPmax <= np)
     return 0;
-  assert(d < POLY_Dmax);
-  assert(E->ne <= VERT_Nmax);
+  if (d >= POLY_Dmax) {
+    fputs("Error: Fano5d dimension exceeds POLY_Dmax\n", stderr);
+    exit(1);
+  }
+  if (E->ne > VERT_Nmax) {
+    fputs("Error: Fano5d facet count exceeds VERT_Nmax\n", stderr);
+    exit(1);
+  }
   for (z = np; 0 <= z; z--) {
     {
       for (n = 0; n < d; n++)
@@ -4844,7 +5265,10 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
     if (n == d)
       break;
   }
-  assert(0 <= z);
+  if (z < 0) {
+    fputs("Error: Fano5d could not find a zero among input points\n", stderr);
+    exit(1);
+  }
   if (z < np)
     for (n = 0; n < d; n++) {
       P->x[z][n] = P->x[np][n];
@@ -4873,7 +5297,10 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
     else {
       int p1 = 0, m1 = 0, p2 = 0, m2 = 0, sum = 0;
       Long C[POLY_Dmax];
-      assert(i == d + 1);
+      if (i != d + 1) {
+        fputs("Error: Fano5d circuit face has unexpected size\n", stderr);
+        exit(1);
+      }
       Circuit(d, Y, C);
       for (i = 0; i <= d; i++) {
         sum += C[i];
@@ -4915,7 +5342,11 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
         } /* circuits with abs(C[])>1 */
         else
           CC[nc][np] = 1;
-        assert(++nc < FPcirNmax);
+        nc++;
+        if (nc >= FPcirNmax) {
+          fputs("Error: Fano5d circuit list overflow\n", stderr);
+          exit(1);
+        }
       }
       /* for(i=0;i<=d;i++)printf("%d ",p[i]); printf(" =>  ");
          for(i=0;i<=d;i++)printf("%ld ",C[i]); puts(" [circuit]"); */
@@ -4989,7 +5420,10 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
           M.x[j][i] = P->x[X[j]][i];
         I += 1 << X[i];
       }
-      assert(d == Make_G_for_GxMT_UT(M, G));
+      if (d != Make_G_for_GxMT_UT(M, G)) {
+        fputs("Error: Fano5d simplicial facet basis rank mismatch\n", stderr);
+        exit(1);
+      }
       for (k = 0; k < d; k++) {
         for (l = 0; l < d; l++) {
           Long s = 0;
@@ -5027,11 +5461,18 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
     } /* ENDof base change */
     else {
       int Y[POLY_Dmax];
-      assert(x == d + 1); /*  circuit facet case  */
+      if (x != d + 1) {
+        fputs("Error: Fano5d non-simplicial facet is not a circuit\n", stderr);
+        exit(1);
+      }
       for (c = 0; c < nc; c++)
         if ((CI[c] & FI[e]) == CI[c])
           break;
-      assert(c < nc);
+      if (c >= nc) {
+        fputs("Error: Fano5d no circuit found for non-simplicial facet\n",
+              stderr);
+        exit(1);
+      }
       for (n = 0; n < x; n++)
         if (getNI(X[n], CI[c])) { /* drop X[n] */
           int y = 0;
@@ -5049,7 +5490,11 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
                 M.x[j][i] = P->x[Y[j]][i];
               I += 1 << Y[i];
             }
-            assert(d == Make_G_for_GxMT_UT(M, G));
+            if (d != Make_G_for_GxMT_UT(M, G)) {
+              fputs("Error: Fano5d circuit facet basis rank mismatch\n",
+                    stderr);
+              exit(1);
+            }
             for (k = 0; k < d; k++) {
               for (l = 0; l < d; l++) {
                 Long s = 0;
