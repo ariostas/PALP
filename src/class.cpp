@@ -391,7 +391,12 @@ int main(int narg, char *fn[]) {
             oFlag = -3;
             puts("complete data");
           } else {
-            assert(('0' <= fn[n][2]) && (fn[n][2] <= '9'));
+            if ((fn[n][2] < '0') || (fn[n][2] > '9')) {
+              fprintf(stderr,
+                      "Error: class -o option requires a digit, got %c\n",
+                      fn[n][2]);
+              exit(1);
+            }
             oFlag = atoi(&fn[n][2]);
             if (!oFlag) {
               oFlag = -2;
