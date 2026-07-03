@@ -239,7 +239,10 @@ void RgcAddweight(Equation wn, RgcClassData *X) {
 
 void PrintPoint(int n, RgcClassData *X) {
   int i;
-  assert(n < POLY_Dmax);
+  if (n >= POLY_Dmax) {
+    fprintf(stderr, "Error: PrintPoint n=%d out of range\n", n);
+    exit(1);
+  }
   for (i = 0; i < n; i++)
     printf(" ");
   printf("X: ");
@@ -250,7 +253,10 @@ void PrintPoint(int n, RgcClassData *X) {
 
 void PrintQ(int n, RgcClassData *X) {
   int i, j;
-  assert(n < POLY_Dmax);
+  if (n >= POLY_Dmax) {
+    fprintf(stderr, "Error: PrintQ n=%d out of range\n", n);
+    exit(1);
+  }
   for (i = 0; i < n; i++)
     printf(" ");
   printf("q: ne=%d\n", X->q[n].ne);
@@ -274,7 +280,10 @@ int LastPointForbidden(int n, RgcClassData *X) {
   int l;
   Long *y = X->x[n];
   Long ysum = 0, ymax = 0;
-  assert(n < X->d);
+  if (n >= X->d) {
+    fprintf(stderr, "Error: LastPointForbidden n=%d out of range\n", n);
+    exit(1);
+  }
   for (l = 0; l < X->d; l++) {
     ysum += y[l];
     if (y[l] > ymax)
@@ -333,7 +342,10 @@ void ComputeQ(int n, RgcClassData *X) {
   EqList *qOld = &X->q[n - 1], *qNew = &X->q[n];
   INCI *qIOld = X->qI[n - 1], *qINew = X->qI[n];
   INCI newINCI;
-  assert(n < X->d);
+  if (n >= X->d) {
+    fprintf(stderr, "Error: MakeEquations n=%d out of range\n", n);
+    exit(1);
+  }
   for (i = X->d - 1; (i >= X->f0[n - 1]) && (y[i] == 0); i--)
     ;
   X->f0[n] = ++i;
@@ -355,7 +367,10 @@ void ComputeQ(int n, RgcClassData *X) {
                 qNew->e[k] = qNew->e[qNew->ne - 1];
                 qNew->ne--;
               }
-            assert(qNew->ne < EQUA_Nmax - 1);
+            if (qNew->ne >= EQUA_Nmax - 1) {
+              fputs("Error: MakeEquations equation list overflow\n", stderr);
+              exit(1);
+            }
             qINew[qNew->ne] = newINCI;
             qNew->e[qNew->ne] =
                 EEV_To_Equation(&qOld->e[i], &qOld->e[j], y, X->d);
@@ -399,7 +414,13 @@ int ComputeAndAddAverageWeight(Equation *q, int n, RgcClassData *X) {
     for (i = 0; i < X->q[n].ne; i++)
       q->a[j] += X->q[n].e[i].a[j] * (q->c / X->q[n].e[i].c);
     if (q->a[j] <= 0) {
-      assert(q->a[j] == 0);
+      if (q->a[j] != 0) {
+        fprintf(stderr,
+                "Error: ComputeAndAddAverageWeight negative weight at "
+                "component %d\n",
+                j);
+        exit(1);
+      }
       return 0;
     }
   }
@@ -466,7 +487,13 @@ void RecConstructRgcWeights(int n, RgcClassData *X) {
     for (l = k + 1; l < X->d; l++)
       yq[l] = yq[k];
     if (n == X->d - 2) {
-      assert(X->q[X->d - 2].ne == 2);
+      if (X->q[X->d - 2].ne != 2) {
+        fprintf(stderr,
+                "Error: RecConstructRgcWeights expected 2 equations at level "
+                "%d, got %d\n",
+                X->d - 2, X->q[X->d - 2].ne);
+        exit(1);
+      }
       ComputeAndAddLastQ(X);
     } else
       RecConstructRgcWeights(n + 1, X);
@@ -621,10 +648,22 @@ void Init_IP_Weights(int narg, char *fn[]) {
   if (++n < narg)
     if ((fn[n][0] != '-') && (IsDigit(fn[n][0]))) {
       L = atoi(fn[n]);
-      assert(++n < narg);
-      assert(IsDigit(fn[n][0]));
+      if (++n >= narg) {
+        puts("Error: Init_IP_Weights missing upper bound argument");
+        exit(1);
+      }
+      if (!IsDigit(fn[n][0])) {
+        puts("Error: Init_IP_Weights upper bound must be a number");
+        exit(1);
+      }
       H = atoi(fn[n]);
-      assert(L <= H);
+      if (L > H) {
+        fprintf(stderr,
+                "Error: Init_IP_Weights lower bound %d exceeds upper "
+                "bound %d\n",
+                L, H);
+        exit(1);
+      }
       n++;
     }
   n--;
@@ -673,10 +712,22 @@ void Init_moon_Weights(int narg, char *fn[]) {
   if (++n < narg)
     if ((fn[n][0] != '-') && (IsDigit(fn[n][0]))) {
       L = atoi(fn[n]);
-      assert(++n < narg);
-      assert(IsDigit(fn[n][0]));
+      if (++n >= narg) {
+        puts("Error: Init_moon_Weights missing upper bound argument");
+        exit(1);
+      }
+      if (!IsDigit(fn[n][0])) {
+        puts("Error: Init_moon_Weights upper bound must be a number");
+        exit(1);
+      }
       H = atoi(fn[n]);
-      assert(L <= H);
+      if (L > H) {
+        fprintf(stderr,
+                "Error: Init_moon_Weights lower bound %d exceeds upper bound "
+                "%d\n",
+                L, H);
+        exit(1);
+      }
       n++;
     }
   n--;
@@ -710,19 +761,33 @@ void Npoly2cws(int narg, char *fn[]) {
   Long *X[VERT_Nmax];
   FILE *OF;
   auto P = std::make_unique<PolyPointList>();
-  assert(!strcmp(fn[1], "-N"));
+  if (strcmp(fn[1], "-N") != 0) {
+    fprintf(stderr, "Error: Npoly2cws first argument must be -N, got %s\n",
+            fn[1]);
+    exit(1);
+  }
   inFILE = stdin;
   outFILE = stdout;
   if (narg > 2) {
     if (fn[2][0] == '-') {
-      assert(fn[2][1] == 'f');
+      if (fn[2][1] != 'f') {
+        fprintf(stderr, "Error: Npoly2cws unknown option %s\n", fn[2]);
+        exit(1);
+      }
       inFILE = NULL;
     } else {
       inFILE = fopen(fn[2], "r");
-      assert(NULL != inFILE);
+      if (inFILE == NULL) {
+        fprintf(stderr, "Error: Npoly2cws cannot open input file %s\n", fn[2]);
+        exit(1);
+      }
       if (narg > 3) {
         outFILE = fopen(fn[3], "w");
-        assert(NULL != outFILE);
+        if (outFILE == NULL) {
+          fprintf(stderr, "Error: Npoly2cws cannot open output file %s\n",
+                  fn[3]);
+          exit(1);
+        }
       }
     }
   }
@@ -1025,7 +1090,10 @@ void Make_34_Weights(int d, int tFlag) {
   PolyPointList *P_ptr = P.get();
   X->wnum = 1;
   X->N = d + 1;
-  assert(d <= 4);
+  if (d > 4) {
+    fprintf(stderr, "Error: Make_34_Weights d=%d exceeds 4\n", d);
+    exit(1);
+  }
   makesubsets(X.get());
   for (i = 0; i < X->N; i++)
     X->points[0][i] = 1;
@@ -1185,7 +1253,13 @@ void MakeIpWeights(int N, int from_d, int to_d, int *rFlag, int *tFlag) {
   int npp = 0, nrp = 0;
   Weight W;
   auto P = std::make_unique<PolyPointList>();
-  assert((N <= W_Nmax) && (N < POLY_Dmax + 2));
+  if ((N > W_Nmax) || (N >= POLY_Dmax + 2)) {
+    fprintf(stderr,
+            "Error: MakeIpWeights N=%d out of range (W_Nmax=%d, "
+            "POLY_Dmax+2=%d)\n",
+            N, W_Nmax, POLY_Dmax + 2);
+    exit(1);
+  }
   W.N = N;
   W.M = 0;
   for (W.d = from_d; W.d <= to_d; W.d++)
@@ -1213,7 +1287,11 @@ void RecMoonWeights(Weight *W, int g, int sum, long *npp, long *nintPP1,
     for (W->w[n] = wmax; (n + 1) * W->w[n] >= sum; W->w[n]--) {
       /*PP1[n] = rP(dmwow[n], PP1[n+1]);*/
       PP1N[n] = PP1N[n + 1] * (long long)(W->d - W->w[n]);
-      assert(PP1N[n] > 0);
+      if (PP1N[n] <= 0) {
+        fprintf(stderr,
+                "Error: RecMoonWeights PP1N[%d] overflow or non-positive\n", n);
+        exit(1);
+      }
       PP1D[n] = PP1D[n + 1] * (long long)W->w[n];
       RecMoonWeights(W, Fgcd(g, W->w[n]), sum - W->w[n], npp, nintPP1, nintchi,
                      n - 1, PP1N, PP1D);
@@ -1240,7 +1318,13 @@ void MakeMoonWeights(int N, int from_d, int to_d) {
   Weight W;
   /* Rat PP1[W_Nmax]; */ /* Poincare polynomial evaluated at t=1 */
   long long PP1N[W_Nmax], PP1D[W_Nmax];
-  assert((N <= W_Nmax) && (N < POLY_Dmax + 2));
+  if ((N > W_Nmax) || (N >= POLY_Dmax + 2)) {
+    fprintf(stderr,
+            "Error: MakeMoonWeights N=%d out of range (W_Nmax=%d, "
+            "POLY_Dmax+2=%d)\n",
+            N, W_Nmax, POLY_Dmax + 2);
+    exit(1);
+  }
   W.N = N;
   W.M = 0;
   for (W.d = from_d; W.d <= to_d; W.d++) {
@@ -1278,7 +1362,10 @@ void Make_Trans_Weights(int n, int dmin, int dmax /*,int rFlag */) {
   X.n = n;
   X.wnum = 0;
   outFILE = stdout;
-  assert(n <= AMBI_Dmax);
+  if (n > AMBI_Dmax) {
+    fprintf(stderr, "Error: Make_Trans_Weights n=%d exceeds AMBI_Dmax\n", n);
+    exit(1);
+  }
   X.wei[0] = n;
   for (X.d = dmin; X.d <= dmax; X.d += inc) {
     X.wei[n + 1] = X.d;
@@ -1365,7 +1452,11 @@ void T_Chon(int i, int urp, int nm, int g, T_aux *X) {
 /*  ppcheck checks whether the formal poincare polynomial is a polynomial  */
 int PPT_Check(T_weight nli, T_aux *X) {
   int i = 0, n, t, tt, j, d = X->d;
-  assert(d == nli[nli[0]]);
+  if (d != nli[nli[0]]) {
+    fprintf(stderr, "Error: PPT_Check degree mismatch d=%d != nli[%d]=%d\n", d,
+            nli[0], nli[nli[0]]);
+    exit(1);
+  }
   for (i = 1; i <= nli[0]; i++) {
     n = 1;
     tt = nli[i];
@@ -1645,7 +1736,11 @@ void Make_34_CWS(int d) {
   int u, ef;
   char *outfile;
 
-  assert(d <= 4); /*puts("Implement Make_34_CWS");*/
+  if (d > 4) {
+    fprintf(stderr, "Error: Make_34_CWS d=%d exceeds 4\n", d);
+    exit(1);
+  }
+  /*puts("Implement Make_34_CWS");*/
   if ((w2FILE = tmpfile()) == NULL)
     Die("Unable to open tmpfile for read/write");
   if ((w3FILE = tmpfile()) == NULL)
@@ -1799,7 +1894,10 @@ void PRINT_CWS(CWS *CW) {
         fprintf(outFILE, " N:%d %d", DP->np, E.ne);
       else
         fprintf(outFILE, " F:%d N:%d", E.ne, DP->np);
-      assert(IP_Check(DP, &V, &E));
+      if (!IP_Check(DP, &V, &E)) {
+        fputs("Error: IP_WeightInfo dual polytope not reflexive\n", stderr);
+        exit(1);
+      }
       fprintf(outFILE, "\n");
     }
   }
@@ -2245,7 +2343,11 @@ void Make_IP_CWS(int narg, char *fn[]) {
         a = fn[n];
         if (!IsDigit(*a))
           Die("after -t there must be digit(s)!");
-        assert(t.nu < NFmax);
+        if (t.nu >= NFmax) {
+          fprintf(stderr, "Error: too many -t type arguments (max %d)\n",
+                  NFmax);
+          exit(1);
+        }
         t.u[t.nu] = atoi(a);
         t.nu++;
       }
@@ -2274,9 +2376,13 @@ void Make_IP_CWS(int narg, char *fn[]) {
       Die("Unable to open infile to read");
   }
   if (nF == 2) {
-    if (!t.nu)
-      assert((u = D[0] + D[1] - d) >= 0);
-    else {
+    if (!t.nu) {
+      u = D[0] + D[1] - d;
+      if (u < 0) {
+        fprintf(stderr, "Error: combined dimension mismatch u=%d\n", u);
+        exit(1);
+      }
+    } else {
       if (t.u[0] != t.u[1])
         Die("if input is -n2 -t k_1 k_2 then k_1 must be equal to k_2!");
       if (t.u[0] != (D[0] + D[1] - d))
@@ -2403,7 +2509,10 @@ void IP_Poly_Data(int narg, char *fn[]) {
         Print_PPL(_P.get(), "");
       if (d)
         Print_PPL(_DP.get(), "");
-      assert(IP_Check(_DP.get(), _V, _E));
+      if (!IP_Check(_DP.get(), _V, _E)) {
+        fputs("Error: cws main dual polytope not reflexive\n", stderr);
+        exit(1);
+      }
       fprintf(outFILE, "\n");
     }
 }
@@ -2571,7 +2680,10 @@ void SimplexPointCount(int narg, char *fn[]) {
   EqList E;
   int L;
   PolyPointList P{};
-  assert(narg > 1);
+  if (narg <= 1) {
+    PrintCWSUsage(fn[0]);
+    exit(1);
+  }
   if (fn[1][2] == 'f')
     inFILE = NULL;
   W.M = 0;
