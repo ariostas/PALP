@@ -95,7 +95,10 @@ void PRNtriang(triang *SR, const char *c) {
 }
 
 int MaxBit(Inci64 I, int p) {
-  assert(I != 0);
+  if (I == 0) {
+    fputs("Error: MaxBit called with zero incidence\n", stderr);
+    exit(1);
+  }
   while (0 == getN(--p, I))
     ;
   return p;
@@ -109,8 +112,14 @@ int Multiloop(int *N, int *I, int *j, int *J);
 int Init_Choose(int n, int k, int *C) {
   int i;
   long X = 1;
-  assert(k > 0);
-  assert(k <= n);
+  if (k <= 0) {
+    fputs("Error: Init_Choose needs k > 0\n", stderr);
+    exit(1);
+  }
+  if (k > n) {
+    fputs("Error: Init_Choose needs k <= n\n", stderr);
+    exit(1);
+  }
   for (i = 0; i < k; i++) {
     C[i] = i;
     X *= (n - i);
@@ -128,7 +137,10 @@ int Choose(int n, int k, int *C) {
       C[x]++;
       return 1;
     }
-  assert(x == k - 1);
+  if (x != k - 1) {
+    fputs("Error: inconsistent state in Choose\n", stderr);
+    exit(1);
+  }
   if (C[x] < n - 1) {
     int i;
     for (i = 0; i < x; i++)
@@ -178,13 +190,19 @@ void DivClassBasis(int SF, PolyPointList *P, int v, const char *D,
             dprintf(SF, ","); /* complement */
           dprintf(SF, "%s%d-%s%d", B, ++x, D, c + 1);
         }
-      assert(x == v - d);
+      if (x != v - d) {
+        fputs("Error: DivClassBasis complement size mismatch\n", stderr);
+        exit(1);
+      }
       dprintf(SF, ";\n");
       return;
     }
     nok--;
   } while (Choose(v, d, C));
-  assert(nok == 0);
+  if (nok != 0) {
+    fputs("Error: DivClassBasis did not enumerate all choices\n", stderr);
+    exit(1);
+  }
 
   if (cdiv > 1) {
     printf("Fundamental group = Z%d\n", (int)cdiv);
@@ -213,12 +231,19 @@ void DivClassBasis(int SF, PolyPointList *P, int v, const char *D,
               dprintf(SF, ",");
             dprintf(SF, "%s%d-%s%d", B, ++x, D, c + 1);
           }
-        assert(x == v - d);
+        if (x != v - d) {
+          fputs("Error: DivClassBasis complement size mismatch\n", stderr);
+          exit(1);
+        }
         dprintf(SF, ";\n");
         return;
       }
       nok--;
     } while (Choose(v, d, C));
+    if (nok != 0) {
+      fputs("Error: DivClassBasis did not enumerate all choices\n", stderr);
+      exit(1);
+    }
   }
 
   puts("IMPROVE CODE: no Vol=1 simplex in DivClassBasis()");
@@ -226,8 +251,8 @@ void DivClassBasis(int SF, PolyPointList *P, int v, const char *D,
 }
 
 /*  ideal IRingNorm = (Q*U - Di.Dj.Dk); on the CY where
- *  Q = Di.Dj.Dk.Dcy / Di.Dj.Dk.Dl*Vol(\s_ijkl) and Di.Dj.Dk.Dl*Vol(\s) = U = 1
- *  on ambient space IP_\S, i.e. we introduce a formal variable U = Unit
+ *  Q = Di.Dj.Dk.Dcy / Di.Dj.Dk.Dl*Vol(\s_ijkl) and Di.Dj.Dk.Dl*Vol(\s) = U =
+ * 1 on ambient space IP_\S, i.e. we introduce a formal variable U = Unit
  */
 /* new version:	number Vol=1; poly norm=Vol*reduce(d1*d2*d3*d4*d5,chow);
  *		reduce(nef*d1*d1*d1,chow)/norm;  // D=d divisor, B=h basis
@@ -239,8 +264,14 @@ void MoriGen(Matrix T, Long *V) {
   int i;
   Matrix G;
   Init_Matrix(&G, T.d, T.d);
-  assert(T.d == T.v + 1);
-  assert(T.v == Make_G_for_GxMT_UT(T, G));
+  if (T.d != T.v + 1) {
+    fputs("Error: MoriGen dimension mismatch\n", stderr);
+    exit(1);
+  }
+  if (T.v != Make_G_for_GxMT_UT(T, G)) {
+    fputs("Error: MoriGen rank mismatch\n", stderr);
+    exit(1);
+  }
   for (i = 0; i < T.d; i++)
     V[i] = G.x[T.v][i];
   Free_Matrix(&G);
@@ -355,14 +386,20 @@ int Check_Mori(PolyPointList *P, int p, triang *T) { // strongly convex(?)
   Init_Matrix(&VT, d, d + 1);
   Init_Matrix(&R, ngen, p);
   Init_Matrix(&G, p, p); // ng0=ngen;
-  assert(ngen == Make_triCD2F(T, cd2F));
+  if (ngen != Make_triCD2F(T, cd2F)) {
+    fputs("Error: Check_Mori inconsistent number of generators\n", stderr);
+    exit(1);
+  }
   for (i = 1; i < nI; i++)
     for (j = 0; j < i; j++)
       if (Inci64_abs(Inci64_AND(I[i], I[j])) == d - 1) {
         int a, b;
         Inci64 Ia = I[i] | I[j];
         Inci64_2_VNL(Ia, &V, p);
-        assert(V.nv == d + 1);
+        if (V.nv != d + 1) {
+          fputs("Error: Check_Mori vertex count mismatch\n", stderr);
+          exit(1);
+        }
         for (a = 0; a <= d; a++)
           for (b = 0; b < d; b++)
             VT.x[b][a] = P->x[V.v[a]][b];
@@ -375,8 +412,18 @@ int Check_Mori(PolyPointList *P, int p, triang *T) { // strongly convex(?)
             break;
         // prnI(p,I[i]);printf("=Ii Ij=");prnI(p,I[j]); printf("
         // Ia=");prnI(p,Ia); printf(" -> ");	Print_VNL(&V);
-        assert(Inci64_abs(Ia) == 2);
-        assert(b < d);
+        if (Inci64_abs(Ia) != 2) {
+          fputs("Error: Mori cone computation expected a pair of differing "
+                "vertices\n",
+                stderr);
+          exit(1);
+        }
+        if (b >= d) {
+          fputs("Error: Mori cone computation could not locate differing "
+                "vertex\n",
+                stderr);
+          exit(1);
+        }
         if (0 == Z[b]) {
           printf("Error: Z[b]==0 for I[%d]&I[%d] !\n", j, i);
           exit(1);
@@ -425,7 +472,10 @@ int Check_Mori(PolyPointList *P, int p, triang *T) { // strongly convex(?)
       UT->x[i][j] = VxV(G.x[j], R.x[i], p);
   for (i = 0; i < ngen; i++)
     for (j = r; j < p; j++)
-      assert(0 == VxV(G.x[j], R.x[i], p));
+      if (0 != VxV(G.x[j], R.x[i], p)) {
+        fputs("Error: Check_Mori orthogonal complement failure\n", stderr);
+        exit(1);
+      }
   for (i = 0; i < UT->n; i++)
     UT->x[UT->np][i] = 0;
   UT->np++;
@@ -468,7 +518,10 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I) {
         int a, b;
         Inci64 Ia = I[i] | I[j];
         Inci64_2_VNL(Ia, &V, p);
-        assert(V.nv == d + 1);
+        if (V.nv != d + 1) {
+          fputs("Error: Print_Mori vertex count mismatch\n", stderr);
+          exit(1);
+        }
         for (a = 0; a <= d; a++)
           for (b = 0; b < d; b++)
             VT.x[b][a] = P->x[V.v[a]][b];
@@ -481,8 +534,18 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I) {
             break;
         // prnI(p,I[i]);printf("=Ii Ij=");prnI(p,I[j]); printf("
         // Ia=");prnI(p,Ia); printf(" -> ");	Print_VNL(&V);
-        assert(Inci64_abs(Ia) == 2);
-        assert(b < d);
+        if (Inci64_abs(Ia) != 2) {
+          fputs("Error: Mori cone computation expected a pair of differing "
+                "vertices\n",
+                stderr);
+          exit(1);
+        }
+        if (b >= d) {
+          fputs("Error: Mori cone computation could not locate differing "
+                "vertex\n",
+                stderr);
+          exit(1);
+        }
         if (0 == Z[b]) {
           printf("Error: Z[b]==0 for I[%d]&I[%d] !\n", j, i);
           exit(1);
@@ -531,7 +594,10 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I) {
       UT->x[i][j] = VxV(G.x[j], R.x[i], p);
   for (i = 0; i < ngen; i++)
     for (j = r; j < p; j++)
-      assert(0 == VxV(G.x[j], R.x[i], p));
+      if (0 != VxV(G.x[j], R.x[i], p)) {
+        fputs("Error: Print_Mori orthogonal complement failure\n", stderr);
+        exit(1);
+      }
   for (i = 0; i < UT->n; i++)
     UT->x[UT->np][i] = 0;
   UT->np++;
@@ -547,8 +613,9 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I) {
     exit(1);
   }
 
-  /* The extremal rays of the Mori cone are those that have maximal incidences *
-   * with faces of the cone, i.e. with equations containing the origin.	     */
+  /* The extremal rays of the Mori cone are those that have maximal incidences
+   * * with faces of the cone, i.e. with equations containing the origin.
+   */
   for (i = 0; i < nv; i++)
     IE[i] = 0; /* igonore the origin = UT.x[np==V.v[nv]] */
   for (i = 0; i < E->ne; i++)
@@ -564,14 +631,19 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I) {
   // printf("p=%d nm=%d\n",p,nm);
   for (i = 0; i < nv; i++) {
     for (j = 0; j < nv; j++)
-      //    if(i!=j) if(Inci64_LE(IE[i],IE[j]))			/* equivalent
+      //    if(i!=j) if(Inci64_LE(IE[i],IE[j]))			/*
+      //    equivalent
       //    ??? */
       if ((((IE[i]) | (IE[j])) == (IE[j])) && !((IE[i]) == (IE[j])))
         break;
     if (j == nv)
       m[nm++] = i;
   }
-  assert(nm >= r);
+  if (nm < r) {
+    fputs("Error: Print_Mori found fewer extremal rays than cone dimension\n",
+          stderr);
+    exit(1);
+  }
   //  fprintf(outFILE,
   //  "%d MORI GENERATORS / dim(cone)=%d   [#rays=%d<=%d #eq=%d<=%d
   //  #v=%d<=%d]\n",
@@ -599,7 +671,7 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I) {
 
 // ===============	Triangulation  <-->  Stanley Reisner	============ //
 
-/*   SR generators:  G=I+2^n  with  I<2^n,  I<=face  and not  G'<G           */
+/*   SR generators:  G=I+2^n  with  I<2^n,  I<=face  and not  G'<G */
 /*   d = dim(Poly) = #(vertices of simplices on *T) = #vertices on simp.facets
  *   OFFSET=0, i.e. IP not on (position 0 of) Inci64
  */
@@ -624,7 +696,11 @@ void Triang_from_SR(triang *TR, triang *SR) { /* consistency check ... */
   if (binco++ > 2999)
     binco = 2999;
   A = (Inci64 *)malloc(2 * binco * sizeof(Inci64));
-  assert(A != NULL);
+  if (A == NULL) {
+    fputs("Error: failed to allocate incidence buffer in Triang_from_SR\n",
+          stderr);
+    exit(1);
+  }
   M = A;
   N = &A[binco];
   for (i = 1; i < p; i++)
@@ -635,7 +711,10 @@ void Triang_from_SR(triang *TR, triang *SR) { /* consistency check ... */
           break; /* no edge of triangle */
       if (k == s) {
         ++m;
-        assert(m < binco);
+        if (m >= binco) {
+          fputs("Error: too many edges in Triang_from_SR\n", stderr);
+          exit(1);
+        }
       }
     }
   for (r = 3; r <= d; r++) {
@@ -648,7 +727,10 @@ void Triang_from_SR(triang *TR, triang *SR) { /* consistency check ... */
             break;
         if (l == s) {
           ++n;
-          assert(n < binco);
+          if (n >= binco) {
+            fputs("Error: too many faces in Triang_from_SR\n", stderr);
+            exit(1);
+          }
         }
       }
     Inci64 *swapI = M;
@@ -657,7 +739,10 @@ void Triang_from_SR(triang *TR, triang *SR) { /* consistency check ... */
     m = n;
   }
   TR->n = m;
-  assert(m <= TR->nmax);
+  if (m > TR->nmax) {
+    fputs("Error: too many triangles in Triang_from_SR\n", stderr);
+    exit(1);
+  }
   for (k = 0; k < m; k++)
     T[k] = M[k];
   free(A);
@@ -682,7 +767,11 @@ void StanleyReisner(triang *SR,
     binco = 2999;
 
   A = (Inci64 *)malloc(2 * binco * sizeof(Inci64));
-  assert(A != NULL);
+  if (A == NULL) {
+    fputs("Error: failed to allocate incidence buffer in StanleyReisner\n",
+          stderr);
+    exit(1);
+  }
   M = A;
   N = &A[binco];
   for (i = 1; i < p; i++)
@@ -695,7 +784,11 @@ void StanleyReisner(triang *SR,
         S[s++] = M[m];
       else {
         ++m;
-        assert(m < binco);
+        if (m >= binco) {
+          fputs("Error: too many quadratic generators in StanleyReisner\n",
+                stderr);
+          exit(1);
+        }
       } /* quadratic generator */
     }
   for (r = 3; r <= d + 1; r++) {
@@ -713,12 +806,19 @@ void StanleyReisner(triang *SR,
             if (Inci64_LE(S[l], N[n]))
               break;
           if (l == s) {
-            assert(s < SR->nmax);
+            if (s >= SR->nmax) {
+              fputs("Error: too many Stanley-Reisner generators\n", stderr);
+              exit(1);
+            }
             S[s++] = N[n];
           }
         } else {
           ++n;
-          assert(n < binco);
+          if (n >= binco) {
+            fputs("Error: too many working incidences in StanleyReisner\n",
+                  stderr);
+            exit(1);
+          }
         }
       }
     Inci64 *swapI = M;
@@ -768,7 +868,8 @@ void StanleyReisner(triang *SR,
       PRNtriang(T, "Triangulation");
       PRNtriang(SR, "SR-ideal");
       PRNtriang(&TeST, "Tri(SR) ... test failed !!!");
-      assert(0);
+      fputs("Error: Stanley-Reisner self-consistency check failed\n", stderr);
+      exit(1);
     }
   }
 }
@@ -799,9 +900,9 @@ void InterSectionRing(Inci64 *Tri, int *t, PolyPointList *P, int p,
       if (P->n < (POLY_Dmax + 1)) {
         HyperSurfSingular(P, &T, &SR, _Flag, F, &p);
       } else {
-        printf(
-            "Intersection ring implemented only for polytopes up to dim=%d \n",
-            POLY_Dmax);
+        printf("Intersection ring implemented only for polytopes up to "
+               "dim=%d \n",
+               POLY_Dmax);
       }
     }
     if (_Flag->m)
@@ -813,7 +914,10 @@ void InterSectionRing(Inci64 *Tri, int *t, PolyPointList *P, int p,
 
 void Transpose(Matrix M, Matrix MT) {
   int i, j, l = M.v, c = M.d;
-  assert((MT.v == c) && (MT.d == l));
+  if ((MT.v != c) || (MT.d != l)) {
+    fputs("Error: Transpose matrix dimension mismatch\n", stderr);
+    exit(1);
+  }
   for (i = 0; i < M.v; i++)
     for (j = 0; j < M.d; j++)
       MT.x[j][i] = M.x[i][j];
@@ -874,8 +978,15 @@ Inci64 FindPolyCircuits(PolyPointList *P, int p, Inci64 F, int f) {
         A.x[k][j] = P->x[i][j];
       C[k++] = i;
     }
-  assert(f > d);
-  assert(k == f);
+  if (f <= d) {
+    fputs("Error: FindPolyCircuits needs more facet points than dimension\n",
+          stderr);
+    exit(1);
+  }
+  if (k != f) {
+    fputs("Error: FindPolyCircuits facet count mismatch\n", stderr);
+    exit(1);
+  }
   d = f - d;
   GaleTransform(A, &B); // Print_CMatrix(B,"Gale");
   for (i = 0; i < k; i++) {
@@ -916,8 +1027,7 @@ int SameRay(Long *X, Long *Y, int d) {
     return (x * y > 0);
   else {
     puts("ZeroVectors in SameRay (forbidden)");
-    assert(x);
-    return 000;
+    exit(1);
   }
 }
 
@@ -935,7 +1045,8 @@ Long SCALproduct(Long *X, Long *Y) {
   return X[0] * Y[0] + X[1] * Y[1] + X[2] * Y[2];
 }
 // #define BZx(a,b,c)	(XYZproduct(B.x[Z[a]],B.x[Z[b]],B.x[Z[c]]))
-// #define BZRx(a,b,c)	(XYZproduct(B.x[Z[*R[a]]],B.x[Z[*R[b]]],B.x[Z[*R[c]]]))
+// #define BZRx(a,b,c)
+// (XYZproduct(B.x[Z[*R[a]]],B.x[Z[*R[b]]],B.x[Z[*R[c]]]))
 
 #define BZR(eqr) (B.x[Z[*R[eqr]]])
 #define BZRx(a, b, c) (XYZproduct(BZR(a), BZR(b), BZR(c)))
@@ -996,10 +1107,22 @@ void IntersectEdges(Long *X, Long *Y, Long *U, Long *V, Long *Q) {
          U[2], V[0], V[1], V[2], Q[0], Q[1], Q[2]);
 #endif
 
-  assert((SCALproduct(X, Q) > 0) || (SCALproduct(Y, Q) > 0));
-  assert((SCALproduct(U, Q) > 0) || (SCALproduct(V, Q) > 0));
-  assert(XYZproduct(X, Y, Q) == 0);
-  assert(XYZproduct(U, V, Q) == 0);
+  if ((SCALproduct(X, Q) <= 0) && (SCALproduct(Y, Q) <= 0)) {
+    fputs("Error: IntersectEdges produced point outside first edge\n", stderr);
+    exit(1);
+  }
+  if ((SCALproduct(U, Q) <= 0) && (SCALproduct(V, Q) <= 0)) {
+    fputs("Error: IntersectEdges produced point outside second edge\n", stderr);
+    exit(1);
+  }
+  if (XYZproduct(X, Y, Q) != 0) {
+    fputs("Error: IntersectEdges Q not coplanar with first edge\n", stderr);
+    exit(1);
+  }
+  if (XYZproduct(U, V, Q) != 0) {
+    fputs("Error: IntersectEdges Q not coplanar with second edge\n", stderr);
+    exit(1);
+  }
 }
 
 void Print_MaxTrian(Inci64 C, Inci64 *CT[ANtri], int nmt, int *nt, int p) {
@@ -1015,7 +1138,11 @@ void Print_MaxTrian(Inci64 C, Inci64 *CT[ANtri], int nmt, int *nt, int p) {
       U |= CT[i][j];
     }
     puts("}");
-    assert(U == C);
+    if (U != C) {
+      fputs("Error: Print_MaxTrian union of simplices does not cover circuit\n",
+            stderr);
+      exit(1);
+    }
   }
 }
 
@@ -1033,7 +1160,10 @@ int Triang1dSFan(PolyPointList *P, int p, Inci64 I, Inci64 *X,
         A.x[k][j] = P->x[i][j];
       F[k++] = i;
     }
-  assert(k == d + 1);
+  if (k != d + 1) {
+    fputs("Error: Triang1dSFan simplex vertex count mismatch\n", stderr);
+    exit(1);
+  }
   GaleTransform(A, &B);
   i = j = *nmt = 0;
   for (k = 0; k <= d; k++)
@@ -1047,7 +1177,10 @@ int Triang1dSFan(PolyPointList *P, int p, Inci64 I, Inci64 *X,
 #if (TRACE_TRIANGULATION)
   {
     Inci64 PC = FindPolyCircuits(P, p, I, d + 1);
-    assert(PC == CI);
+    if (PC != CI) {
+      fputs("Error: Triang1dSFan circuit mismatch\n", stderr);
+      exit(1);
+    }
   }
   prnI(p, CI);
   printf("=C -> ");
@@ -1072,9 +1205,14 @@ int Triang1dSFan(PolyPointList *P, int p, Inci64 I, Inci64 *X,
     (*nmt)++;
   }
 #if (TRACE_TRIANGULATION)
-  Print_MaxTrian(CI, CT, *nmt, nt, p); // printf("i=%d j=%d nmt=%d\n",i,j,*nmt);
+  Print_MaxTrian(CI, CT, *nmt, nt,
+                 p); // printf("i=%d j=%d nmt=%d\n",i,j,*nmt);
 #endif
-  assert(*nmt == (i * j + 1 > i + j) + 1);
+  if (*nmt != (i * j + 1 > i + j) + 1) {
+    fputs("Error: Triang1dSFan unexpected number of maximal triangulations\n",
+          stderr);
+    exit(1);
+  }
   Free_Matrix(&A);
   Free_Matrix(&B);
   return tnt;
@@ -1097,7 +1235,10 @@ int Triang2dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
         A.x[k][j] = P->x[i][j];
       F[k++] = i;
     }
-  assert(k == d + 2);
+  if (k != d + 2) {
+    fputs("Error: Triang2dSFan circuit vertex count mismatch\n", stderr);
+    exit(1);
+  }
   GaleTransform(A, &B);
   U = 0; // F_i<d+2
   for (k = 0; k < v; k++)
@@ -1171,24 +1312,46 @@ int Triang2dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
   i = 0;
   k = 0;
   for (r = 0; r < nr; r++) {
-    assert(BZangle(*R[(r + 1) % nr], *R[r]) > 0);
+    if (BZangle(*R[(r + 1) % nr], *R[r]) <= 0) {
+      fputs("Error: Triang2dSFan rays are not strictly ordered\n", stderr);
+      exit(1);
+    }
     for (j = 0; j < nrp[r]; j++) {
-      assert(0 <= R[r][j]);
-      assert(R[r][j] < z);
+      if (R[r][j] < 0) {
+        fputs("Error: Triang2dSFan negative ray point index\n", stderr);
+        exit(1);
+      }
+      if (R[r][j] >= z) {
+        fputs("Error: Triang2dSFan ray point index out of range\n", stderr);
+        exit(1);
+      }
       k += R[r][j];
       if (j)
-        assert(BZangle(R[r][j - 1], R[r][j]) == 0);
+        if (BZangle(R[r][j - 1], R[r][j]) != 0) {
+          fputs("Error: Triang2dSFan collinear ray points expected\n", stderr);
+          exit(1);
+        }
     }
     i += nrp[r];
   }
-  assert(i == z);
-  assert(2 * k == z * (z - 1));
+  if (i != z) {
+    fputs("Error: Triang2dSFan ray point total mismatch\n", stderr);
+    exit(1);
+  }
+  if (2 * k != z * (z - 1)) {
+    fputs("Error: Triang2dSFan ray point sum mismatch\n", stderr);
+    exit(1);
+  }
 #endif
   for (r = 0; r < nr; r++) {
     int a, s = (r + 1) % nr; // triangulation for cone (R[r],R[s])
     Inci64 PC = 0, *CI = CT[*nmt];
     nt[*nmt] = 0;
-    assert(BZangle(*R[s], *R[r]) > 0);
+    if (BZangle(*R[s], *R[r]) <= 0) {
+      fputs("Error: Triang2dSFan adjacent rays are not strictly ordered\n",
+            stderr);
+      exit(1);
+    }
     //    if((nrp[r]>1)&&(nrp[s]>1))		// maximal triangulations only
     for (j = 1; j < nr; j++) {
       int b, y;
@@ -1210,7 +1373,10 @@ int Triang2dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
       CT[++(*nmt)] = &X[tnt];
     }
   }
-  assert(*nmt > 0);
+  if (*nmt == 0) {
+    fputs("Error: Triang2dSFan found no maximal triangulation\n", stderr);
+    exit(1);
+  }
 #if (TRACE_TRIANGULATION)
   Print_MaxTrian(U, CT, *nmt, nt, p);
 #endif
@@ -1254,10 +1420,17 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
   int tn = 0, en = 0, a, b, c, k = 0, l, iem = 0, ies = 0, nQuad = 0, chi = 0,
       ncr = 0;
 
-  /*  int ChamberTriangle(Long *Q,int *T){Long a,b,c;   // Q in BZR(T_0,T_1,T_2)
-      if(0<=(a=XYZproduct(BZR(T[0]),BZR(T[1]),Q))) if(0<=(b=XYZproduct(BZR(T[1])
-        ,BZR(T[2]),Q))) if(0<=(c=XYZproduct(BZR(T[2]),BZR(T[0]),Q)))
-      {assert(a*b*c>0); return 1;} return 0;}		 // END of DECLARATIONS
+  /*  int ChamberTriangle(Long *Q,int *T){Long a,b,c;   // Q in
+     BZR(T_0,T_1,T_2) if(0<=(a=XYZproduct(BZR(T[0]),BZR(T[1]),Q)))
+     if(0<=(b=XYZproduct(BZR(T[1]) ,BZR(T[2]),Q)))
+      if(0<=(c=XYZproduct(BZR(T[2]),BZR(T[0]),Q))) {
+        if (a*b*c <= 0) {
+          fputs("Error: ChamberTriangle non-positive orientation\n", stderr);
+          exit(1);
+        }
+        return 1;
+      }
+      return 0;}		 // END of DECLARATIONS
    */
 
   Init_Matrix(&A, Inci64_abs(FI), d);
@@ -1289,9 +1462,15 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
   prnI(p, C);
   printf("=C(Gale) ");
   Print_CMatrix(B, "Gale");
-  assert(f == A.v);
+  if (f != A.v) {
+    fputs("Error: Triang3dSFan facet point count mismatch\n", stderr);
+    exit(1);
+  }
   AuxPrintRays(R, nrp, r);
-  assert(z >= r);
+  if (z < r) {
+    fputs("Error: Triang3dSFan fewer non-zero Gale points than rays\n", stderr);
+    exit(1);
+  }
 #endif
 
   //	3d secondary fan A L G O R I T H M
@@ -1374,12 +1553,23 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
       nQuad++;
     }
 
-  assert(ies % 2 == 0);
-  assert(2 * ies < VERT_Nmax);
+  if (ies % 2 != 0) {
+    fputs("Error: Triang3dSFan odd number of intersecting edge pairs\n",
+          stderr);
+    exit(1);
+  }
+  if (2 * ies >= VERT_Nmax) {
+    fputs("Error: Triang3dSFan too many intersecting edge pairs\n", stderr);
+    exit(1);
+  }
   ies /= 2;
 
-  if (iem < 2)
-    assert(2 * ies == nQuad); // nQuad redundant => eliminate
+  if (iem < 2) {
+    if (2 * ies != nQuad) {
+      fputs("Error: Triang3dSFan quadrilateral count mismatch\n", stderr);
+      exit(1);
+    }
+  }
 
 #if (TRACE_TRIANGULATION)
   // for(l=0;l<r;l++)printf("RZF=%d:%d:%d
@@ -1404,7 +1594,8 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
   ///// ==========	n - G O N  case  /  make chambers :: CR[ncr]
 
   if (iem > 1) {
-    int OE[8 * VERT_Nmax][2], noe = 0, y, q = 0; // orient.edges, y = #Rays+#Q's
+    int OE[8 * VERT_Nmax][2], noe = 0, y,
+                              q = 0; // orient.edges, y = #Rays+#Q's
     Long *Y[VERT_Nmax], YY[VERT_Nmax][3];
     int nse = 0;
     for (i = 0; i < en; i++)
@@ -1412,7 +1603,10 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
     for (y = 0; y < r; y++)
       Y[y] = BZR(y);
     Y[y] = YY[0];
-    assert(nse <= VERT_Nmax);
+    if (nse > VERT_Nmax) {
+      fputs("Error: Triang3dSFan too many subdivided edges\n", stderr);
+      exit(1);
+    }
 
     for (i = 0; i < en; i++)
       if (ien[i]) { // Y[k]::Y[y]=YY[q]=intersection(Ei,Ej)
@@ -1447,10 +1641,14 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
       }
 
     // for(l=0;l<noe;l++)printf("oe%d=%d%d ",l,OE[l][0],OE[l][1]);puts("
-    // double:"); for(f=0;f<3;f++){for(k=0;k<y;k++)printf("%3ld",Y[k][f]);puts("
+    // double:");
+    // for(f=0;f<3;f++){for(k=0;k<y;k++)printf("%3ld",Y[k][f]);puts("
     // =Y");}exit(0);
 
-    assert(noe <= 4 * VERT_Nmax);
+    if (noe > 4 * VERT_Nmax) {
+      fputs("Error: Triang3dSFan too many oriented edges\n", stderr);
+      exit(1);
+    }
     nse = noe; // double/revers orientation
     for (i = 0; i < noe; i++) {
       OE[noe + i][0] = OE[i][1];
@@ -1459,7 +1657,8 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
     noe *= 2;
 
 #if (TRACE_TRIANGULATION)
-    //	for(f=0;f<3;f++){for(k=0;k<q;k++)printf("%3ld",YY[k][f]);puts(" =YY");}
+    //	for(f=0;f<3;f++){for(k=0;k<q;k++)printf("%3ld",YY[k][f]);puts("
+    //=YY");}
     for (f = 0; f < 3; f++) {
       for (k = 0; k < y; k++)
         printf("%3ld", Y[k][f]);
@@ -1493,7 +1692,10 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
         OE[k][1] = OE[noe][1];
       } // next
       while (face[f] != face[0]); // face complete
-      assert(f > 1);
+      if (f <= 1) {
+        fputs("Error: Triang3dSFan degenerate chamber face\n", stderr);
+        exit(1);
+      }
       for (j = 0; j < 3; j++)
         CR[ncr][j] = Y[face[0]][j] + Y[face[2]][j];
       if (f == 3)
@@ -1510,7 +1712,10 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
 #endif
       ncr++;
     } //// 	chambers DONE
-    assert(ncr - nse + y == 2);
+    if (ncr - nse + y != 2) {
+      fputs("Error: Triang3dSFan Euler characteristic mismatch\n", stderr);
+      exit(1);
+    }
   } // check Euler number
 
   ///// ==================		squares and triangles only:
@@ -1524,9 +1729,15 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
         if ((j = IEli[i][0]) > i) {
           Long Q[3]; // make QUAD
           IEI[nie++] = Einc[i];
-          assert(Einc[i] == makeN(Eli[i][0]) + makeN(Eli[i][1]));
+          if (Einc[i] != makeN(Eli[i][0]) + makeN(Eli[i][1])) {
+            fputs("Error: Triang3dSFan edge incidence mismatch\n", stderr);
+            exit(1);
+          }
           IEI[nie++] = Einc[j];
-          assert(Einc[j] == makeN(Eli[j][0]) + makeN(Eli[j][1]));
+          if (Einc[j] != makeN(Eli[j][0]) + makeN(Eli[j][1])) {
+            fputs("Error: Triang3dSFan edge incidence mismatch\n", stderr);
+            exit(1);
+          }
           IntersectEdges(BZRE(i, 0), BZRE(i, 1), BZRE(j, 0), BZRE(j, 1), Q);
           for (a = 0; a < 2; a++)
             for (b = 0; b < 2; b++) {
@@ -1536,7 +1747,10 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
               ncr++;
             }
         }
-    assert(nie == 2 * ies);
+    if (nie != 2 * ies) {
+      fputs("Error: Triang3dSFan intersection edge count mismatch\n", stderr);
+      exit(1);
+    }
     chi = r - en + 3 * ies; // QUAD DONE, NOW MIN.TRIANG:
     for (i = 0; i < tn; i++) {
       a = Tli[i][0];
@@ -1570,7 +1784,10 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
       }
     }
 #endif
-    assert(chi == 2);
+    if (chi != 2) {
+      fputs("Error: Triang3dSFan Euler characteristic is not 2\n", stderr);
+      exit(1);
+    }
   } // NO MULTIPLE InterSectE DONE, now make MAX.TRIANG.
 
   ///// ======	CR[ncr] = Chamber Rays = Triangulations, MaxTri <= ncr
@@ -1586,7 +1803,12 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
       if (0 <= (a = XYZproduct(BZR(Tli[j][0]), BZR(Tli[j][1]), Q)))
         if (0 <= (b = XYZproduct(BZR(Tli[j][1]), BZR(Tli[j][2]), Q)))
           if (0 <= (c = XYZproduct(BZR(Tli[j][2]), BZR(Tli[j][0]), Q))) {
-            assert(a * b * c > 0);
+            if (a * b * c <= 0) {
+              fputs("Error: Triang3dSFan chamber triangle has non-positive "
+                    "orientation\n",
+                    stderr);
+              exit(1);
+            }
             ChamberTriangle = 1;
           }
       if (ChamberTriangle) {
@@ -1605,15 +1827,22 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
       tmt += nt[(*nmt)++];
     }
   }
-  assert(*nmt); // check total #triangle in max.triangulations:
+  if (*nmt == 0) {
+    fputs("Error: Triang3dSFan found no maximal triangulation\n", stderr);
+    exit(1);
+  }
   j = 0;
   for (i = 0; i < *nmt; i++)
     j += nt[i];
-  assert(j == tmt);
+  if (j != tmt) {
+    fputs("Error: Triang3dSFan triangle count mismatch\n", stderr);
+    exit(1);
+  }
   return tmt;
 }
 
-/* INDUCED TRIANGulation t_i<n with f=\cup(t_i) induced by T_j<N, f < \cup(T_i)
+/* INDUCED TRIANGulation t_i<n with f=\cup(t_i) induced by T_j<N, f <
+ * \cup(T_i)
  */
 
 int Induce_Facet_Tri(Inci64 *T, int N, Inci64 f, Inci64 C, Inci64 *iT, int p,
@@ -1636,9 +1865,15 @@ int Induce_Facet_Tri(Inci64 *T, int N, Inci64 f, Inci64 C, Inci64 *iT, int p,
   }
   for (i = 0; i < n; i++) {
     iT[i] |= A;
-    assert(Inci64_abs(iT[i]) == d);
+    if (Inci64_abs(iT[i]) != d) {
+      fputs("Error: Induce_Facet_Tri simplex dimension mismatch\n", stderr);
+      exit(1);
+    }
   }
-  assert(A + C == f);
+  if (A + C != f) {
+    fputs("Error: Induce_Facet_Tri circuit decomposition mismatch\n", stderr);
+    exit(1);
+  }
   return n;
 }
 
@@ -1739,8 +1974,9 @@ void GKZsubdivide(Inci64 *F, int f, PolyPointList *P, int p, int *Tp, int *ntp,
                   int nPS, MORI_Flags *_Flag, FibW *_F) {
   int c, d = P->n, d2, i, j, t = 00; // d2=dim(2ndaryFan)
   Inci64 T[naT], *X = &T[nPS], C[ANfan],
-                 *CT[ANfan][ANtri];          // C=circuit, CT=triang
-  int nmt[ANfan], nt[ANfan][ANtri], nmf = 0; // NumMaxTri, NumTriang, NumMax2Fan
+                 *CT[ANfan][ANtri]; // C=circuit, CT=triang
+  int nmt[ANfan], nt[ANfan][ANtri],
+      nmf = 0; // NumMaxTri, NumTriang, NumMax2Fan
   Inci64 MT[VERT_Nmax * POLY_Dmax], *_CT[ANfan];
   int TpMax = 0, nMax = 00, _nt[ANfan], I[ANfan], comptri = 0;
 
@@ -1756,7 +1992,10 @@ void GKZsubdivide(Inci64 *F, int f, PolyPointList *P, int p, int *Tp, int *ntp,
         for (j = 0; j < nmf; j++)
           if (Inci64_LE(T[i], C[j]))
             break;
-        assert(Inci64_LE(T[i], F[c]));
+        if (!Inci64_LE(T[i], F[c])) {
+          fputs("Error: GKZsubdivide circuit not contained in facet\n", stderr);
+          exit(1);
+        }
         if (j == nmf)
           switch (d2) { // TRIANGULATE POLY_CIRCUITS:
           case 1:
@@ -1805,7 +2044,10 @@ void GKZsubdivide(Inci64 *F, int f, PolyPointList *P, int p, int *Tp, int *ntp,
   for (j = 0; j < f; j++)      // f=#facets
     if (d == Inci64_abs(F[j])) // d=dim Polytope
       MT[c++] = F[j];
-  assert(c + nPS == f);
+  if (c + nPS != f) {
+    fputs("Error: GKZsubdivide facet count mismatch\n", stderr);
+    exit(1);
+  }
 
   t = Init_Multiloop(nmt, I, &c, &nmf);
   do {
@@ -1842,7 +2084,10 @@ void GKZsubdivide(Inci64 *F, int f, PolyPointList *P, int p, int *Tp, int *ntp,
     }
     t--;
   } while (Multiloop(nmt, I, &c, &nmf));
-  assert(t == 0);
+  if (t != 0) {
+    fputs("Error: GKZsubdivide multiloop counter mismatch\n", stderr);
+    exit(1);
+  }
 }
 
 /*	S u b d i v i d e ():	triangulate and call InterSectionRing
@@ -1883,8 +2128,10 @@ void Subdivide(PolyPointList *P, int v, Inci64 I[], int p, Inci64 *T, int *t,
     if (Tv[j] > d)
       nVS++; // nVS = #not-vertex-simplicial
     /* control: facets must have always at least d vertexes */
-    else
-      assert(Tv[j] == d);
+    else if (Tv[j] != d) {
+      fputs("Error: Subdivide facet vertex count mismatch\n", stderr);
+      exit(1);
+    }
     Tp[j] = Tv[j]; // ntp[] = non-P.Simpl. facets
     /* counts the number of points on the j-facet */
     for (i = v; i < p; i++)
@@ -1895,8 +2142,10 @@ void Subdivide(PolyPointList *P, int v, Inci64 I[], int p, Inci64 *T, int *t,
     if (Tp[j] > d)
       ntp[nPS++] = j; // C[i][f]= facets containing P.x[v+i], f<c[i]
     /* control that j-facet is in fact a facet i.e. at least d points */
-    else
-      assert(Tp[j] == d);
+    else if (Tp[j] != d) {
+      fputs("Error: Subdivide facet point count mismatch\n", stderr);
+      exit(1);
+    }
   } // ns2= # on triangles  =>  p-v-ns2 on edges
 
   if (nPS == 0) { // no triang. needed
@@ -1905,7 +2154,8 @@ void Subdivide(PolyPointList *P, int v, Inci64 I[], int p, Inci64 *T, int *t,
   } else if ((P->n != 4) || (p > v + 3)) {
     printf("P* requires triangulation. The present routinwes can ");
     puts("triangulate only 4-polytopes");
-    puts("with up to 3 points that are neither vertices nor interior to P* or");
+    puts("with up to 3 points that are neither vertices nor interior to P* "
+         "or");
     puts("a facet. Use option `-M' for providing a triangulation as input.");
     exit(1);
   }
@@ -1916,10 +2166,10 @@ void Subdivide(PolyPointList *P, int v, Inci64 I[], int p, Inci64 *T, int *t,
              "may lead to unresolved singularities in the hypersurface. \n",
              num_facetIPs);
     else
-      printf(
-          "WARNING: there are %d facet-IPs ignored in the triangulation. These "
-          "may lead to unresolved singularities in the hypersurface. \n",
-          num_facetIPs);
+      printf("WARNING: there are %d facet-IPs ignored in the triangulation. "
+             "These "
+             "may lead to unresolved singularities in the hypersurface. \n",
+             num_facetIPs);
   }
 
   /*
@@ -1936,7 +2186,11 @@ void Subdivide(PolyPointList *P, int v, Inci64 I[], int p, Inci64 *T, int *t,
              i - v + 1);
       exit(1);
     }
-    assert(c[i - v] > 1);
+    if (c[i - v] <= 1) {
+      fputs("Error: Subdivide non-vertex point lies on too few facets\n",
+            stderr);
+      exit(1);
+    }
     if (c[i - v] == 2)
       ns2++;
   } // ns2 = #pts @ codim2=triangle
@@ -2063,7 +2317,8 @@ void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
     for (i = 0; i < cp; i++)
       fprintf(outFILE, "-----");
 
-    /* The # IP simplices = the number of weight-relations (dim of matrix W) */
+    /* The # IP simplices = the number of weight-relations (dim of matrix W)
+     */
     fprintf(outFILE, "   #IP-simp=%d", F->nw);
 
     /* If there are more weight-relations than prim.div.cl. print the info
@@ -2259,7 +2514,10 @@ Inci64 Read_INCI(int p) {
     ;
   ungetc(c, inFILE);
   while (IsDigit(c = fgetc(inFILE))) {
-    assert(c < '2');
+    if (c >= '2') {
+      fputs("Error: Read_INCI expects binary digits only\n", stderr);
+      exit(1);
+    }
     X = Inci64_PN(X, '1' - c);
     p--;
   }
@@ -2337,12 +2595,19 @@ void Test_INCI(int *nI, Inci64 *ILi, int p) {
 void Read_Tri(int p, int *nI, int *nIA, Inci64 **_I) {
   int i;
   Inci64 *I = *_I;
-  assert(0 <= (*nIA));
+  if (0 > *nIA) {
+    fputs("Error: Read_Tri invalid allocated size\n", stderr);
+    exit(1);
+  }
   if (*nIA < (*nI = ReadInt())) {
     if (0 < *nIA)
       free(I);
     *nIA = *nI; /* realloc I */
-    assert(NULL != (I = (Inci64 *)malloc(*nIA * sizeof(Inci64))));
+    I = (Inci64 *)malloc(*nIA * sizeof(Inci64));
+    if (I == NULL) {
+      fputs("Error: failed to allocate incidence list in Read_Tri\n", stderr);
+      exit(1);
+    }
     *_I = I;
   }
   for (i = 0; i < *nI; i++)
@@ -2363,7 +2628,8 @@ void Print_INCI_list(int nI, Inci64 *I, int v) {
 
 /*
  * Auxiliary routine aimed at reversing the order of the first n digits
- * of a Inci64 Incidence string X: e.g. 0000 ... 0001 1100 --> 000 ... 0000 0111
+ * of a Inci64 Incidence string X: e.g. 0000 ... 0001 1100 --> 000 ... 0000
+ * 0111
  */
 Inci64 Inci64_revert(Inci64 X, int n) {
   Inci64 Y = 0;
@@ -2397,7 +2663,11 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
       if (Inci64_abs(Inci64_AND(I[i], I[j])) == d) {
         int a, b, x;
         INCI_2_VNL(I[j], &V, p);
-        assert(V.nv == d + 1);
+        if (V.nv != d + 1) {
+          fputs("Error: Print_Mori_Old first simplex vertex count mismatch\n",
+                stderr);
+          exit(1);
+        }
         for (k = 0; k <= d; k++)
           pli[k] = V.v[k];
         INCI_2_VNL(I[i], &V, p);
@@ -2405,7 +2675,11 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
           k = 1;
           while (pli[k] == V.v[k])
             k++;
-          assert(k <= d);
+          if (k > d) {
+            fputs("Error: Print_Mori_Old adjacent simplices are identical\n",
+                  stderr);
+            exit(1);
+          }
         } else {
           for (a = 0; a <= d; a++)
             printf("%d ", pli[a]);
@@ -2427,10 +2701,20 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
           x = k + 1;
         }
         // for(a=0;a<=d;a++)printf("%d ",pli[a]);puts("=>pli");
-        if (x > 1)
-          assert(pli[0] > pli[x - 1]);
-        if (x < d)
-          assert(pli[0] < pli[x]);
+        if (x > 1) {
+          if (pli[0] <= pli[x - 1]) {
+            fputs("Error: Print_Mori_Old invalid merged simplex ordering\n",
+                  stderr);
+            exit(1);
+          }
+        }
+        if (x < d) {
+          if (pli[0] >= pli[x]) {
+            fputs("Error: Print_Mori_Old invalid merged simplex ordering\n",
+                  stderr);
+            exit(1);
+          }
+        }
         for (a = 0; a <= d; a++)
           for (b = 0; b < d; b++)
             VT.x[b][a] = P->x[pli[a]][b];
@@ -2442,7 +2726,11 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
           for (a = 0; a <= d; a++) {
             printf("r=%d pli[%d]=%d Z[%d]=%ld\n", r, a, pli[a], a, Z[a]);
             fflush(0);
-            assert(pli[a] < p);
+            if (pli[a] >= p) {
+              fputs("Error: Print_Mori_Old simplex vertex index out of range\n",
+                    stderr);
+              exit(1);
+            }
           }
           exit(1);
         }
@@ -2489,7 +2777,10 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
       UT->x[i][j] = VxV(G.x[j], R.x[i], p);
   for (i = 0; i < ngen; i++)
     for (j = r; j < p; j++)
-      assert(0 == VxV(G.x[j], R.x[i], p));
+      if (0 != VxV(G.x[j], R.x[i], p)) {
+        fputs("Error: Print_Mori_Old orthogonal complement failure\n", stderr);
+        exit(1);
+      }
   for (i = 0; i < UT->n; i++)
     UT->x[UT->np][i] = 0;
   UT->np++;
@@ -2525,7 +2816,12 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
     if (j == nv)
       m[nm++] = i;
   }
-  assert(nm >= r);
+  if (nm < r) {
+    fputs("Error: Print_Mori_Old found fewer extremal rays than cone "
+          "dimension\n",
+          stderr);
+    exit(1);
+  }
   fprintf(outFILE,
           "%d MORI GENERATORS / dim(cone)=%d"
           //    ": rays=%d (%d)  #eq=%d (%d)  #v=%d (%d)"
@@ -2562,7 +2858,10 @@ long long Compute_Abi(PolyPointList *P) {
     bico *= (P->np - i);
     bico /= ++i;
   }
-  assert(P->np < VERT_Nmax);
+  if (P->np >= VERT_Nmax) {
+    fputs("Error: Compute_Abi needs more VERT_Nmax\n", stderr);
+    exit(1);
+  }
   return Abi = bico * sizeof(Inci64);
 }
 
@@ -2573,14 +2872,17 @@ void ComputeStanleyReisner(PolyPointList *P, int nI, Inci64 *I, int *NrInz,
   if (j > P->n)
     j = P->n + 1;
   // bico=P->np; while(i<j) {bico*=(P->np-i); bico/=++i;}
-  assert(P->np < VERT_Nmax);
+  if (P->np >= VERT_Nmax) {
+    fputs("Error: ComputeStanleyReisner needs more VERT_Nmax\n", stderr);
+    exit(1);
+  }
   A = (Inci64 *)malloc(Abi);
   B = (Inci64 *)malloc(Abi);
   IV = (Inci64 *)malloc(v * sizeof(Inci64)); // SRG = (Inci64 *) malloc( Abi ),
-  assert(SRG != NULL);
-  assert(IV != NULL);
-  assert(A != NULL);
-  assert(B != NULL);
+  if (SRG == NULL || IV == NULL || A == NULL || B == NULL) {
+    fputs("Error: failed to allocate Stanley-Reisner buffers\n", stderr);
+    exit(1);
+  }
   IV[0] = Inci64_1();
   for (i = 1; i < v; i++)
     IV[i] = Inci64_PN(IV[i - 1], 1);
@@ -2622,7 +2924,10 @@ void ComputeStanleyReisner(PolyPointList *P, int nI, Inci64 *I, int *NrInz,
         }
       }
     }
-    assert(n * d == m * (v - d + 1));
+    if (n * d != m * (v - d + 1)) {
+      fputs("Error: ComputeStanleyReisner face count mismatch\n", stderr);
+      exit(1);
+    }
     Inci64 *swapI = M;
     M = N;
     N = swapI;
@@ -2774,7 +3079,11 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag) {
       Print_Mori_Old(_POF, nI, IOF);
     free(IOF);
   }
-  assert(I != NULL);
+  if (I == NULL) {
+    fputs("Error: TriList_to_MoriList incidence list was never allocated\n",
+          stderr);
+    exit(1);
+  }
   free(I);
   if (_Flag->FilterFlag)
     inFILE = NULL;
