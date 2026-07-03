@@ -143,7 +143,10 @@ int Read_CWS_Zinfo(FILE *inFILE, CWS *CW) /* return !EOF */
     if ((c[i] != '/') || (c[i + 1] != 'Z'))
       return 1;
     i += 2;
-    assert(*nz < POLY_Dmax);
+    if (*nz >= POLY_Dmax) {
+      fputs("Error: CWSZ quotient list overflow\n", stderr);
+      exit(1);
+    }
     if ((j = auxString2Int(&c[i], &CW->m[*nz]))) {
       if (c[i + j] != ':')
         CWSZerror(":");
@@ -290,7 +293,10 @@ int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index)
       inFILE = NULL;
     return 1;
   } /* End of reading PolyPointList */
-  assert(i != 3);
+  if (i == 3) {
+    fputs("Error: CWS input with exactly 3 numbers not allowed\n", stderr);
+    exit(1);
+  }
   S = IN[i - 1];
   for (j = 0; j < i - 1; j++)
     if ((IN[j] == 0) || (S < IN[j]))
@@ -300,10 +306,19 @@ int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index)
     _CW->nw = 1;
     _CW->d[0] = S;
     _CW->N = i - 1;
-    assert(_CW->N <= POLY_Dmax + 1); /* Increase POLY_Dmax */
+    if (_CW->N > POLY_Dmax + 1) {
+      fprintf(stderr,
+              "Error: Read_CWS single weight N=%d exceeds POLY_Dmax+1\n",
+              _CW->N);
+      exit(1);
+    } /* Increase POLY_Dmax */
     for (j = 0; j < _CW->N; j++) {
       _CW->W[0][j] = IN[j];
-      assert(IN[j] > 0);
+      if (IN[j] <= 0) {
+        fprintf(stderr, "Error: Read_CWS weight IN[%d]=%ld must be positive\n",
+                j, (long)IN[j]);
+        exit(1);
+      }
     }
     goto MAP;
   }
@@ -346,7 +361,11 @@ MAP:
   {
     Long sum = _CW->d[i] * index, *w = _CW->W[i];
     for (j = 0; j < _CW->N; j++) {
-      assert(w[j] >= 0);
+      if (w[j] < 0) {
+        fprintf(stderr, "Error: Read_CWS weight W[%d][%d]=%ld is negative\n", i,
+                j, (long)w[j]);
+        exit(1);
+      }
       sum -= w[j];
     }
     if ((sum) && (index == 1)) {
@@ -519,7 +538,11 @@ int Read_CWS(CWS *_CW, PolyPointList *_P) {
     puts("Error: expected input format is CWS!");
     exit(1);
   }
-  assert(i != 3);
+  if (i == 3) {
+    fputs("Error: Read_Weight input with exactly 3 numbers not allowed\n",
+          stderr);
+    exit(1);
+  }
   S = IN[i - 1];
   for (j = 0; j < i - 1; j++)
     if (S < IN[j])
@@ -529,10 +552,20 @@ int Read_CWS(CWS *_CW, PolyPointList *_P) {
     _CW->nw = 1;
     _CW->d[0] = S;
     _CW->N = i - 1;
-    assert(_CW->N <= POLY_Dmax + 1); /* Increase POLY_Dmax */
+    if (_CW->N > POLY_Dmax + 1) {
+      fprintf(stderr,
+              "Error: Read_Weight single weight N=%d exceeds POLY_Dmax+1\n",
+              _CW->N);
+      exit(1);
+    } /* Increase POLY_Dmax */
     for (j = 0; j < _CW->N; j++) {
       _CW->W[0][j] = IN[j];
-      assert(IN[j] > 0);
+      if (IN[j] <= 0) {
+        fprintf(stderr,
+                "Error: Read_Weight weight IN[%d]=%ld must be positive\n", j,
+                (long)IN[j]);
+        exit(1);
+      }
     }
     goto MAP;
   }
@@ -576,7 +609,11 @@ MAP:
   {
     Long sum = _CW->d[i], *w = _CW->W[i];
     for (j = 0; j < _CW->N; j++) {
-      assert(w[j] >= 0);
+      if (w[j] < 0) {
+        fprintf(stderr, "Error: Read_Weight weight W[%d][%d]=%ld is negative\n",
+                i, j, (long)w[j]);
+        exit(1);
+      }
       sum -= w[j];
     }
     if (sum) { /*printf("Use poly.x -w for (single) WeightSystems with ");
@@ -661,7 +698,10 @@ void Solve_Next_WEq(Long *NW, CWLatticeBasis *_B) {
   if (P > 1)
     W_to_GLZ(W, &P, X); /* P>1, compute GLZ */
   else { /* printf("P=%d W[0]=%d for W_to_GLZ\n",P,W[0]);exit(1);*/
-    assert(P);
+    if (P == 0) {
+      fputs("Error: Make_CWS_Basis no non-zero weights found\n", stderr);
+      exit(1);
+    }
     for (i = 0; i < p[0]; i++)
       _B->x[i][i] = 1;
     while ((++i) < _B->N)
@@ -798,7 +838,11 @@ void Old_Make_CWS_Points(CWS *Cin, PolyPointList *_P) {
 #endif                       /* = End of Perm Coord Improvement = */
   Make_CWS_Basis(_C, &B);    /* make `triangular' Basis */
 #ifndef NO_COORD_IMPROVEMENT /* ==== Perm Coord Improvement ==== */
-  assert(_C->N == _C->B.ne);
+  if (_C->N != _C->B.ne) {
+    fprintf(stderr, "Error: Make_CWS_Points basis size mismatch N=%d B.ne=%d\n",
+            _C->N, _C->B.ne);
+    exit(1);
+  }
   for (i = 0; i < Cin->N; i++)
     Cin->B.e[i] = _C->B.e[pi[i]];
   Cin->B.ne = _C->N;
@@ -988,7 +1032,13 @@ void Make_CWS_Points(CWS *Cin, PolyPointList *_P) {
 #endif                       /* = End of Perm Coord Improvement = */
   Make_CWS_Basis(_C, &B);    /* make `triangular' Basis */
 #ifndef NO_COORD_IMPROVEMENT /* ==== Perm Coord Improvement ==== */
-  assert(_C->N == _C->B.ne);
+  if (_C->N != _C->B.ne) {
+    fprintf(stderr,
+            "Error: Make_CWS_Points (index path) basis size mismatch N=%d "
+            "B.ne=%d\n",
+            _C->N, _C->B.ne);
+    exit(1);
+  }
   for (i = 0; i < Cin->N; i++)
     Cin->B.e[i] = _C->B.e[pi[i]];
   Cin->B.ne = _C->N;
@@ -1173,9 +1223,13 @@ void Tri_GLZ_Basis_Perm(int *d, int *pi, /* int *pinv, */ Tri_GLZ_MPaux *AP) {
   }
   g = W_to_GLZ(N, d, S);
   norm = Tri_GLZ_Norm(d, S);
-  if (AP->s)
-    assert(g == AP->g);
-  else
+  if (AP->s && (g != AP->g)) {
+    fprintf(stderr,
+            "Error: Tri_GLZ_Basis_Perm GLZ determinant mismatch g=%ld "
+            "expected %ld\n",
+            (long)g, (long)AP->g);
+    exit(1);
+  } else
     AP->g = g;
   if ((0 == AP->s) || (norm < AP->s)) /* init or improve AP->G */
   {
@@ -1284,12 +1338,17 @@ void Initialize_C5S(C5stats *_C5S, int n) {
 }
 
 void Update_C5S(BaHo *_BH, int *nf, Long *W, C5stats *_C5S) {
-  assert(POLY_Dmax > 4);
+  if (POLY_Dmax <= 4) {
+    fputs("Error: Update_C5S requires POLY_Dmax > 4\n", stderr);
+    exit(1);
+  }
   if (_BH->np) { // reflexive case
     int i, chi = 48 + 6 * (_BH->h1[1] - _BH->h1[2] + _BH->h1[3]),
            ld = int_ld(W[5]);
-    assert(0 <= ld);
-    assert(ld < MAXLD);
+    if ((ld < 0) || (ld >= MAXLD)) {
+      fprintf(stderr, "Error: Update_C5S ld=%d out of [0,%d)\n", ld, MAXLD);
+      exit(1);
+    }
     if (_BH->mp > _C5S->max_mp)
       _C5S->max_mp = _BH->mp;
     if (_BH->mv > _C5S->max_mv)
@@ -1330,7 +1389,10 @@ void Update_C5S(BaHo *_BH, int *nf, Long *W, C5stats *_C5S) {
 
 void Print_C5S(C5stats *_C5S) {
   int i;
-  assert(POLY_Dmax > 4);
+  if (POLY_Dmax <= 4) {
+    fputs("Error: Print_C5S requires POLY_Dmax > 4\n", stderr);
+    exit(1);
+  }
   printf("non-IP: #=%ld\n", _C5S->n_nonIP);
   printf(
       "IP, non-reflexive: #=%ld, max_mp=%d, max_mv=%d, max_nv=%d, max_w=%ld\n",
