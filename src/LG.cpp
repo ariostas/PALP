@@ -87,8 +87,12 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
     puts("Increase POLY_Dmax");
     exit(1);
   }
-  for (i = 0; i <= WZ->N; i++)
-    assert(I[i] > 0);
+  for (i = 0; i <= WZ->N; i++) {
+    if (I[i] <= 0) {
+      fputs("Error: Read_WZeight got non-positive weight component\n", stderr);
+      exit(1);
+    }
+  }
   if (I[WZ->N] > I[0]) {
     WZ->d = I[WZ->N];
     shift = 0;
@@ -96,7 +100,11 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
     WZ->d = I[0];
   for (i = 0; i < WZ->N; i++) {
     WZ->w[i] = I[i + shift];
-    assert(WZ->w[i] < WZ->d);
+    if (WZ->w[i] >= WZ->d) {
+      fputs("Error: Read_WZeight weight component not smaller than degree\n",
+            stderr);
+      exit(1);
+    }
   }
   WZ->r = 0;
   for (i = 0; i < WZ->N; i++)
@@ -132,7 +140,10 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
     if ((c[i] != '/') || (c[i + 1] != 'Z'))
       break;
     i += 2;
-    assert(*nz < POLY_Dmax);
+    if (*nz >= POLY_Dmax) {
+      fputs("Error: Read_WZeight too many /Z actions\n", stderr);
+      exit(1);
+    }
     WZ->m[*nz] = 0;
     while ((i < n) && IsDigit(c[i]))
       WZ->m[*nz] = 10 * WZ->m[*nz] + c[i++] - '0';
@@ -164,7 +175,10 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
   a = WZ->N;
   for (i = 0; i < a; i++)
     B[i] = BM[i];
-  assert(1 == W_to_GLZ(WZ->w, &a, B));
+  if (1 != W_to_GLZ(WZ->w, &a, B)) {
+    fputs("Error: Read_WZeight weight matrix not unimodular\n", stderr);
+    exit(1);
+  }
   if (1 == WZ->r)
     for (i = 0; i < a; i++)
       WZ->A[i] = F[i] = 1; /* Z.(X-F) \cong 0 */
@@ -199,7 +213,10 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
     X = 1 - WZ->r * WZ->A[i];
     for (j = i; j < d; j++)
       X -= WZ->rI[j] * WZ->B[i][j];
-    assert(0 == (X % WZ->B[i][i - 1]));
+    if (X % WZ->B[i][i - 1] != 0) {
+      fputs("Error: Read_WZeight rI division not integral\n", stderr);
+      exit(1);
+    }
     WZ->rI[i - 1] = X / WZ->B[i][i - 1];
   }
   for (i = 0; i < *nz; i++) /* divide by symmetries: */
@@ -254,14 +271,22 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
     g = WZ->m[i] / g;
     for (k = 0; k < a; k++)
       WZ->B[k][0] *= g; /* goto sublattice */
-    assert((WZ->rI[0] % g) == 0);
+    if ((WZ->rI[0] % g) != 0) {
+      fputs("Error: Read_WZeight rI[0] not divisible by sublattice factor\n",
+            stderr);
+      exit(1);
+    }
     WZ->rI[0] /= g;
     shift *= g;
   }
   X = 1;
   for (j = 0; j < *nz; j++)
     X *= WZ->m[j];
-  assert(X % shift == 0);
+  if (X % shift != 0) {
+    fputs("Error: Read_WZeight symmetry order product not divisible by shift\n",
+          stderr);
+    exit(1);
+  }
   shift = X / shift;
 
   if (Tout) {
@@ -337,7 +362,13 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
       X = 0;
       for (j = 0; j < a; j++)
         X += Z[i][j];
-      assert(0 == (X % M[i]));
+      if (X % M[i] != 0) {
+        fprintf(
+            stderr,
+            "Error: Read_WZeight orbit sum %ld not divisible by M[%d]=%ld\n", X,
+            i, M[i]);
+        exit(1);
+      }
     }
     for (i = 0; i < k; i++) {
       WZ->m[i] = M[i];
@@ -356,7 +387,12 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
     if (0 == (A %= M))
       continue;
     g = Egcd(X % M, M, &cx, &cm);
-    assert(0 == (A % g)); /* Z_i -= cx * A/g * w_ */
+    if (A % g != 0) {
+      fprintf(stderr,
+              "Error: Read_WZeight action A=%ld not divisible by gcd=%ld\n", A,
+              g);
+      exit(1);
+    } /* Z_i -= cx * A/g * w_ */
     cx *= A / g;
     if (cx > 0)
       cx -= M;
@@ -368,18 +404,31 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
   X = 0;
   for (j = 0; j < a; j++)
     X += WZ->w[j] * WZ->A[j];
-  assert(X == WZ->d); /* TEST w.A=d */
+  if (X != WZ->d) {
+    fprintf(stderr, "Error: Read_WZeight w.A=%ld != degree %d\n", X, WZ->d);
+    exit(1);
+  } /* TEST w.A=d */
   for (j = 0; j < a; j++) {
     X = WZ->r * WZ->A[j];
     for (k = 0; k < d; k++)
       X += WZ->B[j][k] * WZ->rI[k];
-    assert(X == 1);
+    if (X != 1) {
+      fprintf(stderr,
+              "Error: Read_WZeight r*A+B.rI entry %ld != 1 for equation %d\n",
+              X, j);
+      exit(1);
+    }
   } /* TEST:  r*A+B.rI==IP */
   for (i = 0; i < WZ->M; i++) {
     X = 0;
     for (j = 0; j < a; j++)
       X += WZ->z[i][j] * WZ->A[j];
-    assert(0 == X % WZ->m[i]);
+    if (X % WZ->m[i] != 0) {
+      fprintf(stderr,
+              "Error: Read_WZeight action A.z=%ld not divisible by m[%d]=%d\n",
+              X, i, WZ->m[i]);
+      exit(1);
+    }
   } /* TEST: A*z[]%m[]==0 */
 
   if (FilterFlag)
@@ -448,8 +497,12 @@ int Read_Weight(Weight *_W) /* read "d w_i" [ or "w_i d" if last=max ] */
     puts("Increase POLY_Dmax");
     exit(1);
   }
-  for (i = 0; i <= _W->N; i++)
-    assert(I[i] > 0);
+  for (i = 0; i <= _W->N; i++) {
+    if (I[i] <= 0) {
+      fputs("Error: Read_Weight got non-positive weight component\n", stderr);
+      exit(1);
+    }
+  }
   if (I[_W->N] > I[0]) {
     _W->d = I[_W->N];
     shift = 0;
@@ -457,7 +510,11 @@ int Read_Weight(Weight *_W) /* read "d w_i" [ or "w_i d" if last=max ] */
     _W->d = I[0];
   for (i = 0; i < _W->N; i++) {
     _W->w[i] = I[i + shift];
-    assert(_W->w[i] < _W->d);
+    if (_W->w[i] >= _W->d) {
+      fputs("Error: Read_Weight weight component not smaller than degree\n",
+            stderr);
+      exit(1);
+    }
   }
   if (FilterFlag)
     inFILE = NULL;
@@ -502,7 +559,11 @@ void Write_WH(Weight *_W, BaHo *_BH, VaHo *_VH, int rc, int tc,
       int r = _W->N - (D /= d);
       if ((r % 2) || (r <= 2))
         r = 0;
-      assert(D == _VH->D);
+      if (D != _VH->D) {
+        fprintf(stderr, "Error: Write_WH LG dimension mismatch %d != %d\n", D,
+                _VH->D);
+        exit(1);
+      }
       for (i = 0; i <= D; i++) {
         fprintf(outFILE, "%sH%d:", i ? " " : "", i);
         for (j = 0; j <= D - i; j++)
@@ -553,7 +614,11 @@ void Write_WH(Weight *_W, BaHo *_BH, VaHo *_VH, int rc, int tc,
         }
       fprintf(outFILE, " [%ld]\n", (long)chi);
     } else {
-      assert(rc);
+      if (!rc) {
+        fputs("Error: Write_WH unexpected non-reflexive non-transverse case\n",
+              stderr);
+        exit(1);
+      }
       fprintf(outFILE, "H:%d", _BH->h1[1]);
       for (i = 2; i < _P->n - 1; i++)
         fprintf(outFILE, ",%d", _BH->h1[i]);
@@ -652,7 +717,11 @@ void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP) {
     TEST_LatticeBasis(&B);
     printf("POINT_Num=%d\n", _AP->np);
   }
-  assert(_AP->np <= POINT_Nmax);
+  if (_AP->np > POINT_Nmax) {
+    fputs("Error: Make_Poly_Points generated too many ambient points\n",
+          stderr);
+    exit(1);
+  }
   nip = ChangeToTrianBasis(_AP, &B, _PP);
   if constexpr (TEST_LG)
     Print_PPL(_PP, "PolyPoints:");
@@ -670,7 +739,10 @@ void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP) {
     int i;
     for (i = 0; i < B.N; i++)
       A[i] = 1 - index * _AP->x[nip][i];
-    assert(_PP->np < POINT_Nmax); /* need one more to store IP for GEN_CY */
+    if (_PP->np >= POINT_Nmax) {
+      fputs("Error: GEN_CY point storage overflow\n", stderr);
+      exit(1);
+    } /* need one more to store IP for GEN_CY */
     Ambi_2_Lattice(A, &B, _PP->x[_PP->np]);
   }
 #endif
@@ -866,7 +938,10 @@ void MakeRefWeights(int N, int from_d, int to_d) {
   Weight W;
   PolyPointList P;
   W.N = N;
-  assert((N <= W_Nmax) && (N < POLY_Dmax + 2));
+  if ((N > W_Nmax) || (N >= POLY_Dmax + 2)) {
+    fputs("Error: MakeRefWeights dimension out of range\n", stderr);
+    exit(1);
+  }
   for (W.d = from_d; W.d <= to_d; W.d++)
     for (W.w[N - 1] = W.d / 2; W.d <= N * W.w[N - 1]; W.w[N - 1]--)
       Rec_RefWeights(&W, &P, Fgcd(W.d, W.w[W.N - 1]), W.d - W.w[W.N - 1], &npp,
@@ -923,7 +998,9 @@ void Add_Mono_2_Poly(int e, Pint c, PoCoLi *P) /* use bisection */
   if (P->A <= P->n) {
     printf("n=A=%d\n", P->A);
     fflush(0);
-    assert(P->n < P->A);
+    fputs("Error: Add_Mono_2_Poly polynomial coefficient storage overflow\n",
+          stderr);
+    exit(1);
   } /* check #(coeff.) of Poly. */
   for (m = P->n++; M < m; m--) { /* insert new exponent at M */
     P->c[m] = P->c[m - 1];
@@ -958,7 +1035,12 @@ void Remove_Zeros(PoCoLi *AB) {
   AB->n -= s;
 }
 void PolyCopy(PoCoLi *X, PoCoLi *Y) {
-  assert(X->n <= Y->A);
+  if (X->n > Y->A) {
+    fputs(
+        "Error: PolyCopy source polynomial larger than destination capacity\n",
+        stderr);
+    exit(1);
+  }
   for (Y->n = 0; Y->n < X->n; Y->n++) {
     Y->e[Y->n] = X->e[Y->n];
     Y->c[Y->n] = X->c[Y->n];
@@ -969,10 +1051,16 @@ int BottomUpQuot(PoCoLi *N, PoCoLi *D, PoCoLi *Q, PoCoLi *R) /* Q*D = N-R */
   int i, /* c, */ Npos, e, E, dD, dN;
   Q->n = R->n = 0; /* return R==0 */
   Pint c;
-  assert(D->n > 0);
+  if (D->n <= 0) {
+    fputs("Error: BottomUpQuot division by zero polynomial\n", stderr);
+    exit(1);
+  }
   if (N->n == 0)
     return 1;
-  assert(N->n > 0); /* assume D != 0 */
+  if (N->n <= 0) {
+    fputs("Error: BottomUpQuot numerator polynomial is empty\n", stderr);
+    exit(1);
+  } /* assume D != 0 */
   dD = D->e[D->n - 1] - D->e[0];
   dN = N->e[N->n - 1] - N->e[0];
   e = N->e[0] - D->e[0];
@@ -1016,7 +1104,10 @@ void PolyProd(PoCoLi *A, PoCoLi *B, PoCoLi *AB) /* AB = A*B */
 {
   int i, j, s = A->n + B->n - 1;
   AB->n = 0;
-  assert(s < AB->A);
+  if (s >= AB->A) {
+    fputs("Error: PolyProd product size exceeds polynomial capacity\n", stderr);
+    exit(1);
+  }
   for (i = 0; i < s; i++) {
     int m = (i < B->n) ? 0 : i + 1 - B->n, M = (i < A->n) ? i + 1 : A->n;
     for (j = m; j < M; j++)
@@ -1049,21 +1140,30 @@ void Poly_Sum(PoCoLi *A, PoCoLi *B, PoCoLi *S) /* S = A+B */
         Pint s = A->c[a] + B->c[b++];
         q = 0;
         if (s) {
-          assert(S->n < S->A);
+          if (S->n >= S->A) {
+            fputs("Error: Poly_Sum coefficient storage overflow\n", stderr);
+            exit(1);
+          }
           S->e[S->n] = A->e[a];
           S->c[S->n++] = s;
         }
       }
     if (q)
       if (A->c[a]) {
-        assert(S->n < S->A);
+        if (S->n >= S->A) {
+          fputs("Error: Poly_Sum coefficient storage overflow\n", stderr);
+          exit(1);
+        }
         S->e[S->n] = A->e[a];
         S->c[S->n++] = A->c[a];
       }
   }
   while (b < B->n)
     if (B->c[b]) {
-      assert(S->n < S->A);
+      if (S->n >= S->A) {
+        fputs("Error: Poly_Sum coefficient storage overflow\n", stderr);
+        exit(1);
+      }
       S->e[S->n] = B->e[b];
       S->c[S->n++] = B->c[b++];
     } else
@@ -1081,7 +1181,10 @@ void Poly_Dif(PoCoLi *A, PoCoLi *B, PoCoLi *D) /* D = A-B */
       else {
         Pint d = -B->c[b++];
         if (d) {
-          assert(D->n < D->A);
+          if (D->n >= D->A) {
+            fputs("Error: Poly_Dif coefficient storage overflow\n", stderr);
+            exit(1);
+          }
           D->c[D->n] = d;
           D->e[D->n++] = B->e[b - 1];
         }
@@ -1091,21 +1194,30 @@ void Poly_Dif(PoCoLi *A, PoCoLi *B, PoCoLi *D) /* D = A-B */
         Pint d = A->c[a] - B->c[b++];
         q = 0;
         if (d) {
-          assert(D->n < D->A);
+          if (D->n >= D->A) {
+            fputs("Error: Poly_Dif coefficient storage overflow\n", stderr);
+            exit(1);
+          }
           D->e[D->n] = A->e[a];
           D->c[D->n++] = d;
         }
       }
     if (q)
       if (A->c[a]) {
-        assert(D->n < D->A);
+        if (D->n >= D->A) {
+          fputs("Error: Poly_Dif coefficient storage overflow\n", stderr);
+          exit(1);
+        }
         D->e[D->n] = A->e[a];
         D->c[D->n++] = A->c[a];
       }
   }
   while (b < B->n)
     if (B->c[b]) {
-      assert(D->n < D->A);
+      if (D->n >= D->A) {
+        fputs("Error: Poly_Dif coefficient storage overflow\n", stderr);
+        exit(1);
+      }
       D->e[D->n] = B->e[b];
       D->c[D->n++] = -B->c[b++];
     } else
@@ -1113,7 +1225,10 @@ void Poly_Dif(PoCoLi *A, PoCoLi *B, PoCoLi *D) /* D = A-B */
 }
 void AllocPoCoLi(PoCoLi *P) /* allocate e[A] and c[A] */
 {
-  assert(0 < P->A);
+  if (P->A <= 0) {
+    fputs("Error: AllocPoCoLi requested non-positive capacity\n", stderr);
+    exit(1);
+  }
   P->e.resize(P->A);
   P->c.resize(P->A);
   // printf("AllocPoCoLi: P->A = %d\n", P->A);
@@ -1147,17 +1262,29 @@ void PoincarePoly(int N, int *w, int d, PoCoLi *P, PoCoLi *Z, PoCoLi *R) {
   } /* printf("\nN =");PrintPoCoLi(Z); */
   while (i--) {
     B.e[1] = w[i];
-    assert(BottomUpQuot(In, &B, Out, R));
+    if (!BottomUpQuot(In, &B, Out, R)) {
+      fputs("Error: PoincarePoly division failed unexpectedly\n", stderr);
+      exit(1);
+    }
     aux = Out;
     Out = In;
     In = aux;
   } /* printf("Q =");PrintPoCoLi(P); */
-  assert((R->n) == 0);
+  if (R->n != 0) {
+    fputs("Error: PoincarePoly final remainder is not zero\n", stderr);
+    exit(1);
+  }
   if constexpr (TEST_PD) {
     int M = P->n - 1, I = (M + 1) / 2, E = P->e[P->n - 1];
     for (i = 0; i < I; i++) {
-      assert(P->e[i] == E - P->e[M - i]);
-      assert(P->c[i] == P->c[M - i]);
+      if (P->e[i] != E - P->e[M - i]) {
+        fputs("Error: PoincarePoly palindromic exponent mismatch\n", stderr);
+        exit(1);
+      }
+      if (P->c[i] != P->c[M - i]) {
+        fputs("Error: PoincarePoly palindromic coefficient mismatch\n", stderr);
+        exit(1);
+      }
     }
   }
 }
@@ -1199,7 +1326,11 @@ int DoHodgeTest(VaHo *V) /*[holo] Poincare duality, Hodge duality, sum rule */
         X += x;
       }
     }
-  assert(3 * X == D * V->E);
+  if (3 * X != D * V->E) {
+    fprintf(stderr, "Error: DoHodgeTest index relation 3*%d != %d*%d\n", 3 * X,
+            D, V->E);
+    exit(1);
+  }
   return (V->h[0][0] == 1);
 }
 int Hodge_Test(VaHo *V) /* [holo] Poincare duality, Hodge duality, sum rule */
@@ -1216,9 +1347,16 @@ int Init_Multiloop(int *N, int *I, int *j, int *J) {
   long X = 1;
   for (*j = 0; *j < *J; (*j)++) {
     I[*j] = 0;
-    assert(N[*j] > 0);
+    if (N[*j] <= 0) {
+      fprintf(stderr, "Error: Init_Multiloop non-positive bound N[%d]=%d\n", *j,
+              N[*j]);
+      exit(1);
+    }
   }
-  assert(0 <= *J);
+  if (*J < 0) {
+    fputs("Error: Init_Multiloop negative loop count\n", stderr);
+    exit(1);
+  }
   if ((*J) == 0) {
     N[0] = 1;
     I[0] = 0;
@@ -1231,7 +1369,10 @@ int Init_Multiloop(int *N, int *I, int *j, int *J) {
 int Multiloop(int *N, int *I, int *j,
               int *J) /* need j=I[]=0 => Init_Multiloop */
 {
-  assert((*j) == 0);
+  if (*j != 0) {
+    fputs("Error: Multiloop called without reset index\n", stderr);
+    exit(1);
+  }
   if (++(I[0]) < N[0])
     return 1;
   while (N[*j] <= I[*j]) {
@@ -1260,7 +1401,11 @@ int Count_b01(Weight *W) {
           th = rS(th, rR(I[k] * W->z[k][i], M[k]));
         }
         th.N %= th.D;
-        assert(th.N >= 0);
+        if (th.N < 0) {
+          fprintf(stderr, "Error: Count_b01 got negative numerator %ld/%ld\n",
+                  th.N, th.D);
+          exit(1);
+        }
         if (th.N) {
           th = rP(th, rR(W->d, W->w[i]));
           if (th.N != th.D)
@@ -1302,11 +1447,22 @@ int Count_b01(Weight *W) {
 /* 	printf("M[%d]=",J);for(i=0;i<J;i++)printf("%d ",M[i]);  	     */
 /* 	printf(" I=");for(i=0;i<J;i++)printf("%d ",I[i]);printf(" j=%d\n",j);*/
 #endif
-      assert(0 < (c--));
+      if (c <= 0) {
+        fputs("Error: Count_b01 group enumeration counter exhausted\n", stderr);
+        exit(1);
+      }
+      c--;
     } while (Multiloop(M, I, &j, &J));
-    assert(c == 0); /* END */
+    if (c != 0) {
+      fprintf(stderr,
+              "Error: Count_b01 group enumeration counter %d not zero\n", c);
+      exit(1);
+    }
   }
-  assert(vac == 1);
+  if (vac != 1) {
+    fprintf(stderr, "Error: Count_b01 expected one vacuum, got %d\n", vac);
+    exit(1);
+  }
   return b;
 }
 void Fast_c9_VaHo(Weight *W,
@@ -1320,18 +1476,32 @@ void Fast_c9_VaHo(Weight *W,
   V->D = 0;
   for (i = 0; i < W->N; i++)
     V->D += W->d - 2 * W->w[i];
-  assert(V->D % W->d == 0);
+  if (V->D % W->d != 0) {
+    fprintf(stderr, "Error: Fast_c9_VaHo degree sum %d not divisible by %d\n",
+            V->D, W->d);
+    exit(1);
+  }
   V->D /= W->d;
-  assert((0 < V->D) && (V->D <= 3));
+  if ((V->D <= 0) || (V->D > 3)) {
+    fprintf(stderr, "Error: Fast_c9_VaHo computed dimension %d out of range\n",
+            V->D);
+    exit(1);
+  }
   V->h[0][0] = V->h[0][V->D] = V->h[V->D][0] = V->h[V->D][V->D] = 1;
   if (V->D == 1) {
-    assert(Count_b01(W) == 1);
+    if (Count_b01(W) != 1) {
+      fputs("Error: Fast_c9_VaHo D=1 expected exactly one b01 twist\n", stderr);
+      exit(1);
+    }
     return;
   }
   if (V->D == 2) {
     b01 = Count_b01(W);
     V->h[0][1] = V->h[1][0] = V->h[2][1] = V->h[1][2] = b01;
-    assert((b01 == 0) || (b01 == 2));
+    if ((b01 != 0) && (b01 != 2)) {
+      fprintf(stderr, "Error: Fast_c9_VaHo D=2 unexpected b01 count %d\n", b01);
+      exit(1);
+    }
     V->h[1][1] = (b01) ? 4 : 20;
     return;
   }
@@ -1361,11 +1531,24 @@ void Fast_c9_VaHo(Weight *W,
           nvar += mask[i];
       }
       woS[nvar]++;
-      assert(0 < (c--));
+      if (c <= 0) {
+        fputs("Error: Fast_c9_VaHo group enumeration counter exhausted\n",
+              stderr);
+        exit(1);
+      }
+      c--;
     } while (Multiloop(W->m, I, &j, &ns));
-    assert(c == 0); /* END */
+    if (c != 0) {
+      fprintf(stderr,
+              "Error: Fast_c9_VaHo group enumeration counter %d not zero\n", c);
+      exit(1);
+    }
   }
-  assert(woS[mask[n] - 1] == 1); /* over=overcount=wo[mask[n]-1][1]; */
+  if (woS[mask[n] - 1] != 1) {
+    fprintf(stderr, "Error: Fast_c9_VaHo vacuum count %d for full set != 1\n",
+            woS[mask[n] - 1]);
+    exit(1);
+  } /* over=overcount=wo[mask[n]-1][1]; */
   for (i = 0; i < mask[n]; i++) {
     fac = 1;
     for (j = 0; j < n; j++)
@@ -1393,13 +1576,21 @@ void Fast_c9_VaHo(Weight *W,
     }
   ng = -(zsum1 / mo + 2) / 2;
   ngb = (zsum2 / mo - 2) / 2; /* /over */
-  assert((zsum1 == -2 * (ng + 1) * mo) &&
-         (zsum2 == 2 * (ngb + 1) * mo)); /* *over */
+  if ((zsum1 != -2 * (ng + 1) * mo) || (zsum2 != 2 * (ngb + 1) * mo)) {
+    fprintf(stderr,
+            "Error: Fast_c9_VaHo genus consistency check failed "
+            "zsum1=%ld zsum2=%ld ng=%ld ngb=%ld mo=%ld\n",
+            zsum1, zsum2, ng, ngb, mo);
+    exit(1);
+  } /* *over */
   /* woS[word] = #group elements :: survivors==word */
   /* woG / woA = contributions to ng / ngb */
   if (ng == ngb) {
     b01 = Count_b01(W);
-    assert((b01 == 0) || (b01 == 1) || (b01 == 3));
+    if ((b01 != 0) && (b01 != 1) && (b01 != 3)) {
+      fprintf(stderr, "Error: Fast_c9_VaHo D=3 unexpected b01 count %d\n", b01);
+      exit(1);
+    }
   }
   for (i = 1; i <= 2; i++) {
     V->h[i][i] = ngb - 2 * b01;
@@ -1443,9 +1634,19 @@ int WIndex_HTrace(Weight *W, int *WI, int *T) /* T=sum(Hij), return over=H00 */
           nvar += mask[i];
       }
       woS[nvar]++;
-      assert(0 < (c--));
+      if (c <= 0) {
+        fputs("Error: WIndex_HTrace group enumeration counter exhausted\n",
+              stderr);
+        exit(1);
+      }
+      c--;
     } while (Multiloop(W->m, I, &j, &ns));
-    assert(c == 0); /* END */
+    if (c != 0) {
+      fprintf(stderr,
+              "Error: WIndex_HTrace group enumeration counter %d not zero\n",
+              c);
+      exit(1);
+    }
   }
   vacnum = woS[mask[n] - 1]; /* over=overcount=wo[mask[n]-1][1]; */
   for (i = 0; i < mask[n]; i++) {
@@ -1475,9 +1676,21 @@ int WIndex_HTrace(Weight *W, int *WI, int *T) /* T=sum(Hij), return over=H00 */
     }
   /* woS[word] = #group elements :: survivors==word */
   /* woG / woA = contributions to ng / ngb */
-  assert(zsum1 % mo == 0);
-  assert(zsum2 % mo == 0);
-  assert(vacnum == 1);
+  if (zsum1 % mo != 0) {
+    fprintf(stderr, "Error: WIndex_HTrace zsum1=%ld not divisible by mo=%ld\n",
+            zsum1, mo);
+    exit(1);
+  }
+  if (zsum2 % mo != 0) {
+    fprintf(stderr, "Error: WIndex_HTrace zsum2=%ld not divisible by mo=%ld\n",
+            zsum2, mo);
+    exit(1);
+  }
+  if (vacnum != 1) {
+    fprintf(stderr, "Error: WIndex_HTrace expected one vacuum, got %d\n",
+            vacnum);
+    exit(1);
+  }
   *WI = (zsum2 + zsum1) / mo;
   *T = (zsum2 - zsum1) / mo;
   return vacnum;
@@ -1493,8 +1706,14 @@ int WIndex_HTrace(Weight *W, int *WI, int *T) /* T=sum(Hij), return over=H00 */
  */
 int Test_BottomUpQuot(PoCoLi *Num, PoCoLi *Den, PoCoLi *Quo, PoCoLi *Rem) {
   int i = BottomUpQuot(Num, Den, Quo, Rem);
-  if (Rem->n)
-    assert(i == 0);
+  if (Rem->n) {
+    if (i != 0) {
+      fputs(
+          "Error: Test_BottomUpQuot remainder non-zero but quotient flag set\n",
+          stderr);
+      exit(1);
+    }
+  }
   if (i)
     return 1;
   printf("Num=");
@@ -1514,7 +1733,10 @@ int Test_BottomUpQuot(PoCoLi *Num, PoCoLi *Den, PoCoLi *Quo, PoCoLi *Rem) {
     PolyProd(Den, Quo, &A);
     Poly_Dif(&A, Num, Den);
     Poly_Sum(Den, Rem, &A);
-    assert(A.n == 0);
+    if (A.n != 0) {
+      fputs("Error: Test_BottomUpQuot verification product mismatch\n", stderr);
+      exit(1);
+    }
     Free_PoCoLi(&A);
     puts("BottomUpQuot: Test o.k.");
   }
@@ -1595,7 +1817,11 @@ int Index_Trace_Test(VaHo *V, int WI, int T) {
       else
         WI -= V->h[i][j];
     }
-  assert((T == 0) && (WI == 0));
+  if ((T != 0) || (WI != 0)) {
+    fprintf(stderr, "Error: Index_Trace_Test residual T=%d WI=%d not zero\n", T,
+            WI);
+    exit(1);
+  }
   return 1;
 }
 /* Thru 4-folds it is sufficient to know boundary (i.e. H{0i} and H{di} *)   *
@@ -1607,7 +1833,11 @@ void LGO_VaHo(Weight *W, VaHo *V) {
   int i, d = W->d, D = 0;
   for (i = 0; i < W->N; i++)
     D += d - 2 * W->w[i];
-  assert(!(D % d));
+  if (D % d != 0) {
+    fprintf(stderr, "Error: LGO_VaHo degree sum %d not divisible by %d\n", D,
+            d);
+    exit(1);
+  }
   D /= d;
   /* printf("In LGO_VaHo: W->N: %d W->M: %d D: %d\n", W->N, W->M, D); */
   /* From palp-2.0 to palp-2.11 the next lines were
@@ -1653,7 +1883,13 @@ void LGO_VaHo(Weight *W, VaHo *V) {
         V->h[i][j] = 0;
     for (j = 0; j < J; j++) {
       G *= (M[j] = W->m[j]);
-      assert(*M % M[j] == 0);
+      if (*M % M[j] != 0) {
+        fprintf(
+            stderr,
+            "Error: LGO_VaHo group order M[0]=%ld not divisible by M[%d]=%d\n",
+            *M, j, M[j]);
+        exit(1);
+      }
       x[j] = X / M[j];
     }
     std::vector<PoCoLi> S_storage(2 * X);
@@ -1672,7 +1908,11 @@ void LGO_VaHo(Weight *W, VaHo *V) {
           th[i] = k * W->w[i] * rd;
           for (j = 0; j < J; j++)
             th[i] += I[j] * W->z[j][i] * (U / W->m[j]);
-          assert(th[i] >= 0);
+          if (th[i] < 0) {
+            fprintf(stderr, "Error: LGO_VaHo negative phase %ld before mod\n",
+                    th[i]);
+            exit(1);
+          }
           th[i] %= U;
           if (th[i]) {
             QL += th[i] - W->w[i] * rd;
@@ -1683,9 +1923,20 @@ void LGO_VaHo(Weight *W, VaHo *V) {
               ph[j] += x[j] * W->z[j][i];
           }
         }
-        assert((dQ % U) == 0);
-        assert((QL % rd) == 0);
-        assert(QL + dQ >= 0);
+        if (dQ % U != 0) {
+          fprintf(stderr, "Error: LGO_VaHo dQ=%ld not divisible by U=%ld\n", dQ,
+                  U);
+          exit(1);
+        }
+        if (QL % rd != 0) {
+          fprintf(stderr, "Error: LGO_VaHo QL=%ld not divisible by rd=%ld\n",
+                  QL, rd);
+          exit(1);
+        }
+        if (QL + dQ < 0) {
+          fprintf(stderr, "Error: LGO_VaHo QL+dQ=%ld negative\n", QL + dQ);
+          exit(1);
+        }
         dQ /= U;
         QL /= rd;
         for (j = 0; j < J; j++)
@@ -1714,7 +1965,10 @@ void LGO_VaHo(Weight *W, VaHo *V) {
           s = 0;
           for (j = 0; j < J; j++) { /* cyclic projection */
             int rj = (W->z[j][*n] * x[j]) % X, sj = ph[j] % X;
-            assert(0 <= rj);
+            if (rj < 0) {
+              fprintf(stderr, "Error: LGO_VaHo negative rj %d\n", rj);
+              exit(1);
+            }
             if (rj == 0) {
               if (sj == 0)
                 continue;
@@ -1742,231 +1996,293 @@ void LGO_VaHo(Weight *W, VaHo *V) {
               break;
             }
           }
-          assert((j < J) == (g == 0));
-        if (g == 0)
-          Quo.n = 0;
-        else if (g == X)
-          Init1_xN(&Num, d - w);
-        else { /* assert(g>1); */
-          Aux_Phase_Poly(&Num, w, d, r, s, X / g);
-        }
-        if (g) {
-          Init1_xN(&Den, w * (X / g));
-          BottomUpQuot(&Num, &Den, &Quo, &Rem);
-          for (i = 0; i < Quo.n; i++)
-            if ((q = (QL + Quo.e[i])) % d == 0) {
-              h[q / d] += Quo.c[i];
-              hn = 1;
-            }
-        }
-      }
-      if (N > 1) /* N>1: S[] sector -> SN[] new sector PoCoLi */
-      {
-        int u, b, l, L[POLY_Dmax], w[W_Nmax], o[W_Nmax], io[W_Nmax], mm = 1;
-        for (i = 0; i < N; i++)
-          for (j = i + 1; j < N; j++) /* sort invariant weights */
-            if (W->w[n[j]] < W->w[n[i]])
-              swap(&n[i], &n[j]);
-        for (i = 0; i < N; i++) {
-          w[i] = W->w[n[i]];
-          o[i] = 1;
-          for (j = 0; j < J; j++) {
-            u = NNgcd(W->z[j][n[i]], W->m[j]);
-            u = W->m[j] / u;
-            o[i] = u * o[i] / Fgcd(o[i], u);
+          if ((j < J) != (g == 0)) {
+            fprintf(stderr,
+                    "Error: LGO_VaHo projection loop state mismatch "
+                    "j=%d J=%d g=%d\n",
+                    j, J, g);
+            exit(1);
           }
-          mm = mm * o[i] / Fgcd(mm, o[i]);
-        }
-        /* phase(g.s.) = gs/mm; mm=lcm(o[i]); phase(X(n(i))=z[i]/o[i];     */
-
-        /*  BEGIN GROUP PROJECTION */
-        if (mm > 1) {
-          int *mo, m, ego = 1; /* effective group order */
-          PoCoLi *A, *B, *C, Ax;
-          Ax.A = Quo.A;
-          AllocPoCoLi(&Ax);
-          Num.n = 0;
-          for (j = 0; j < J; j++) {
-            int g = W->z[j][n[0]];
-            for (i = 1; i < N; i++)
-              g = NNgcd(g, W->z[j][n[i]]);
-            M[j] = W->m[j] / NNgcd(g, W->m[j]);
+          if (g == 0)
+            Quo.n = 0;
+          else if (g == X)
+            Init1_xN(&Num, d - w);
+          else {
+            if (g <= 1) {
+              fprintf(stderr, "Error: LGO_VaHo projection g=%d not > 1\n", g);
+              exit(1);
+            } /* assert(g>1); */
+            Aux_Phase_Poly(&Num, w, d, r, s, X / g);
           }
-          for (m = 0; m < MX.n; m++)
-            if (mm <= MX.d[m])
-              break;
-          assert(mm == MX.d[m]);
-          mo = MX.mt[m];
-          l = 0;
-          for (j = 0; j < m; j++)
-            if (mo[j] == 1)
-              l++;
-            else if (mo[j] == -1)
-              l++;
-            else
-              assert(mo[j] == 0);
-
-          b = ego = Init_Multiloop(M, L, &u, &J);
-          do { /* BEGIN make group */
-            int gs = 0, z[W_Nmax];
-            for (i = 0; i < N; i++) {
-              z[i] = 0; /* g.s. phases */
-              for (j = 0; j < J; j++)
-                z[i] += L[j] * ((W->z[j][n[i]] * o[i]) / W->m[j]);
-              io[i] = mm / o[i];
-              gs += io[i] * z[i];
-            }
-            gs %= mm;
-            assert(gs >= 0);
-            SO = S;
-            SN = &S[mm]; /* for each projection group element */
-            for (s = 0; s < mm; s++) {
-              int ds = gs + s;
-              S[s].A = 2 * mm; /* init SO */
-              AllocPoCoLi(&S[s]);
-              if (ds % io[0])
-                S[s].n = 0;
-              else if (*o > 1)
-                Aux_Phase_Poly(&S[s], w[0], d, z[0], -ds / io[0], o[0]);
-              else
-                Init1_xN(&S[s], d - w[0]);
-            }
-            for (i = 1; i < N; i++) {
-              PoCoLi *Saux = SO, *ac;
-              int t;
-              for (t = 0; t < mm; t++) {
-                A = &Ax;
-                B = &Quo;
-                C = &Rem;
-                C->n = 0;
-                for (s = 0; s < mm; s++)
-                  if (s % io[i] == 0) {
-                    if (o[i] > 1)
-                      Aux_Phase_Poly(A, w[i], d, z[i], -s / io[i], o[i]);
-                    else
-                      Init1_xN(A, d - w[i]);
-                    PolyProd(&SO[(mm + t - s) % mm], A, B);
-                    Poly_Sum(B, C, A);
-                    ac = A;
-                    A = C;
-                    C = ac;
-                  }
-                SN[t].A = C->A;
-                AllocPoCoLi(&SN[t]);
-                PolyCopy(C, &SN[t]);
+          if (g) {
+            Init1_xN(&Den, w * (X / g));
+            BottomUpQuot(&Num, &Den, &Quo, &Rem);
+            for (i = 0; i < Quo.n; i++)
+              if ((q = (QL + Quo.e[i])) % d == 0) {
+                h[q / d] += Quo.c[i];
+                hn = 1;
               }
-              for (t = 0; t < mm; t++)
-                Free_PoCoLi(&SO[t]);
-              SO = SN;
-              SN = Saux;
-            } /* S[s] finished */
+          }
+        }
+        if (N > 1) /* N>1: S[] sector -> SN[] new sector PoCoLi */
+        {
+          int u, b, l, L[POLY_Dmax], w[W_Nmax], o[W_Nmax], io[W_Nmax], mm = 1;
+          for (i = 0; i < N; i++)
+            for (j = i + 1; j < N; j++) /* sort invariant weights */
+              if (W->w[n[j]] < W->w[n[i]])
+                swap(&n[i], &n[j]);
+          for (i = 0; i < N; i++) {
+            w[i] = W->w[n[i]];
+            o[i] = 1;
+            for (j = 0; j < J; j++) {
+              u = NNgcd(W->z[j][n[i]], W->m[j]);
+              u = W->m[j] / u;
+              o[i] = u * o[i] / Fgcd(o[i], u);
+            }
+            mm = mm * o[i] / Fgcd(mm, o[i]);
+          }
+          /* phase(g.s.) = gs/mm; mm=lcm(o[i]); phase(X(n(i))=z[i]/o[i];     */
 
-            /* if(pntw)for(s=0;s<mm;s++){
-            printf("gs=%d S[%d]= ",gs,s);PrintPoCoLi(&SO[s]);} */
-
-            Poly_Sum(&SO[0], &Num, &Rem);
-            B = &Num;
-            A = &Rem;
+          /*  BEGIN GROUP PROJECTION */
+          if (mm > 1) {
+            int *mo, m, ego = 1; /* effective group order */
+            PoCoLi *A, *B, *C, Ax;
+            Ax.A = Quo.A;
+            AllocPoCoLi(&Ax);
+            Num.n = 0;
+            for (j = 0; j < J; j++) {
+              int g = W->z[j][n[0]];
+              for (i = 1; i < N; i++)
+                g = NNgcd(g, W->z[j][n[i]]);
+              M[j] = W->m[j] / NNgcd(g, W->m[j]);
+            }
+            for (m = 0; m < MX.n; m++)
+              if (mm <= MX.d[m])
+                break;
+            if (mm != MX.d[m]) {
+              fprintf(stderr,
+                      "Error: LGO_VaHo Mobius entry mm=%d not found (got %d)\n",
+                      mm, MX.d[m]);
+              exit(1);
+            }
+            mo = MX.mt[m];
+            l = 0;
             for (j = 0; j < m; j++)
-              if (mo[j] == 1) {
-                Poly_Sum(A, &SO[MX.d[j]], B);
-                C = A;
-                A = B;
-                B = C;
-              } else if (mo[j] == -1) {
-                Poly_Dif(A, &SO[MX.d[j]], B);
+              if ((mo[j] == 1) || (mo[j] == -1))
+                l++;
+              else if (mo[j] != 0) {
+                fprintf(stderr,
+                        "Error: LGO_VaHo Mobius coefficient mo[%d]=%d not in "
+                        "{-1,0,1}\n",
+                        j, mo[j]);
+                exit(1);
+              }
+
+            b = ego = Init_Multiloop(M, L, &u, &J);
+            do { /* BEGIN make group */
+              int gs = 0, z[W_Nmax];
+              for (i = 0; i < N; i++) {
+                z[i] = 0; /* g.s. phases */
+                for (j = 0; j < J; j++)
+                  z[i] += L[j] * ((W->z[j][n[i]] * o[i]) / W->m[j]);
+                io[i] = mm / o[i];
+                gs += io[i] * z[i];
+              }
+              gs %= mm;
+              if (gs < 0) {
+                fprintf(stderr, "Error: LGO_VaHo negative group phase %d\n",
+                        gs);
+                exit(1);
+              }
+              SO = S;
+              SN = &S[mm]; /* for each projection group element */
+              for (s = 0; s < mm; s++) {
+                int ds = gs + s;
+                S[s].A = 2 * mm; /* init SO */
+                AllocPoCoLi(&S[s]);
+                if (ds % io[0])
+                  S[s].n = 0;
+                else if (*o > 1)
+                  Aux_Phase_Poly(&S[s], w[0], d, z[0], -ds / io[0], o[0]);
+                else
+                  Init1_xN(&S[s], d - w[0]);
+              }
+              for (i = 1; i < N; i++) {
+                PoCoLi *Saux = SO, *ac;
+                int t;
+                for (t = 0; t < mm; t++) {
+                  A = &Ax;
+                  B = &Quo;
+                  C = &Rem;
+                  C->n = 0;
+                  for (s = 0; s < mm; s++)
+                    if (s % io[i] == 0) {
+                      if (o[i] > 1)
+                        Aux_Phase_Poly(A, w[i], d, z[i], -s / io[i], o[i]);
+                      else
+                        Init1_xN(A, d - w[i]);
+                      PolyProd(&SO[(mm + t - s) % mm], A, B);
+                      Poly_Sum(B, C, A);
+                      ac = A;
+                      A = C;
+                      C = ac;
+                    }
+                  SN[t].A = C->A;
+                  AllocPoCoLi(&SN[t]);
+                  PolyCopy(C, &SN[t]);
+                }
+                for (t = 0; t < mm; t++)
+                  Free_PoCoLi(&SO[t]);
+                SO = SN;
+                SN = Saux;
+              } /* S[s] finished */
+
+              /* if(pntw)for(s=0;s<mm;s++){
+              printf("gs=%d S[%d]= ",gs,s);PrintPoCoLi(&SO[s]);} */
+
+              Poly_Sum(&SO[0], &Num, &Rem);
+              B = &Num;
+              A = &Rem;
+              for (j = 0; j < m; j++)
+                if (mo[j] == 1) {
+                  Poly_Sum(A, &SO[MX.d[j]], B);
+                  C = A;
+                  A = B;
+                  B = C;
+                } else if (mo[j] == -1) {
+                  Poly_Dif(A, &SO[MX.d[j]], B);
+                  C = A;
+                  A = B;
+                  B = C;
+                }
+              if ((A == &Num) != (l % 2)) {
+                fprintf(stderr,
+                        "Error: LGO_VaHo projection pointer swap parity "
+                        "mismatch l=%d\n",
+                        l);
+                exit(1);
+              }
+              if (l % 2 == 0)
+                PolyCopy(A, &Num);
+              for (s = 0; s < mm; s++) {
+                Free_PoCoLi(&SO[s]);
+              }
+              if (b <= 0) {
+                fputs("Error: LGO_VaHo group projection counter exhausted\n",
+                      stderr);
+                exit(1);
+              }
+              b--;
+            } while (Multiloop(M, L, &u, &J));
+            if (b != 0) {
+              fprintf(stderr,
+                      "Error: LGO_VaHo group projection counter %d not zero\n",
+                      b);
+              exit(1);
+            }
+
+            for (i = 0; i < Num.n; i++) {
+              if (Num.c[i] % ego != 0) {
+                fprintf(
+                    stderr,
+                    "Error: LGO_VaHo numerator coefficient %ld not divisible "
+                    "by ego=%d\n",
+                    Num.c[i], ego);
+                exit(1);
+              }
+              Num.c[i] /= ego;
+            }
+
+            /* if(pntw){printf("Num[%d:%d,%d]=",k,I[0],I[1]);
+               PrintPoCoLi(&Num);fflush(0);} */
+
+            A = &Num;
+            B = &Quo;
+            if (Num.n)
+              for (i = 0; i < N; i++) {
+                Init1_xN(&Den, w[i] * o[i]);
+                BottomUpQuot(A, &Den, B, &Rem);
                 C = A;
                 A = B;
                 B = C;
               }
-            assert((A == &Num) == (l % 2));
-            if (l % 2 == 0)
-              PolyCopy(A, &Num);
-            for (s = 0; s < mm; s++) {
-              Free_PoCoLi(&SO[s]);
-            }
-            assert(0 < (b--));
-          } while (Multiloop(M, L, &u, &J));
-          assert(b == 0);
+            for (i = 0; i < A->n; i++)
+              if ((q = (QL + A->e[i])) % d == 0) {
+                h[q / d] += A->c[i];
+                hn = 1;
+              }
 
-          for (i = 0; i < Num.n; i++) {
-            assert(0 == Num.c[i] % ego);
-            Num.c[i] /= ego;
+            /* if(pntw){printf("Quo[%d:%d,%d]=",k,I[0],I[1]);
+                    PrintPoCoLi(A);fflush(0);} */
+
+            Free_PoCoLi(&Ax); /*  END GROUP PROJECTION */
+          } else {
+            PoincarePoly(N, w, d, &Quo, &Num, &Den);
+            for (i = 0; i < Quo.n; i++)
+              if ((q = (QL + Quo.e[i])) % d == 0) {
+                h[q / d] += Quo.c[i];
+                hn = 1;
+              } /*END of no projection */
           }
+        } /* N>1 CASE FINISHED */
 
-          /* if(pntw){printf("Num[%d:%d,%d]=",k,I[0],I[1]);
-             PrintPoCoLi(&Num);fflush(0);} */
-
-          A = &Num;
-          B = &Quo;
-          if (Num.n)
-            for (i = 0; i < N; i++) {
-              Init1_xN(&Den, w[i] * o[i]);
-              BottomUpQuot(A, &Den, B, &Rem);
-              C = A;
-              A = B;
-              B = C;
-            }
-          for (i = 0; i < A->n; i++)
-            if ((q = (QL + A->e[i])) % d == 0) {
-              h[q / d] += A->c[i];
-              hn = 1;
-            }
-
-          /* if(pntw){printf("Quo[%d:%d,%d]=",k,I[0],I[1]);
-                  PrintPoCoLi(A);fflush(0);} */
-
-          Free_PoCoLi(&Ax); /*  END GROUP PROJECTION */
-        } else {
-          PoincarePoly(N, w, d, &Quo, &Num, &Den);
-          for (i = 0; i < Quo.n; i++)
-            if ((q = (QL + Quo.e[i])) % d == 0) {
-              h[q / d] += Quo.c[i];
-              hn = 1;
-            } /*END of no projection */
-        }
-      } /* N>1 CASE FINISHED */
-
-      if (hn)
-        for (i = 0; i <= D; i++)
-          if (h[i])
-            V->h[D - i][i + dQ] += h[i];
-      if (V->sts)
-        if (hn) {
-          fprintf(outFILE, "sec[%d", k);
-          for (j = 0; j < J; j++)
-            fprintf(outFILE, "%s%d", j ? "," : ":", I[j]);
-          fputs("]", outFILE);
-          fprintf(outFILE, " th=%2ld", th[0]);
-          for (i = 1; i < W->N; i++)
-            fprintf(outFILE, " %2ld", th[i]); /*fprintf(outFILE,"/%d ",U);*/
-          /*fprintf(outFILE," %d*ph=",U);for(i=0;i<J;i++)printf("%d ",ph[i]);
-           */
-          fprintf(outFILE, "  QL=%2ld/%d dQ=%2ld ", QL, d, dQ);
-          /*fprintf(outFILE,"N=%d ",N);*/
+        if (hn)
           for (i = 0; i <= D; i++)
             if (h[i])
-              fprintf(outFILE, " q%d%ld+=%d", i, i + dQ, h[i]);
-          fputs("\n", outFILE);
+              V->h[D - i][i + dQ] += h[i];
+        if (V->sts)
+          if (hn) {
+            fprintf(outFILE, "sec[%d", k);
+            for (j = 0; j < J; j++)
+              fprintf(outFILE, "%s%d", j ? "," : ":", I[j]);
+            fputs("]", outFILE);
+            fprintf(outFILE, " th=%2ld", th[0]);
+            for (i = 1; i < W->N; i++)
+              fprintf(outFILE, " %2ld", th[i]); /*fprintf(outFILE,"/%d ",U);*/
+            /*fprintf(outFILE," %d*ph=",U);for(i=0;i<J;i++)printf("%d ",ph[i]);
+             */
+            fprintf(outFILE, "  QL=%2ld/%d dQ=%2ld ", QL, d, dQ);
+            /*fprintf(outFILE,"N=%d ",N);*/
+            for (i = 0; i <= D; i++)
+              if (h[i])
+                fprintf(outFILE, " q%d%ld+=%d", i, i + dQ, h[i]);
+            fputs("\n", outFILE);
+          }
+        /* if(!cont)exit(1); */
+        if (a <= 0) {
+          fputs("Error: LGO_VaHo twist enumeration counter exhausted\n",
+                stderr);
+          exit(1);
         }
-      /* if(!cont)exit(1); */
-      assert(0 < (a--));
+        a--;
+      } while (Multiloop(W->m, I, &v, &J));
+      if (a != 0) {
+        fprintf(stderr,
+                "Error: LGO_VaHo twist enumeration counter %d not zero\n", a);
+        exit(1);
+      } /* END gen TWISTS */
     }
-    while (Multiloop(W->m, I, &v, &J))
-      ;
-    assert(a == 0); /* END gen TWISTS */
+    FreeMobius(&MX);
+    Free_PoCoLi(&Rem);
+    Free_PoCoLi(&Quo);
+    if (!Hodge_Test(V)) {
+      fputs("Error: LGO_VaHo final Hodge test failed\n", stderr);
+      exit(1);
+    }
+    Free_PoCoLi(&Den);
+    Free_PoCoLi(&Num);
+    if (WIndex_HTrace(W, &WI, &T) != 1) {
+      fputs("Error: LGO_VaHo Witten index / trace vacuum count not 1\n",
+            stderr);
+      exit(1);
+    }
+    if (!Index_Trace_Test(V, WI, T)) {
+      fputs("Error: LGO_VaHo index / trace test failed\n", stderr);
+      exit(1);
+    }
+    if (V->sts)
+      printf("WittenIndex=%d, Trace=%d\n", WI, T);
   }
-  FreeMobius(&MX);
-  Free_PoCoLi(&Rem);
-  Free_PoCoLi(&Quo);
-  assert(Hodge_Test(V));
-  Free_PoCoLi(&Den);
-  Free_PoCoLi(&Num);
-  assert(1 == WIndex_HTrace(W, &WI, &T));
-  assert(Index_Trace_Test(V, WI, T));
-  if (V->sts)
-    printf("WittenIndex=%d, Trace=%d\n", WI, T);
-}
 }
 /* T=\x*t: (1-T^(d-w))/(1-T^w)=(1-T^(d-w))*(1+T^w+T^2w+...+T^(x-1)w)/(1-T^wx)*
  * phase(\x)=r/x. All terms in numerator with phase s/x, p=0,...,x-1 =>	     *
@@ -1975,7 +2291,10 @@ void Aux_Phase_Poly(PoCoLi *P, int w, int d, int r, int s, int x) {
   int i, nocancel = (d % w) || (x * w < d) || ((r * d / w) % x),
          negmin = nocancel ? d - w : x * w, negmax = d + x * w - 2 * w,
          posmax = nocancel ? (x - 1) * w : d - 2 * w;
-  assert(x > 1);
+  if (x <= 1) {
+    fputs("Error: Aux_Phase_Poly called with x <= 1\n", stderr);
+    exit(1);
+  }
   P->n = 0;
   for (i = 0; i <= posmax; i += w)
     if ((r * (i / w) - s) % x == 0)
@@ -2010,14 +2329,23 @@ void Calc_VaHo(Weight *W, VaHo *V) {
   AllocPoCoLi(Z);
   AllocPoCoLi(R);
   PoincarePoly(N, w, d, P, Z, R);
-  assert(D * d == P->e[P->n - 1]);
+  if (D * d != P->e[P->n - 1]) {
+    fprintf(stderr,
+            "Error: Calc_VaHo Poincare poly leading exponent %d != D*d=%d\n",
+            P->e[P->n - 1], D * d);
+    exit(1);
+  }
   {
     int n = P->n;
     Pint cM = 0;
     long long sum = 0, num = 1, den = 1; /*check sum = P(0)*/
     for (i = 0; i < n; i++) {
       Pint co = P->c[i];
-      assert(co > 0);
+      if (co <= 0) {
+        fprintf(stderr, "Error: Calc_VaHo Poincare poly coefficient %d <= 0\n",
+                co);
+        exit(1);
+      }
       if (co > cM)
         cM = co;
       sum += co;
@@ -2038,9 +2366,15 @@ void Calc_VaHo(Weight *W, VaHo *V) {
       } else
         printf("#(Exp,Co)=%d  Exp<=%d  Coeff<=%d  sum=%lld\n", n, P->e[n - 1],
                cM, sum);
-    if (den == 1)
-      assert(num == sum);
-    else {
+    if (den == 1) {
+      if (num != sum) {
+        fprintf(stderr,
+                "Error: Calc_VaHo Poincare poly evaluated sum %lld != expected "
+                "%lld\n",
+                sum, num);
+        exit(1);
+      }
+    } else {
       printf("sum=%lld  test=%lld/%lld \n", sum, num, den);
     }
   }
@@ -2078,7 +2412,13 @@ void Calc_VaHo(Weight *W, VaHo *V) {
           if (w[j] < w[i])
             swap(&w[j], &w[j]);
       PoincarePoly(n, w, d, P, Z, R);
-      assert(Deff == P->e[P->n - 1]);
+      if (Deff != P->e[P->n - 1]) {
+        fprintf(stderr,
+                "Error: Calc_VaHo k=%d twisted Poincare leading exponent %d "
+                "!= Deff=%d\n",
+                k, P->e[P->n - 1], Deff);
+        exit(1);
+      }
       Tmt /= d;
       for (i = 0; i < P->n; i++) {
         j = et + P->e[i];
@@ -2142,7 +2482,11 @@ struct TransCheckData {
     for (i = 1; i <= W_Nmax; i++)
       mask[i] = 2 * mask[i - 1]; /* mask={1,2,4,8,16,32,...} */
 
-    assert(maxPN == mask[W_Nmax]); /* maximum number of pointers at one point */
+    if (maxPN != mask[W_Nmax]) {
+      fprintf(stderr, "Error: TransCheckData mask[%d]=%d != 2^W_Nmax=%d\n",
+              W_Nmax, mask[W_Nmax], maxPN);
+      exit(1);
+    } /* maximum number of pointers at one point */
     targets.resize(maxPN);
     mighty.resize(maxPN);
 
@@ -2158,7 +2502,10 @@ int OLDTrans_Check(
     Weight W) {     /* returns 1 if non-degenerate potential exists */
   int i, j, k, mon; /* j represents the link!!!        */
   static TransCheckData data;
-  assert(W.N <= W_Nmax);
+  if (W.N > W_Nmax) {
+    fputs("Error: OLDTrans_Check weight count exceeds W_Nmax\n", stderr);
+    exit(1);
+  }
   if (!data.initialized)
     data.init();
   int *mask = data.mask;
@@ -2222,7 +2569,10 @@ int Trans_Check(Weight W) { /* returns 1 if non-degenerate potential exists */
   int i, j, k, l;           /* j represents the link!!!        */
   symlist dw;
   static TransCheckData data;
-  assert(W.N <= W_Nmax);
+  if (W.N > W_Nmax) {
+    fputs("Error: Trans_Check weight count exceeds W_Nmax\n", stderr);
+    exit(1);
+  }
   if (!data.initialized)
     data.init();
   int *mask = data.mask;
