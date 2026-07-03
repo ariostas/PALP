@@ -184,7 +184,10 @@ Long W_to_GLZ(Long *W, int *d, Long **GLZ) {
   int i, j;
   Long G, *E = *GLZ, *B = GLZ[1];
   for (i = 0; i < *d; i++)
-    assert(W[i] != 0);
+    if (W[i] == 0) {
+      fputs("Error: W_to_GLZ input weight is zero\n", stderr);
+      exit(1);
+    }
   for (i = 1; i < *d; i++)
     for (j = 0; j < *d; j++)
       GLZ[i][j] = 0;
