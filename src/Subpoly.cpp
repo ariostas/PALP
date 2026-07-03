@@ -35,7 +35,8 @@ int New_Improve_Coords(PolyPointList *_P, VertexNumList *_V) {
     Make_Poly_UTriang(_P);
     return 1;
   default:
-    assert(0);
+    fputs("Error: NormalForm invalid mode\n", stderr);
+    exit(1);
   }
 }
 
@@ -91,7 +92,10 @@ void Add_INCI_To_List(INCI New_INCI, INCI *INCI_List, int *n_INCI) {
     if (INCI_LE(INCI_List[i], New_INCI))
       INCI_List[i] = INCI_List[--(*n_INCI)];
   }
-  assert(*n_INCI < CD2F_Nmax);
+  if (*n_INCI >= CD2F_Nmax) {
+    fputs("Error: Add_INCI_To_List CD2F list overflow\n", stderr);
+    exit(1);
+  }
   INCI_List[(*n_INCI)++] = New_INCI;
 }
 /*
@@ -166,16 +170,26 @@ void FE_Close_the_Hole(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     for (j = 0; j < _P->n; j++)
       P.x[i][j] = _P->x[Hole_Verts.v[i]][j];
   Find_Equations(&P, &Hole_Verts, &BVE);
-  assert(BVE.ne);
+  if (BVE.ne == 0) {
+    fputs("Error: Good_CEquations hole found no bounding equations\n", stderr);
+    exit(1);
+  }
   for (i = 0; i < BVE.ne; i++)
     if (IsGoodCEq(&BVE.e[i], _P, _V))
       if (IsNewEq(&BVE.e[i], _CEq, _E, &_P->n)) {
         n_new_Eq++;
-        assert(_CEq->ne < CEQ_Nmax);
+        if (_CEq->ne >= CEQ_Nmax) {
+          fputs("Error: Good_CEquations candidate equation list overflow\n",
+                stderr);
+          exit(1);
+        }
         CEq_INCI[_CEq->ne] = Eq_To_INCI(&BVE.e[i], _P, _V);
         _CEq->e[_CEq->ne++] = BVE.e[i];
       }
-  assert(n_new_Eq);
+  if (n_new_Eq == 0) {
+    fputs("Error: Good_CEquations found no new good equations\n", stderr);
+    exit(1);
+  }
 }
 
 void Close_the_Hole(PolyPointList *_P, VertexNumList *_V, EqList *_E,
@@ -233,7 +247,11 @@ void Close_the_Hole(PolyPointList *_P, VertexNumList *_V, EqList *_E,
       if (IsGoodCEq(&Eq, _P, _V)) {
         CEq_INCI[_CEq->ne] = Eq_To_INCI(&Eq, _P, _V);
         if (!Irrel(&(CEq_INCI[_CEq->ne]), E_INCI, &_E->ne)) {
-          assert(_CEq->ne < CEQ_Nmax);
+          if (_CEq->ne >= CEQ_Nmax) {
+            fputs("Error: Close_the_Hole candidate equation list overflow\n",
+                  stderr);
+            exit(1);
+          }
           _CEq->e[_CEq->ne] = Eq;
           Remove_INCI_From_List(CEq_INCI[_CEq->ne], Hole_Faces, &n_Hole_Faces);
           _CEq->ne++;
@@ -270,7 +288,10 @@ void Close_the_Hole(PolyPointList *_P, VertexNumList *_V, EqList *_E,
           break;
       if (k < _E->ne)
         continue;
-      assert(n_cd2_Faces < CD2F_Nmax);
+      if (n_cd2_Faces >= CD2F_Nmax) {
+        fputs("Error: Close_the_Hole codim-2 face list overflow\n", stderr);
+        exit(1);
+      }
       cd2_Faces[n_cd2_Faces++] = New_Face;
     }
   Bad_Vert_INCI =
@@ -322,7 +343,10 @@ int Aided_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_E,
             break;
       if (k < _E->ne)
         continue;
-      assert(n_Hole_Faces < CD2F_Nmax);
+      if (n_Hole_Faces >= CD2F_Nmax) {
+        fputs("Error: Aided_IP_Check hole face list overflow\n", stderr);
+        exit(1);
+      }
       Hole_Faces[n_Hole_Faces++] = New_Face;
     }
 
@@ -1494,7 +1518,11 @@ void Find_Sublat_Polys(char mFlag, char *dbin, char *polyi, char *polyo,
         Tstart = time(NULL);
         strcpy(fx, ext);
         dbfile = fopen(dbname.c_str(), "rb");
-        assert(dbfile != NULL);
+        if (dbfile == NULL) {
+          fprintf(stderr, "Error: Make_DB_PolyList cannot open DB file %s\n",
+                  dbname.c_str());
+          exit(1);
+        }
         if (!mFlag) {
           printf("Reading %s\n", dbname.c_str());
           fflush(0);
@@ -1508,8 +1536,17 @@ void Find_Sublat_Polys(char mFlag, char *dbin, char *polyi, char *polyo,
               printf("MS=%d!!!\n", MS);
               exit(1);
             }
-            assert(IP_Check(_P, &Vnl, &Fel));
-            assert(v == Vnl.nv);
+            if (!IP_Check(_P, &Vnl, &Fel)) {
+              fputs("Error: Make_DB_PolyList IP check failed\n", stderr);
+              exit(1);
+            }
+            if (v != Vnl.nv) {
+              fprintf(stderr,
+                      "Error: Make_DB_PolyList vertex count mismatch v=%d "
+                      "Vnl.nv=%d\n",
+                      v, Vnl.nv);
+              exit(1);
+            }
             /* compute VPM */
             for (j = 0; j < Fel.ne; j++)
               for (k = 0; k < Vnl.nv; k++)
@@ -1537,7 +1574,11 @@ void Find_Sublat_Polys(char mFlag, char *dbin, char *polyi, char *polyo,
   else {
     CWS W;
     while (Read_CWS_PP(&W, _P)) {
-      assert(IP_Check(_P, &Vnl, &Fel));
+      if (!IP_Check(_P, &Vnl, &Fel)) {
+        fputs("Error: Find_Sublat_Polys input polytope not reflexive\n",
+              stderr);
+        exit(1);
+      }
       /* compute VPM */
       for (j = 0; j < Fel.ne; j++)
         for (i = 0; i < Vnl.nv; i++)
@@ -1640,7 +1681,10 @@ int virred(PolyPointList *_P, EqList *B) {
   int i, j, k, drop_point[POLY_Dmax], equal;
   VertexNumList V;
   EqList E;
-  assert(Ref_Check(_P, &V, &E));
+  if (!Ref_Check(_P, &V, &E)) {
+    fputs("Error: virred input polytope not reflexive\n", stderr);
+    exit(1);
+  }
   for (j = 0; j < _P->n; j++)
     drop_point[j] = 0; /* just to silence the compiler */
   /* for(i=0;(i<V.nv);i++) {
@@ -1690,7 +1734,10 @@ int virred(PolyPointList *_P, EqList *B) {
       _P->x[V.v[i]][j] = drop_point[j];
     }
     _P->np++;
-    assert(Ref_Check(_P, &V, &E));
+    if (!Ref_Check(_P, &V, &E)) {
+      fputs("Error: virred failed to reconstruct reflexive polytope\n", stderr);
+      exit(1);
+    }
   }
   return 1;
 }
