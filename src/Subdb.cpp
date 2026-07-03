@@ -35,7 +35,12 @@ void Small_Make_Dual(PolyPointList *_P, VertexNumList *_V, EqList *_E) {
   int i;
   EqList AE = *_E;
   VNL_to_DEL(_P, _V, _E);
-  assert(EL_to_PPL(&AE, _P, &_P->n));
+  if (!EL_to_PPL(&AE, _P, &_P->n)) {
+    fputs("Error: Small_Make_Dual could not convert equation list to "
+          "polytope\n",
+          stderr);
+    exit(1);
+  }
   _V->nv = _P->np;
   for (i = 0; i < _P->np; i++)
     _V->v[i] = i;
@@ -65,14 +70,16 @@ void Polyi_2_DBo(char *polyi, char *dbo) {
   fx = &dbnames[strlen(dbo) + 1];
   strcat(dbnames.data(), ".info");
   Finfo = fopen(dbnames.c_str(), "w");
-  assert(Finfo != NULL);
+  if (Finfo == NULL) {
+    fprintf(stderr, "Error: Polyi_2_DBo cannot create %s.info\n", dbo);
+    exit(1);
+  }
   printf("Read %s (", polyi);
   fflush(stdout);
 
   Init_FInfoList(&L); /* start reading the file */
   d = fgetc(F);
-  assert(d == 0); /* for(i=0;i<d;i++) fgetc(F); */
-  if (d) {
+  if (d != 0) { /* for(i=0;i<d;i++) fgetc(F); */
     printf("Recursion depth %d forbidden in DB !!\n", d);
     Finfo = stdout;
   }
@@ -100,8 +107,15 @@ void Polyi_2_DBo(char *polyi, char *dbo) {
       tNB += nu * L.NFnum[v][nu];
     }
   }
-  assert(tNF == L.nNF);
-  assert(0 == (unsigned int)(tNB - L.NB));
+  if (tNF != L.nNF) {
+    fprintf(stderr, "Error: Polyi_2_DBo total NF mismatch: tNF=%u L.nNF=%u\n",
+            (unsigned)tNF, (unsigned)L.nNF);
+    exit(1);
+  }
+  if ((unsigned int)(tNB - L.NB) != 0) {
+    fprintf(stderr, "Error: Polyi_2_DBo byte count mismatch\n");
+    exit(1);
+  }
   L.NB = tNB;
 
   printf("%lldpoly +%dsl %lldb)  write %s.* (%d files)  ",
@@ -141,7 +155,11 @@ void Polyi_2_DBo(char *polyi, char *dbo) {
       ext[2] = '0' + v % 10;
       strcpy(fx, ext);
       Fv = fopen(dbnames.c_str(), "wb");
-      assert(Fv != NULL);
+      if (Fv == NULL) {
+        fprintf(stderr, "Error: Polyi_2_DBo cannot create %s\n",
+                dbnames.c_str());
+        exit(1);
+      }
 
       for (nu = 1; nu <= L.NUCmax; nu++)
         if (L.NFnum[v][nu]) {
@@ -160,7 +178,10 @@ void Polyi_2_DBo(char *polyi, char *dbo) {
   {
     strcpy(fx, "sl");
     Fsl = fopen(dbnames.c_str(), "wb");
-    assert(Fsl != NULL);
+    if (Fsl == NULL) {
+      fprintf(stderr, "Error: Polyi_2_DBo cannot create %s.sl\n", dbo);
+      exit(1);
+    }
     for (i = 0; i < sl_NB; i++)
       fputc(fgetc(F), Fsl);
     if (ferror(Fsl)) {
@@ -203,16 +224,23 @@ void Init_DB(NF_List *_NFL) {
 
   /* read the info-file: */
   DB->Finfo = fopen(dbname.c_str(), "r");
-  assert(DB->Finfo != NULL);
-  fscanf(DB->Finfo, "%d  %d %d %d  %d  %lld %d %lld %lld  %d %d %d %d", &d,
-         &DB->nV, &DB->nVmax, &DB->NUCmax, &list_num, &DB->nNF, &DB->nSM,
-         &DB->nNM, &DB->NB, &sl_nNF, &sl_SM, &sl_NM, &sl_NB);
+  if (DB->Finfo == NULL) {
+    fprintf(stderr, "Error: Open_DB cannot open %s.info\n", dbname.c_str());
+    exit(1);
+  }
+  if (fscanf(DB->Finfo, "%d  %d %d %d  %d  %lld %d %lld %lld  %d %d %d %d", &d,
+             &DB->nV, &DB->nVmax, &DB->NUCmax, &list_num, &DB->nNF, &DB->nSM,
+             &DB->nNM, &DB->NB, &sl_nNF, &sl_SM, &sl_NM, &sl_NB) != 13) {
+    fputs("Error: Open_DB malformed info file\n", stderr);
+    exit(1);
+  }
   printf("%lld+%dsl %lldnf %lldb", 2 * (DB->nNF) - DB->nSM - DB->nNM,
          2 * sl_nNF - sl_SM - sl_NM, DB->nNF + sl_nNF, DB->NB + sl_NB);
   /* if( _FILE_OFFSET_BITS < 64 ) assert(DB->NB <= LONG_MAX);	Along */
-  if (_NFL->d)
-    assert(d == _NFL->d);
-  else
+  if (_NFL->d && (d != _NFL->d)) {
+    fprintf(stderr, "Error: Open_DB dimension mismatch %d != %d\n", d, _NFL->d);
+    exit(1);
+  } else
     _NFL->d = d;
 
   for (v = 1; v < VERT_Nmax; v++) {
@@ -237,7 +265,11 @@ void Init_DB(NF_List *_NFL) {
   }
   fclose(DB->Finfo);
   fflush(stdout);
-  assert(RAM_size <= INT_MAX);
+  if (RAM_size > INT_MAX) {
+    fprintf(stderr, "Error: Open_DB RAM_size %lld exceeds INT_MAX\n",
+            (long long)RAM_size);
+    exit(1);
+  }
 
   DB->RAM_NF_owner =
       std::make_unique<unsigned char[]>(static_cast<size_t>(RAM_size));
@@ -251,7 +283,10 @@ void Init_DB(NF_List *_NFL) {
       ext[2] = '0' + v % 10;
       strcpy(fx, ext);
       DB->Fv[v] = fopen(dbname.c_str(), "rb");
-      assert(DB->Fv[v] != NULL);
+      if (DB->Fv[v] == NULL) {
+        fprintf(stderr, "Error: Open_DB cannot open %s\n", dbname.c_str());
+        exit(1);
+      }
       FSEEK(DB->Fv[v], 0, SEEK_END);
 
       DB->Fv_pos[v][0] = 0;
@@ -432,14 +467,35 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
       tNF += FIi.NFnum[v][nu];
     }
   }
-  assert(tNF == FIi.nNF);
+  if (tNF != FIi.nNF) {
+    fprintf(stderr,
+            "Error: Add_Aux_to_DB total NF mismatch: tNF=%lld FIi.nNF=%lld\n",
+            (long long)tNF, (long long)FIi.nNF);
+    exit(1);
+  }
   tNF = 0;
-  assert(!fgetc(FA)); /*  rd==0  (recursion depth::no aux-file)  */
+  {
+    int rd_byte = fgetc(FA);
+    if (rd_byte != EOF) {
+      ungetc(rd_byte, FA);
+      fputs("Error: Add_Aux_to_DB aux-file recursion depth must be 0\n",
+            stderr);
+      exit(1);
+    }
+  }
   Read_Bin_Info(FA, &j, &Ali, &AslNF, &AslSM, &AslNM, &AslNB, &FIa);
-  assert(d == j);
+  if (d != j) {
+    fprintf(stderr, "Error: Add_Aux_to_DB dimension mismatch %d != %d\n", d, j);
+    exit(1);
+  }
   strcpy(Ifx, ".sl");
-  if (IslNF)
-    assert(NULL != (FI = fopen(Ifn.data(), "rb")));
+  if (IslNF) {
+    FI = fopen(Ifn.data(), "rb");
+    if (FI == NULL) {
+      fprintf(stderr, "Error: Add_Aux_to_DB cannot open %s.sl\n", Ifn.data());
+      exit(1);
+    }
+  }
   std::vector<unsigned char> ucSL_buffer;
   if ((IslNB + AslNB))
     ucSL_buffer.resize(IslNB + AslNB);
@@ -453,7 +509,10 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
          /* Islp= */ 2 * IslNF - IslNM - IslSM, FIi.NB + slNB, d);
   printf("Data on %s:  %u+%dsl  %lldb  (%dd)\n", polya, Anp,
          /* Aslp= */ 2 * AslNF - AslNM - AslSM, Apos, d);
-  assert(HApos + FIa.NB + AslNB == Apos);
+  if (HApos + FIa.NB + AslNB != Apos) {
+    fputs("Error: Add_Aux_to_DB aux-file size mismatch\n", stderr);
+    exit(1);
+  }
   FSEEK(FA, -AslNB, SEEK_CUR);
   s = 0;
   if (s < AslNF)
@@ -529,13 +588,22 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
     if ((++s) < AslNF)
       AuxGet_vn_uc(FA, &vA, &nuA, ucA);
   }
-  assert(tnb + slNB == IslNB + AslNB); /* SL done */
+  if (tnb + slNB != IslNB + AslNB) {
+    fputs("Error: Add_Aux_to_DB sublattice byte count mismatch\n", stderr);
+    exit(1);
+  } /* SL done */
 
   printf("SL: %dnf %dsm %dnm %db -> ", slNF, slSM, slNM, slNB);
   if (IslNF) {
     HIpos = FTELL(FI);
-    assert(HIpos == IslNB);
-    assert(!ferror(FI));
+    if (HIpos != IslNB) {
+      fprintf(stderr, "Error: Add_Aux_to_DB sublattice read size mismatch\n");
+      exit(1);
+    }
+    if (ferror(FI)) {
+      fprintf(stderr, "Error: Add_Aux_to_DB sublattice file read error\n");
+      exit(1);
+    }
     fclose(FI);
     if (!newout)
       remove(Ifn.data());
@@ -568,7 +636,11 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
       if (FIi.nNUC[v]) {
         if (!newout) {
           strcat(Ifx, SAVE_FILE_EXT);
-          assert(!rename(Ofn.data(), Ifn.data()));
+          if (rename(Ofn.data(), Ifn.data()) != 0) {
+            fprintf(stderr, "Error: Add_Aux_to_DB rename %s -> %s failed\n",
+                    Ofn.data(), Ifn.data());
+            exit(1);
+          }
         }
         if (NULL == (FI = fopen(Ifn.data(), "rb"))) {
           printf("Ifn %s failed", Ifn.data());
@@ -679,46 +751,79 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
               pa += 1 + (((*ucA) % 4) == 3);
             }
           }
-          assert(pi + pa == peq + po); /* checksum(v,nu) */
+          if (pi + pa != peq + po) {
+            fprintf(stderr,
+                    "Error: Add_Aux_to_DB checksum mismatch for v=%d nu=%d\n",
+                    v, nu);
+            exit(1);
+          } /* checksum(v,nu) */
           FIo.NFnum[v][nu] = O_NF;
           FIo.nNF += O_NF;
           FIo.NB += O_NF * nu;
-          assert(O_NF + neq == I_NF + A_NF);
+          if (O_NF + neq != I_NF + A_NF) {
+            fprintf(stderr,
+                    "Error: Add_Aux_to_DB NF merge mismatch for v=%d nu=%d\n",
+                    v, nu);
+            exit(1);
+          }
           /*
           {static int list;printf("#%d v=%d nu=%d Inf=%d Anf=%d ",++list,v,nu,
           I_NF,A_NF);printf("Onf=%d   pi=%d pa=%d  po=%d\n",O_NF,pi,pa,po);
           }*/
         }
       if (FIi.nNUC[v]) {
-        assert(!ferror(FI));
+        if (ferror(FI)) {
+          fprintf(stderr, "Error: Add_Aux_to_DB input file read error\n");
+          exit(1);
+        }
         fclose(FI);
         if (!newout)
           remove(Ifn.data());
       }
-      assert(!ferror(FO));
+      if (ferror(FO)) {
+        fprintf(stderr, "Error: Add_Aux_to_DB output file write error\n");
+        exit(1);
+      }
       fclose(FO);
     }
   tnb = 0;
 
   if (slNF) {
     strcpy(Ofx, ".sl");
-    assert(NULL != (FO = fopen(Ofn.data(), "wb")));
+    FO = fopen(Ofn.data(), "wb");
+    if (FO == NULL) {
+      fprintf(stderr, "Error: Add_Aux_to_DB cannot create %s.sl\n", Ofn.data());
+      exit(1);
+    }
     for (i = 0; i < slNF; i++) /* write SL */
     {
       uc = &ucSL[SLp[i] + 2];
       v = uc[-2];
       nu = uc[-1];
       tnb += nu + 2;
-      assert(uc[-2] < VERT_Nmax);
+      if (uc[-2] >= VERT_Nmax) {
+        fprintf(stderr, "Error: Add_Aux_to_DB vertex count %d out of range\n",
+                uc[-2]);
+        exit(1);
+      }
       fputc(uc[-2], FO);
       slNP += 1 + (((*uc) % 4) == 3);
       fputc(nu, FO);
       for (s = 0; s < nu; s++)
         fputc(uc[s], FO);
     }
-    assert(tnb == slNB);
-    assert(slNP == 2 * slNF - slNM - slSM);
-    assert(!ferror(FO));
+    if (tnb != slNB) {
+      fprintf(stderr, "Error: Add_Aux_to_DB sublattice byte write mismatch\n");
+      exit(1);
+    }
+    if (slNP != 2 * slNF - slNM - slSM) {
+      fprintf(stderr, "Error: Add_Aux_to_DB sublattice NP count mismatch\n");
+      exit(1);
+    }
+    if (ferror(FO)) {
+      fprintf(stderr, "Error: Add_Aux_to_DB sublattice file write error\n");
+      exit(1);
+    }
     fclose(FO);
   }
   printf("\nd=%d v%d v<=%d n<=%d vn%d  %lld %d %lld %lld  %d %d %d %d\n", d,
@@ -726,7 +831,11 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
          slNF, slSM, slNM, slNB);
 
   strcpy(Ofx, ".info");
-  assert(NULL != (FO = fopen(Ofn.data(), "w")));
+  FO = fopen(Ofn.data(), "w");
+  if (FO == NULL) {
+    fprintf(stderr, "Error: Add_Aux_to_DB cannot create %s.info\n", Ofn.data());
+    exit(1);
+  }
   fprintf(FO, /* write FO.info */
           "%d  %d %d %d  %d  %lld %d %lld %lld  %d %d %d %d\n\n", d, FIo.nV,
           FIo.nVmax, FIo.NUCmax, Oli, FIo.nNF, FIo.nSM, FIo.nNM, FIo.NB, slNF,
@@ -753,9 +862,15 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
   */
   Print_Expect(&FIo);
   puts("");
-  assert(ferror(FA) == 0);
+  if (ferror(FA)) {
+    fprintf(stderr, "Error: Add_Aux_to_DB aux-file read error\n");
+    exit(1);
+  }
   fclose(FA);
-  assert(ferror(FO) == 0);
+  if (ferror(FO)) {
+    fprintf(stderr, "Error: Add_Aux_to_DB info-file write error\n");
+    exit(1);
+  }
   fclose(FO);
 }
 int Check_sl_order(int *v, int *nu, unsigned char *uc) {
@@ -857,7 +972,11 @@ void Check_NF_Order(char *polyi, char *dbi, int cF,
     rd = fgetc(F);
     if (rd > 127)
       rd = 128 * (rd - 128) + fgetc(F);
-    assert(rd <= MAX_REC_DEPTH);
+    if (rd > MAX_REC_DEPTH) {
+      fprintf(stderr, "Error: DB_Check recursion depth %d exceeds maximum\n",
+              rd);
+      exit(1);
+    }
     printf("rd=%d: ", rd);
     for (i = 0; i < rd; i++)
       printf(" %d", fgetc(F));
@@ -898,7 +1017,10 @@ void Check_NF_Order(char *polyi, char *dbi, int cF,
       if (cF == 2)
         puts("");
     }
-    assert(0 == (unsigned int)(tNB - L.NB));
+    if ((unsigned int)(tNB - L.NB) != 0) {
+      fputs("Error: DB_Check aux-file byte count mismatch\n", stderr);
+      exit(1);
+    }
     L.NB = tNB;
     if (cF == 2)
       printf("np=%lld+%dsl %lldb  %d files\n", 2 * L.nNF - L.nSM - L.nNM,
@@ -950,13 +1072,19 @@ void Check_NF_Order(char *polyi, char *dbi, int cF,
       if (cF == 2)
         puts("");
     }
-    assert(tln == list_num);
+    if (tln != list_num) {
+      fprintf(stderr, "Error: DB_Check info list count mismatch\n");
+      exit(1);
+    }
   }
   printf("#hNF=%lld sum=%lld %s\n", L.nNF, tNF,
          (tNF == L.nNF) ? "o.k." : "Error");
   if (tNF != L.nNF)
     exit(1);
-  assert(!ferror(F));
+  if (ferror(F)) {
+    fprintf(stderr, "Error: DB_Check file read error\n");
+    exit(1);
+  }
   tNF = 0;
   if (tln != list_num) {
     printf("ERROR: #li=%d != %d\n", list_num, tln);
@@ -989,20 +1117,35 @@ void Check_NF_Order(char *polyi, char *dbi, int cF,
   for (si = 0; si < sl_nNF; si++) {
     unsigned char uc[NUC_Nmax];
     v = fgetc(F);
-    assert(v <= VERT_Nmax);
+    if (v > VERT_Nmax) {
+      fprintf(stderr, "Error: DB_Check vertex count %d out of range\n", v);
+      exit(1);
+    }
     nu = fgetc(F); /* assert(nu<=L.NUCmax); */
     AuxGet_uc(F, &nu, uc);
-    assert(!ferror(F));
+    if (ferror(F)) {
+      fprintf(stderr, "Error: DB_Check sublattice read error\n");
+      exit(1);
+    }
     if ((*uc % 4) == 0)
       tSM++;
     else if ((*uc % 4) < 3)
       tNM++;
     Test_ucNF(&d, &v, &nu, uc, _P);
-    assert(Check_sl_order(&v, &nu, uc));
+    if (!Check_sl_order(&v, &nu, uc)) {
+      fputs("Error: DB_Check sublattice order violation\n", stderr);
+      exit(1);
+    }
   }
   if (sl_NB && (*dbi)) {
     SLpos = FTELL(F);
-    assert(sl_NB == SLpos);
+    if (sl_NB != SLpos) {
+      fprintf(stderr,
+              "Error: DB_Check sublattice byte position mismatch "
+              "sl_NB=%lld SLpos=%lld\n",
+              (long long)sl_NB, (long long)SLpos);
+      exit(1);
+    }
     printf("NB o.k. ");
   }
   printf("sm=%d=%d nm=%d=%lld", sl_SM, tSM, sl_NM, tNM);
@@ -1063,9 +1206,16 @@ void Check_NF_Order(char *polyi, char *dbi, int cF,
         }
       if (*dbi) {
         Hpos = FTELL(F);
-        assert(Hpos == nbsum);
+        if (Hpos != nbsum) {
+          fprintf(stderr,
+                  "Error: DB_Check honest byte position mismatch v=%d\n", v);
+          exit(1);
+        }
       }
-      assert(!ferror(F));
+      if (ferror(F)) {
+        fprintf(stderr, "Error: DB_Check honest file read error v=%d\n", v);
+        exit(1);
+      }
     }
   printf("  sm=%d nm=%lld", tSM, tNM);
   printf("  order o.k.");
@@ -1115,12 +1265,22 @@ void Check_NF_Order(char *polyi, char *dbi, int cF,
         }
       if (*dbi) {
         Hpos = FTELL(F);
-        assert(Hpos == nbsum);
+        if (Hpos != nbsum) {
+          fprintf(stderr,
+                  "Error: DB_Check honest NF byte position mismatch v=%d\n", v);
+          exit(1);
+        }
       }
-      assert(!ferror(F));
+      if (ferror(F)) {
+        fprintf(stderr, "Error: DB_Check honest NF read error v=%d\n", v);
+        exit(1);
+      }
     }
   printf("  NF o.k.\n");
-  assert(!ferror(F));
+  if (ferror(F)) {
+    fprintf(stderr, "Error: DB_Check file error after honest NF pass\n");
+    exit(1);
+  }
   fclose(F);
 }
 
@@ -1215,15 +1375,24 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
         tNF += FIs.NFnum[v][nu];
       }
     }
-    assert(tln == Sli);
-    s = d;
-    assert(tNF == FIs.nNF);
-    assert(!ferror(FS));
-    tNF = 0;
     if (tln != Sli) {
-      printf("ERROR: #li=%d != %d\n", Sli, tln);
+      fprintf(stderr,
+              "Error: Subtract_Aux_from_DB source list count mismatch\n");
       exit(1);
     }
+    s = d;
+    if (tNF != FIs.nNF) {
+      fprintf(stderr,
+              "Error: Subtract_Aux_from_DB source NF total mismatch "
+              "tNF=%lld FIs.nNF=%lld\n",
+              (long long)tNF, (long long)FIs.nNF);
+      exit(1);
+    }
+    if (ferror(FS)) {
+      fprintf(stderr, "Error: Subtract_Aux_from_DB source file read error\n");
+      exit(1);
+    }
+    tNF = 0;
   } else {
     if (NULL == (FS = fopen(polys, "rb"))) {
       printf("Cannot open %s", polys);
@@ -1237,7 +1406,11 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
     HSpos = FTELL(FS);
     FSEEK(FS, 0, SEEK_END);
     Spos = FTELL(FS);
-    assert(HSpos + FIs.NB + SslNB == Spos);
+    if (HSpos + FIs.NB + SslNB != Spos) {
+      fprintf(stderr,
+              "Error: Subtract_Aux_from_DB source file size mismatch\n");
+      exit(1);
+    }
     FSEEK(FS, -SslNB, SEEK_CUR);
   }
   d = fgetc(FI);
@@ -1257,7 +1430,11 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
     fputc(j, FO);
   }
   Read_Bin_Info(FI, &d, &Ili, &IslNF, &IslSM, &IslNM, &IslNB, &FIi);
-  assert(d == s);
+  if (d != s) {
+    fprintf(stderr, "Error: Subtract_Aux_from_DB dimension mismatch %d != %d\n",
+            d, s);
+    exit(1);
+  }
   HIpos = FTELL(FI);
   FSEEK(FI, 0, SEEK_END);
   Ipos = FTELL(FI);
@@ -1268,7 +1445,10 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
          2 * IslNF - IslNM - IslSM, Ipos, s);
   printf("Data on %s:  %lld+%dsl  %lldb  (%dd)\n", db ? dbsub : polys, Snp,
          2 * SslNF - SslNM - SslSM, db ? FIs.NB + SslNB : Spos, d);
-  assert(HIpos + FIi.NB + IslNB == Ipos);
+  if (HIpos + FIi.NB + IslNB != Ipos) {
+    fprintf(stderr, "Error: Subtract_Aux_from_DB input file size mismatch\n");
+    exit(1);
+  }
   FSEEK(FI, -IslNB, SEEK_CUR);
 
   if (db && SslNF) {
@@ -1344,7 +1524,11 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
           HIPli[v][nu] = Opos;
           Opos += nu * FIi.NFnum[v][nu];
         }
-  assert(Opos == HIpos + FIi.NB);
+  if (Opos != HIpos + FIi.NB) {
+    fprintf(stderr,
+            "Error: Subtract_Aux_from_DB honest input offset mismatch\n");
+    exit(1);
+  }
   Opos = HSpos;
   for (v = d + 1; v <= FIs.nVmax; v++)
     if (FIs.nNUC[v]) /* init HSPli */
@@ -1358,8 +1542,10 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
           HSPli[v][nu] = Opos;
           Opos += nu * FIs.NFnum[v][nu];
         }
-  if (!db)
-    assert(Opos == HSpos + FIs.NB);
+  if (!db && (Opos != HSpos + FIs.NB)) {
+    fprintf(stderr, "Error: Subtract_Aux_from_DB source offset mismatch\n");
+    exit(1);
+  }
   dv = 0;
   Init_FInfoList(&FIo);
 
@@ -1380,7 +1566,13 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
                 vxt[3] = v % 10 + '0';
                 vxt[4] = 0;
                 strcpy(Sfx, vxt);
-                assert(!ferror(FS));
+                if (ferror(FS)) {
+                  fprintf(stderr,
+                          "Error: Subtract_Aux_from_DB source file read "
+                          "error v=%d\n",
+                          v);
+                  exit(1);
+                }
                 fclose(FS);
                 if (NULL == (FS = fopen(Sfn, "rb"))) {
                   printf("%s open failed", Sfn);
@@ -1460,7 +1652,13 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
                 vxt[3] = v % 10 + '0';
                 vxt[4] = 0;
                 strcpy(Sfx, vxt);
-                assert(!ferror(FS));
+                if (ferror(FS)) {
+                  fprintf(stderr,
+                          "Error: Subtract_Aux_from_DB source file read "
+                          "error v=%d\n",
+                          v);
+                  exit(1);
+                }
                 fclose(FS);
                 if (NULL == (FS = fopen(Sfn, "rb"))) {
                   printf("%s open failed", Sfn);
@@ -1536,8 +1734,19 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
                 FIo.nSM++;
             }
           }
-          assert(pi - peq == po);
-          assert(O_NF + neq == I_NF); /* checksum(v,nu) */
+          if (pi - peq != po) {
+            fprintf(stderr,
+                    "Error: Subtract_Aux_from_DB checksum mismatch v=%d "
+                    "nu=%d\n",
+                    v, nu);
+            exit(1);
+          }
+          if (O_NF + neq != I_NF) {
+            fprintf(stderr,
+                    "Error: Subtract_Aux_from_DB NF mismatch v=%d nu=%d\n", v,
+                    nu);
+            exit(1);
+          } /* checksum(v,nu) */
           FIo.NFnum[v][nu] = O_NF;
           FIo.nNF += O_NF;
           FIo.NB += O_NF * nu;
@@ -1568,7 +1777,13 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
               vxt[3] = v % 10 + '0';
               vxt[4] = 0;
               strcpy(Sfx, vxt);
-              assert(!ferror(FS));
+              if (ferror(FS)) {
+                fprintf(stderr,
+                        "Error: Subtract_Aux_from_DB source file read "
+                        "error v=%d\n",
+                        v);
+                exit(1);
+              }
               fclose(FS);
               if (NULL == (FS = fopen(Sfn, "rb"))) {
                 printf("%s open failed", Sfn);
@@ -1592,7 +1807,13 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
                   break;
                 }
                 if ((uc[0] != v) || (uc[1] != nu)) {
-                  assert((uc[0] > v) || ((uc[0] == v) && (uc[1] > nu)));
+                  if ((uc[0] < v) || ((uc[0] == v) && (uc[1] < nu))) {
+                    fprintf(stderr,
+                            "Error: Subtract_Aux_from_DB SL order violation "
+                            "v=%d nu=%d\n",
+                            v, nu);
+                    exit(1);
+                  }
                   break;
                 }
               }
@@ -1622,7 +1843,13 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
                   }
                   uc = &(ucSL[SLp[i]]);
                   if ((uc[0] != v) || (uc[1] != nu)) {
-                    assert((uc[0] > v) || ((uc[0] == v) && (uc[1] > nu)));
+                    if ((uc[0] < v) || ((uc[0] == v) && (uc[1] < nu))) {
+                      fprintf(stderr,
+                              "Error: Subtract_Aux_from_DB SL order violation "
+                              "v=%d nu=%d\n",
+                              v, nu);
+                      exit(1);
+                    }
                     break;
                   }
                   break;
@@ -1640,9 +1867,18 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
                 }
               } /* else (SL>H): hence next H */
             }
-            assert(!ferror(FS));
-          } else
-            assert((uc[0] > v) || ((uc[0] == v) && (uc[1] > nu)));
+            if (ferror(FS)) {
+              fprintf(stderr,
+                      "Error: Subtract_Aux_from_DB source file read error\n");
+              exit(1);
+            }
+          } else if ((uc[0] < v) || ((uc[0] == v) && (uc[1] < nu))) {
+            fprintf(stderr,
+                    "Error: Subtract_Aux_from_DB SL list order violation "
+                    "v=%d nu=%d\n",
+                    v, nu);
+            exit(1);
+          }
           if (sl_done)
             break;
         }
@@ -1654,15 +1890,28 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
     nu = uc[-1];
     tnb += nu + 2;
     /* printf("#%d:  SLp=%d  v=%d  nu=%d\n",i,SLp[i],v,nu); */
-    assert(uc[-2] < VERT_Nmax);
+    if (uc[-2] >= VERT_Nmax) {
+      fprintf(stderr,
+              "Error: Subtract_Aux_from_DB vertex count %d out of range\n",
+              uc[-2]);
+      exit(1);
+    }
     fputc(uc[-2], FO);
     slNP += 1 + (((*uc) % 4) == 3);
     fputc(nu, FO);
     for (s = 0; s < nu; s++)
       fputc(uc[s], FO);
   }
-  assert(tnb == slNB);
-  assert(slNP == 2 * slNF - slNM - slSM);
+  if (tnb != slNB) {
+    fprintf(stderr,
+            "Error: Subtract_Aux_from_DB sublattice byte count mismatch\n");
+    exit(1);
+  }
+  if (slNP != 2 * slNF - slNM - slSM) {
+    fprintf(stderr,
+            "Error: Subtract_Aux_from_DB sublattice NP count mismatch\n");
+    exit(1);
+  }
   printf("\nd=%d v%d v<=%d n<=%d vn%d  %lld %d %lld %lld  %d %d %d %d\n", d,
          FIo.nV, FIo.nVmax, FIo.NUCmax, Oli, FIo.nNF, FIo.nSM, FIo.nNM, FIo.NB,
          slNF, slSM, slNM, slNB);
@@ -1700,12 +1949,24 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
   }	*/
   Print_Expect(&FIo);
   puts("");
-  assert(ferror(FI) == 0);
+  if (ferror(FI)) {
+    fprintf(stderr, "Error: Subtract_Aux_from_DB input file read error\n");
+    exit(1);
+  }
   fclose(FI);
-  assert(ferror(FS) == 0);
+  if (ferror(FS)) {
+    fprintf(stderr, "Error: Subtract_Aux_from_DB source file read error\n");
+    exit(1);
+  }
   fclose(FS);
-  assert(HOpos == FTELL(FO));
-  assert(ferror(FO) == 0);
+  if (HOpos != FTELL(FO)) {
+    fprintf(stderr, "Error: Subtract_Aux_from_DB output position mismatch\n");
+    exit(1);
+  }
+  if (ferror(FO)) {
+    fprintf(stderr, "Error: Subtract_Aux_from_DB output file write error\n");
+    exit(1);
+  }
   fclose(FO);
 }
 void Bin2a(char *polyi, int max, PolyPointList *_P) {
@@ -1726,7 +1987,10 @@ void Bin2a(char *polyi, int max, PolyPointList *_P) {
     exit(1);
   }
   d = fgetc(F);
-  assert(d == 0); /* for(i=0;i<d;i++) fgetc(F); */
+  if (d != 0) { /* for(i=0;i<d;i++) fgetc(F); */
+    fprintf(stderr, "Error: Bin2a recursion depth %d must be 0\n", d);
+    exit(1);
+  }
   d = fgetc(F);
   L.nV = fgetc(F);
   L.nVmax = fgetc(F);
@@ -1750,9 +2014,16 @@ void Bin2a(char *polyi, int max, PolyPointList *_P) {
       tNB += L.NFnum[v][nu] * (Along)nu;
     }
   }
-  assert(0 == (unsigned int)(tNB - L.NB));
+  if ((unsigned int)(tNB - L.NB) != 0) {
+    fputs("Error: Bin2a byte count mismatch\n", stderr);
+    exit(1);
+  }
   L.NB = tNB;
-  assert(tNF == L.nNF);
+  if (tNF != L.nNF) {
+    fprintf(stderr, "Error: Bin2a NF total mismatch tNF=%lld L.nNF=%lld\n",
+            (long long)tNF, (long long)L.nNF);
+    exit(1);
+  }
 
   for (v = d + 1; v <= L.nVmax; v++)
     if (L.nNUC[v]) /* write  honest polys */
@@ -1769,7 +2040,12 @@ void Bin2a(char *polyi, int max, PolyPointList *_P) {
           for (I = 0; I < v; I++)
             for (J = 0; J < d; J++)
               _P->x[I][J] = NF[J][I];
-          assert(Ref_Check(_P, &V, &E));
+          if (!Ref_Check(_P, &V, &E)) {
+            fprintf(stderr,
+                    "Error: Bin2a stored polytope not reflexive v=%d nu=%d\n",
+                    v, nu);
+            exit(1);
+          }
 
           if (MS != 2) /* if(MS!=2) print NF */
             if (!max || Poly_Max_check(_P, &V, &E)) {
@@ -1807,7 +2083,11 @@ void DB_fromVF_toVT(DataBase *DB, int vf, int vt) {
   }
   while (0 == DB->nNUC[vt]) {
     vt--;
-    assert(vf <= vt);
+    if (vf > vt) {
+      fprintf(stderr, "Error: DB_fromVF_toVT range collapsed %d > %d\n", vf,
+              vt);
+      exit(1);
+    }
   }
   DB->v = vf;
   DB->nVmax = vt;
@@ -1858,10 +2138,16 @@ void Bin2aDBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P) {
     int I, J;
     unsigned char uc[NUC_Nmax];
     v = fgetc(F);
-    assert(v <= VERT_Nmax);
+    if (v > VERT_Nmax) {
+      fprintf(stderr, "Error: Bin2aDBsl vertex count %d out of range\n", v);
+      exit(1);
+    }
     nu = fgetc(F);
     AuxGet_uc(F, &nu, uc);
-    assert(!ferror(F));
+    if (ferror(F)) {
+      fprintf(stderr, "Error: Bin2aDBsl sublattice read error\n");
+      exit(1);
+    }
     if ((*uc % 4) == 0)
       tSM++;
     else if ((*uc % 4) < 3)
@@ -1875,7 +2161,12 @@ void Bin2aDBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P) {
     for (I = 0; I < v; I++)
       for (J = 0; J < d; J++)
         _P->x[I][J] = NF[J][I];
-    assert(Ref_Check(_P, &V, &E));
+    if (!Ref_Check(_P, &V, &E)) {
+      fprintf(stderr,
+              "Error: Bin2aDBsl sublattice polytope not reflexive v=%d nu=%d\n",
+              v, nu);
+      exit(1);
+    }
     if (MS != 2) /* if(MS!=2) print NF */
       if (!max || Poly_Max_check(_P, &V, &E)) {
         mc++;
@@ -1964,10 +2255,16 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto,
 
   /* read the info-file: */
   DB.Finfo = fopen(dbname.data(), "r");
-  assert(DB.Finfo != NULL);
-  fscanf(DB.Finfo, "%d  %d %d %d  %d  %lld %d %lld %lld  %d %d %d %d", &d,
-         &DB.nV, &DB.nVmax, &DB.NUCmax, &list_num, &DB.nNF, &DB.nSM, &DB.nNM,
-         &DB.NB, &sl_nNF, &sl_SM, &sl_NM, &sl_NB);
+  if (DB.Finfo == NULL) {
+    fprintf(stderr, "Error: CY_hodge_split cannot open %s\n", dbname.data());
+    exit(1);
+  }
+  if (fscanf(DB.Finfo, "%d  %d %d %d  %d  %lld %d %lld %lld  %d %d %d %d", &d,
+             &DB.nV, &DB.nVmax, &DB.NUCmax, &list_num, &DB.nNF, &DB.nSM,
+             &DB.nNM, &DB.NB, &sl_nNF, &sl_SM, &sl_NM, &sl_NB) != 13) {
+    fputs("Error: CY_hodge_split malformed info file\n", stderr);
+    exit(1);
+  }
   printf("%lldp (%dsl) %lldnf %lldb\n",
          2 * (DB.nNF) - DB.nSM - DB.nNM + 2 * sl_nNF - sl_SM - sl_NM,
          2 * sl_nNF - sl_SM - sl_NM, DB.nNF + sl_nNF, DB.NB + sl_NB);
@@ -2015,7 +2312,11 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto,
       fflush(0);
       strcpy(fx, ext);
       DB.Fv[v] = fopen(dbname.data(), "rb");
-      assert(DB.Fv[v] != NULL);
+      if (DB.Fv[v] == NULL) {
+        fprintf(stderr, "Error: CY_hodge_split cannot open %s\n",
+                dbname.data());
+        exit(1);
+      }
       for (nu = 0; nu <= DB.NUCmax; nu++)
         for (i = 0; i < DB.NFnum[v][nu]; i++) {
           int mirror = 0;
@@ -2024,8 +2325,20 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto,
           for (j = 0; j < nu; j++)
             uc_poly[j] = fgetc(DB.Fv[v]);
           uc_nf_to_P(_P, &MS, &d, &v, &nu, uc_poly);
-          assert(Ref_Check(_P, &V, &E));
-          assert(V.nv == v);
+          if (!Ref_Check(_P, &V, &E)) {
+            fprintf(stderr,
+                    "Error: CY_hodge_split stored polytope not reflexive "
+                    "v=%d nu=%d\n",
+                    v, nu);
+            exit(1);
+          }
+          if (V.nv != v) {
+            fprintf(stderr,
+                    "Error: CY_hodge_split vertex count mismatch V.nv=%d "
+                    "v=%d\n",
+                    V.nv, v);
+            exit(1);
+          }
           Make_VEPM(_P, &V, &E, VPM);
           Complete_Poly(VPM, &E, V.nv, _P);
           Make_Dual_Poly(_P, &V, &E, _PD.get());
@@ -2125,7 +2438,10 @@ void Sort_Hodge(char *dbaux, char *dbout) {
 
   /* read the info-file: */
   Fvinfo = fopen(dbaname.data(), "r");
-  assert(Fvinfo != NULL);
+  if (Fvinfo == NULL) {
+    fprintf(stderr, "Error: Sort_Hodge_files cannot open %s\n", dbaname.data());
+    exit(1);
+  }
   while ((fscanf(Fvinfo, "%d", &v)) != EOF) {
     fscanf(Fvinfo, "%d  %d", &nd, &(nnf_v[v]));
     /* printf("%d %d %d  ", v, nd, nnf_v[v]  ); fflush(0); */
@@ -2146,7 +2462,11 @@ void Sort_Hodge(char *dbaux, char *dbout) {
   Tstart = time(NULL);
 
   Fhinfo = fopen(dbhname.data(), "w");
-  assert(Fhinfo != NULL);
+  if (Fhinfo == NULL) {
+    fprintf(stderr, "Error: Sort_Hodge_files cannot create %s\n",
+            dbhname.data());
+    exit(1);
+  }
 
   /* Sort the Hodge&Poly-Data */
   for (dh = 0; dh <= Hod_Dif_max; dh++)
@@ -2271,7 +2591,10 @@ void Test_Hodge_db(char *dbname) {
 
   /* read the info-file: */
   Fhinfo = fopen(filename.data(), "r");
-  assert(Fhinfo != NULL);
+  if (Fhinfo == NULL) {
+    fprintf(stderr, "Error: Test_Hodge_db cannot open %s\n", filename.data());
+    exit(1);
+  }
   while ((fscanf(Fhinfo, "%d", &dh)) != EOF) {
     fscanf(Fhinfo, "%d  %d", &nh, &(nnf_d[dh]));
     nnf_sum = 0;
@@ -2319,7 +2642,11 @@ void Test_Hodge_db(char *dbname) {
           hext[7] = '0' + h12 % 10;
           strcpy(fhx, hext);
           Fh = fopen(filename.data(), "rb");
-          assert(Fh != 0);
+          if (Fh == NULL) {
+            fprintf(stderr, "Error: Test_Hodge_db cannot open %s\n",
+                    filename.data());
+            exit(1);
+          }
           while ((c1 = fgetc(Fh)) != EOF) {
             nnf_sum++;
             /* c2= */ fgetc(Fh);
@@ -2483,7 +2810,11 @@ void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P) {
 
   /* read the info-file: */
   Fhinfo = fopen(filename.data(), "r");
-  assert(Fhinfo != NULL);
+  if (Fhinfo == NULL) {
+    fprintf(stderr, "Error: Extract_from_Hodge_db cannot open %s\n",
+            filename.data());
+    exit(1);
+  }
   while ((fscanf(Fhinfo, "%d", &dh)) != EOF) {
     fscanf(Fhinfo, "%d  %d", &nh, &(nnf_d[dh]));
     nnf_sum = 0;
@@ -2541,7 +2872,11 @@ void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P) {
         hext[7] = '0' + h12 % 10;
         strcpy(fhx, hext);
         Fh = fopen(filename.data(), "rb");
-        assert(Fh != 0);
+        if (Fh == NULL) {
+          fprintf(stderr, "Error: Extract_from_Hodge_db cannot open %s\n",
+                  filename.data());
+          exit(1);
+        }
         while ((c1 = fgetc(Fh)) != EOF) {
           mv = c1 / 4;
           if (mv > max_mv)
@@ -2632,7 +2967,10 @@ void Test_Hodge_file(char *filename, PolyPointList *_P) {
   unsigned char uc_poly[NUC_Nmax];
 
   int nuc, mirror, nv, np, mv, mp, j, c1, c2, d = 4, MS;
-  assert(Ft != 0);
+  if (Ft == NULL) {
+    fprintf(stderr, "Error: Test_Hodge_file cannot open %s\n", filename);
+    exit(1);
+  }
   while ((c1 = fgetc(Ft)) != EOF) {
     c2 = fgetc(Ft);
     mv = c1 / 4;
@@ -2666,7 +3004,10 @@ void Open_DB(char *dbin, DataBase **_DB, int info) {
     return;
   }
   DB = new DataBase();
-  assert(DB != NULL);
+  if (DB == NULL) {
+    fputs("Error: Open_DB allocation failed\n", stderr);
+    exit(1);
+  }
   *_DB = DB;
   strcpy(dbname.data(), dbin);
   strcat(dbname.data(), ".info");
@@ -2676,10 +3017,17 @@ void Open_DB(char *dbin, DataBase **_DB, int info) {
     fflush(0);
   }
   DB->Finfo = fopen(dbname.data(), "r");
-  assert(DB->Finfo != NULL);
-  fscanf(DB->Finfo, "%d  %d %d %d  %d  %lld %d %lld %lld  %d %d %d %d", &DB->d,
-         &DB->nV, &DB->nVmax, &DB->NUCmax, &DB->list_num, &DB->nNF, &DB->nSM,
-         &DB->nNM, &DB->NB, &DB->sl_nNF, &DB->sl_SM, &DB->sl_NM, &DB->sl_NB);
+  if (DB->Finfo == NULL) {
+    fprintf(stderr, "Error: Open_DB cannot open %s\n", dbname.data());
+    exit(1);
+  }
+  if (fscanf(DB->Finfo, "%d  %d %d %d  %d  %lld %d %lld %lld  %d %d %d %d",
+             &DB->d, &DB->nV, &DB->nVmax, &DB->NUCmax, &DB->list_num, &DB->nNF,
+             &DB->nSM, &DB->nNM, &DB->NB, &DB->sl_nNF, &DB->sl_SM, &DB->sl_NM,
+             &DB->sl_NB) != 13) {
+    fputs("Error: Open_DB malformed info file\n", stderr);
+    exit(1);
+  }
   if (info)
     printf("%lldp (%dsl) %lldnf %lldb\n",
            2 * (DB->nNF) - DB->nSM - DB->nNM + 2 * DB->sl_nNF - DB->sl_SM -
@@ -2713,7 +3061,10 @@ void Open_DB(char *dbin, DataBase **_DB, int info) {
       ext[2] = '0' + v % 10;
       strcpy(fx, ext);
       DB->Fv[v] = fopen(dbname.data(), "rb");
-      assert(DB->Fv[v] != NULL);
+      if (DB->Fv[v] == NULL) {
+        fprintf(stderr, "Error: Open_DB cannot open %s\n", dbname.data());
+        exit(1);
+      }
       if (0 == DB->v) {
         DB->v = v;
         while (0 == DB->NFnum[v][DB->nu])
@@ -2739,9 +3090,15 @@ int Read_H_ucNF_from_DB(DataBase *DB, unsigned char *uc) /* p=next read pos */
 {
   static Along totNF;
   int rest;
-  assert(DB != NULL);
+  if (DB == NULL) {
+    fputs("Error: Read_H_ucNF_from_DB called with NULL database\n", stderr);
+    exit(1);
+  }
   rest = DB->NFnum[DB->v][DB->nu] - DB->p;
-  assert(0 <= rest);
+  if (rest < 0) {
+    fprintf(stderr, "Error: Read_H_ucNF_from_DB negative rest %d\n", rest);
+    exit(1);
+  }
   if (rest == 0) /* search next v/nu */
   {
     int v = DB->v, nu = DB->nu; /* search nu(v): */
@@ -2752,13 +3109,23 @@ int Read_H_ucNF_from_DB(DataBase *DB, unsigned char *uc) /* p=next read pos */
     {
       if (DB->v < DB->nVmax) {
         while (0 == DB->nNUC[++DB->v])
-          assert(DB->v < DB->nVmax);
+          if (DB->v >= DB->nVmax) {
+            fprintf(stderr,
+                    "Error: Read_H_ucNF_from_DB exhausted vertex range\n");
+            exit(1);
+          }
         DB->nu = 0;
         while (DB->nu < DB->NUCmax)
           if (DB->NFnum[DB->v][++(DB->nu)])
             break;
       } else {
-        assert(totNF == DB->nNF);
+        if (totNF != DB->nNF) {
+          fprintf(stderr,
+                  "Error: Read_H_ucNF_from_DB total NF mismatch "
+                  "totNF=%lld DB->nNF=%lld\n",
+                  (long long)totNF, (long long)DB->nNF);
+          exit(1);
+        }
         return 0;
       }
     }
@@ -2767,9 +3134,23 @@ int Read_H_ucNF_from_DB(DataBase *DB, unsigned char *uc) /* p=next read pos */
       DB->p = 0;
     }
   }
-  assert(DB->p <= DB->NFnum[DB->v][DB->nu]);
-  assert(rest);
-  assert(totNF < DB->nNF);
+  if (DB->p > DB->NFnum[DB->v][DB->nu]) {
+    fprintf(stderr,
+            "Error: Read_H_ucNF_from_DB position exceeds NFnum v=%d nu=%d\n",
+            DB->v, DB->nu);
+    exit(1);
+  }
+  if (rest == 0) {
+    fputs("Error: Read_H_ucNF_from_DB zero rest\n", stderr);
+    exit(1);
+  }
+  if (totNF >= DB->nNF) {
+    fprintf(
+        stderr,
+        "Error: Read_H_ucNF_from_DB totNF %lld not less than DB->nNF %lld\n",
+        (long long)totNF, (long long)DB->nNF);
+    exit(1);
+  }
   AuxGet_uc(DB->Fv[DB->v], &DB->nu, uc);
   ++DB->p;
   totNF++;
@@ -2808,7 +3189,13 @@ int Read_H_poly_from_DB(DataBase *DB, PolyPointList *P) {
   MS %= 4;
   DB->last_ms3 = (MS == 3);
   if (MS == 2) {
-    assert(Ref_Check(P, &V, &E));
+    if (!Ref_Check(P, &V, &E)) {
+      fprintf(stderr,
+              "Error: Read_H_poly_from_DB stored polytope not reflexive "
+              "v=%d nu=%d\n",
+              DB->v, DB->nu);
+      exit(1);
+    }
     P->np = E.ne;
     for (i = 0; i < P->np; i++)
       for (j = 0; j < P->n; j++)
@@ -2936,7 +3323,11 @@ void Aux_Print_SLpoly(int *I, int *d, int *N, Long *X[POLY_Dmax],
 void Aux_Make_Dual(PolyPointList *P, VertexNumList *V, EqList *E) {
   Long VM[VERT_Nmax][POLY_Dmax];
   int i, j, d = P->n, e = E->ne, v = V->nv;
-  assert(e <= VERT_Nmax);
+  if (e > VERT_Nmax) {
+    fprintf(stderr,
+            "Error: Aux_Make_Dual equation count %d exceeds VERT_Nmax\n", e);
+    exit(1);
+  }
   P->np = V->nv = e;
   E->ne = v;
   for (i = 0; i < v; i++)
@@ -2952,7 +3343,10 @@ void Aux_Make_Dual(PolyPointList *P, VertexNumList *V, EqList *E) {
       E->e[i].a[j] = VM[i][j];
     E->e[i].c = 1;
   }
-  assert(Ref_Check(P, V, E));
+  if (!Ref_Check(P, V, E)) {
+    fputs("Error: Aux_Make_Dual result not reflexive\n", stderr);
+    exit(1);
+  }
 }
 void PrintVPHMusage(void);
 int Make_Lattice_Basis(int d, int p, Long *P[POLY_Dmax], /* index=det(D) */
@@ -2974,9 +3368,18 @@ void PH_Sublat_Polys(char *dbin, int omitFIP, PolyPointList *_P, char sF) {
   while (Read_H_poly_from_DB_or_inFILE(DB, _P)) {
     Long D[POLY_Dmax], G[POLY_Dmax][POLY_Dmax], PM[VERT_Nmax][VERT_Nmax];
     int index, N = 0; /* if(!Ref_Check(_P,&V,&E)) Print_PPL(_P,""); */
-    if (B)
-      assert(_P->n == 4); /* b:Brower group only for CY hypersurface d=4 */
-    assert(Ref_Check(_P, &V, &E));
+    if (B && (_P->n != 4)) {
+      fprintf(stderr,
+              "Error: PH_Sublat_Polys Brower group requires d=4, got d=%d\n",
+              _P->n);
+      exit(1);
+    }
+    if (!Ref_Check(_P, &V, &E)) {
+      fprintf(stderr,
+              "Error: PH_Sublat_Polys input polytope not reflexive d=%d\n",
+              _P->n);
+      exit(1);
+    }
     /* Aux_Make_Dual(_P,&V,&E); */ /* don't dualize: take M-lattice poly */
     Make_VEPM(_P, &V, &E, PM);
     _P->np = V.nv;
@@ -2996,7 +3399,13 @@ void PH_Sublat_Polys(char *dbin, int omitFIP, PolyPointList *_P, char sF) {
         if (z > omitFIP)
           RelPts[N++] = _P->x[p];
       }
-      assert(V.nv <= N);     /* count <E,.>=0; if(n>1) add_to_RelPts; */
+      if (V.nv > N) {
+        fprintf(stderr,
+                "Error: PH_Sublat_Polys relevant point count N=%d less than "
+                "vertices %d\n",
+                N, V.nv);
+        exit(1);
+      } /* count <E,.>=0; if(n>1) add_to_RelPts; */
     } else if (omitFIP == 3) /* Omit all non-vertices */
     {
       for (N = 0; N < V.nv; N++)
@@ -3017,10 +3426,19 @@ void PH_Sublat_Polys(char *dbin, int omitFIP, PolyPointList *_P, char sF) {
       if (omitFIP == 3)
         if (D[1] == 1)
           continue;
-      assert(index > 0);
+      if (index <= 0) {
+        fprintf(stderr,
+                "Error: PH_Sublat_Polys non-positive sublattice index %d\n",
+                index);
+        exit(1);
+      }
       if (index <= I)
         continue;
-      assert(Ref_Check(_P, &V, &E));
+      if (!Ref_Check(_P, &V, &E)) {
+        fprintf(stderr,
+                "Error: PH_Sublat_Polys cover polytope not reflexive\n");
+        exit(1);
+      }
       Aux_Print_CoverPoly(&index, &_P->n, &N, RelPts, G, D, &x, Z, M, r);
     } else {
       index = Make_Lattice_Basis(_P->n, N, RelPts, G, D);
@@ -3032,8 +3450,17 @@ void PH_Sublat_Polys(char *dbin, int omitFIP, PolyPointList *_P, char sF) {
       if (omitFIP == 3)
         if (D[1] == 1)
           continue;
-      assert(index > 0);
-      assert(Ref_Check(_P, &V, &E));
+      if (index <= 0) {
+        fprintf(stderr,
+                "Error: PH_Sublat_Polys non-positive lattice index %d\n",
+                index);
+        exit(1);
+      }
+      if (!Ref_Check(_P, &V, &E)) {
+        fprintf(stderr,
+                "Error: PH_Sublat_Polys sublattice polytope not reflexive\n");
+        exit(1);
+      }
       Print_VL(_P, &V, "");
       Aux_Print_SLpoly(&index, &_P->n, &N, RelPts, G, D, &x);
     }
@@ -3069,14 +3496,22 @@ void V_Sublat_Polys(char mr, char *dbin, char *polyi, char *polyo,
   while (Read_H_poly_from_DB_or_inFILE(DB, _P)) {
     Long D[POLY_Dmax], G[POLY_Dmax][POLY_Dmax];
     int index, N;
-    assert(Ref_Check(_P, &V, &E));
+    if (!Ref_Check(_P, &V, &E)) {
+      fprintf(stderr,
+              "Error: V_Sublat_Polys input polytope not reflexive d=%d\n",
+              _P->n);
+      exit(1);
+    }
     for (N = 0; N < V.nv; N++)
       RelPts[N] = _P->x[V.v[N]];
     ++x;
     index = Make_Lattice_Basis(_P->n, N, RelPts, G, D);
     if (1 == index)
       continue;
-    assert(index > 0);
+    if (index <= 0) {
+      fprintf(stderr, "Error: V_Sublat_Polys non-positive index %d\n", index);
+      exit(1);
+    }
     if (index > max_order)
       max_order = index;
 
@@ -3090,7 +3525,13 @@ void V_Sublat_Polys(char mr, char *dbin, char *polyi, char *polyo,
           U[i][j] = 0;
           for (k = 0; k < _P->n; k++)
             U[i][j] += G[i][k] * RelPts[j][k];
-          assert(0 == (U[i][j] % D[i]));
+          if ((D[i] != 0) && (U[i][j] % D[i] != 0)) {
+            fprintf(stderr,
+                    "Error: V_Sublat_Polys lattice vector not divisible by "
+                    "D[%d]=%ld\n",
+                    i, (long)D[i]);
+            exit(1);
+          }
           U[i][j] /= D[i];
         }
       }
@@ -3167,7 +3608,10 @@ void Bin_2_ANF(char *polyi, int max, PolyPointList *_P) {
     exit(1);
   }
   d = fgetc(F);
-  assert(d == 0); /* for(i=0;i<d;i++) fgetc(F); */
+  if (d != 0) { /* for(i=0;i<d;i++) fgetc(F); */
+    fprintf(stderr, "Error: Bin_2_ANF recursion depth %d must be 0\n", d);
+    exit(1);
+  }
   d = fgetc(F);
   L.nV = fgetc(F);
   L.nVmax = fgetc(F);
@@ -3191,9 +3635,16 @@ void Bin_2_ANF(char *polyi, int max, PolyPointList *_P) {
       tNB += L.NFnum[v][nu] * (Along)nu;
     }
   }
-  assert(0 == (unsigned int)(tNB - L.NB));
+  if ((unsigned int)(tNB - L.NB) != 0) {
+    fputs("Error: Bin_2_ANF byte count mismatch\n", stderr);
+    exit(1);
+  }
   L.NB = tNB;
-  assert(tNF == L.nNF);
+  if (tNF != L.nNF) {
+    fprintf(stderr, "Error: Bin_2_ANF NF total mismatch tNF=%lld L.nNF=%lld\n",
+            (long long)tNF, (long long)L.nNF);
+    exit(1);
+  }
 
   for (v = d + 1; v <= L.nVmax; v++)
     if (L.nNUC[v]) /* write  honest polys */
@@ -3210,7 +3661,11 @@ void Bin_2_ANF(char *polyi, int max, PolyPointList *_P) {
           for (I = 0; I < v; I++)
             for (J = 0; J < d; J++)
               _P->x[I][J] = NF[J][I];
-          /* assert(Ref_Check(_P,&V,&E)); */ assert(MS == 1);
+          /* assert(Ref_Check(_P,&V,&E)); */
+          if (MS != 1) {
+            fprintf(stderr, "Error: Bin_2_ANF MS=%d, expected 1\n", MS);
+            exit(1);
+          }
 
           if (MS != 2) /* if(MS!=2) print NF */
             if (!max || Poly_Max_check(_P, &V, &E)) {
@@ -3290,10 +3745,17 @@ void Bin_2_ANF_DBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P) {
     int I, J;
     unsigned char uc[NUC_Nmax];
     v = fgetc(F);
-    assert(v <= VERT_Nmax);
+    if (v > VERT_Nmax) {
+      fprintf(stderr, "Error: Bin_2_ANF_DBsl vertex count %d out of range\n",
+              v);
+      exit(1);
+    }
     nu = fgetc(F);
     AuxGet_uc(F, &nu, uc);
-    assert(!ferror(F));
+    if (ferror(F)) {
+      fprintf(stderr, "Error: Bin_2_ANF_DBsl sublattice read error\n");
+      exit(1);
+    }
     if ((*uc % 4) == 0)
       tSM++;
     else if ((*uc % 4) < 3)
