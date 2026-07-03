@@ -296,7 +296,13 @@ int main(int narg, char *fn[]) {
       Sort_VL(_V);
       Sort_PPL(_P, _V);
       /*Print_PPL(_P,"nachher");*/
-      assert(nv == _V->nv && ne == _E->ne);
+      if ((nv != _V->nv) || (ne != _E->ne)) {
+        fprintf(stderr,
+                "Error: nef main vertex/equation count mismatch nv=%d/%d "
+                "ne=%d/%d\n",
+                nv, _V->nv, ne, _E->ne);
+        exit(1);
+      }
       if (!F.VP) {
         if constexpr (write_cws) {
           OUT_CWS(&CW, D, &F.Msum);
@@ -320,8 +326,15 @@ int main(int narg, char *fn[]) {
     }
   }
   if (F.VP) {
-    assert(VPmax < POINT_Nmax);
-    assert(VPmax >= VPmin);
+    if (VPmax >= POINT_Nmax) {
+      fprintf(stderr, "Error: nef VPmax=%d exceeds POINT_Nmax=%d\n", VPmax,
+              POINT_Nmax);
+      exit(1);
+    }
+    if (VPmax < VPmin) {
+      fprintf(stderr, "Error: nef VPmax=%d less than VPmin=%d\n", VPmax, VPmin);
+      exit(1);
+    }
     Print_Pstat(_PS, N, VPmax, VPmin);
   }
   return 0;
@@ -432,7 +445,11 @@ void Mink_WPCICY(AmbiPointList *_AP_1, AmbiPointList *_AP_2,
       if (Num >= 0) {
         num = Make_Bi_section(&B, _c_num.data(), &n, _x.data());
         if (num >= 0) {
-          assert((n + N) < P_max);
+          if ((n + N) >= P_max) {
+            fputs("Error: Mink_WPCICY combined point count exceeds P_max\n",
+                  stderr);
+            exit(1);
+          }
           for (l = 0; l < _AP_1->N; l++)
             B.L[(n + N)].x[l] = _x[l];
           for (m = n; m > num; m--) {
@@ -445,7 +462,11 @@ void Mink_WPCICY(AmbiPointList *_AP_1, AmbiPointList *_AP_2,
         }
       }
     }
-  assert((n + N) <= POINT_Nmax);
+  if ((n + N) > POINT_Nmax) {
+    fputs("Error: Mink_WPCICY combined point count exceeds POINT_Nmax\n",
+          stderr);
+    exit(1);
+  }
   B.np = n + N;
   _AP->np = B.np;
   _AP->N = _AP_1->N;
@@ -465,11 +486,21 @@ void Make_Poly_WPCICY(Weight *_W, int *_D, PolyPointList *_PP) {
 
   _W->d = _D[0];
   WeightMakePoints(_W, _AP_1.get());
-  assert(POINT_Nmax >= _AP_1->np);
+  if (POINT_Nmax < _AP_1->np) {
+    fputs(
+        "Error: Make_Poly_WPCICY first weight point count exceeds POINT_Nmax\n",
+        stderr);
+    exit(1);
+  }
 
   _W->d = _D[1];
   WeightMakePoints(_W, _AP_2.get());
-  assert(POINT_Nmax >= _AP_2->np);
+  if (POINT_Nmax < _AP_2->np) {
+    fputs("Error: Make_Poly_WPCICY second weight point count exceeds "
+          "POINT_Nmax\n",
+          stderr);
+    exit(1);
+  }
 
   _W->d += _D[0];
 
@@ -509,7 +540,10 @@ int Read_WPCICY(Weight *_W, int *_D)
   sum = nl;
 
   for (_W->N = 0; _W->N < W_Nmax; sum -= nl) {
-    assert(_W->N < W_Nmax);
+    if (_W->N >= W_Nmax) {
+      fputs("Error: Read_WPCICY weight count exceeds W_Nmax\n", stderr);
+      exit(1);
+    }
     while (' ' == (c = fgetc(inFILE)))
       ;
     ungetc(c, inFILE);
@@ -538,7 +572,12 @@ int Read_WPCICY(Weight *_W, int *_D)
     exit(1);
   }
 
-  assert((_D[0] + _D[1]) == _W->d);
+  if ((_D[0] + _D[1]) != _W->d) {
+    fprintf(stderr,
+            "Error: Read_WPCICY degree split %d + %d != total degree %d\n",
+            _D[0], _D[1], _W->d);
+    exit(1);
+  }
 
   if (_W->N < 2) {
     puts("I need at least 2 weights!");

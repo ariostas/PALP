@@ -277,7 +277,11 @@ void PRINT_GORE(PolyPointList *_P, int codim, int n, const char *comment) {
     _P_AUX->x[_P_AUX->np][j] = 0;
   _P_AUX->np++;
   /* Print_PPL(_P_AUX,"Ref_Check input"); */
-  assert(Ref_Check(_P_AUX.get(), _V_AUX, _E_AUX));
+  if (!Ref_Check(_P_AUX.get(), _V_AUX, _E_AUX)) {
+    fputs("Error: PRINT_Dual_Fibration auxiliary polytope not reflexive\n",
+          stderr);
+    exit(1);
+  }
   /* Find_Equations(_P_AUX, _V_AUX, _E_AUX);  ...  redundant */
   if (n == 0) {
     Sort_PPL(_P_AUX.get(), _V_AUX);
@@ -370,7 +374,10 @@ void PRINT_Fibrations(VertexNumList *_V, PolyPointList *_P, Flags *_F
     }
     _P_AUX->np = c;
     _P_AUX->n = dim[n];
-    assert(Ref_Check(_P_AUX.get(), _V_AUX, _E_AUX));
+    if (!Ref_Check(_P_AUX.get(), _V_AUX, _E_AUX)) {
+      fputs("Error: PRINT_Fibrations fiber polytope not reflexive\n", stderr);
+      exit(1);
+    }
     for (i = 0; i < (_P->np - 1); i++)
       C[i] = '_';
     for (i = 0; i < c; i++)
@@ -382,7 +389,11 @@ void PRINT_Fibrations(VertexNumList *_V, PolyPointList *_P, Flags *_F
     nv = _V_AUX->nv;
     np = (_P_AUX->np + 1);
     EL_to_PPL(_E_AUX, _P_AUX.get(), &dim[n]);
-    assert(Ref_Check(_P_AUX.get(), _V_AUX, _E_AUX));
+    if (!Ref_Check(_P_AUX.get(), _V_AUX, _E_AUX)) {
+      fputs("Error: PRINT_Fibrations dual fiber polytope not reflexive\n",
+            stderr);
+      exit(1);
+    }
     {
       Long X[VERT_Nmax][VERT_Nmax];
       Make_VEPM(_P_AUX.get(), _V_AUX, _E_AUX, X);
@@ -447,7 +458,10 @@ void Print_L(LInfo *_L, int p, int v) {
 
   N = (v ? _L->nv : (_L->nv + 1));
   if (v) {
-    assert(FIB_POINT_Nmax >= N);
+    if (FIB_POINT_Nmax < N) {
+      fputs("Error: Print_L vertex count exceeds FIB_POINT_Nmax\n", stderr);
+      exit(1);
+    }
     fprintf(outFILE, "%d %d Vertices in N-lattice:\n", _L->d, N);
     for (j = 0; j < _L->d; j++) {
       for (i = 0; i < N; i++)
@@ -458,8 +472,14 @@ void Print_L(LInfo *_L, int p, int v) {
   for (j = 0; j < N; j++)
     fprintf(outFILE, (_L->nv > 20) ? "----" : "-----");
   fprintf(outFILE, "\n");
-  assert(FIB_Nmax >= _L->nw);
-  assert(FIB_POINT_Nmax >= _L->nv);
+  if (FIB_Nmax < _L->nw) {
+    fputs("Error: Print_L weight count exceeds FIB_Nmax\n", stderr);
+    exit(1);
+  }
+  if (FIB_POINT_Nmax < _L->nv) {
+    fputs("Error: Print_L point count exceeds FIB_POINT_Nmax\n", stderr);
+    exit(1);
+  }
   for (i = 0; i < _L->nw; i++) {
     D = 0;
     codim = 0;
@@ -485,7 +505,10 @@ void Make_L(PolyPointList *_P, VertexNumList *_V, LInfo *_L, int p, int v) {
     _L->nv = _V->nv;
   }
   if (p) {
-    assert(_P->np <= VERT_Nmax);
+    if (_P->np > VERT_Nmax) {
+      fputs("Error: Make_L point count exceeds VERT_Nmax\n", stderr);
+      exit(1);
+    }
     for (i = 0; i < _P->np; i++)
       for (j = 0; j < _P->n; j++)
         _L->VM[i][j] = _P->x[i][j];
@@ -898,7 +921,12 @@ void New_CPVE(PolyPointList *_P, DYN_PPL *_CP, VertexNumList *_V,
 void Poly_To_DYNPoly(DYN_PPL *_CP, PolyPointList *_P) {
   int i, d;
 
-  assert(_P->np <= static_cast<Long>(_CP->L.size()));
+  if (_P->np > static_cast<Long>(_CP->L.size())) {
+    fputs(
+        "Error: Poly_To_DYNPoly source point count exceeds DYN_PPL capacity\n",
+        stderr);
+    exit(1);
+  }
   for (i = 0; i < _P->np; i++)
     for (d = 0; d < _P->n; d++)
       _CP->L[i].x[d] = _P->x[i][d];
@@ -1088,7 +1116,11 @@ void Make_Gore_Poly(PolyPointList *_P, PolyPointList *_DP, PolyPointList *_P_D,
         k++;
       }
       if (ip == 1) {
-        assert(_P_N->np < POINT_Nmax);
+        if (_P_N->np >= POINT_Nmax) {
+          fputs("Error: Make_Gore_Poly N-lattice point storage overflow\n",
+                stderr);
+          exit(1);
+        }
         for (d = 0; d < _DP->n; d++)
           _P_N->x[_P_N->np][d + *_codim - 1] = _DP->x[l][d];
         for (d = 1; d < *_codim; d++) {
@@ -1126,7 +1158,11 @@ void Make_Gore_Poly(PolyPointList *_P, PolyPointList *_DP, PolyPointList *_P_D,
         k++;
       }
       if (ip == 1) {
-        assert(_P_D->np < POINT_Nmax);
+        if (_P_D->np >= POINT_Nmax) {
+          fputs("Error: Make_Gore_Poly D-lattice point storage overflow\n",
+                stderr);
+          exit(1);
+        }
         for (d = 0; d < _P->n; d++)
           _P_D->x[_P_D->np][d + *_codim - 1] = _P->x[l][d];
         for (d = 1; d < *_codim; d++) {
@@ -1482,7 +1518,13 @@ void AnalyseGorensteinCone(CWS *_CW, PolyPointList *_P, VertexNumList *_V,
     printf("Please increase POLY_Dmax to at least %d = %d + 1\n", (_P->n + 1),
            _P->n);
     printf("(POLY_Dmax >= dim(cone) = dim(support) + 1 required)\n");
-    assert(*_codim == 1);
+    if (*_codim != 1) {
+      fputs(
+          "Error: AnalyseGorensteinCone POLY_Dmax overflow only supported for "
+          "codim 1\n",
+          stderr);
+      exit(1);
+    }
     exit(1);
   }
   /* Print_PPL(_P, "_P before sorting");fflush(0); */
@@ -1517,7 +1559,13 @@ void AnalyseGorensteinCone(CWS *_CW, PolyPointList *_P, VertexNumList *_V,
       r = 0;
     }
   } else {
-    assert(_E_D->ne > _P_D->n);
+    if (_E_D->ne <= _P_D->n) {
+      fprintf(stderr,
+              "Error: AnalyseGorensteinCone dual equation count %d not greater "
+              "than dimension %d\n",
+              _E_D->ne, _P_D->n);
+      exit(1);
+    }
     r = 0;
   }
 
@@ -1543,8 +1591,15 @@ void AnalyseGorensteinCone(CWS *_CW, PolyPointList *_P, VertexNumList *_V,
     SL2Z_Make_Poly_UTriang(_P_D);
     /* Print_PPL(_P_D, "_P_D after Make_Poly_UTriang");  */
     _P_D->n--;
-    for (i = 0; i < _P_D->np; i++)
-      assert(_P_D->x[i][_P->n] == 0);
+    for (i = 0; i < _P_D->np; i++) {
+      if (_P_D->x[i][_P->n] != 0) {
+        fprintf(stderr,
+                "Error: AnalyseGorensteinCone reduced coordinate not zero at "
+                "row %d col %d\n",
+                i, _P->n);
+        exit(1);
+      }
+    }
     /* Print_PPL(_P_D, "_P_D after reduction"); */
     Find_Equations(_P_D, _V_D, _E_D);
     /* Print_EL(_E_D, &_P_D->n, 0, "_E_D"); */
@@ -1555,8 +1610,16 @@ void AnalyseGorensteinCone(CWS *_CW, PolyPointList *_P, VertexNumList *_V,
     /* Print_Matrix(VPM_D, _E_D->ne, _V_D->nv, "VPM_D"); */
     Complete_Poly(VPM_D, _E_D, _V_D->nv, _P_D);
     /* Print_PPL(_P_D, "_P_D after Complete_Poly"); */
-    assert(_E_D->ne == _V->nv);
-    assert(_E->ne == _V_D->nv);
+    if (_E_D->ne != _V->nv) {
+      fprintf(stderr, "Error: AnalyseGorensteinCone _E_D->ne=%d != _V->nv=%d\n",
+              _E_D->ne, _V->nv);
+      exit(1);
+    }
+    if (_E->ne != _V_D->nv) {
+      fprintf(stderr, "Error: AnalyseGorensteinCone _E->ne=%d != _V_D->nv=%d\n",
+              _E->ne, _V_D->nv);
+      exit(1);
+    }
     /* Compute _new_E_D->ne by comparing VPM and VPM_D:
        if (VPM[j][i] == VPM_D[k][j]) for all j then _new_E_D->e[i] = _E_D[k] */
     _new_E_D->ne = _E_D->ne;
@@ -1575,7 +1638,13 @@ void AnalyseGorensteinCone(CWS *_CW, PolyPointList *_P, VertexNumList *_V,
         Print_Matrix(VPM, _E->ne, _V->nv, "VPM");
         Print_Matrix(VPM_D, _E_D->ne, _V_D->nv, "VPM_D");
       }
-      assert(k < _V->nv);
+      if (k >= _V->nv) {
+        fprintf(stderr,
+                "Error: AnalyseGorensteinCone could not match VPM row %d of "
+                "%d\n",
+                i, _V->nv);
+        exit(1);
+      }
     }
     /* Print_EL(_new_E_D, &_P_D->n, 0, "_new_E_D");
        Make_VEPM(_P_D, _V_D, _new_E_D, VPM_D);
