@@ -525,7 +525,7 @@ int Read_WPCICY(Weight *_W, int *_D)
 /* read "d" and "w_i" till sum=d or non-digit */
 {
   char c;
-  long nl, sum;
+  long int nl, sum;
   int FilterFlag = (inFILE == NULL);
   if (inFILE == stdin)
     printf("type degrees and weights [d  w1 w2 ... wk d=d_1 d_2]: ");

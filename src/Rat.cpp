@@ -87,7 +87,7 @@ int rC(Rat a, Rat b) /* Compare = [1 / 0 / -1] iff a [gt/eq/lt] b */
 }
 void Rpr(Rat c) /* write "c.N/c.D" -> outFN */
 {
-  fprintf(outFILE, "%d/%d", (int)c.N, (int)c.D);
+  fprintf(outFILE, "%ld/%ld", (long)c.N, (long)c.D);
 } /*  ==========  	  END of Rational Operations		==========  */
 
 /*  ==========		(Extended) Greatest Common Divisor	 =========  */

@@ -215,8 +215,9 @@ names and descriptions should remain locatable.
 - **File**: `Rat.c`
 - **Line**: 59
 - **Severity**: Low
+- **Status**: Fixed
 - **Description**: `Rpr` uses `%d` format with `(int) c.N` — truncation if
-  `Long` exceeds `int` range. Should use `%ld` or a C++ stream.
+  `Long` exceeds `int` range. Changed to `%ld` with `(long) c.N`/`(long) c.D`.
 
 ### 22. Platform-dependent integer sizes
 - **File**: `Global.h`
@@ -230,8 +231,9 @@ names and descriptions should remain locatable.
 - **File**: `nef.c`
 - **Line**: 485
 - **Severity**: Low
+- **Status**: Fixed
 - **Description**: `int long nl` — unusual declaration order (legal C but
-  confusing). Should be `long int nl` or just `long nl`.
+  confusing). Changed to `long int nl`.
 
 ---
 
