@@ -13,7 +13,7 @@ constexpr int NFmax = 10; /* maximal number of WS-files */
 constexpr int SIMPLEX_POINT_Nmax = 50;
 constexpr int OSL = 24; /* opt_string's length */
 constexpr int WDIM = 800000;
-constexpr Long lcm(Long a, Long b) { return (a * b) / NNgcd(a, b); }
+inline Long lcm(Long a, Long b) { return (a * b) / NNgcd(a, b); }
 constexpr int TWDIM = 16384; /* weight-buffer dimension */
 constexpr Long mod(Long a, Long b) { return a % b; }
 } // namespace

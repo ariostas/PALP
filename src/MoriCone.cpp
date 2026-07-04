@@ -701,6 +701,7 @@ void Triang_from_SR(triang *TR, triang *SR) { /* consistency check ... */
           stderr);
     exit(1);
   }
+  /* TODO: convert to std::unique_ptr<Inci64[]> once ownership is simple. */
   M = A;
   N = &A[binco];
   for (i = 1; i < p; i++)
@@ -772,6 +773,7 @@ void StanleyReisner(triang *SR,
           stderr);
     exit(1);
   }
+  /* TODO: convert to std::unique_ptr<Inci64[]> once ownership is simple. */
   M = A;
   N = &A[binco];
   for (i = 1; i < p; i++)
@@ -2611,6 +2613,7 @@ void Read_Tri(int p, int *nI, int *nIA, Inci64 **_I) {
     }
     *_I = I;
   }
+  /* TODO: this is caller-owned realloc logic; defer unique_ptr conversion. */
   for (i = 0; i < *nI; i++)
     I[i] = Read_INCI(p - 1);
   Read_EOL();
@@ -2879,11 +2882,13 @@ void ComputeStanleyReisner(PolyPointList *P, int nI, Inci64 *I, int *NrInz,
   }
   A = (Inci64 *)malloc(Abi);
   B = (Inci64 *)malloc(Abi);
-  IV = (Inci64 *)malloc(v * sizeof(Inci64)); // SRG = (Inci64 *) malloc( Abi ),
+  IV = (Inci64 *)malloc(v * sizeof(Inci64));
   if (SRG == NULL || IV == NULL || A == NULL || B == NULL) {
     fputs("Error: failed to allocate Stanley-Reisner buffers\n", stderr);
     exit(1);
   }
+  /* TODO: SRG is caller-provided; A/B/IV are local. Convert to unique_ptr
+     once ownership is separated. */
   IV[0] = Inci64_1();
   for (i = 1; i < v; i++)
     IV[i] = Inci64_PN(IV[i - 1], 1);
@@ -2953,8 +2958,8 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag) {
   triang T, SR;
   long long Abi = Compute_Abi(_P);
   Inci64 *SRG = (Inci64 *)malloc(Abi);
-  PolyPointList *_POF =
-      (PolyPointList *)malloc(sizeof(PolyPointList)); /* _P in Old Format */
+  auto _POF_owner = std::make_unique<PolyPointList>();
+  PolyPointList *_POF = _POF_owner.get(); /* _P in Old Format */
 
   //	fprintf(outFILE, "DIAGNOSTICS: pre Read &I=%d , I=%d , nI=%d , nIA=%d
   //\n", &I, I, nI, nIA); // diagnostics
@@ -2983,7 +2988,8 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag) {
     Inci64 *IOF; /* Same as I but keeps old format till the end   */
     Read_Tri(_P->np, &nI, &nIA, &I); /* gives everything in the old format
                                         from input without leading 1   */
-    IOF = (Inci64 *)malloc(nI * sizeof(Inci64));
+    auto IOF_owner = std::make_unique<Inci64[]>(nI);
+    IOF = IOF_owner.get();
     for (i = 0; i < nI; i++)
       IOF[i] = I[i];
     ComputeStanleyReisner(_POF, nI, I, &NrInz, SRG, Abi);
@@ -3078,7 +3084,6 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag) {
       fputs("\n", outFILE);
     if (_Flag->m)
       Print_Mori_Old(_POF, nI, IOF);
-    free(IOF);
   }
   if (I == NULL) {
     fputs("Error: TriList_to_MoriList incidence list was never allocated\n",
@@ -3086,6 +3091,7 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag) {
     exit(1);
   }
   free(I);
+  free(SRG);
   if (_Flag->FilterFlag)
     inFILE = NULL;
 }

@@ -3159,10 +3159,6 @@ void Open_DB(char *dbin, DataBase **_DB, int info) {
     return;
   }
   DB = new DataBase();
-  if (DB == NULL) {
-    fputs("Error: Open_DB allocation failed\n", stderr);
-    exit(1);
-  }
   *_DB = DB;
   strcpy(dbname.data(), dbin);
   strcat(dbname.data(), ".info");

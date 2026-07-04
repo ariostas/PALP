@@ -673,13 +673,13 @@ void TEST_WeightMakePoints(AmbiPointList *_P) {
   if (_P->np > 20) {
     for (i = 0; i < _P->np; i++) {
       for (j = 0; j < _P->N; j++)
-        printf("%d ", _P->x[i][j]);
+        printf("%ld ", (long)_P->x[i][j]);
       puts("");
     }
   } else {
     for (i = 0; i < _P->N; i++) {
       for (j = 0; j < _P->np; j++)
-        printf("%4d", _P->x[j][i]);
+        printf("%4ld", (long)_P->x[j][i]);
       puts("");
     }
   }
@@ -1900,8 +1900,8 @@ void LGO_VaHo(Weight *W, VaHo *V) {
       if (*M % M[j] != 0) {
         fprintf(
             stderr,
-            "Error: LGO_VaHo group order M[0]=%ld not divisible by M[%d]=%d\n",
-            *M, j, M[j]);
+            "Error: LGO_VaHo group order M[0]=%d not divisible by M[%d]=%d\n",
+            (int)*M, j, M[j]);
         exit(1);
       }
       x[j] = X / M[j];
@@ -2199,9 +2199,9 @@ void LGO_VaHo(Weight *W, VaHo *V) {
               if (Num.c[i] % ego != 0) {
                 fprintf(
                     stderr,
-                    "Error: LGO_VaHo numerator coefficient %ld not divisible "
+                    "Error: LGO_VaHo numerator coefficient %d not divisible "
                     "by ego=%d\n",
-                    Num.c[i], ego);
+                    (int)Num.c[i], ego);
                 exit(1);
               }
               Num.c[i] /= ego;
@@ -2356,8 +2356,8 @@ void Calc_VaHo(Weight *W, VaHo *V) {
     for (i = 0; i < n; i++) {
       Pint co = P->c[i];
       if (co <= 0) {
-        fprintf(stderr, "Error: Calc_VaHo Poincare poly coefficient %d <= 0\n",
-                co);
+        fprintf(stderr, "Error: Calc_VaHo Poincare poly coefficient %ld <= 0\n",
+                (long)co);
         exit(1);
       }
       if (co > cM)
