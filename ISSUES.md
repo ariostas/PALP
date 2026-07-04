@@ -122,8 +122,11 @@ names and descriptions should remain locatable.
 - **File**: `SingularInput.c`
 - **Line**: 173
 - **Severity**: Medium
+- **Status**: Fixed
 - **Description**: `he = malloc(divclassnr * sizeof(int))` — no NULL check
-  on `malloc` return. Subsequent use of `he` could segfault.
+  on `malloc` return. Subsequent use of `he` could segfault. During migration
+  this buffer was replaced by `std::vector<int> he(divclassnr)`, so allocation
+  failure throws `std::bad_alloc` instead of producing a NULL pointer.
 
 ### 12. Command injection via `system()`
 - **File**: `SingularInput.cpp`
