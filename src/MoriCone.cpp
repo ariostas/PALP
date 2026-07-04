@@ -2498,7 +2498,8 @@ int ReadInt(void) {
   if (!IsDigit(c) && (c != '-'))
     FE("ReadInt");
   ungetc(c, inFILE);
-  fscanf(inFILE, "%d", &n);
+  if (fscanf(inFILE, "%d", &n) != 1)
+    FE("ReadInt");
   while (' ' == (c = fgetc(inFILE)))
     ;
   ungetc(c, inFILE);

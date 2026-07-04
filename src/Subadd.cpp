@@ -32,7 +32,10 @@
 #else
 int IntSqrt(int q) /* sqrt(q) => r=1; r'=(q+r*r)/(2r); */
 {
-  assert(q > 0);
+  if (q <= 0) {
+    fprintf(stderr, "Error: IntSqrt non-positive argument %d\n", q);
+    exit(1);
+  }
   if (q < 4)
     return 1;
   else { /* troubles: e.g. 9408 */
@@ -110,8 +113,11 @@ void Init_New_List(NF_List *S) {
   S->SLp = (int *)malloc(SL_Nmax * sizeof(int));
   S->NewNF = (unsigned char *)malloc(S->ANB * sizeof(char));
   S->NC = 0;
-  assert((S->PE != NULL) && (S->PPE != NULL) && (S->SLp != NULL) &&
-         (S->NewNF != NULL));
+  if ((S->PE == NULL) || (S->PPE == NULL) || (S->SLp == NULL) ||
+      (S->NewNF == NULL)) {
+    fputs("Error: Init_New_List allocation failed\n", stderr);
+    exit(1);
+  }
 #ifdef __DECC
   /* printf("NULL=%p S->PE=%p S->NewNF=%p\n",NULL,S->PE,S->NewNF); */
 #endif
@@ -146,8 +152,11 @@ void PrintNumbers(NF_List *S) {
 }
 void Test_SLnbMS(NF_List *S) {
   int i, tNB = 0, tNM = 0, tSM = 0, testNB = !(S->PEN || S->PPEN);
-  if (testNB)
-    assert(S->RemNB == 0);
+  if (testNB && (S->RemNB != 0)) {
+    fputs("Error: Test_SLnbMS RemNB non-zero with empty pending lists\n",
+          stderr);
+    exit(1);
+  }
   for (i = 0; i < S->SLN; i++) {
     unsigned char *C = &S->NewNF[S->SLp[i]];
     int ms = C[2] % 4;
@@ -167,7 +176,11 @@ void Test_SLnbMS(NF_List *S) {
            S->slSM, tSM, S->NewNB, tNB);
     exit(1);
   }
-  assert(S->nSLP == 2 * S->SLN - tSM - tNM);
+  if (S->nSLP != 2 * S->SLN - tSM - tNM) {
+    fprintf(stderr, "Error: Test_SLnbMS sublattice NP count mismatch nSLP=%d\n",
+            S->nSLP);
+    exit(1);
+  }
 }
 void Test_ucNF(int *d, int *tnv, int *tnuc, unsigned char *tuc,
                PolyPointList *_P);
@@ -188,7 +201,10 @@ void Test_NF_List(NF_List *S, PolyPointList *_P) {
         exit(1);
       }
       if (oldC[0] == nv) {
-        assert(oldC[1] <= nuc);
+        if (oldC[1] > nuc) {
+          fprintf(stderr, "Error: Test_NF_List order violation at i=%d\n", i);
+          exit(1);
+        }
         if (oldC[1] == nuc)
           if (RIGHTminusLEFT(olduc, uc, &nuc) < 0) {
             printf("failed at i=%d\n", i);
@@ -219,7 +235,10 @@ void Test_PPEN(NF_List *S) {
         exit(1);
       }
       if (oldC[0] == nv) {
-        assert(oldC[1] <= nuc);
+        if (oldC[1] > nuc) {
+          fprintf(stderr, "Error: Test_PPEN order violation at i=%d\n", i);
+          exit(1);
+        }
         if (oldC[1] == nuc)
           if (RIGHTminusLEFT(olduc, uc, &nuc) < 0) {
             printf("failed at i=%d\n", i);
@@ -251,7 +270,11 @@ void Read_Bin_Info(FILE *F, int *d, unsigned *li, int *SLN, int *slSM,
   unsigned tli = 0;
   Along tNF = 0, tNB = 0;
   *d = fgetc(F);
-  assert(*d <= POLY_Dmax);
+  if (*d > POLY_Dmax) {
+    fprintf(stderr, "Error: Read_Bin_Info dimension %d exceeds POLY_Dmax\n",
+            *d);
+    exit(1);
+  }
   FI->nV = fgetc(F);
   FI->nVmax = fgetc(F);
   FI->NUCmax = fgetc(F);
@@ -273,9 +296,21 @@ void Read_Bin_Info(FILE *F, int *d, unsigned *li, int *SLN, int *slSM,
       tNB += nnb * nu;
     }
   }
-  assert(tNF == FI->nNF);
-  assert(tli == *li);
-  assert(0 == (unsigned int)(tNB - FI->NB));
+  if (tNF != FI->nNF) {
+    fprintf(stderr,
+            "Error: Read_Bin_Info total NF mismatch tNF=%lld FI.nNF=%lld\n",
+            (long long)tNF, (long long)FI->nNF);
+    exit(1);
+  }
+  if (tli != *li) {
+    fprintf(stderr, "Error: Read_Bin_Info list count mismatch tli=%u li=%u\n",
+            tli, *li);
+    exit(1);
+  }
+  if ((unsigned int)(tNB - FI->NB) != 0) {
+    fprintf(stderr, "Error: Read_Bin_Info byte count mismatch\n");
+    exit(1);
+  }
   FI->NB = tNB;
 }
 void Read_Honest_Poly(FILE *F, FInfoList *FI, NF_List *L) {
@@ -285,7 +320,12 @@ void Read_Honest_Poly(FILE *F, FInfoList *FI, NF_List *L) {
   Init_FInfoList(FI);
   L->rd = fgetc(F);
   if (128 <= (L->rd)) {
-    assert((L->rd -= 128) < 7);
+    L->rd -= 128;
+    if (L->rd >= 7) {
+      fprintf(stderr, "Error: Read_Honest_Poly recursion depth %d >= 7\n",
+              L->rd);
+      exit(1);
+    }
     L->rd = 128 * L->rd + fgetc(F); /* DirtyFix rd */
   }
   for (i = 0; i < L->rd; i++)
@@ -319,7 +359,12 @@ void Read_Honest_Poly(FILE *F, FInfoList *FI, NF_List *L) {
             for (i = 0; i < nu; i++)
               FI->NFli[pos++] = fgetc(F);
         }
-  assert(pos == FI->NB);
+  if (pos != FI->NB) {
+    fprintf(stderr,
+            "Error: Read_Honest_Poly byte position mismatch pos=%lld NB=%lld\n",
+            (long long)pos, (long long)FI->NB);
+    exit(1);
+  }
   /* printf("\nRead: tNF=%d  pos=%d\n",tNF,pos);
      for(v=L->d+1;v<=FI->nVmax;v++) if(FI->nNUC[v])
      for(nu=1;nu<=FI->NUCmax;nu++) for(j=0;j<FI->NFnum[v][nu];j++)
@@ -336,7 +381,13 @@ void Read_SubLat_Poly(FILE *F, NF_List *L) {
     for (j = 0; j < C[1]; j++)
       L->NewNF[pos++] = fgetc(F);
   }
-  assert(pos == L->NewNB);
+  if (pos != L->NewNB) {
+    fprintf(
+        stderr,
+        "Error: Read_SubLat_Poly byte position mismatch pos=%d NewNB=%lld\n",
+        pos, (long long)L->NewNB);
+    exit(1);
+  }
 }
 void Read_In_File(NF_List *S) {
   time_t Tstart = time(NULL);
@@ -349,7 +400,11 @@ void Read_In_File(NF_List *S) {
   }
   Read_Honest_Poly(F, &S->In, S);
   S->NP = S->nSLP = 0;
-  assert(S->rd == 0);
+  if (S->rd != 0) {
+    fprintf(stderr, "Error: Read_In_File recursion depth %d must be 0\n",
+            S->rd);
+    exit(1);
+  }
   fclose(F);
   printf("  done (%ds)\n", (int)difftime(time(NULL), Tstart));
   fflush(stdout);
@@ -397,7 +452,11 @@ void Read_Aux_File(NF_List *L) {
       char *Mfn = (char *)malloc(1 + strlen(L->oname) + strlen(MOVE_SAVE_FILE));
       strcpy(Mfn, L->oname);
       strcat(Mfn, MOVE_SAVE_FILE);
-      assert(!rename(auxfn, Mfn));
+      if (rename(auxfn, Mfn) != 0) {
+        fprintf(stderr, "Error: Read_Aux_File rename %s -> %s failed\n", auxfn,
+                Mfn);
+        exit(1);
+      }
       free(Mfn);
     }
 #endif
@@ -460,7 +519,10 @@ void TestMSbits(NF_List *S, PolyPointList *_P) {
          S->NP - S->nSLP, S->PEN + S->PPEN, S->Aux.nNF, peNF, axNF, peNM, axNM,
          peSM, axSM);
   fflush(stdout);
-  assert(S->NP - S->nSLP == 2 * peNF - peNM - peSM + 2 * axNF - axNM - axSM);
+  if (S->NP - S->nSLP != 2 * peNF - peNM - peSM + 2 * axNF - axNM - axSM) {
+    fprintf(stderr, "Error: TestMSbits honest NP count mismatch\n");
+    exit(1);
+  }
   for (i = 0; i < S->SLN; i++) {
     unsigned char *C = &S->NewNF[S->SLp[i]];
     int ms = C[2] % 4;
@@ -477,7 +539,10 @@ void TestMSbits(NF_List *S, PolyPointList *_P) {
   printf("  sl: slNP=%d  slNF=%d=%d  slNM=%d  slSM=%d\n\n", S->nSLP, S->SLN,
          slNF, slNM, slSM);
   fflush(stdout);
-  assert(S->nSLP == 2 * slNF - slNM - slSM);
+  if (S->nSLP != 2 * slNF - slNM - slSM) {
+    fprintf(stderr, "Error: TestMSbits sublattice NP count mismatch\n");
+    exit(1);
+  }
 }
 void AuxCalcNumbers(NF_List *S, FInfoList *AI) {
   int i, j;
@@ -553,7 +618,12 @@ void Write_Bin_File(FILE *F, NF_List *L) {
     if (v_li)
       fi++;
   }
-  assert(L->rd <= MAX_REC_DEPTH);
+  if (L->rd > MAX_REC_DEPTH) {
+    fprintf(stderr,
+            "Error: Write_Bin_File recursion depth %d exceeds maximum\n",
+            L->rd);
+    exit(1);
+  }
   if (L->rd < 128)
     fputc(L->rd, F);
   else {
@@ -579,13 +649,19 @@ void Write_Bin_File(FILE *F, NF_List *L) {
          L->slSM, L->slNM, L->NewNB - L->RemNB - AI.NB - 2 * AI.nNF);
   fflush(stdout);
 #endif
-  assert(L->NP - L->nSLP == 2 * AI.nNF - AI.nNM - AI.nSM + 2 * L->Aux.nNF -
-                                L->Aux.nNM - L->Aux.nSM);
+  if (L->NP - L->nSLP !=
+      2 * AI.nNF - AI.nNM - AI.nSM + 2 * L->Aux.nNF - L->Aux.nNM - L->Aux.nSM) {
+    fprintf(stderr, "Error: Write_Bin_File honest NP count mismatch\n");
+    exit(1);
+  }
   fputUI(tnb = L->Aux.NB + AI.NB, F);
   fputUI(L->SLN, F);
   fputUI(L->slSM, F);
   fputUI(L->slNM, F);
-  assert(L->nSLP == 2 * L->SLN - L->slNM - L->slSM);
+  if (L->nSLP != 2 * L->SLN - L->slNM - L->slSM) {
+    fprintf(stderr, "Error: Write_Bin_File sublattice NP count mismatch\n");
+    exit(1);
+  }
   fputUI(L->NewNB - L->RemNB - AI.NB - 2 * AI.nNF, F);
   for (v = L->d + 1; v <= nVmax; v++)
     if (AI.nNUC[v] + L->Aux.nNUC[v]) {
@@ -635,9 +711,16 @@ void Write_Bin_File(FILE *F, NF_List *L) {
             tnb -= nu;
             tc--;
           }
-          assert(tc == 0);
+          if (tc != 0) {
+            fprintf(stderr,
+                    "Error: Write_Bin_File block byte count mismatch\n");
+            exit(1);
+          }
         }
-  assert(tnb == 0);
+  if (tnb != 0) {
+    fprintf(stderr, "Error: Write_Bin_File honest byte count mismatch\n");
+    exit(1);
+  }
   for (n = 0; n < L->SLN; n++) /* =S->nSLP */
   {
     C = &L->NewNF[L->SLp[n]];
@@ -646,7 +729,10 @@ void Write_Bin_File(FILE *F, NF_List *L) {
       fputc(C[j], F);
     tc += C[1] + 2;
   }
-  assert(tc == L->NewNB - L->RemNB - AI.NB - 2 * AI.nNF);
+  if (tc != L->NewNB - L->RemNB - AI.NB - 2 * AI.nNF) {
+    fprintf(stderr, "Error: Write_Bin_File sublattice byte count mismatch\n");
+    exit(1);
+  }
 #ifdef More_File_IO_Data
   printf("\n    nv<=%d  nuc<=%d  files=%d  lists=%d  nNF=%d  NB=%lld ..", nVmax,
          NUCmax, fi, li, AI.nNF, AI.NB);
@@ -788,7 +874,12 @@ void Insert_PPent_into_Pent(NF_List *S) {
     puts("This should not happen in Insert_PPent_into_Pent");
     exit(1);
   }
-  assert(pos <= SAVE_INC + SL_Nmax);
+  if (pos > SAVE_INC + SL_Nmax) {
+    fprintf(stderr,
+            "Error: Insert_PPent_into_Pent position %d exceeds list bound\n",
+            pos);
+    exit(1);
+  }
   while (Spos--) {
     if (S->PPE[Spos].n == Mpos)
       S->PE[--pos] = S->PPE[Spos].pe;
@@ -1014,7 +1105,13 @@ void SL_List_Remove(int *NV, int *nUC, /* unsigned char *UC, */
     S->slNM--;
   else
     S->slSM--;
-  assert((*NV == C[0]) && (*nUC == C[1]));
+  if ((*NV != C[0]) || (*nUC != C[1])) {
+    fprintf(
+        stderr,
+        "Error: SL_List_Remove entry mismatch NV=%d C[0]=%d nUC=%d C[1]=%d\n",
+        *NV, C[0], *nUC, C[1]);
+    exit(1);
+  }
   /* assert(0==RIGHTminusLEFT(UC,&C[2],nUC)); */
   while ((++l) < S->SLN)
     S->SLp[l - 1] = S->SLp[l];
@@ -1081,7 +1178,11 @@ int ucNF_Sort_Add(int *NV, int *nUC, unsigned char *UC, NF_List *S) {
     InsertPNFintoPPEntList(&NEWpos, &PEpos, &FIpos, NV, nUC, UC, S);
     NewH = 1;
   }
-  assert(NewH + S->SL == 1);
+  if (NewH + S->SL != 1) {
+    fprintf(stderr, "Error: ucNF_Sort_Add invariant NewH=%d SL=%d violated\n",
+            NewH, S->SL);
+    exit(1);
+  }
   if (SearchSL_List(NV, nUC, UC, &NEWpos, S)) {
     unsigned char *c = &(S->NewNF[S->SLp[NEWpos] + 2]);
     if (NewH) {
@@ -1109,7 +1210,11 @@ int ucNF_Sort_Add(int *NV, int *nUC, unsigned char *UC, NF_List *S) {
       }
     }
   } else if (S->SL) {
-    assert(NewH == 0);
+    if (NewH != 0) {
+      fprintf(stderr, "Error: ucNF_Sort_Add sublattice branch with NewH=%d\n",
+              NewH);
+      exit(1);
+    }
     NewSL = 1;
     SL_List_Insert(NV, nUC, UC, &NEWpos, S);
   }
@@ -1322,7 +1427,10 @@ void LLBasePutInt(int *base, int *x, UXLong *X) /* X = X * base + x */
     ad = z / USM;
   }
   while (ad) {
-    assert(X->n < Nint_XLong);
+    if (X->n >= Nint_XLong) {
+      fputs("Error: LLBasePutInt UXLong overflow\n", stderr);
+      exit(1);
+    }
     X->x[X->n++] = ad % USM;
     ad /= USM;
   }
@@ -1365,7 +1473,10 @@ void BasePutInt(int *base, int *x, UXLong *X) /* X = X * base + x */
     ad = z / USM;
   }
   if (ad) {
-    assert(X->n <= (Nint_XLong - 1));
+    if (X->n >= Nint_XLong) {
+      fputs("Error: BasePutInt UXLong overflow\n", stderr);
+      exit(1);
+    }
     X->x[X->n++] = ad;
   }
 }
@@ -1454,7 +1565,10 @@ void Init_BaseList(Base_List **bl, int *d) /* once: alloc and init BaseList */
     return;
   }
   *bl = BL = (Base_List *)malloc(sizeof(Base_List));
-  assert(BL != NULL);
+  if (BL == NULL) {
+    fputs("Error: Init_BaseList allocation failed\n", stderr);
+    exit(1);
+  }
   for (i = *d; i <= VERT_Nmax; i++) {
     int nx = NX(*d, i), bn = 3, nuco, nucn;
     BL->v[i] = 1;
@@ -1499,7 +1613,10 @@ void NUCtoBase(int *d, int *v, int *nuc, int *Base) {
       AuxNextGoodBase(v, &nx, BL);
     while (*nuc > (BL->nuc[*v][++i]));
   }
-  assert(*nuc == BL->nuc[*v][i]);
+  if (*nuc != BL->nuc[*v][i]) {
+    fprintf(stderr, "Error: NUCtoBase failed to find matching nuc %d\n", *nuc);
+    exit(1);
+  }
   *Base = BL->base[*v][i];
 }
 
@@ -1513,7 +1630,10 @@ void UNIT_Init_BaseList(Base_List **bl, int *d) /* once: ainit BaseList */
     return;
   }
   *bl = BL = (Base_List *)malloc(sizeof(Base_List));
-  assert(BL != NULL);
+  if (BL == NULL) {
+    fputs("Error: UNIT_Init_BaseList allocation failed\n", stderr);
+    exit(1);
+  }
   for (i = *d; i <= VERT_Nmax; i++) {
     int nx = UNIT_NX(*d, i), bn = 3, nuco, nucn;
     BL->v[i] = 1;
@@ -1557,7 +1677,11 @@ void UNIT_NUCtoBase(int *d, int *v, int *nuc, int *Base) {
       AuxNextGoodBase(v, &nx, BL);
     while (*nuc > (BL->nuc[*v][++i]));
   }
-  assert(*nuc == BL->nuc[*v][i]);
+  if (*nuc != BL->nuc[*v][i]) {
+    fprintf(stderr, "Error: UNIT_NUCtoBase failed to find matching nuc %d\n",
+            *nuc);
+    exit(1);
+  }
   *Base = BL->base[*v][i];
 }
 #endif
@@ -1662,8 +1786,10 @@ void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
   if (V->nv > E->ne)
     MS = 2;
 #endif /* else: priority to sorting by nuc */
-  assert(
-      Init_rVM_VPM(P, V, E, &P->n, &V->nv, &E->ne, VM, VPM)); /* make ref VPM */
+  if (!Init_rVM_VPM(P, V, E, &P->n, &V->nv, &E->ne, VM, VPM)) {
+    fputs("Error: VF_2_ucNF input polytope not reflexive\n", stderr);
+    exit(1);
+  } /* make ref VPM */
   if (MS < 2) {
     Eval_Poly_NF(&P->n, &V->nv, &E->ne, VM, VPM, V_NF, 0); /* V_NF */
     vone = BminOff(V_NF, &P->n, &V->nv, &vo, &vbmin);
@@ -1822,7 +1948,11 @@ void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
     }
   }
 #endif
-  assert((*UC % 4) == MS);
+  if ((*UC % 4) != MS) {
+    fprintf(stderr, "Error: VF_2_ucNF MS mismatch *UC%%4=%d MS=%d\n", *UC % 4,
+            MS);
+    exit(1);
+  }
 }
 void Test_ucNF(int *d, int *v, int *nuc, unsigned char *uc, PolyPointList *_P) {
   Long tNF[POLY_Dmax][VERT_Nmax];
@@ -1837,12 +1967,30 @@ void Test_ucNF(int *d, int *v, int *nuc, unsigned char *uc, PolyPointList *_P) {
   for (i = 0; i < *v; i++)
     for (j = 0; j < *d; j++)
       _P->x[i][j] = tNF[j][i];
-  assert(Ref_Check(_P, &V, &E));
+  if (!Ref_Check(_P, &V, &E)) {
+    fprintf(stderr, "Error: Test_ucNF decompressed polytope not reflexive\n");
+    exit(1);
+  }
   VF_2_ucNF(_P, &V, &E, &NV, &NUC, UC, nullptr);
-  assert(*v == NV);
-  assert(*nuc == NUC);
-  assert(RIGHTminusLEFT(uc, UC, nuc) == 0);
-  assert((tMS == 0) == ((*uc % 4) == 0));
+  if (*v != NV) {
+    fprintf(stderr, "Error: Test_ucNF vertex count mismatch %d != %d\n", *v,
+            NV);
+    exit(1);
+  }
+  if (*nuc != NUC) {
+    fprintf(stderr, "Error: Test_ucNF nuc count mismatch %d != %d\n", *nuc,
+            NUC);
+    exit(1);
+  }
+  if (RIGHTminusLEFT(uc, UC, nuc) != 0) {
+    fprintf(stderr, "Error: Test_ucNF roundtrip mismatch\n");
+    exit(1);
+  }
+  if ((tMS == 0) != ((*uc % 4) == 0)) {
+    fprintf(stderr, "Error: Test_ucNF MS zero flag mismatch tMS=%d uc%%4=%d\n",
+            tMS, *uc % 4);
+    exit(1);
+  }
 }
 
 void AuxGet_vn_uc(FILE *F, int *v, int *nu, unsigned char *uc) {
@@ -1970,12 +2118,36 @@ void Add_Polya_2_Polyi(char *polyi, char *polya, char *polyo) {
     exit(1);
   }
   ucSL = (unsigned char *)malloc(SL_Nmax * CperR_MAX * sizeof(char));
-  assert(ucSL != NULL);
-  assert(!fgetc(FI));
-  assert(!fgetc(FA));
+  if (ucSL == NULL) {
+    fputs("Error: Add_Polya_2_Polyi sublattice buffer allocation failed\n",
+          stderr);
+    exit(1);
+  }
+  {
+    int rd_i = fgetc(FI);
+    int rd_a = fgetc(FA);
+    if (rd_i != 0) {
+      fprintf(stderr,
+              "Error: Add_Polya_2_Polyi input recursion depth %d must "
+              "be 0\n",
+              rd_i);
+      exit(1);
+    }
+    if (rd_a != 0) {
+      fprintf(stderr,
+              "Error: Add_Polya_2_Polyi aux recursion depth %d must "
+              "be 0\n",
+              rd_a);
+      exit(1);
+    }
+  }
   Read_Bin_Info(FI, &i, &Ili, &IslNF, &IslSM, &IslNM, &IslNB, &FIi);
   Read_Bin_Info(FA, &d, &Ali, &AslNF, &AslSM, &AslNM, &AslNB, &FIa);
-  assert(d == i);
+  if (d != i) {
+    fprintf(stderr, "Error: Add_Polya_2_Polyi dimension mismatch %d != %d\n", d,
+            i);
+    exit(1);
+  }
   HIpos = FTELL(FI);
   FSEEK(FI, 0, SEEK_END);
   Ipos = FTELL(FI);
@@ -1989,10 +2161,16 @@ void Add_Polya_2_Polyi(char *polyi, char *polya, char *polyo) {
          (FIa.nNF - FIa.nSM) + (FIa.nNF - FIa.nNM),
          /* Aslp= */ 2 * AslNF - AslNM - AslSM, Apos, d);
   /* printf("HIpos=%lld NB=%lld sl=%lld pos=%lld\n",HIpos,FIi.NB,IslNB,Ipos); */
-  assert(HIpos + FIi.NB + IslNB == Ipos);
+  if (HIpos + FIi.NB + IslNB != Ipos) {
+    fputs("Error: Add_Polya_2_Polyi input file size mismatch\n", stderr);
+    exit(1);
+  }
   FSEEK(FI, -IslNB, SEEK_CUR);
   /* printf("HApos=%lld NB=%lld sl=%lld pos=%lld\n",HApos,FIa.NB,AslNB,Apos); */
-  assert(HApos + FIa.NB + AslNB == Apos);
+  if (HApos + FIa.NB + AslNB != Apos) {
+    fputs("Error: Add_Polya_2_Polyi aux file size mismatch\n", stderr);
+    exit(1);
+  }
   FSEEK(FA, -AslNB, SEEK_CUR);
   a = 0;
   if (a < AslNF)
@@ -2068,7 +2246,10 @@ void Add_Polya_2_Polyi(char *polyi, char *polya, char *polyo) {
     if ((++a) < AslNF)
       AuxGet_vn_uc(FA, &vA, &nuA, ucA);
   }
-  assert(tnb + slNB == IslNB + AslNB); /* SL done */
+  if (tnb + slNB != IslNB + AslNB) {
+    fputs("Error: Add_Polya_2_Polyi sublattice byte count mismatch\n", stderr);
+    exit(1);
+  } /* SL done */
 
   printf("SL: %dnf %dsm %dnm %db -> ", slNF, slSM, slNM, slNB);
 
@@ -2197,11 +2378,21 @@ void Add_Polya_2_Polyi(char *polyi, char *polya, char *polyo) {
               pa += 1 + (((*ucA) % 4) == 3);
             }
           }
-          assert(pi + pa == peq + po); /* checksum(v,nu) */
+          if (pi + pa != peq + po) {
+            fprintf(stderr,
+                    "Error: Add_Polya_2_Polyi checksum mismatch v=%d nu=%d\n",
+                    v, nu);
+            exit(1);
+          } /* checksum(v,nu) */
           FIo.NFnum[v][nu] = O_NF;
           FIo.nNF += O_NF;
           FIo.NB += O_NF * nu;
-          assert(O_NF + neq == I_NF + A_NF);
+          if (O_NF + neq != I_NF + A_NF) {
+            fprintf(stderr,
+                    "Error: Add_Polya_2_Polyi NF merge mismatch v=%d nu=%d\n",
+                    v, nu);
+            exit(1);
+          }
           /*
           {static int list;printf("#%d v=%d nu=%d Inf=%d Anf=%d ",++list,v,nu,
           I_NF,A_NF);printf("Onf=%d   pi=%d pa=%d  po=%d\n",O_NF,pi,pa,po);
@@ -2215,15 +2406,26 @@ void Add_Polya_2_Polyi(char *polyi, char *polya, char *polyo) {
     nu = uc[-1];
     tnb += nu + 2;
     /* printf("#%d:  SLp=%d  v=%d  nu=%d\n",i,SLp[i],v,nu); */
-    assert(uc[-2] < VERT_Nmax);
+    if (uc[-2] >= VERT_Nmax) {
+      fprintf(stderr, "Error: Add_Polya_2_Polyi vertex count %d out of range\n",
+              uc[-2]);
+      exit(1);
+    }
     fputc(uc[-2], FO);
     slNP += 1 + (((*uc) % 4) == 3);
     fputc(nu, FO);
     for (j = 0; j < nu; j++)
       fputc(uc[j], FO);
   }
-  assert(tnb == slNB);
-  assert(slNP == 2 * slNF - slNM - slSM);
+  if (tnb != slNB) {
+    fprintf(stderr,
+            "Error: Add_Polya_2_Polyi sublattice byte count mismatch\n");
+    exit(1);
+  }
+  if (slNP != 2 * slNF - slNM - slSM) {
+    fprintf(stderr, "Error: Add_Polya_2_Polyi sublattice NP count mismatch\n");
+    exit(1);
+  }
   printf("\nd=%d v%d v<=%d n<=%d vn%d  %lld %d %lld %lld  %d %d %d %d\n", d,
          FIo.nV, FIo.nVmax, FIo.NUCmax, Oli, FIo.nNF, FIo.nSM, FIo.nNM, FIo.NB,
          slNF, slSM, slNM, slNB);
@@ -2268,11 +2470,20 @@ void Add_Polya_2_Polyi(char *polyi, char *polya, char *polyo) {
   }*/
   Print_Expect(&FIo);
   puts("");
-  assert(ferror(FI) == 0);
+  if (ferror(FI)) {
+    fputs("Error: Add_Polya_2_Polyi input file read error\n", stderr);
+    exit(1);
+  }
   fclose(FI);
-  assert(ferror(FA) == 0);
+  if (ferror(FA)) {
+    fputs("Error: Add_Polya_2_Polyi aux file read error\n", stderr);
+    exit(1);
+  }
   fclose(FA);
-  assert(ferror(FO) == 0);
+  if (ferror(FO)) {
+    fputs("Error: Add_Polya_2_Polyi output file write error\n", stderr);
+    exit(1);
+  }
   fclose(FO);
 }
 
@@ -2285,16 +2496,29 @@ void UCnf_2_ANF(int *d, int *v, int *nuc, unsigned char *uc, /* IN */
   UCnf2vNF(d, v, nuc, uc, NF, MS);
   off = NF[0][*v - 1]; /* offset not 1 */
   for (i = 1; i < *d; i++)
-    assert(NF[i][*v - 1] == off); /* but last column ! */
+    if (NF[i][*v - 1] != off) {
+      fprintf(stderr,
+              "Error: UCnf_2_ANF last-column mismatch row %d: %ld != %ld\n", i,
+              (long)NF[i][*v - 1], (long)off);
+      exit(1);
+    } /* but last column ! */
 
   for (i = 0; i < *d; i++) {
     int c;
     for (c = 0; c < i; c++)
-      assert(NF[i][c] == 0);
+      if (NF[i][c] != 0) {
+        fprintf(stderr,
+                "Error: UCnf_2_ANF lower-triangle non-zero at (%d,%d)=%ld\n", i,
+                c, (long)NF[i][c]);
+        exit(1);
+      }
     for (c = i; c < *v; c++)
       NF[i][c] -= off;
   }
-  assert(*MS % 4 == 1);
+  if (*MS % 4 != 1) {
+    fprintf(stderr, "Error: UCnf_2_ANF MS=%d, expected 1 modulo 4\n", *MS);
+    exit(1);
+  }
 }
 void ANF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
                 int *NV, int *nUC, unsigned char *UC,          /* OUT */
@@ -2366,7 +2590,11 @@ void ANF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
     }
   }
 #endif
-  assert((*UC % 4) == 1);
+  if ((*UC % 4) != 1) {
+    fprintf(stderr, "Error: ANF_2_ucNF output MS=%d, expected 1 modulo 4\n",
+            *UC % 4);
+    exit(1);
+  }
 }
 
 int Add_ANF_to_List(PolyPointList *_P, VertexNumList *_V, EqList *_E,
@@ -2413,7 +2641,10 @@ void Gen_Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
   NF_List *_NFL = (NF_List *)malloc(sizeof(NF_List));
   VertexNumList V;
   EqList F;
-  assert(_NFL != NULL);
+  if (_NFL == NULL) {
+    fputs("Error: Gen_Ascii_to_Binary NF_List allocation failed\n", stderr);
+    exit(1);
+  }
   if (!(*polyo)) {
     puts("You have to specify an output file via -po in -a-mode!\n");
     printf("For more help use option '-h'\n");

@@ -611,9 +611,13 @@ void AddHalf(void) {
       while (' ' == (c = fgetc(inFILE)))
         ;
       ungetc(c, inFILE); /* read blanks */
-      if (IsNextDigit())
-        fscanf(inFILE, "%d", &IN[i]);
-      else
+      if (IsNextDigit()) {
+        if (fscanf(inFILE, "%d", &IN[i]) != 1) {
+          fprintf(stderr, "Error: AddHalf expected integer at position %d\n",
+                  i);
+          exit(1);
+        }
+      } else
         break;
     }
     if (i == 0)
@@ -2634,8 +2638,13 @@ Long NP_use_lat(EqList *_E, PolyPointList *_P) {
   td_Print_EL(_E, &_P->n, 0, "");
   system(command);
   outFILE = fopen("zzL.tmp1", "r");
-  while ((fscanf(outFILE, "%d", &tmp)) != EOF)
+  while ((fscanf(outFILE, "%d", &tmp)) == 1)
     ;
+  if (ferror(outFILE)) {
+    fputs("Error: NP_use_lat could not read lattice count\n", stderr);
+    fclose(outFILE);
+    exit(1);
+  }
   fclose(outFILE);
   return tmp;
 }

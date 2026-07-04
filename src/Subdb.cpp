@@ -250,11 +250,24 @@ void Init_DB(NF_List *_NFL) {
   }
 
   for (i = 0; i < DB->nV; i++) {
-    fscanf(DB->Finfo, "%d", &v);
-    fscanf(DB->Finfo, "%d", &(DB->nNUC[v]));
+    if (fscanf(DB->Finfo, "%d", &v) != 1) {
+      fputs("Error: Open_DB expected vertex count\n", stderr);
+      exit(1);
+    }
+    if (fscanf(DB->Finfo, "%d", &(DB->nNUC[v])) != 1) {
+      fprintf(stderr, "Error: Open_DB expected nuc count for v=%d\n", v);
+      exit(1);
+    }
     for (j = 0; j < DB->nNUC[v]; j++) {
-      fscanf(DB->Finfo, "%d", &nu);
-      fscanf(DB->Finfo, "%d", &(DB->NFnum[v][nu]));
+      if (fscanf(DB->Finfo, "%d", &nu) != 1) {
+        fprintf(stderr, "Error: Open_DB expected nu value for v=%d\n", v);
+        exit(1);
+      }
+      if (fscanf(DB->Finfo, "%d", &(DB->NFnum[v][nu])) != 1) {
+        fprintf(stderr, "Error: Open_DB expected NF count for v=%d nu=%d\n", v,
+                nu);
+        exit(1);
+      }
       RAM_size += nu * ((DB->NFnum[v][nu] - 1) / BLOCK_LENGTH);
     }
   }
@@ -449,8 +462,12 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
     printf("Cannot open %s", polya);
     exit(1);
   }
-  fscanf(FI, "%d%d%d%d%d%lld%d%lld %lld %d%d%d%d", &d, &i, &j, &nu, &Ili,
-         &FIi.nNF, &FIi.nSM, &FIi.nNM, &FIi.NB, &IslNF, &IslSM, &IslNM, &IslNB);
+  if (fscanf(FI, "%d%d%d%d%d%lld%d%lld %lld %d%d%d%d", &d, &i, &j, &nu, &Ili,
+             &FIi.nNF, &FIi.nSM, &FIi.nNM, &FIi.NB, &IslNF, &IslSM, &IslNM,
+             &IslNB) != 13) {
+    fputs("Error: Add_Polya_2_DBi malformed info header\n", stderr);
+    exit(1);
+  }
   FIi.nV = i;
   FIi.nVmax = j;
   FIi.NUCmax = nu;
@@ -458,98 +475,93 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
      d,FIi.nV,FIi.nVmax,FIi.NUCmax,Ili,FIi.nNF,FIi.nSM,
      FIi.nNM,FIi.NB,IslNF,IslSM,IslNM,IslNB); */
   for (i = 0; i < FIi.nV; i++) {
-    fscanf(FI, "%d", &v);
-    fscanf(FI, "%d", &j);
+    if (fscanf(FI, "%d", &v) != 1) {
+      fputs("Error: Add_Polya_2_DBi expected vertex count\n", stderr);
+      exit(1);
+    }
+    if (fscanf(FI, "%d", &j) != 1) {
+      fprintf(stderr, "Error: Add_Polya_2_DBi expected nuc count for v=%d\n",
+              v);
+      exit(1);
+    }
     FIi.nNUC[v] = j;
     for (j = 0; j < FIi.nNUC[v]; j++) {
-      fscanf(FI, "%d", &nu);
-      fscanf(FI, "%d", &FIi.NFnum[v][nu]);
-      tNF += FIi.NFnum[v][nu];
+      if (fscanf(FI, "%d", &nu) != 1) {
+        fprintf(stderr, "Error: Add_Polya_2_DBi expected nu value for v=%d\n",
+                v);
+        exit(1);
+      }
+      if (fscanf(FI, "%d", &FIi.NFnum[v][nu]) != 1) {
+        fprintf(stderr,
+                "Error: Add_Polya_2_DBi expected NF count for v=%d nu=%d\n", v,
+                nu);
+        exit(1);
+      }
     }
   }
   if (tNF != FIi.nNF) {
-    fprintf(stderr,
-            "Error: Add_Aux_to_DB total NF mismatch: tNF=%lld FIi.nNF=%lld\n",
-            (long long)tNF, (long long)FIi.nNF);
+  fprintf(stderr,
+          "Error: Add_Aux_to_DB total NF mismatch: tNF=%lld FIi.nNF=%lld\n",
+          (long long)tNF, (long long)FIi.nNF);
+  exit(1);
+}
+tNF = 0;
+{
+  int rd_byte = fgetc(FA);
+  if (rd_byte != EOF) {
+    ungetc(rd_byte, FA);
+    fputs("Error: Add_Aux_to_DB aux-file recursion depth must be 0\n", stderr);
     exit(1);
   }
-  tNF = 0;
-  {
-    int rd_byte = fgetc(FA);
-    if (rd_byte != EOF) {
-      ungetc(rd_byte, FA);
-      fputs("Error: Add_Aux_to_DB aux-file recursion depth must be 0\n",
-            stderr);
-      exit(1);
-    }
-  }
-  Read_Bin_Info(FA, &j, &Ali, &AslNF, &AslSM, &AslNM, &AslNB, &FIa);
-  if (d != j) {
-    fprintf(stderr, "Error: Add_Aux_to_DB dimension mismatch %d != %d\n", d, j);
+}
+Read_Bin_Info(FA, &j, &Ali, &AslNF, &AslSM, &AslNM, &AslNB, &FIa);
+if (d != j) {
+  fprintf(stderr, "Error: Add_Aux_to_DB dimension mismatch %d != %d\n", d, j);
+  exit(1);
+}
+strcpy(Ifx, ".sl");
+if (IslNF) {
+  FI = fopen(Ifn.data(), "rb");
+  if (FI == NULL) {
+    fprintf(stderr, "Error: Add_Aux_to_DB cannot open %s.sl\n", Ifn.data());
     exit(1);
   }
-  strcpy(Ifx, ".sl");
-  if (IslNF) {
-    FI = fopen(Ifn.data(), "rb");
-    if (FI == NULL) {
-      fprintf(stderr, "Error: Add_Aux_to_DB cannot open %s.sl\n", Ifn.data());
-      exit(1);
-    }
-  }
-  std::vector<unsigned char> ucSL_buffer;
-  if ((IslNB + AslNB))
-    ucSL_buffer.resize(IslNB + AslNB);
-  ucSL = ucSL_buffer.data();
-  HApos = FTELL(FA);
-  FSEEK(FA, 0, SEEK_END);
-  Apos = FTELL(FA);
-  Inp = 2 * FIi.nNF - FIi.nSM - FIi.nNM;
-  Anp = 2 * FIa.nNF - FIa.nSM - FIa.nNM;
-  printf("Data on %s:  %lld+%dsl  %lldb  (%dd)\n", dbi, Inp,
-         /* Islp= */ 2 * IslNF - IslNM - IslSM, FIi.NB + slNB, d);
-  printf("Data on %s:  %u+%dsl  %lldb  (%dd)\n", polya, Anp,
-         /* Aslp= */ 2 * AslNF - AslNM - AslSM, Apos, d);
-  if (HApos + FIa.NB + AslNB != Apos) {
-    fputs("Error: Add_Aux_to_DB aux-file size mismatch\n", stderr);
-    exit(1);
-  }
-  FSEEK(FA, -AslNB, SEEK_CUR);
-  s = 0;
-  if (s < AslNF)
-    AuxGet_vn_uc(FA, &vA, &nuA, ucA);
-  for (i = 0; i < IslNF; i++) {
-    AuxGet_vn_uc(FI, &vI, &nuI, ucI);
-    uc = &ucSL[2 + (SLp[slNF++] = slNB)];
-    while (s < AslNF) {
-      if (!(AmI = vA - vI))
-        if (!(AmI = nuA - nuI))
-          AmI = RIGHTminusLEFT(ucI, ucA, &nuI);
-      if (AmI < 0) /* put A */
-      {
-        uc[-2] = vA;
-        uc[-1] = nuA;
-        for (j = 0; j < nuA; j++)
-          uc[j] = ucA[j];
-        slNB += 2 + nuA;
-        if ((ms = (*uc % 4))) {
-          if (ms < 3)
-            slNM++;
-        } else
-          slSM++;
-        if ((++s) < AslNF)
-          AuxGet_vn_uc(FA, &vA, &nuA, ucA);
-        uc = &ucSL[2 + (SLp[slNF++] = slNB)];
-      } else
-        break;
-    }
-    if ((s < AslNF) && (AmI == 0)) /* put I==A */
+}
+std::vector<unsigned char> ucSL_buffer;
+if ((IslNB + AslNB))
+  ucSL_buffer.resize(IslNB + AslNB);
+ucSL = ucSL_buffer.data();
+HApos = FTELL(FA);
+FSEEK(FA, 0, SEEK_END);
+Apos = FTELL(FA);
+Inp = 2 * FIi.nNF - FIi.nSM - FIi.nNM;
+Anp = 2 * FIa.nNF - FIa.nSM - FIa.nNM;
+printf("Data on %s:  %lld+%dsl  %lldb  (%dd)\n", dbi, Inp,
+       /* Islp= */ 2 * IslNF - IslNM - IslSM, FIi.NB + slNB, d);
+printf("Data on %s:  %u+%dsl  %lldb  (%dd)\n", polya, Anp,
+       /* Aslp= */ 2 * AslNF - AslNM - AslSM, Apos, d);
+if (HApos + FIa.NB + AslNB != Apos) {
+  fputs("Error: Add_Aux_to_DB aux-file size mismatch\n", stderr);
+  exit(1);
+}
+FSEEK(FA, -AslNB, SEEK_CUR);
+s = 0;
+if (s < AslNF)
+  AuxGet_vn_uc(FA, &vA, &nuA, ucA);
+for (i = 0; i < IslNF; i++) {
+  AuxGet_vn_uc(FI, &vI, &nuI, ucI);
+  uc = &ucSL[2 + (SLp[slNF++] = slNB)];
+  while (s < AslNF) {
+    if (!(AmI = vA - vI))
+      if (!(AmI = nuA - nuI))
+        AmI = RIGHTminusLEFT(ucI, ucA, &nuI);
+    if (AmI < 0) /* put A */
     {
-      uc[-2] = vI;
-      uc[-1] = nuI;
-      for (j = 0; j < nuI; j++)
-        uc[j] = ucI[j];
-      if ((*ucI % 4) != (*ucA % 4))
-        *uc = 3 + 4 * (*uc / 4);
+      uc[-2] = vA;
+      uc[-1] = nuA;
+      for (j = 0; j < nuA; j++)
+        uc[j] = ucA[j];
+      slNB += 2 + nuA;
       if ((ms = (*uc % 4))) {
         if (ms < 3)
           slNM++;
@@ -557,29 +569,18 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
         slSM++;
       if ((++s) < AslNF)
         AuxGet_vn_uc(FA, &vA, &nuA, ucA);
-      tnb += 2 + nuI;
-    } else /* put I */
-    {
-      uc[-2] = vI;
-      uc[-1] = nuI;
-      for (j = 0; j < nuI; j++)
-        uc[j] = ucI[j];
-      if ((ms = (*uc % 4))) {
-        if (ms < 3)
-          slNM++;
-      } else
-        slSM++;
-    }
-    slNB += 2 + nuI;
+      uc = &ucSL[2 + (SLp[slNF++] = slNB)];
+    } else
+      break;
   }
-  while (s < AslNF) /* put A */
+  if ((s < AslNF) && (AmI == 0)) /* put I==A */
   {
-    uc = &ucSL[2 + (SLp[slNF++] = slNB)];
-    slNB += 2 + nuA;
-    uc[-2] = vA;
-    uc[-1] = nuA;
-    for (j = 0; j < nuA; j++)
-      uc[j] = ucA[j];
+    uc[-2] = vI;
+    uc[-1] = nuI;
+    for (j = 0; j < nuI; j++)
+      uc[j] = ucI[j];
+    if ((*ucI % 4) != (*ucA % 4))
+      *uc = 3 + 4 * (*uc / 4);
     if ((ms = (*uc % 4))) {
       if (ms < 3)
         slNM++;
@@ -587,291 +588,320 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
       slSM++;
     if ((++s) < AslNF)
       AuxGet_vn_uc(FA, &vA, &nuA, ucA);
+    tnb += 2 + nuI;
+  } else /* put I */
+  {
+    uc[-2] = vI;
+    uc[-1] = nuI;
+    for (j = 0; j < nuI; j++)
+      uc[j] = ucI[j];
+    if ((ms = (*uc % 4))) {
+      if (ms < 3)
+        slNM++;
+    } else
+      slSM++;
   }
-  if (tnb + slNB != IslNB + AslNB) {
-    fputs("Error: Add_Aux_to_DB sublattice byte count mismatch\n", stderr);
+  slNB += 2 + nuI;
+}
+while (s < AslNF) /* put A */
+{
+  uc = &ucSL[2 + (SLp[slNF++] = slNB)];
+  slNB += 2 + nuA;
+  uc[-2] = vA;
+  uc[-1] = nuA;
+  for (j = 0; j < nuA; j++)
+    uc[j] = ucA[j];
+  if ((ms = (*uc % 4))) {
+    if (ms < 3)
+      slNM++;
+  } else
+    slSM++;
+  if ((++s) < AslNF)
+    AuxGet_vn_uc(FA, &vA, &nuA, ucA);
+}
+if (tnb + slNB != IslNB + AslNB) {
+  fputs("Error: Add_Aux_to_DB sublattice byte count mismatch\n", stderr);
+  exit(1);
+} /* SL done */
+
+printf("SL: %dnf %dsm %dnm %db -> ", slNF, slSM, slNM, slNB);
+if (IslNF) {
+  HIpos = FTELL(FI);
+  if (HIpos != IslNB) {
+    fprintf(stderr, "Error: Add_Aux_to_DB sublattice read size mismatch\n");
     exit(1);
-  } /* SL done */
+  }
+  if (ferror(FI)) {
+    fprintf(stderr, "Error: Add_Aux_to_DB sublattice file read error\n");
+    exit(1);
+  }
+  fclose(FI);
+  if (!newout)
+    remove(Ifn.data());
+} /* SL file done */
 
-  printf("SL: %dnf %dsm %dnm %db -> ", slNF, slSM, slNM, slNB);
-  if (IslNF) {
-    HIpos = FTELL(FI);
-    if (HIpos != IslNB) {
-      fprintf(stderr, "Error: Add_Aux_to_DB sublattice read size mismatch\n");
-      exit(1);
+FSEEK(FA, HApos, SEEK_SET);
+Init_FInfoList(&FIo);
+FIo.nVmax = palp::max(FIi.nVmax, FIa.nVmax);
+FIo.NUCmax = palp::max(FIi.NUCmax, FIa.NUCmax); /* Tnb=0; */
+for (v = d + 1; v <= FIo.nVmax; v++)
+  for (nu = 1; nu <= FIo.NUCmax; nu++)
+    if ((FIo.NFnum[v][nu] = FIi.NFnum[v][nu] + FIa.NFnum[v][nu])) {
+      FIo.nNUC[v]++;
+      Oli++; /* Tnb+=FIo.NFnum[v][nu]; */
     }
-    if (ferror(FI)) {
-      fprintf(stderr, "Error: Add_Aux_to_DB sublattice file read error\n");
-      exit(1);
-    }
-    fclose(FI);
-    if (!newout)
-      remove(Ifn.data());
-  } /* SL file done */
+FIo.nV = 0;
+for (v = d + 1; v <= FIo.nVmax; v++)
+  if (FIo.nNUC[v])
+    FIo.nV++;
 
-  FSEEK(FA, HApos, SEEK_SET);
-  Init_FInfoList(&FIo);
-  FIo.nVmax = palp::max(FIi.nVmax, FIa.nVmax);
-  FIo.NUCmax = palp::max(FIi.NUCmax, FIa.NUCmax); /* Tnb=0; */
-  for (v = d + 1; v <= FIo.nVmax; v++)
-    for (nu = 1; nu <= FIo.NUCmax; nu++)
-      if ((FIo.NFnum[v][nu] = FIi.NFnum[v][nu] + FIa.NFnum[v][nu])) {
-        FIo.nNUC[v]++;
-        Oli++; /* Tnb+=FIo.NFnum[v][nu]; */
-      }
-  FIo.nV = 0;
-  for (v = d + 1; v <= FIo.nVmax; v++)
-    if (FIo.nNUC[v])
-      FIo.nV++;
-
-  for (v = d + 1; v <= FIo.nVmax; v++)
-    if (FIo.nNUC[v]) {
-      char vxt[5];
-      strcpy(vxt, ".v");
-      vxt[2] = v / 10 + '0';
-      vxt[3] = v % 10 + '0';
-      vxt[4] = 0;
-      strcpy(Ofx, vxt);
-      strcpy(Ifx, vxt);
-      if (FIi.nNUC[v]) {
-        if (!newout) {
-          strcat(Ifx, SAVE_FILE_EXT);
-          if (rename(Ofn.data(), Ifn.data()) != 0) {
-            fprintf(stderr, "Error: Add_Aux_to_DB rename %s -> %s failed\n",
-                    Ofn.data(), Ifn.data());
-            exit(1);
-          }
-        }
-        if (NULL == (FI = fopen(Ifn.data(), "rb"))) {
-          printf("Ifn %s failed", Ifn.data());
+for (v = d + 1; v <= FIo.nVmax; v++)
+  if (FIo.nNUC[v]) {
+    char vxt[5];
+    strcpy(vxt, ".v");
+    vxt[2] = v / 10 + '0';
+    vxt[3] = v % 10 + '0';
+    vxt[4] = 0;
+    strcpy(Ofx, vxt);
+    strcpy(Ifx, vxt);
+    if (FIi.nNUC[v]) {
+      if (!newout) {
+        strcat(Ifx, SAVE_FILE_EXT);
+        if (rename(Ofn.data(), Ifn.data()) != 0) {
+          fprintf(stderr, "Error: Add_Aux_to_DB rename %s -> %s failed\n",
+                  Ofn.data(), Ifn.data());
           exit(1);
         }
       }
-      if (NULL == (FO = fopen(Ofn.data(), "wb"))) {
-        printf("Ofn %s failed", Ofn.data());
+      if (NULL == (FI = fopen(Ifn.data(), "rb"))) {
+        printf("Ifn %s failed", Ifn.data());
         exit(1);
       }
+    }
+    if (NULL == (FO = fopen(Ofn.data(), "wb"))) {
+      printf("Ofn %s failed", Ofn.data());
+      exit(1);
+    }
 
-      for (nu = 1; nu <= FIo.NUCmax; nu++)
-        if (FIo.NFnum[v][nu]) {
-          unsigned int I_NF = FIi.NFnum[v][nu], A_NF = FIa.NFnum[v][nu],
-                       O_NF = 0;
-          UPint neq = 0, peq = 0, pa = 0;
-          Along pi = 0, po = 0;
+    for (nu = 1; nu <= FIo.NUCmax; nu++)
+      if (FIo.NFnum[v][nu]) {
+        unsigned int I_NF = FIi.NFnum[v][nu], A_NF = FIa.NFnum[v][nu], O_NF = 0;
+        UPint neq = 0, peq = 0, pa = 0;
+        Along pi = 0, po = 0;
 
-          a = 0;
-          if (0 < A_NF) {
-            AuxGet_uc(FA, &nu, ucA);
-            pa += 1 + (((*ucA) % 4) == 3);
-          }
-          for (u = 0; u < I_NF; u++) {
-            AuxGet_uc(FI, &nu, ucI);
-            pi += 1 + (((*ucI) % 4) == 3);
-            while (a < A_NF) {
-              AmI = RIGHTminusLEFT(ucI, ucA, &nu);
-              if (AmI < 0) /* put A */
-              {
-                po += 1 + (((*ucA) % 4) == 3);
-                AuxPut_hNF(FO, &v, &nu, ucA, &FIo, &slNF, &slSM, &slNM, &slNB,
-                           ucSL, SLp);
-                O_NF++;
-                a++;
-                if (a < A_NF) {
-                  AuxGet_uc(FA, &nu, ucA);
-                  pa += 1 + (((*ucA) % 4) == 3);
-                }
-              } else
-                break;
-            }
-            if ((a < A_NF) && (AmI == 0)) /* put I==A */
+        a = 0;
+        if (0 < A_NF) {
+          AuxGet_uc(FA, &nu, ucA);
+          pa += 1 + (((*ucA) % 4) == 3);
+        }
+        for (u = 0; u < I_NF; u++) {
+          AuxGet_uc(FI, &nu, ucI);
+          pi += 1 + (((*ucI) % 4) == 3);
+          while (a < A_NF) {
+            AmI = RIGHTminusLEFT(ucI, ucA, &nu);
+            if (AmI < 0) /* put A */
             {
-              int mm = 10 * (*ucI % 4) + (*ucA % 4);
-              switch (mm) {
-              case 00:
-                peq++;
-                break;
-              case 11:
-                peq++;
-                break;
-              case 12:
-                *ucI += 2;
-                break;
-              case 13:
-                *ucI += 2;
-                peq++;
-                break;
-              case 21:
-                *ucI += 1;
-                break;
-              case 22:
-                peq++;
-                break;
-              case 23:
-                *ucI += 1;
-                peq++;
-                break;
-              case 31:
-                peq++;
-                break;
-              case 32:
-                peq++;
-                break;
-              case 33:
-                peq += 2;
-                break;
-              default:
-                puts("inconsistens mirror flags");
-                exit(1);
-              }
-              AuxPut_hNF(FO, &v, &nu, ucI, &FIo, &slNF, &slSM, &slNM, &slNB,
+              po += 1 + (((*ucA) % 4) == 3);
+              AuxPut_hNF(FO, &v, &nu, ucA, &FIo, &slNF, &slSM, &slNM, &slNB,
                          ucSL, SLp);
-              po += 1 + (((*ucI) % 4) == 3);
-              neq++;
+              O_NF++;
               a++;
               if (a < A_NF) {
                 AuxGet_uc(FA, &nu, ucA);
                 pa += 1 + (((*ucA) % 4) == 3);
               }
-            } else {
-              AuxPut_hNF(FO, &v, &nu, ucI, &FIo, &slNF, &slSM, &slNM, &slNB,
-                         ucSL, SLp);
-              po += 1 + (((*ucI) % 4) == 3);
-            }
-            O_NF++;
+            } else
+              break;
           }
-          while (a < A_NF) /* put A */
+          if ((a < A_NF) && (AmI == 0)) /* put I==A */
           {
-            O_NF++;
-            po += 1 + (((*ucA) % 4) == 3);
-            AuxPut_hNF(FO, &v, &nu, ucA, &FIo, &slNF, &slSM, &slNM, &slNB, ucSL,
+            int mm = 10 * (*ucI % 4) + (*ucA % 4);
+            switch (mm) {
+            case 00:
+              peq++;
+              break;
+            case 11:
+              peq++;
+              break;
+            case 12:
+              *ucI += 2;
+              break;
+            case 13:
+              *ucI += 2;
+              peq++;
+              break;
+            case 21:
+              *ucI += 1;
+              break;
+            case 22:
+              peq++;
+              break;
+            case 23:
+              *ucI += 1;
+              peq++;
+              break;
+            case 31:
+              peq++;
+              break;
+            case 32:
+              peq++;
+              break;
+            case 33:
+              peq += 2;
+              break;
+            default:
+              puts("inconsistens mirror flags");
+              exit(1);
+            }
+            AuxPut_hNF(FO, &v, &nu, ucI, &FIo, &slNF, &slSM, &slNM, &slNB, ucSL,
                        SLp);
-            ++a;
+            po += 1 + (((*ucI) % 4) == 3);
+            neq++;
+            a++;
             if (a < A_NF) {
               AuxGet_uc(FA, &nu, ucA);
               pa += 1 + (((*ucA) % 4) == 3);
             }
+          } else {
+            AuxPut_hNF(FO, &v, &nu, ucI, &FIo, &slNF, &slSM, &slNM, &slNB, ucSL,
+                       SLp);
+            po += 1 + (((*ucI) % 4) == 3);
           }
-          if (pi + pa != peq + po) {
-            fprintf(stderr,
-                    "Error: Add_Aux_to_DB checksum mismatch for v=%d nu=%d\n",
-                    v, nu);
-            exit(1);
-          } /* checksum(v,nu) */
-          FIo.NFnum[v][nu] = O_NF;
-          FIo.nNF += O_NF;
-          FIo.NB += O_NF * nu;
-          if (O_NF + neq != I_NF + A_NF) {
-            fprintf(stderr,
-                    "Error: Add_Aux_to_DB NF merge mismatch for v=%d nu=%d\n",
-                    v, nu);
-            exit(1);
-          }
-          /*
-          {static int list;printf("#%d v=%d nu=%d Inf=%d Anf=%d ",++list,v,nu,
-          I_NF,A_NF);printf("Onf=%d   pi=%d pa=%d  po=%d\n",O_NF,pi,pa,po);
-          }*/
+          O_NF++;
         }
-      if (FIi.nNUC[v]) {
-        if (ferror(FI)) {
-          fprintf(stderr, "Error: Add_Aux_to_DB input file read error\n");
+        while (a < A_NF) /* put A */
+        {
+          O_NF++;
+          po += 1 + (((*ucA) % 4) == 3);
+          AuxPut_hNF(FO, &v, &nu, ucA, &FIo, &slNF, &slSM, &slNM, &slNB, ucSL,
+                     SLp);
+          ++a;
+          if (a < A_NF) {
+            AuxGet_uc(FA, &nu, ucA);
+            pa += 1 + (((*ucA) % 4) == 3);
+          }
+        }
+        if (pi + pa != peq + po) {
+          fprintf(stderr,
+                  "Error: Add_Aux_to_DB checksum mismatch for v=%d nu=%d\n", v,
+                  nu);
+          exit(1);
+        } /* checksum(v,nu) */
+        FIo.NFnum[v][nu] = O_NF;
+        FIo.nNF += O_NF;
+        FIo.NB += O_NF * nu;
+        if (O_NF + neq != I_NF + A_NF) {
+          fprintf(stderr,
+                  "Error: Add_Aux_to_DB NF merge mismatch for v=%d nu=%d\n", v,
+                  nu);
           exit(1);
         }
-        fclose(FI);
-        if (!newout)
-          remove(Ifn.data());
+        /*
+        {static int list;printf("#%d v=%d nu=%d Inf=%d Anf=%d ",++list,v,nu,
+        I_NF,A_NF);printf("Onf=%d   pi=%d pa=%d  po=%d\n",O_NF,pi,pa,po);
+        }*/
       }
-      if (ferror(FO)) {
-        fprintf(stderr, "Error: Add_Aux_to_DB output file write error\n");
+    if (FIi.nNUC[v]) {
+      if (ferror(FI)) {
+        fprintf(stderr, "Error: Add_Aux_to_DB input file read error\n");
         exit(1);
       }
-      fclose(FO);
-    }
-  tnb = 0;
-
-  if (slNF) {
-    strcpy(Ofx, ".sl");
-    FO = fopen(Ofn.data(), "wb");
-    if (FO == NULL) {
-      fprintf(stderr, "Error: Add_Aux_to_DB cannot create %s.sl\n", Ofn.data());
-      exit(1);
-    }
-    for (i = 0; i < slNF; i++) /* write SL */
-    {
-      uc = &ucSL[SLp[i] + 2];
-      v = uc[-2];
-      nu = uc[-1];
-      tnb += nu + 2;
-      if (uc[-2] >= VERT_Nmax) {
-        fprintf(stderr, "Error: Add_Aux_to_DB vertex count %d out of range\n",
-                uc[-2]);
-        exit(1);
-      }
-      fputc(uc[-2], FO);
-      slNP += 1 + (((*uc) % 4) == 3);
-      fputc(nu, FO);
-      for (s = 0; s < nu; s++)
-        fputc(uc[s], FO);
-    }
-    if (tnb != slNB) {
-      fprintf(stderr, "Error: Add_Aux_to_DB sublattice byte write mismatch\n");
-      exit(1);
-    }
-    if (slNP != 2 * slNF - slNM - slSM) {
-      fprintf(stderr, "Error: Add_Aux_to_DB sublattice NP count mismatch\n");
-      exit(1);
+      fclose(FI);
+      if (!newout)
+        remove(Ifn.data());
     }
     if (ferror(FO)) {
-      fprintf(stderr, "Error: Add_Aux_to_DB sublattice file write error\n");
+      fprintf(stderr, "Error: Add_Aux_to_DB output file write error\n");
       exit(1);
     }
     fclose(FO);
   }
-  printf("\nd=%d v%d v<=%d n<=%d vn%d  %lld %d %lld %lld  %d %d %d %d\n", d,
-         FIo.nV, FIo.nVmax, FIo.NUCmax, Oli, FIo.nNF, FIo.nSM, FIo.nNM, FIo.NB,
-         slNF, slSM, slNM, slNB);
+tnb = 0;
 
-  strcpy(Ofx, ".info");
-  FO = fopen(Ofn.data(), "w");
+if (slNF) {
+  strcpy(Ofx, ".sl");
+  FO = fopen(Ofn.data(), "wb");
   if (FO == NULL) {
-    fprintf(stderr, "Error: Add_Aux_to_DB cannot create %s.info\n", Ofn.data());
+    fprintf(stderr, "Error: Add_Aux_to_DB cannot create %s.sl\n", Ofn.data());
     exit(1);
   }
-  fprintf(FO, /* write FO.info */
-          "%d  %d %d %d  %d  %lld %d %lld %lld  %d %d %d %d\n\n", d, FIo.nV,
-          FIo.nVmax, FIo.NUCmax, Oli, FIo.nNF, FIo.nSM, FIo.nNM, FIo.NB, slNF,
-          slSM, slNM, slNB);
-
-  for (v = d + 1; v <= FIo.nVmax; v++)
-    if (FIo.nNUC[v]) /* honest info */
-    {
-      i = 0;
-      fprintf(FO, "%d %d\n", v, FIo.nNUC[v]); /*  v  #nuc's  */
-      for (nu = 1; nu <= FIo.NUCmax; nu++)
-        if (FIo.NFnum[v][nu]) {
-          fprintf(FO, "%d %d%s", nu, FIo.NFnum[v][nu], /* nuc #NF(v,nuc) */
-                  (++i < FIo.nNUC[v]) ? "  " : "\n");
-        }
+  for (i = 0; i < slNF; i++) /* write SL */
+  {
+    uc = &ucSL[SLp[i] + 2];
+    v = uc[-2];
+    nu = uc[-1];
+    tnb += nu + 2;
+    if (uc[-2] >= VERT_Nmax) {
+      fprintf(stderr, "Error: Add_Aux_to_DB vertex count %d out of range\n",
+              uc[-2]);
+      exit(1);
     }
-  printf("Writing %s: %lld+%dsl %lldm+%ds %lldb", dbo,
-         2 * FIo.nNF - FIo.nNM - FIo.nSM, slNP,
-         /*Tnb=*/FIo.nNF - FIo.nNM - FIo.nSM, FIo.nSM, FIo.NB + slNB);
-  /*   if(tnb>99)
-       {	long long tnp=(2*FIo.nNF-FIo.nNM-FIo.nSM)/10; tnp*=tnp;
-          tnp/=20; tnp/=Tnb; printf("   [p^2/2m=%ldk]",tnp);
-       }
-  */
-  Print_Expect(&FIo);
-  puts("");
-  if (ferror(FA)) {
-    fprintf(stderr, "Error: Add_Aux_to_DB aux-file read error\n");
+    fputc(uc[-2], FO);
+    slNP += 1 + (((*uc) % 4) == 3);
+    fputc(nu, FO);
+    for (s = 0; s < nu; s++)
+      fputc(uc[s], FO);
+  }
+  if (tnb != slNB) {
+    fprintf(stderr, "Error: Add_Aux_to_DB sublattice byte write mismatch\n");
     exit(1);
   }
-  fclose(FA);
+  if (slNP != 2 * slNF - slNM - slSM) {
+    fprintf(stderr, "Error: Add_Aux_to_DB sublattice NP count mismatch\n");
+    exit(1);
+  }
   if (ferror(FO)) {
-    fprintf(stderr, "Error: Add_Aux_to_DB info-file write error\n");
+    fprintf(stderr, "Error: Add_Aux_to_DB sublattice file write error\n");
     exit(1);
   }
   fclose(FO);
+}
+printf("\nd=%d v%d v<=%d n<=%d vn%d  %lld %d %lld %lld  %d %d %d %d\n", d,
+       FIo.nV, FIo.nVmax, FIo.NUCmax, Oli, FIo.nNF, FIo.nSM, FIo.nNM, FIo.NB,
+       slNF, slSM, slNM, slNB);
+
+strcpy(Ofx, ".info");
+FO = fopen(Ofn.data(), "w");
+if (FO == NULL) {
+  fprintf(stderr, "Error: Add_Aux_to_DB cannot create %s.info\n", Ofn.data());
+  exit(1);
+}
+fprintf(FO, /* write FO.info */
+        "%d  %d %d %d  %d  %lld %d %lld %lld  %d %d %d %d\n\n", d, FIo.nV,
+        FIo.nVmax, FIo.NUCmax, Oli, FIo.nNF, FIo.nSM, FIo.nNM, FIo.NB, slNF,
+        slSM, slNM, slNB);
+
+for (v = d + 1; v <= FIo.nVmax; v++)
+  if (FIo.nNUC[v]) /* honest info */
+  {
+    i = 0;
+    fprintf(FO, "%d %d\n", v, FIo.nNUC[v]); /*  v  #nuc's  */
+    for (nu = 1; nu <= FIo.NUCmax; nu++)
+      if (FIo.NFnum[v][nu]) {
+        fprintf(FO, "%d %d%s", nu, FIo.NFnum[v][nu], /* nuc #NF(v,nuc) */
+                (++i < FIo.nNUC[v]) ? "  " : "\n");
+      }
+  }
+printf("Writing %s: %lld+%dsl %lldm+%ds %lldb", dbo,
+       2 * FIo.nNF - FIo.nNM - FIo.nSM, slNP,
+       /*Tnb=*/FIo.nNF - FIo.nNM - FIo.nSM, FIo.nSM, FIo.NB + slNB);
+/*   if(tnb>99)
+     {	long long tnp=(2*FIo.nNF-FIo.nNM-FIo.nSM)/10; tnp*=tnp;
+        tnp/=20; tnp/=Tnb; printf("   [p^2/2m=%ldk]",tnp);
+     }
+*/
+Print_Expect(&FIo);
+puts("");
+if (ferror(FA)) {
+  fprintf(stderr, "Error: Add_Aux_to_DB aux-file read error\n");
+  exit(1);
+}
+fclose(FA);
+if (ferror(FO)) {
+  fprintf(stderr, "Error: Add_Aux_to_DB info-file write error\n");
+  exit(1);
+}
+fclose(FO);
 }
 int Check_sl_order(int *v, int *nu, unsigned char *uc) {
   static int n, V, NU;
@@ -1041,8 +1071,13 @@ void Check_NF_Order(char *polyi, char *dbi, int cF,
       exit(1);
     }
     Init_FInfoList(&L); /* start reading the file */
-    fscanf(F, "%d%d%d%d%d%lld%d%lld %lld %d%d%d%d", &d, &i, &j, &nu, &list_num,
-           &L.nNF, &L.nSM, &L.nNM, &L.NB, &sl_nNF, &sl_SM, &sl_NM, &sl_NB);
+    if (fscanf(F, "%d%d%d%d%d%lld%d%lld %lld %d%d%d%d", &d, &i, &j, &nu,
+               &list_num, &L.nNF, &L.nSM, &L.nNM, &L.NB, &sl_nNF, &sl_SM,
+               &sl_NM, &sl_NB) != 13) {
+      fputs("Error: DB_Check malformed info header\n", stderr);
+      fclose(F);
+      exit(1);
+    }
     L.nV = i;
     L.nVmax = j;
     L.NUCmax = nu;
@@ -1055,15 +1090,32 @@ void Check_NF_Order(char *polyi, char *dbi, int cF,
     fflush(stdout);
 
     for (i = 0; i < L.nV; i++) {
-      fscanf(F, "%d", &v);
-      fscanf(F, "%d", &j);
+      if (fscanf(F, "%d", &v) != 1) {
+        fputs("Error: DB_Check expected vertex count\n", stderr);
+        fclose(F);
+        exit(1);
+      }
+      if (fscanf(F, "%d", &j) != 1) {
+        fprintf(stderr, "Error: DB_Check expected nuc count for v=%d\n", v);
+        fclose(F);
+        exit(1);
+      }
       L.nNUC[v] = j;
       if (cF == 2)
         printf("v%dn%d: ", v, L.nNUC[v]);
       fflush(stdout);
       for (j = 0; j < L.nNUC[v]; j++) {
-        fscanf(F, "%d", &nu);
-        fscanf(F, "%d", &L.NFnum[v][nu]);
+        if (fscanf(F, "%d", &nu) != 1) {
+          fprintf(stderr, "Error: DB_Check expected nu value for v=%d\n", v);
+          fclose(F);
+          exit(1);
+        }
+        if (fscanf(F, "%d", &L.NFnum[v][nu]) != 1) {
+          fprintf(stderr, "Error: DB_Check expected NF count for v=%d nu=%d\n",
+                  v, nu);
+          fclose(F);
+          exit(1);
+        }
         tln++;
         tNF += L.NFnum[v][nu];
         if (cF == 2)
@@ -1356,8 +1408,14 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
     }
     {
       Along sNF, sNM; /* start reading the file */
-      fscanf(FS, "%d%d%d%d%d%lld%d%lld %lld %d%d%d%lld", &d, &i, &j, &nu, &Sli,
-             &sNF, &FIs.nSM, &sNM, &FIs.NB, &SslNF, &SslSM, &SslNM, &SslNB);
+      if (fscanf(FS, "%d%d%d%d%d%lld%d%lld %lld %d%d%d%lld", &d, &i, &j, &nu,
+                 &Sli, &sNF, &FIs.nSM, &sNM, &FIs.NB, &SslNF, &SslSM, &SslNM,
+                 &SslNB) != 13) {
+        fputs("Error: Subtract_Aux_from_DB malformed source info header\n",
+              stderr);
+        fclose(FS);
+        exit(1);
+      }
       FIs.nNF = sNF;
       FIs.nNM = sNM;
     }
@@ -1365,12 +1423,34 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
     FIs.nVmax = j;
     FIs.NUCmax = nu;
     for (i = 0; i < FIs.nV; i++) {
-      fscanf(FS, "%d", &v);
-      fscanf(FS, "%d", &j);
+      if (fscanf(FS, "%d", &v) != 1) {
+        fputs("Error: Subtract_Aux_from_DB expected vertex count\n", stderr);
+        fclose(FS);
+        exit(1);
+      }
+      if (fscanf(FS, "%d", &j) != 1) {
+        fprintf(stderr,
+                "Error: Subtract_Aux_from_DB expected nuc count for v=%d\n", v);
+        fclose(FS);
+        exit(1);
+      }
       FIs.nNUC[v] = j;
       for (j = 0; j < FIs.nNUC[v]; j++) {
-        fscanf(FS, "%d", &nu);
-        fscanf(FS, "%d", &FIs.NFnum[v][nu]);
+        if (fscanf(FS, "%d", &nu) != 1) {
+          fprintf(stderr,
+                  "Error: Subtract_Aux_from_DB expected nu value for v=%d\n",
+                  v);
+          fclose(FS);
+          exit(1);
+        }
+        if (fscanf(FS, "%d", &FIs.NFnum[v][nu]) != 1) {
+          fprintf(stderr,
+                  "Error: Subtract_Aux_from_DB expected NF count for v=%d "
+                  "nu=%d\n",
+                  v, nu);
+          fclose(FS);
+          exit(1);
+        }
         tln++;
         tNF += FIs.NFnum[v][nu];
       }
@@ -2111,8 +2191,13 @@ void Bin2aDBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P) {
     exit(1);
   }
   Init_FInfoList(&L); /* start reading the file */
-  fscanf(F, "%d%d%d%d%d%lld%d%lld %lld %d%d%d%d", &d, &i, &j, &nu, &list_num,
-         &L.nNF, &L.nSM, &L.nNM, &L.NB, &sl_nNF, &sl_SM, &sl_NM, &sl_NB);
+  if (fscanf(F, "%d%d%d%d%d%lld%d%lld %lld %d%d%d%d", &d, &i, &j, &nu,
+             &list_num, &L.nNF, &L.nSM, &L.nNM, &L.NB, &sl_nNF, &sl_SM, &sl_NM,
+             &sl_NB) != 13) {
+    fputs("Error: Bin2aDBsl malformed info header\n", stderr);
+    fclose(F);
+    exit(1);
+  }
   L.nV = i;
   L.nVmax = j;
   L.NUCmax = nu;
@@ -2276,11 +2361,26 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto,
   }
 
   for (i = 0; i < DB.nV; i++) {
-    fscanf(DB.Finfo, "%d", &v);
-    fscanf(DB.Finfo, "%d", &(DB.nNUC[v]));
+    if (fscanf(DB.Finfo, "%d", &v) != 1) {
+      fputs("Error: CY_hodge_split expected vertex count\n", stderr);
+      exit(1);
+    }
+    if (fscanf(DB.Finfo, "%d", &(DB.nNUC[v])) != 1) {
+      fprintf(stderr, "Error: CY_hodge_split expected nuc count for v=%d\n", v);
+      exit(1);
+    }
     for (j = 0; j < DB.nNUC[v]; j++) {
-      fscanf(DB.Finfo, "%d", &nu);
-      fscanf(DB.Finfo, "%d", &(DB.NFnum[v][nu]));
+      if (fscanf(DB.Finfo, "%d", &nu) != 1) {
+        fprintf(stderr, "Error: CY_hodge_split expected nu value for v=%d\n",
+                v);
+        exit(1);
+      }
+      if (fscanf(DB.Finfo, "%d", &(DB.NFnum[v][nu])) != 1) {
+        fprintf(stderr,
+                "Error: CY_hodge_split expected NF count for v=%d nu=%d\n", v,
+                nu);
+        exit(1);
+      }
     }
   }
 
@@ -2442,12 +2542,29 @@ void Sort_Hodge(char *dbaux, char *dbout) {
     fprintf(stderr, "Error: Sort_Hodge_files cannot open %s\n", dbaname.data());
     exit(1);
   }
-  while ((fscanf(Fvinfo, "%d", &v)) != EOF) {
-    fscanf(Fvinfo, "%d  %d", &nd, &(nnf_v[v]));
+  while (fscanf(Fvinfo, "%d", &v) == 1) {
+    if (fscanf(Fvinfo, "%d  %d", &nd, &(nnf_v[v])) != 2) {
+      fprintf(stderr, "Error: Sort_Hodge_files expected nd nnf_v for v=%d\n",
+              v);
+      fclose(Fvinfo);
+      exit(1);
+    }
     /* printf("%d %d %d  ", v, nd, nnf_v[v]  ); fflush(0); */
     for (i = 0; i < nd; i++) {
-      fscanf(Fvinfo, "%d", &dh);
-      fscanf(Fvinfo, "%d", &(nnf_vd[v][dh]));
+      if (fscanf(Fvinfo, "%d", &dh) != 1) {
+        fprintf(stderr,
+                "Error: Sort_Hodge_files expected dh entry %d for v=%d\n", i,
+                v);
+        fclose(Fvinfo);
+        exit(1);
+      }
+      if (fscanf(Fvinfo, "%d", &(nnf_vd[v][dh])) != 1) {
+        fprintf(stderr,
+                "Error: Sort_Hodge_files expected count for v=%d dh=%d\n", v,
+                dh);
+        fclose(Fvinfo);
+        exit(1);
+      }
       nnf_d[dh] += nnf_vd[v][dh];
     }
   }
@@ -2595,12 +2712,28 @@ void Test_Hodge_db(char *dbname) {
     fprintf(stderr, "Error: Test_Hodge_db cannot open %s\n", filename.data());
     exit(1);
   }
-  while ((fscanf(Fhinfo, "%d", &dh)) != EOF) {
-    fscanf(Fhinfo, "%d  %d", &nh, &(nnf_d[dh]));
+  while (fscanf(Fhinfo, "%d", &dh) == 1) {
+    if (fscanf(Fhinfo, "%d  %d", &nh, &(nnf_d[dh])) != 2) {
+      fprintf(stderr, "Error: Test_Hodge_db expected nh nnf_d for dh=%d\n", dh);
+      fclose(Fhinfo);
+      exit(1);
+    }
     nnf_sum = 0;
     for (i = 0; i < nh; i++) {
-      fscanf(Fhinfo, "%d", &h12);
-      fscanf(Fhinfo, "%d", &(nnf_dh[dh][h12]));
+      if (fscanf(Fhinfo, "%d", &h12) != 1) {
+        fprintf(stderr,
+                "Error: Test_Hodge_db expected h12 entry %d for dh=%d\n", i,
+                dh);
+        fclose(Fhinfo);
+        exit(1);
+      }
+      if (fscanf(Fhinfo, "%d", &(nnf_dh[dh][h12])) != 1) {
+        fprintf(stderr,
+                "Error: Test_Hodge_db expected count for dh=%d h12=%d\n", dh,
+                h12);
+        fclose(Fhinfo);
+        exit(1);
+      }
       nnf_sum += nnf_dh[dh][h12];
     }
     if (nnf_sum != nnf_d[dh]) {
@@ -2815,12 +2948,31 @@ void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P) {
             filename.data());
     exit(1);
   }
-  while ((fscanf(Fhinfo, "%d", &dh)) != EOF) {
-    fscanf(Fhinfo, "%d  %d", &nh, &(nnf_d[dh]));
+  while (fscanf(Fhinfo, "%d", &dh) == 1) {
+    if (fscanf(Fhinfo, "%d  %d", &nh, &(nnf_d[dh])) != 2) {
+      fprintf(stderr,
+              "Error: Extract_from_Hodge_db expected nh nnf_d for dh=%d\n", dh);
+      fclose(Fhinfo);
+      exit(1);
+    }
     nnf_sum = 0;
     for (i = 0; i < nh; i++) {
-      fscanf(Fhinfo, "%d", &h12);
-      fscanf(Fhinfo, "%d", &(nnf_dh[dh][h12]));
+      if (fscanf(Fhinfo, "%d", &h12) != 1) {
+        fprintf(stderr,
+                "Error: Extract_from_Hodge_db expected h12 entry %d for "
+                "dh=%d\n",
+                i, dh);
+        fclose(Fhinfo);
+        exit(1);
+      }
+      if (fscanf(Fhinfo, "%d", &(nnf_dh[dh][h12])) != 1) {
+        fprintf(stderr,
+                "Error: Extract_from_Hodge_db expected count for dh=%d "
+                "h12=%d\n",
+                dh, h12);
+        fclose(Fhinfo);
+        exit(1);
+      }
       nnf_sum += nnf_dh[dh][h12];
     }
     if (nnf_sum != nnf_d[dh]) {
@@ -2828,6 +2980,7 @@ void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P) {
       exit(1);
     }
   }
+
   if (ferror(Fhinfo)) {
     printf("File error in %s\n", filename.data());
     exit(1);
@@ -3040,11 +3193,24 @@ void Open_DB(char *dbin, DataBase **_DB, int info) {
       DB->NFnum[v][nu] = 0;
   }
   for (i = 0; i < DB->nV; i++) {
-    fscanf(DB->Finfo, "%d", &v);
-    fscanf(DB->Finfo, "%d", &(DB->nNUC[v]));
+    if (fscanf(DB->Finfo, "%d", &v) != 1) {
+      fputs("Error: Open_DB expected vertex count\n", stderr);
+      exit(1);
+    }
+    if (fscanf(DB->Finfo, "%d", &(DB->nNUC[v])) != 1) {
+      fprintf(stderr, "Error: Open_DB expected nuc count for v=%d\n", v);
+      exit(1);
+    }
     for (j = 0; j < DB->nNUC[v]; j++) {
-      fscanf(DB->Finfo, "%d", &nu);
-      fscanf(DB->Finfo, "%d", &(DB->NFnum[v][nu]));
+      if (fscanf(DB->Finfo, "%d", &nu) != 1) {
+        fprintf(stderr, "Error: Open_DB expected nu value for v=%d\n", v);
+        exit(1);
+      }
+      if (fscanf(DB->Finfo, "%d", &(DB->NFnum[v][nu])) != 1) {
+        fprintf(stderr, "Error: Open_DB expected NF count for v=%d nu=%d\n", v,
+                nu);
+        exit(1);
+      }
     }
   }
   if (ferror(DB->Finfo)) {
@@ -3711,8 +3877,13 @@ void Bin_2_ANF_DBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P) {
     exit(1);
   }
   Init_FInfoList(&L); /* start reading the file */
-  fscanf(F, "%d%d%d%d%d%lld%d%lld %lld %d%d%d%d", &d, &i, &j, &nu, &list_num,
-         &L.nNF, &L.nSM, &L.nNM, &L.NB, &sl_nNF, &sl_SM, &sl_NM, &sl_NB);
+  if (fscanf(F, "%d%d%d%d%d%lld%d%lld %lld %d%d%d%d", &d, &i, &j, &nu,
+             &list_num, &L.nNF, &L.nSM, &L.nNM, &L.NB, &sl_nNF, &sl_SM, &sl_NM,
+             &sl_NB) != 13) {
+    fputs("Error: Bin_2_ANF_DBsl malformed info header\n", stderr);
+    fclose(F);
+    exit(1);
+  }
   L.nV = i;
   L.nVmax = j;
   L.NUCmax = nu;

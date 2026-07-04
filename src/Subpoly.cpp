@@ -684,10 +684,24 @@ void Start_Make_All_Subpolys(PolyPointList *_P, NF_List *_NFL) {
       fprintf(outFILE, "\n");
     }
     fprintf(outFILE, "How many of them do you want to keep?\n");
-    fscanf(inFILE, "%d", &(KL.nk));
+    if (fscanf(inFILE, "%d", &(KL.nk)) != 1) {
+      fputs("Error: Keep_list expected number of vertices to keep\n", stderr);
+      exit(1);
+    }
+    if ((KL.nk < 0) || (KL.nk > VERT_Nmax)) {
+      fprintf(stderr, "Error: Keep_list nk=%d out of range\n", KL.nk);
+      exit(1);
+    }
     fprintf(outFILE, "Which %d of them do you want to keep?\n", KL.nk);
     for (i = 0; i < KL.nk; i++) {
-      fscanf(inFILE, "%d", &j);
+      if (fscanf(inFILE, "%d", &j) != 1) {
+        fprintf(stderr, "Error: Keep_list expected vertex index %d\n", i);
+        exit(1);
+      }
+      if ((j < 0) || (j >= V.nv)) {
+        fprintf(stderr, "Error: Keep_list vertex index %d out of range\n", j);
+        exit(1);
+      }
       KL.k[i] = V.v[j];
     }
     fprintf(outFILE, "Keeping\n");

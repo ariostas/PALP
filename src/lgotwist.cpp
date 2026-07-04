@@ -235,10 +235,14 @@ int readline(skelet *s) /* reads: "string[#+1] exp_0 ... exp_# ... \n" */
     else
       s->p[s->N++] = i - '0';
   for (i = 0; i < (s->N); i++)
-    fscanf(ctx.infi, "%d", &s->a[i]);
+    if (fscanf(ctx.infi, "%d", &s->a[i]) != 1) {
+      fputs("Error: ReadSkeleton expected integer coefficient\n", stderr);
+      exit(1);
+    }
   n = (*s).N;
   while (fgetc(ctx.infi) - '\n')
-    ;
+    if (feof(ctx.infi))
+      break;
   return 1;
 }
 
@@ -1275,9 +1279,15 @@ void ReadSpec() {
   int g, a, c, b = 0; /* g=h[0]-(h[1]=chi)/2; a=h[0]; b=h[3]; */
   if (ctx.stdi)
     printf("Type 'g a c' or '-g a c h01' with g=h12 and a=h11: ");
-  fscanf(ctx.infi, "%d%d%d", &g, &a, &c);
+  if (fscanf(ctx.infi, "%d%d%d", &g, &a, &c) != 3) {
+    fputs("Error: ReadSpec expected g a c\n", stderr);
+    exit(1);
+  }
   if (g < 0) {
-    fscanf(ctx.infi, "%d", &b);
+    if (fscanf(ctx.infi, "%d", &b) != 1) {
+      fputs("Error: ReadSpec expected h01 after negative g\n", stderr);
+      exit(1);
+    }
     g = -g;
   }
   if (c != 2 * (a - g))

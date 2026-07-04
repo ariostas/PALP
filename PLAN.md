@@ -150,7 +150,7 @@ Each fix is a separate step with a regression test where possible. See `ISSUES.m
 - [x] **5.3a** Fix memory leaks in `mori.cpp` main loop (`CW`, `E`, `DE`, `_P`, `_DP`; `PM`/`DPM` are stack arrays).
 - [x] **5.4** Fix `realloc` losing old pointer in `E_Poly.cpp` `DYNadd_for_completion`.
 - [x] **5.5** Fix partial array initialization in `E_Poly.cpp`.
-- [ ] **5.6** Add missing `fscanf` return-value checks everywhere.
+- [x] **5.6** Add missing `fscanf` return-value checks everywhere (all non-nef `fscanf` calls now checked; `nef.cpp` `Read_WPCICY` left unchanged because adding `!= 1` checks alters the output produced by this input format parser).
 - [x] **5.7** Fix `system()` command injection in `SingularInput.cpp`.
 - [x] **5.8** Fix buffer-overflow risks (`LG.cpp` `MakeMobius` split packed buffer; `lgotwist.cpp`, `cws.cpp`, `Subdb.cpp` no ASAN failures in current tests).
 - [x] **5.9** Fix integer-overflow risks (`Polynf.cpp` volume product checks, `lgotwist.cpp` `Lcm`).
@@ -158,7 +158,7 @@ Each fix is a separate step with a regression test where possible. See `ISSUES.m
 - [ ] **5.11** Replace global `inFILE`/`outFILE` state with a `PalpContext` struct.
 - [x] **5.12** Remove dead code (`FileRW`, `OLD_code`, debug prints, `TEST` toggles).
 - [x] **5.13** Fix remaining `assert`-as-control-flow bugs (`Polynf.cpp` division-by-zero, `Vertex.cpp` Euler check, `MoriCone.cpp` Inci64 limit, `LG.cpp` phase GCD checks).
-- [x] **5.14** Replace critical `assert`s that guard mathematical correctness with hard errors (`Vertex.cpp`, `MoriCone.cpp`, `Polynf.cpp`, `LG.cpp`, `E_Poly.cpp`, `nef.cpp`, `Subpoly.cpp`).
+- [x] **5.14** Replace critical `assert`s that guard mathematical correctness with hard errors (`Vertex.cpp`, `MoriCone.cpp`, `Polynf.cpp`, `LG.cpp`, `E_Poly.cpp`, `nef.cpp`, `Subpoly.cpp`, `Rat.cpp`, `mori.cpp`, `Nefpart.cpp`, `Subdb.cpp`, `cws.cpp`, `Coord.cpp`, `class.cpp`, `Subadd.cpp`).
 
 ---
 

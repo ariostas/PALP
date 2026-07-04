@@ -72,14 +72,21 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
     return 0;
   ungetc(C, inFILE);
   *nz = 0;
-  fscanf(inFILE, "%d", I);
+  if (fscanf(inFILE, "%d", I) != 1) {
+    fputs("Error: Read_WZeight expected leading weight\n", stderr);
+    exit(1);
+  }
   for (i = 1; i < W_Nmax + 2; i++) {
     while (' ' == (C = fgetc(inFILE)))
       ;
     ungetc(C, inFILE);
-    if (IsDigit(C))
-      fscanf(inFILE, "%d", &I[i]);
-    else
+    if (IsDigit(C)) {
+      if (fscanf(inFILE, "%d", &I[i]) != 1) {
+        fprintf(stderr, "Error: Read_WZeight expected weight component %d\n",
+                i);
+        exit(1);
+      }
+    } else
       break;
   }
   WZ->N = i - 1;
@@ -479,14 +486,20 @@ int Read_Weight(Weight *_W) /* read "d w_i" [ or "w_i d" if last=max ] */
   if (!IsDigit(c))
     return 0;
   ungetc(c, inFILE);
-  fscanf(inFILE, "%d", I);
+  if (fscanf(inFILE, "%d", I) != 1) {
+    fputs("Error: Read_Weight expected leading weight\n", stderr);
+    exit(1);
+  }
   for (i = 1; i < W_Nmax + 2; i++) {
     while (' ' == (c = fgetc(inFILE)))
       ;
     ungetc(c, inFILE);
-    if (IsDigit(c))
-      fscanf(inFILE, "%d", &I[i]);
-    else
+    if (IsDigit(c)) {
+      if (fscanf(inFILE, "%d", &I[i]) != 1) {
+        fprintf(stderr, "Error: Read_Weight expected weight component %d\n", i);
+        exit(1);
+      }
+    } else
       break;
   }
   while (fgetc(inFILE) - '\n')
