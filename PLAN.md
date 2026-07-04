@@ -117,7 +117,7 @@ cmake --build build/ubsan && ctest --test-dir build/ubsan
 
 #### Step 4.3 — Final cleanup
 
-- [ ] Remove `-DNDEBUG` workaround in `CMakeLists.txt` (line 16) once asserts are replaced with proper error handling in Phase 5.
+- [x] Remove `-DNDEBUG` workaround in `CMakeLists.txt` (line 16) once asserts are replaced with proper error handling in Phase 5.
 - [ ] Convert any remaining header-level `#define` constants that are safe to `constexpr`/`using` without breaking `#if` array-size logic.
 - [x] Run full multi-dimension test sweep (POLY_Dmax = 4, 5, 6, 11): 196/196 passed for each dimension.
 - [x] Run ASAN build and CTest: 196/196 passed (after fixing `MakeMobius` heap overflow).
