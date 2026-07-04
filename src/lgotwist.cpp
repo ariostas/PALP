@@ -239,7 +239,7 @@ int readline(skelet *s) /* reads: "string[#+1] exp_0 ... exp_# ... \n" */
 
 long pgcd(long a, long b) {
   long c;
-  while (c = Mod(a, b)) {
+  while ((c = Mod(a, b))) {
     a = b;
     b = c;
   }
@@ -340,11 +340,11 @@ void maxpri(prili pn) /* pmax = prime decomposistion of Lcm of group orders */
  *   groups corresponding to inv[] by t_k and evaluate the new generator    */
 /*   finally repeat this for the loop of i and evaluate its symm.-generator */
 void analy(skelet s) {
-  long ph[NM][NM + 1],      /* p[i][0] = order of sym. i<s.N */
-      d, num[NM], den[NM];  /* (n_i)/d == (num_i)/(den_i) */
-  int i, j, n, ord[NM + 1], /* order of evaluation (right to left) */
-      lo[NM + 1], lopo,     /* loop of length *lo; lopo=#(pointers at loop) */
-      inv[NM][NM]; /* j is pointed at by inv[j][1],...,inv[j][*inv[j] */
+  long ph[NM][NM + 1],          /* p[i][0] = order of sym. i<s.N */
+      d, num[NM], den[NM] = {}; /* (n_i)/d == (num_i)/(den_i) */
+  int i, j, n, ord[NM + 1],     /* order of evaluation (right to left) */
+      lo[NM + 1], lopo, /* loop of length *lo; lopo=#(pointers at loop) */
+      inv[NM][NM];      /* j is pointed at by inv[j][1],...,inv[j][*inv[j] */
   for (i = 0; i < s.N; i++) {
     *ph[i] = 1;
     for (j = 0; j < s.N; ph[i][++j] = 0)
@@ -738,7 +738,7 @@ int checklink(int link, int targets) {
    * indicated by targets exists and can be added to the graph.
    * If a pointer is required, the existence of all further links required
    * by our theorem is checked by recursive calls of checklink.               */
-  int i, j, k, pn, check;
+  int i, j, pn;
   int newtarg, newlink;
   smon mon;
   symlist dw;
@@ -773,7 +773,7 @@ int checklink(int link, int targets) {
 
 int checkweight() { /* checks whether our weight system allows a
                     non-degenerate symmetry-respecting potential         */
-  int i, j;
+  int i;
   for (i = 0; i < n; i++)
     pointernum[i] = 0;
   for (i = 0; i < n; i++)
@@ -900,8 +900,8 @@ void processym() {
   if (LONGOUT) {
     fprintf(ctx.outfi, "\nwei:\n");
     for (j = 0; j < n; j++)
-      fprintf(ctx.outfi, " %d", wei[j][0]);
-    fprintf(ctx.outfi, "  %d\n", d[0]);
+      fprintf(ctx.outfi, " %ld", (long)wei[j][0]);
+    fprintf(ctx.outfi, "  %ld\n", (long)d[0]);
   }
   for (i = 1; i <= ns; i++) {
     d[i] = auxd[i - 1][npr - 1];
@@ -910,10 +910,10 @@ void processym() {
     for (j = 0; j < n; j++) {
       wei[j][i] = auxwei[j][i - 1][npr - 1];
       if (LONGOUT)
-        fprintf(ctx.outfi, " %d", wei[j][i]);
+        fprintf(ctx.outfi, " %ld", (long)wei[j][i]);
     }
     if (LONGOUT)
-      fprintf(ctx.outfi, "  %d\n", d[i]);
+      fprintf(ctx.outfi, "  %ld\n", (long)d[i]);
   }
   if (checkweight()) {
     if (LONGOUT)
@@ -1253,7 +1253,7 @@ void finishmodel() {
   if (!specnum)
     ctx.bugcount++;
 }
-void ErrEx(char *c) {
+void ErrEx(const char *c) {
   puts(c);
   exit(1);
 }
@@ -1290,7 +1290,7 @@ void ReadSpec() {
   search[1] = c;
   search[2] = b;
 }
-void PrintUse(char *s) {
+void PrintUse(const char *s) {
   puts(s);
   puts("Either '-s' or '-g # -a #' is required, the rest is optional");
   puts(" -s      ask for spectrum");
