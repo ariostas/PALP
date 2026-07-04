@@ -46,13 +46,25 @@ LgoTwistContext ctx;
 /*  ======================================================================  */
 /*  ==========     rat.h   (header -> #include "rat.h")         ==========  */
 /*  ======================================================================  */
-long gcd(long a, long b);
-
 namespace {
 long Mod(long a, long b) { return b ? a % b : a; }
 long Min(long a, long b) { return a < b ? a : b; }
 long Max(long a, long b) { return a > b ? a : b; }
 long Abs(long a) { return a < 0 ? -a : a; }
+long gcd(long a, long b) {
+  a = (a < 0) ? -a : a;
+  b = (b < 0) ? -b : b;
+  if (!a)
+    return b;
+  if (!b)
+    return a;
+  long c;
+  while ((c = Mod(a, b))) {
+    a = b;
+    b = c;
+  }
+  return b;
+}
 long Lcm(long a, long b) {
   long g = gcd(a, b);
   return g ? (a / g) * b : 0;
@@ -63,18 +75,6 @@ typedef struct {
   long num;
   long den;
 } rat;
-rat rI(long a);          /*  conversion  long -> rat  */
-rat rR(long a, long b);  /*  conversion  a/b  -> rat  */
-rat rS(rat a, rat b);    /*  a + b  */
-rat rD(rat a, rat b);    /*  a - b  */
-rat rP(rat a, rat b);    /*  a * b  */
-rat rQ(rat a, rat b);    /*  a / b  */
-void fS(rat *a, rat *b); /*  fast sum: add rat  *b  to rat  *a  */
-void iS(rat *a, int *b); /*  fast sum: add int  *b  to rat  *a  */
-/*  ======================================================================  */
-/*  ========== rat.c (source code: cc -c rat.c generates rat.o) ==========  */
-/*  ========== cc -o prog prog.c rat.o   incl. obj. code rat.o  ==========  */
-/*  #include "rat.h"      ================================================  */
 rat rI(long a) {
   rat c;
   c.num = a;
@@ -109,8 +109,6 @@ rat rD(rat a, rat b) /*  a - b  */
   c.num /= g;
   c.den /= g;
   return c;
-  /**      rat c; long g=gcd(c.num=a.num*b.den-b.num*a.den,
-        c.den=a.den*b.den);      c.num/=g; c.den/=g; return c; */
 }
 rat rP(rat a, rat b) /*  a * b  */
 {
@@ -138,22 +136,9 @@ rat rQ(rat a, rat b) /*  a / b  */
   }
   return c;
 }
-long gcd(long a, long b) {
-  a = (a < 0) ? -a : a;
-  b = (b < 0) ? -b : b;
-  if (!a)
-    return b;
-  if (!b)
-    return a;
-  {
-    long c;
-    while (c = Mod(a, b)) {
-      a = b;
-      b = c;
-    }
-    return b;
-  }
-}
+void fS(rat *a, rat *b) { *a = rS(*a, *b); }
+void iS(rat *a, int *b) { *a = rS(*a, rI(*b)); }
+
 long argint(char *s) /* string to integer */
 {
   long d = (*s) - '0';
