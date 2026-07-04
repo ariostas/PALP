@@ -2615,9 +2615,7 @@ void Conv(int narg, char *fn[]) {
 /*uses latte instead of Aux_Complete_Poly for counting points*/
 void td_Print_EL(EqList *_E, int *n, int suppress_c, const char *comment) {
   int i, j;
-  char command[100];
-  snprintf(command, sizeof(command), "rm zzL.tmp");
-  system(command);
+  remove("zzL.tmp");
   outFILE = fopen("zzL.tmp", "w");
   fprintf(outFILE, "%d %d  %s\n", _E->ne, (*n) + 1, comment);
   for (i = 0; i < _E->ne; i++) {
@@ -2631,12 +2629,11 @@ void td_Print_EL(EqList *_E, int *n, int suppress_c, const char *comment) {
 }
 Long NP_use_lat(EqList *_E, PolyPointList *_P) {
   int tmp;
-  char command[100];
-  snprintf(command, sizeof(command),
-           "count zzL.tmp | grep '*' | awk '{print $7}' > zzL.tmp1");
-
   td_Print_EL(_E, &_P->n, 0, "");
-  system(command);
+  if (system("count zzL.tmp | grep '*' | awk '{print $7}' > zzL.tmp1")) {
+    fputs("Error: NP_use_lat lattice count command failed\n", stderr);
+    exit(1);
+  }
   outFILE = fopen("zzL.tmp1", "r");
   while ((fscanf(outFILE, "%d", &tmp)) == 1)
     ;

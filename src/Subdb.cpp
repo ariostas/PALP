@@ -500,68 +500,88 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
     }
   }
   if (tNF != FIi.nNF) {
-  fprintf(stderr,
-          "Error: Add_Aux_to_DB total NF mismatch: tNF=%lld FIi.nNF=%lld\n",
-          (long long)tNF, (long long)FIi.nNF);
-  exit(1);
-}
-tNF = 0;
-{
-  int rd_byte = fgetc(FA);
-  if (rd_byte != EOF) {
-    ungetc(rd_byte, FA);
-    fputs("Error: Add_Aux_to_DB aux-file recursion depth must be 0\n", stderr);
+    fprintf(stderr,
+            "Error: Add_Aux_to_DB total NF mismatch: tNF=%lld FIi.nNF=%lld\n",
+            (long long)tNF, (long long)FIi.nNF);
     exit(1);
   }
-}
-Read_Bin_Info(FA, &j, &Ali, &AslNF, &AslSM, &AslNM, &AslNB, &FIa);
-if (d != j) {
-  fprintf(stderr, "Error: Add_Aux_to_DB dimension mismatch %d != %d\n", d, j);
-  exit(1);
-}
-strcpy(Ifx, ".sl");
-if (IslNF) {
-  FI = fopen(Ifn.data(), "rb");
-  if (FI == NULL) {
-    fprintf(stderr, "Error: Add_Aux_to_DB cannot open %s.sl\n", Ifn.data());
+  tNF = 0;
+  {
+    int rd_byte = fgetc(FA);
+    if (rd_byte != EOF) {
+      ungetc(rd_byte, FA);
+      fputs("Error: Add_Aux_to_DB aux-file recursion depth must be 0\n",
+            stderr);
+      exit(1);
+    }
+  }
+  Read_Bin_Info(FA, &j, &Ali, &AslNF, &AslSM, &AslNM, &AslNB, &FIa);
+  if (d != j) {
+    fprintf(stderr, "Error: Add_Aux_to_DB dimension mismatch %d != %d\n", d, j);
     exit(1);
   }
-}
-std::vector<unsigned char> ucSL_buffer;
-if ((IslNB + AslNB))
-  ucSL_buffer.resize(IslNB + AslNB);
-ucSL = ucSL_buffer.data();
-HApos = FTELL(FA);
-FSEEK(FA, 0, SEEK_END);
-Apos = FTELL(FA);
-Inp = 2 * FIi.nNF - FIi.nSM - FIi.nNM;
-Anp = 2 * FIa.nNF - FIa.nSM - FIa.nNM;
-printf("Data on %s:  %lld+%dsl  %lldb  (%dd)\n", dbi, Inp,
-       /* Islp= */ 2 * IslNF - IslNM - IslSM, FIi.NB + slNB, d);
-printf("Data on %s:  %u+%dsl  %lldb  (%dd)\n", polya, Anp,
-       /* Aslp= */ 2 * AslNF - AslNM - AslSM, Apos, d);
-if (HApos + FIa.NB + AslNB != Apos) {
-  fputs("Error: Add_Aux_to_DB aux-file size mismatch\n", stderr);
-  exit(1);
-}
-FSEEK(FA, -AslNB, SEEK_CUR);
-s = 0;
-if (s < AslNF)
-  AuxGet_vn_uc(FA, &vA, &nuA, ucA);
-for (i = 0; i < IslNF; i++) {
-  AuxGet_vn_uc(FI, &vI, &nuI, ucI);
-  uc = &ucSL[2 + (SLp[slNF++] = slNB)];
-  while (s < AslNF) {
-    if (!(AmI = vA - vI))
-      if (!(AmI = nuA - nuI))
-        AmI = RIGHTminusLEFT(ucI, ucA, &nuI);
-    if (AmI < 0) /* put A */
+  strcpy(Ifx, ".sl");
+  if (IslNF) {
+    FI = fopen(Ifn.data(), "rb");
+    if (FI == NULL) {
+      fprintf(stderr, "Error: Add_Aux_to_DB cannot open %s.sl\n", Ifn.data());
+      exit(1);
+    }
+  }
+  std::vector<unsigned char> ucSL_buffer;
+  if ((IslNB + AslNB))
+    ucSL_buffer.resize(IslNB + AslNB);
+  ucSL = ucSL_buffer.data();
+  HApos = FTELL(FA);
+  FSEEK(FA, 0, SEEK_END);
+  Apos = FTELL(FA);
+  Inp = 2 * FIi.nNF - FIi.nSM - FIi.nNM;
+  Anp = 2 * FIa.nNF - FIa.nSM - FIa.nNM;
+  printf("Data on %s:  %lld+%dsl  %lldb  (%dd)\n", dbi, Inp,
+         /* Islp= */ 2 * IslNF - IslNM - IslSM, FIi.NB + slNB, d);
+  printf("Data on %s:  %u+%dsl  %lldb  (%dd)\n", polya, Anp,
+         /* Aslp= */ 2 * AslNF - AslNM - AslSM, Apos, d);
+  if (HApos + FIa.NB + AslNB != Apos) {
+    fputs("Error: Add_Aux_to_DB aux-file size mismatch\n", stderr);
+    exit(1);
+  }
+  FSEEK(FA, -AslNB, SEEK_CUR);
+  s = 0;
+  if (s < AslNF)
+    AuxGet_vn_uc(FA, &vA, &nuA, ucA);
+  for (i = 0; i < IslNF; i++) {
+    AuxGet_vn_uc(FI, &vI, &nuI, ucI);
+    uc = &ucSL[2 + (SLp[slNF++] = slNB)];
+    while (s < AslNF) {
+      if (!(AmI = vA - vI))
+        if (!(AmI = nuA - nuI))
+          AmI = RIGHTminusLEFT(ucI, ucA, &nuI);
+      if (AmI < 0) /* put A */
+      {
+        uc[-2] = vA;
+        uc[-1] = nuA;
+        for (j = 0; j < nuA; j++)
+          uc[j] = ucA[j];
+        slNB += 2 + nuA;
+        if ((ms = (*uc % 4))) {
+          if (ms < 3)
+            slNM++;
+        } else
+          slSM++;
+        if ((++s) < AslNF)
+          AuxGet_vn_uc(FA, &vA, &nuA, ucA);
+        uc = &ucSL[2 + (SLp[slNF++] = slNB)];
+      } else
+        break;
+    }
+    if ((s < AslNF) && (AmI == 0)) /* put I==A */
     {
-      uc[-2] = vA;
-      uc[-1] = nuA;
-      for (j = 0; j < nuA; j++)
-        uc[j] = ucA[j];
-      slNB += 2 + nuA;
+      uc[-2] = vI;
+      uc[-1] = nuI;
+      for (j = 0; j < nuI; j++)
+        uc[j] = ucI[j];
+      if ((*ucI % 4) != (*ucA % 4))
+        *uc = 3 + 4 * (*uc / 4);
       if ((ms = (*uc % 4))) {
         if (ms < 3)
           slNM++;
@@ -569,18 +589,29 @@ for (i = 0; i < IslNF; i++) {
         slSM++;
       if ((++s) < AslNF)
         AuxGet_vn_uc(FA, &vA, &nuA, ucA);
-      uc = &ucSL[2 + (SLp[slNF++] = slNB)];
-    } else
-      break;
+      tnb += 2 + nuI;
+    } else /* put I */
+    {
+      uc[-2] = vI;
+      uc[-1] = nuI;
+      for (j = 0; j < nuI; j++)
+        uc[j] = ucI[j];
+      if ((ms = (*uc % 4))) {
+        if (ms < 3)
+          slNM++;
+      } else
+        slSM++;
+    }
+    slNB += 2 + nuI;
   }
-  if ((s < AslNF) && (AmI == 0)) /* put I==A */
+  while (s < AslNF) /* put A */
   {
-    uc[-2] = vI;
-    uc[-1] = nuI;
-    for (j = 0; j < nuI; j++)
-      uc[j] = ucI[j];
-    if ((*ucI % 4) != (*ucA % 4))
-      *uc = 3 + 4 * (*uc / 4);
+    uc = &ucSL[2 + (SLp[slNF++] = slNB)];
+    slNB += 2 + nuA;
+    uc[-2] = vA;
+    uc[-1] = nuA;
+    for (j = 0; j < nuA; j++)
+      uc[j] = ucA[j];
     if ((ms = (*uc % 4))) {
       if (ms < 3)
         slNM++;
@@ -588,320 +619,291 @@ for (i = 0; i < IslNF; i++) {
       slSM++;
     if ((++s) < AslNF)
       AuxGet_vn_uc(FA, &vA, &nuA, ucA);
-    tnb += 2 + nuI;
-  } else /* put I */
-  {
-    uc[-2] = vI;
-    uc[-1] = nuI;
-    for (j = 0; j < nuI; j++)
-      uc[j] = ucI[j];
-    if ((ms = (*uc % 4))) {
-      if (ms < 3)
-        slNM++;
-    } else
-      slSM++;
   }
-  slNB += 2 + nuI;
-}
-while (s < AslNF) /* put A */
-{
-  uc = &ucSL[2 + (SLp[slNF++] = slNB)];
-  slNB += 2 + nuA;
-  uc[-2] = vA;
-  uc[-1] = nuA;
-  for (j = 0; j < nuA; j++)
-    uc[j] = ucA[j];
-  if ((ms = (*uc % 4))) {
-    if (ms < 3)
-      slNM++;
-  } else
-    slSM++;
-  if ((++s) < AslNF)
-    AuxGet_vn_uc(FA, &vA, &nuA, ucA);
-}
-if (tnb + slNB != IslNB + AslNB) {
-  fputs("Error: Add_Aux_to_DB sublattice byte count mismatch\n", stderr);
-  exit(1);
-} /* SL done */
-
-printf("SL: %dnf %dsm %dnm %db -> ", slNF, slSM, slNM, slNB);
-if (IslNF) {
-  HIpos = FTELL(FI);
-  if (HIpos != IslNB) {
-    fprintf(stderr, "Error: Add_Aux_to_DB sublattice read size mismatch\n");
+  if (tnb + slNB != IslNB + AslNB) {
+    fputs("Error: Add_Aux_to_DB sublattice byte count mismatch\n", stderr);
     exit(1);
-  }
-  if (ferror(FI)) {
-    fprintf(stderr, "Error: Add_Aux_to_DB sublattice file read error\n");
-    exit(1);
-  }
-  fclose(FI);
-  if (!newout)
-    remove(Ifn.data());
-} /* SL file done */
+  } /* SL done */
 
-FSEEK(FA, HApos, SEEK_SET);
-Init_FInfoList(&FIo);
-FIo.nVmax = palp::max(FIi.nVmax, FIa.nVmax);
-FIo.NUCmax = palp::max(FIi.NUCmax, FIa.NUCmax); /* Tnb=0; */
-for (v = d + 1; v <= FIo.nVmax; v++)
-  for (nu = 1; nu <= FIo.NUCmax; nu++)
-    if ((FIo.NFnum[v][nu] = FIi.NFnum[v][nu] + FIa.NFnum[v][nu])) {
-      FIo.nNUC[v]++;
-      Oli++; /* Tnb+=FIo.NFnum[v][nu]; */
+  printf("SL: %dnf %dsm %dnm %db -> ", slNF, slSM, slNM, slNB);
+  if (IslNF) {
+    HIpos = FTELL(FI);
+    if (HIpos != IslNB) {
+      fprintf(stderr, "Error: Add_Aux_to_DB sublattice read size mismatch\n");
+      exit(1);
     }
-FIo.nV = 0;
-for (v = d + 1; v <= FIo.nVmax; v++)
-  if (FIo.nNUC[v])
-    FIo.nV++;
+    if (ferror(FI)) {
+      fprintf(stderr, "Error: Add_Aux_to_DB sublattice file read error\n");
+      exit(1);
+    }
+    fclose(FI);
+    if (!newout)
+      remove(Ifn.data());
+  } /* SL file done */
 
-for (v = d + 1; v <= FIo.nVmax; v++)
-  if (FIo.nNUC[v]) {
-    char vxt[5];
-    strcpy(vxt, ".v");
-    vxt[2] = v / 10 + '0';
-    vxt[3] = v % 10 + '0';
-    vxt[4] = 0;
-    strcpy(Ofx, vxt);
-    strcpy(Ifx, vxt);
-    if (FIi.nNUC[v]) {
-      if (!newout) {
-        strcat(Ifx, SAVE_FILE_EXT);
-        if (rename(Ofn.data(), Ifn.data()) != 0) {
-          fprintf(stderr, "Error: Add_Aux_to_DB rename %s -> %s failed\n",
-                  Ofn.data(), Ifn.data());
+  FSEEK(FA, HApos, SEEK_SET);
+  Init_FInfoList(&FIo);
+  FIo.nVmax = palp::max(FIi.nVmax, FIa.nVmax);
+  FIo.NUCmax = palp::max(FIi.NUCmax, FIa.NUCmax); /* Tnb=0; */
+  for (v = d + 1; v <= FIo.nVmax; v++)
+    for (nu = 1; nu <= FIo.NUCmax; nu++)
+      if ((FIo.NFnum[v][nu] = FIi.NFnum[v][nu] + FIa.NFnum[v][nu])) {
+        FIo.nNUC[v]++;
+        Oli++; /* Tnb+=FIo.NFnum[v][nu]; */
+      }
+  FIo.nV = 0;
+  for (v = d + 1; v <= FIo.nVmax; v++)
+    if (FIo.nNUC[v])
+      FIo.nV++;
+
+  for (v = d + 1; v <= FIo.nVmax; v++)
+    if (FIo.nNUC[v]) {
+      char vxt[5];
+      strcpy(vxt, ".v");
+      vxt[2] = v / 10 + '0';
+      vxt[3] = v % 10 + '0';
+      vxt[4] = 0;
+      strcpy(Ofx, vxt);
+      strcpy(Ifx, vxt);
+      if (FIi.nNUC[v]) {
+        if (!newout) {
+          strcat(Ifx, SAVE_FILE_EXT);
+          if (rename(Ofn.data(), Ifn.data()) != 0) {
+            fprintf(stderr, "Error: Add_Aux_to_DB rename %s -> %s failed\n",
+                    Ofn.data(), Ifn.data());
+            exit(1);
+          }
+        }
+        if (NULL == (FI = fopen(Ifn.data(), "rb"))) {
+          printf("Ifn %s failed", Ifn.data());
           exit(1);
         }
       }
-      if (NULL == (FI = fopen(Ifn.data(), "rb"))) {
-        printf("Ifn %s failed", Ifn.data());
+      if (NULL == (FO = fopen(Ofn.data(), "wb"))) {
+        printf("Ofn %s failed", Ofn.data());
         exit(1);
       }
-    }
-    if (NULL == (FO = fopen(Ofn.data(), "wb"))) {
-      printf("Ofn %s failed", Ofn.data());
-      exit(1);
-    }
 
-    for (nu = 1; nu <= FIo.NUCmax; nu++)
-      if (FIo.NFnum[v][nu]) {
-        unsigned int I_NF = FIi.NFnum[v][nu], A_NF = FIa.NFnum[v][nu], O_NF = 0;
-        UPint neq = 0, peq = 0, pa = 0;
-        Along pi = 0, po = 0;
+      for (nu = 1; nu <= FIo.NUCmax; nu++)
+        if (FIo.NFnum[v][nu]) {
+          unsigned int I_NF = FIi.NFnum[v][nu], A_NF = FIa.NFnum[v][nu],
+                       O_NF = 0;
+          UPint neq = 0, peq = 0, pa = 0;
+          Along pi = 0, po = 0;
 
-        a = 0;
-        if (0 < A_NF) {
-          AuxGet_uc(FA, &nu, ucA);
-          pa += 1 + (((*ucA) % 4) == 3);
-        }
-        for (u = 0; u < I_NF; u++) {
-          AuxGet_uc(FI, &nu, ucI);
-          pi += 1 + (((*ucI) % 4) == 3);
-          while (a < A_NF) {
-            AmI = RIGHTminusLEFT(ucI, ucA, &nu);
-            if (AmI < 0) /* put A */
+          a = 0;
+          if (0 < A_NF) {
+            AuxGet_uc(FA, &nu, ucA);
+            pa += 1 + (((*ucA) % 4) == 3);
+          }
+          for (u = 0; u < I_NF; u++) {
+            AuxGet_uc(FI, &nu, ucI);
+            pi += 1 + (((*ucI) % 4) == 3);
+            while (a < A_NF) {
+              AmI = RIGHTminusLEFT(ucI, ucA, &nu);
+              if (AmI < 0) /* put A */
+              {
+                po += 1 + (((*ucA) % 4) == 3);
+                AuxPut_hNF(FO, &v, &nu, ucA, &FIo, &slNF, &slSM, &slNM, &slNB,
+                           ucSL, SLp);
+                O_NF++;
+                a++;
+                if (a < A_NF) {
+                  AuxGet_uc(FA, &nu, ucA);
+                  pa += 1 + (((*ucA) % 4) == 3);
+                }
+              } else
+                break;
+            }
+            if ((a < A_NF) && (AmI == 0)) /* put I==A */
             {
-              po += 1 + (((*ucA) % 4) == 3);
-              AuxPut_hNF(FO, &v, &nu, ucA, &FIo, &slNF, &slSM, &slNM, &slNB,
+              int mm = 10 * (*ucI % 4) + (*ucA % 4);
+              switch (mm) {
+              case 00:
+                peq++;
+                break;
+              case 11:
+                peq++;
+                break;
+              case 12:
+                *ucI += 2;
+                break;
+              case 13:
+                *ucI += 2;
+                peq++;
+                break;
+              case 21:
+                *ucI += 1;
+                break;
+              case 22:
+                peq++;
+                break;
+              case 23:
+                *ucI += 1;
+                peq++;
+                break;
+              case 31:
+                peq++;
+                break;
+              case 32:
+                peq++;
+                break;
+              case 33:
+                peq += 2;
+                break;
+              default:
+                puts("inconsistens mirror flags");
+                exit(1);
+              }
+              AuxPut_hNF(FO, &v, &nu, ucI, &FIo, &slNF, &slSM, &slNM, &slNB,
                          ucSL, SLp);
-              O_NF++;
+              po += 1 + (((*ucI) % 4) == 3);
+              neq++;
               a++;
               if (a < A_NF) {
                 AuxGet_uc(FA, &nu, ucA);
                 pa += 1 + (((*ucA) % 4) == 3);
               }
-            } else
-              break;
-          }
-          if ((a < A_NF) && (AmI == 0)) /* put I==A */
-          {
-            int mm = 10 * (*ucI % 4) + (*ucA % 4);
-            switch (mm) {
-            case 00:
-              peq++;
-              break;
-            case 11:
-              peq++;
-              break;
-            case 12:
-              *ucI += 2;
-              break;
-            case 13:
-              *ucI += 2;
-              peq++;
-              break;
-            case 21:
-              *ucI += 1;
-              break;
-            case 22:
-              peq++;
-              break;
-            case 23:
-              *ucI += 1;
-              peq++;
-              break;
-            case 31:
-              peq++;
-              break;
-            case 32:
-              peq++;
-              break;
-            case 33:
-              peq += 2;
-              break;
-            default:
-              puts("inconsistens mirror flags");
-              exit(1);
+            } else {
+              AuxPut_hNF(FO, &v, &nu, ucI, &FIo, &slNF, &slSM, &slNM, &slNB,
+                         ucSL, SLp);
+              po += 1 + (((*ucI) % 4) == 3);
             }
-            AuxPut_hNF(FO, &v, &nu, ucI, &FIo, &slNF, &slSM, &slNM, &slNB, ucSL,
+            O_NF++;
+          }
+          while (a < A_NF) /* put A */
+          {
+            O_NF++;
+            po += 1 + (((*ucA) % 4) == 3);
+            AuxPut_hNF(FO, &v, &nu, ucA, &FIo, &slNF, &slSM, &slNM, &slNB, ucSL,
                        SLp);
-            po += 1 + (((*ucI) % 4) == 3);
-            neq++;
-            a++;
+            ++a;
             if (a < A_NF) {
               AuxGet_uc(FA, &nu, ucA);
               pa += 1 + (((*ucA) % 4) == 3);
             }
-          } else {
-            AuxPut_hNF(FO, &v, &nu, ucI, &FIo, &slNF, &slSM, &slNM, &slNB, ucSL,
-                       SLp);
-            po += 1 + (((*ucI) % 4) == 3);
           }
-          O_NF++;
-        }
-        while (a < A_NF) /* put A */
-        {
-          O_NF++;
-          po += 1 + (((*ucA) % 4) == 3);
-          AuxPut_hNF(FO, &v, &nu, ucA, &FIo, &slNF, &slSM, &slNM, &slNB, ucSL,
-                     SLp);
-          ++a;
-          if (a < A_NF) {
-            AuxGet_uc(FA, &nu, ucA);
-            pa += 1 + (((*ucA) % 4) == 3);
+          if (pi + pa != peq + po) {
+            fprintf(stderr,
+                    "Error: Add_Aux_to_DB checksum mismatch for v=%d nu=%d\n",
+                    v, nu);
+            exit(1);
+          } /* checksum(v,nu) */
+          FIo.NFnum[v][nu] = O_NF;
+          FIo.nNF += O_NF;
+          FIo.NB += O_NF * nu;
+          if (O_NF + neq != I_NF + A_NF) {
+            fprintf(stderr,
+                    "Error: Add_Aux_to_DB NF merge mismatch for v=%d nu=%d\n",
+                    v, nu);
+            exit(1);
           }
+          /*
+          {static int list;printf("#%d v=%d nu=%d Inf=%d Anf=%d ",++list,v,nu,
+          I_NF,A_NF);printf("Onf=%d   pi=%d pa=%d  po=%d\n",O_NF,pi,pa,po);
+          }*/
         }
-        if (pi + pa != peq + po) {
-          fprintf(stderr,
-                  "Error: Add_Aux_to_DB checksum mismatch for v=%d nu=%d\n", v,
-                  nu);
-          exit(1);
-        } /* checksum(v,nu) */
-        FIo.NFnum[v][nu] = O_NF;
-        FIo.nNF += O_NF;
-        FIo.NB += O_NF * nu;
-        if (O_NF + neq != I_NF + A_NF) {
-          fprintf(stderr,
-                  "Error: Add_Aux_to_DB NF merge mismatch for v=%d nu=%d\n", v,
-                  nu);
+      if (FIi.nNUC[v]) {
+        if (ferror(FI)) {
+          fprintf(stderr, "Error: Add_Aux_to_DB input file read error\n");
           exit(1);
         }
-        /*
-        {static int list;printf("#%d v=%d nu=%d Inf=%d Anf=%d ",++list,v,nu,
-        I_NF,A_NF);printf("Onf=%d   pi=%d pa=%d  po=%d\n",O_NF,pi,pa,po);
-        }*/
+        fclose(FI);
+        if (!newout)
+          remove(Ifn.data());
       }
-    if (FIi.nNUC[v]) {
-      if (ferror(FI)) {
-        fprintf(stderr, "Error: Add_Aux_to_DB input file read error\n");
+      if (ferror(FO)) {
+        fprintf(stderr, "Error: Add_Aux_to_DB output file write error\n");
         exit(1);
       }
-      fclose(FI);
-      if (!newout)
-        remove(Ifn.data());
+      fclose(FO);
+    }
+  tnb = 0;
+
+  if (slNF) {
+    strcpy(Ofx, ".sl");
+    FO = fopen(Ofn.data(), "wb");
+    if (FO == NULL) {
+      fprintf(stderr, "Error: Add_Aux_to_DB cannot create %s.sl\n", Ofn.data());
+      exit(1);
+    }
+    for (i = 0; i < slNF; i++) /* write SL */
+    {
+      uc = &ucSL[SLp[i] + 2];
+      v = uc[-2];
+      nu = uc[-1];
+      tnb += nu + 2;
+      if (uc[-2] >= VERT_Nmax) {
+        fprintf(stderr, "Error: Add_Aux_to_DB vertex count %d out of range\n",
+                uc[-2]);
+        exit(1);
+      }
+      fputc(uc[-2], FO);
+      slNP += 1 + (((*uc) % 4) == 3);
+      fputc(nu, FO);
+      for (s = 0; s < nu; s++)
+        fputc(uc[s], FO);
+    }
+    if (tnb != slNB) {
+      fprintf(stderr, "Error: Add_Aux_to_DB sublattice byte write mismatch\n");
+      exit(1);
+    }
+    if (slNP != 2 * slNF - slNM - slSM) {
+      fprintf(stderr, "Error: Add_Aux_to_DB sublattice NP count mismatch\n");
+      exit(1);
     }
     if (ferror(FO)) {
-      fprintf(stderr, "Error: Add_Aux_to_DB output file write error\n");
+      fprintf(stderr, "Error: Add_Aux_to_DB sublattice file write error\n");
       exit(1);
     }
     fclose(FO);
   }
-tnb = 0;
+  printf("\nd=%d v%d v<=%d n<=%d vn%d  %lld %d %lld %lld  %d %d %d %d\n", d,
+         FIo.nV, FIo.nVmax, FIo.NUCmax, Oli, FIo.nNF, FIo.nSM, FIo.nNM, FIo.NB,
+         slNF, slSM, slNM, slNB);
 
-if (slNF) {
-  strcpy(Ofx, ".sl");
-  FO = fopen(Ofn.data(), "wb");
+  strcpy(Ofx, ".info");
+  FO = fopen(Ofn.data(), "w");
   if (FO == NULL) {
-    fprintf(stderr, "Error: Add_Aux_to_DB cannot create %s.sl\n", Ofn.data());
+    fprintf(stderr, "Error: Add_Aux_to_DB cannot create %s.info\n", Ofn.data());
     exit(1);
   }
-  for (i = 0; i < slNF; i++) /* write SL */
-  {
-    uc = &ucSL[SLp[i] + 2];
-    v = uc[-2];
-    nu = uc[-1];
-    tnb += nu + 2;
-    if (uc[-2] >= VERT_Nmax) {
-      fprintf(stderr, "Error: Add_Aux_to_DB vertex count %d out of range\n",
-              uc[-2]);
-      exit(1);
+  fprintf(FO, /* write FO.info */
+          "%d  %d %d %d  %d  %lld %d %lld %lld  %d %d %d %d\n\n", d, FIo.nV,
+          FIo.nVmax, FIo.NUCmax, Oli, FIo.nNF, FIo.nSM, FIo.nNM, FIo.NB, slNF,
+          slSM, slNM, slNB);
+
+  for (v = d + 1; v <= FIo.nVmax; v++)
+    if (FIo.nNUC[v]) /* honest info */
+    {
+      i = 0;
+      fprintf(FO, "%d %d\n", v, FIo.nNUC[v]); /*  v  #nuc's  */
+      for (nu = 1; nu <= FIo.NUCmax; nu++)
+        if (FIo.NFnum[v][nu]) {
+          fprintf(FO, "%d %d%s", nu, FIo.NFnum[v][nu], /* nuc #NF(v,nuc) */
+                  (++i < FIo.nNUC[v]) ? "  " : "\n");
+        }
     }
-    fputc(uc[-2], FO);
-    slNP += 1 + (((*uc) % 4) == 3);
-    fputc(nu, FO);
-    for (s = 0; s < nu; s++)
-      fputc(uc[s], FO);
-  }
-  if (tnb != slNB) {
-    fprintf(stderr, "Error: Add_Aux_to_DB sublattice byte write mismatch\n");
+  printf("Writing %s: %lld+%dsl %lldm+%ds %lldb", dbo,
+         2 * FIo.nNF - FIo.nNM - FIo.nSM, slNP,
+         /*Tnb=*/FIo.nNF - FIo.nNM - FIo.nSM, FIo.nSM, FIo.NB + slNB);
+  /*   if(tnb>99)
+       {	long long tnp=(2*FIo.nNF-FIo.nNM-FIo.nSM)/10; tnp*=tnp;
+          tnp/=20; tnp/=Tnb; printf("   [p^2/2m=%ldk]",tnp);
+       }
+  */
+  Print_Expect(&FIo);
+  puts("");
+  if (ferror(FA)) {
+    fprintf(stderr, "Error: Add_Aux_to_DB aux-file read error\n");
     exit(1);
   }
-  if (slNP != 2 * slNF - slNM - slSM) {
-    fprintf(stderr, "Error: Add_Aux_to_DB sublattice NP count mismatch\n");
-    exit(1);
-  }
+  fclose(FA);
   if (ferror(FO)) {
-    fprintf(stderr, "Error: Add_Aux_to_DB sublattice file write error\n");
+    fprintf(stderr, "Error: Add_Aux_to_DB info-file write error\n");
     exit(1);
   }
   fclose(FO);
-}
-printf("\nd=%d v%d v<=%d n<=%d vn%d  %lld %d %lld %lld  %d %d %d %d\n", d,
-       FIo.nV, FIo.nVmax, FIo.NUCmax, Oli, FIo.nNF, FIo.nSM, FIo.nNM, FIo.NB,
-       slNF, slSM, slNM, slNB);
-
-strcpy(Ofx, ".info");
-FO = fopen(Ofn.data(), "w");
-if (FO == NULL) {
-  fprintf(stderr, "Error: Add_Aux_to_DB cannot create %s.info\n", Ofn.data());
-  exit(1);
-}
-fprintf(FO, /* write FO.info */
-        "%d  %d %d %d  %d  %lld %d %lld %lld  %d %d %d %d\n\n", d, FIo.nV,
-        FIo.nVmax, FIo.NUCmax, Oli, FIo.nNF, FIo.nSM, FIo.nNM, FIo.NB, slNF,
-        slSM, slNM, slNB);
-
-for (v = d + 1; v <= FIo.nVmax; v++)
-  if (FIo.nNUC[v]) /* honest info */
-  {
-    i = 0;
-    fprintf(FO, "%d %d\n", v, FIo.nNUC[v]); /*  v  #nuc's  */
-    for (nu = 1; nu <= FIo.NUCmax; nu++)
-      if (FIo.NFnum[v][nu]) {
-        fprintf(FO, "%d %d%s", nu, FIo.NFnum[v][nu], /* nuc #NF(v,nuc) */
-                (++i < FIo.nNUC[v]) ? "  " : "\n");
-      }
-  }
-printf("Writing %s: %lld+%dsl %lldm+%ds %lldb", dbo,
-       2 * FIo.nNF - FIo.nNM - FIo.nSM, slNP,
-       /*Tnb=*/FIo.nNF - FIo.nNM - FIo.nSM, FIo.nSM, FIo.NB + slNB);
-/*   if(tnb>99)
-     {	long long tnp=(2*FIo.nNF-FIo.nNM-FIo.nSM)/10; tnp*=tnp;
-        tnp/=20; tnp/=Tnb; printf("   [p^2/2m=%ldk]",tnp);
-     }
-*/
-Print_Expect(&FIo);
-puts("");
-if (ferror(FA)) {
-  fprintf(stderr, "Error: Add_Aux_to_DB aux-file read error\n");
-  exit(1);
-}
-fclose(FA);
-if (ferror(FO)) {
-  fprintf(stderr, "Error: Add_Aux_to_DB info-file write error\n");
-  exit(1);
-}
-fclose(FO);
 }
 int Check_sl_order(int *v, int *nu, unsigned char *uc) {
   static int n, V, NU;
@@ -2810,7 +2812,7 @@ void Test_Hodge_db(char *dbname) {
 void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P) {
 
   time_t Tstart;
-  char c = *x_string, hext[9], com[80];
+  char c = *x_string, hext[9], com[64];
   std::vector<char> filename(6 + strlen(dbname) + File_Ext_NCmax);
   char *fhx;
   unsigned char uc_poly[NUC_Nmax];
