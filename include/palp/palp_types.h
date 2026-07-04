@@ -9,5 +9,10 @@
  * standard-library names or template parameters.
  */
 
+#include <cstdint>
+
 using Long = long;
 using LLong = long long;
+
+static_assert(sizeof(Long) == 8, "Long must be 64-bit");
+static_assert(sizeof(LLong) == 8, "LLong must be 64-bit");

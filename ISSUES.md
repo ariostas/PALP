@@ -220,12 +220,16 @@ names and descriptions should remain locatable.
   `Long` exceeds `int` range. Changed to `%ld` with `(long) c.N`/`(long) c.D`.
 
 ### 22. Platform-dependent integer sizes
-- **File**: `Global.h`
+- **File**: `Global.h` / `palp_types.h`
 - **Lines**: 12–13
 - **Severity**: Low
+- **Status**: Fixed
 - **Description**: `Long` defined as `long`, `LLong` as `long long` — sizes
-  are platform-dependent (32 vs 64 bit for `long`). Should use `<cstdint>`
-  types (`int64_t`, etc.) in C++ version for consistency.
+  are platform-dependent (32 vs 64 bit for `long`). Kept the aliases as
+  `long`/`long long` for compatibility, but added `static_assert`s in
+  `palp_types.h` to ensure both are 64-bit on the target platform. Also fixed
+  `LRpr` and `ConifoldSing` format strings to avoid mismatches when `Long` is
+  64-bit.
 
 ### 23. Unusual declaration order
 - **File**: `nef.c`

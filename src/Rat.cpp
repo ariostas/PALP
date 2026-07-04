@@ -334,7 +334,8 @@ int LrC(LRat a, LRat b) /* Compare = [1 / 0 / -1] iff a [gt/eq/lt] b */
 }
 void LRpr(LRat c) /* write "c.N/c.D" -> outFN */
 {
-  fprintf(outFILE, "%lld/%lld", (LLong)c.N, (LLong)c.D);
+  fprintf(outFILE, "%lld/%lld", static_cast<long long>(c.N),
+          static_cast<long long>(c.D));
 } /*  ==========  	  END of LRational OpeLRations		==========  */
 
 /*  ==========		(Extended) Greatest Common Divisor	 =========  */

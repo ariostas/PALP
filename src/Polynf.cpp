@@ -2387,8 +2387,8 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
       }
       if (mul != 1 + _FI->nip[1][j]) {
         fprintf(stderr,
-                "Error: ConifoldSing edge multiplicity %d != 1 + nip %d\n", mul,
-                1 + _FI->nip[1][j]);
+                "Error: ConifoldSing edge multiplicity %ld != 1 + nip %d\n",
+                (long)mul, 1 + _FI->nip[1][j]);
         exit(1);
       }
       M[nsq] = mul;
