@@ -351,9 +351,15 @@ names and descriptions should remain locatable.
 - **File**: `lgotwist.c`
 - **Lines**: 46–185
 - **Severity**: Medium
+- **Status**: Partially fixed
 - **Description**: The entire `Rat.h`/`Rat.c` rational arithmetic is duplicated
   inline in `lgotwist.c` — code duplication with divergent bug potential.
-  Should use the shared `Rat.cpp` functions.
+  The duplicate `gcd` body and forward declaration were removed; the local `gcd`
+  helper now lives in the anonymous namespace and is shared with all local rational
+  operations. Full sharing with `Rat.cpp` is blocked because `Rat.cpp` relies on the
+  global `outFILE` variable, which is not initialized by the standalone `lgotwist`
+  program (see Phase 5.11). Once `outFILE`/`inFILE` are folded into a `PalpContext`,
+  `lgotwist` can link `Rat.cpp` and reuse `rI/rR/rS/rD/rP/rQ` directly.
 
 ### 38. `#define TEST` / `#undef TEST` toggling mid-file
 - **File**: `Polynf.c`

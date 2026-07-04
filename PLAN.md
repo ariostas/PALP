@@ -112,7 +112,8 @@ cmake --build build/ubsan && ctest --test-dir build/ubsan
 - [x] Replace `#define abs/min/max/mod` with inline helper functions in an anonymous namespace.
 - [x] Replace `#ifdef __MSDOS__` platform sizing branch with `constexpr int` constants.
 - [x] Replace small I/O/control globals with a `LgoTwistContext` struct (`infi`, `outfi`, `stdi`, `bugcount`, `invertible`).
-- [ ] Remove duplicated rational arithmetic (ISSUES.md #36); reuse `Rat.cpp` logic or align types.
+- [x] Remove duplicated rational arithmetic helpers (ISSUES.md #37): merged the duplicate `gcd` body/declaration and deleted dead comments; `rI/rR/rS/rD/rP/rQ/fS/iS` now share the same local `gcd`.
+- [ ] Full sharing with `Rat.cpp` is deferred to Phase 5.11 because `Rat.cpp` depends on the global `outFILE`/`inFILE` pair, which is not wired up for the standalone `lgotwist` binary.
 - **Verify**: build standalone manually.
 
 #### Step 4.3 — Final cleanup
