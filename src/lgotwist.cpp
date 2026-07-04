@@ -232,8 +232,14 @@ int readline(skelet *s) /* reads: "string[#+1] exp_0 ... exp_# ... \n" */
   while (' ' != (i = fgetc(ctx.infi)))
     if (i == EOF)
       return 0;
-    else
+    else {
+      if (s->N >= NM) {
+        fprintf(stderr,
+                "Error: ReadSkeleton skeleton string exceeds %d fields\n", NM);
+        exit(1);
+      }
       s->p[s->N++] = i - '0';
+    }
   for (i = 0; i < (s->N); i++)
     if (fscanf(ctx.infi, "%d", &s->a[i]) != 1) {
       fputs("Error: ReadSkeleton expected integer coefficient\n", stderr);
