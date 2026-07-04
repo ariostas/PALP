@@ -60,7 +60,7 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
   int i, j, k, a, n, d, shift = 1, I[W_Nmax + 2], *nz = &WZ->M;
   int FilterFlag = (inFILE == NULL);
   char C, b = ' ';
-  std::array<char, 999> c;
+  std::array<char, 1000> c;
   Long BM[W_Nmax][W_Nmax], *B[W_Nmax], Wa[POLY_Dmax], Za[POLY_Dmax], F[W_Nmax],
       G[POLY_Dmax][POLY_Dmax], GI[POLY_Dmax][POLY_Dmax], X;
   if (FilterFlag)
@@ -132,7 +132,8 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
       break;
   }
   if (n == 999) {
-    puts("Out of space in Read_WZeight");
+    c[n] = '\0';
+    fprintf(stderr, "Error: Read_WZeight input line exceeds 999 characters\n");
     exit(1);
   }
   i = 0;
