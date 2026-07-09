@@ -84,6 +84,16 @@ and the detailed commit messages for the full context of each fix.
   with a `PalpContext` struct passed explicitly to functions that need I/O.
   This is also a prerequisite for `lgotwist.cpp` to fully share `Rat.cpp`.
 
+  **Granularity plan** (see PLAN.md Phase 5.11 for details):
+  1. Introduce `PalpContext` and make globals point to a default instance (no
+     functional change).
+  2. Convert pure-output helpers (printing routines) to take `FILE *out`.
+  3. Convert input helpers (`Read_*` in `Coord.cpp`/`LG.cpp`/`MoriCone.cpp`) to
+     take `FILE *in`.
+  4. Convert driver `main()`s to own the context and pass it through.
+  5. Remove the global `inFILE`/`outFILE` entirely and update `Rat.cpp` so
+     `lgotwist.cpp` can reuse it.
+
 ### 42. `inFILE`/`outFILE` mutated without restore
 - **File**: `cws.cpp`
 - **Severity**: High

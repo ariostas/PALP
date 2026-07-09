@@ -110,6 +110,63 @@ cmake --build build/ubsan && ctest --test-dir build/ubsan
   This is the largest remaining refactor. It will also enable `lgotwist.cpp` to
   fully share `Rat.cpp` instead of keeping local rational helpers.
 
+  The refactor is split into granular steps so each commit remains small and
+  the full CTest suite stays green:
+
+  - **5.11.1** Introduce `PalpContext` and thread it through `Rat.cpp`.
+    - Add a `struct PalpContext { FILE *in; FILE *out; }` to `Global.h`.
+    - Keep global `inFILE`/`outFILE` as a compatibility layer (a single default
+      `PalpContext` instance or simple aliases) so existing code keeps compiling.
+    - Change `Rpr`/`LRpr` to take `PalpContext const&` (or `FILE *`) and add
+      overloads that forward to the default global for backward compatibility.
+    - Verify no output changes.
+
+  - **5.11.2** Convert pure output helpers to take an explicit output file.
+    - Files: `E_Poly.cpp`, `Nefpart.cpp`, `Polynf.cpp`, `Subadd.cpp`,
+      `Subdb.cpp`, `Subpoly.cpp`, `Vertex.cpp`, and internal helpers in
+      `cws.cpp`/`nef.cpp`/`MoriCone.cpp`/`LG.cpp`.
+    - Change functions that only write to `outFILE` to accept a new trailing
+      `FILE *out` parameter (defaulted to `outFILE` where possible) and replace
+      uses inside the body.
+    - Update header declarations; add overloads or default arguments to avoid
+      touching every call site in one commit.
+
+  - **5.11.3** Convert pure input helpers to take an explicit input file.
+    - Files: `Coord.cpp` (`Read_PP`, `Read_CWS`, `Read_CWS_Zinfo`),
+      `LG.cpp` (`Read_Weight`, `Read_WZ_PP`, `Read_W_PP`),
+      `MoriCone.cpp` (`ReadInt`, `Read_EOL`, `Read_INCI`, `Read_Tri`).
+    - Add a `FILE *in` parameter (defaulted to `inFILE`) and replace body uses.
+    - Use RAII or local save/restore where a helper temporarily points `inFILE`
+      at another stream (`FilterFlag` / `inFILE = NULL` patterns).
+
+  - **5.11.4** Convert mixed I/O and driver control functions.
+    - Files: `cws.cpp`, `nef.cpp`, `poly.cpp`, `class.cpp`, `mori.cpp`.
+    - These `main()`-like functions set the globals and call library code.
+    - Introduce a local `PalpContext ctx`, open files into `ctx.in`/`ctx.out`,
+      and pass `ctx` down. Keep the old global assignments behind `#ifdef` or
+      a temporary bridge so tests still pass if some library code still reads
+      globals.
+
+  - **5.11.5** Remove the global `inFILE`/`outFILE` declaration and all
+    assignments.
+    - Delete `extern FILE *inFILE, *outFILE;` from `Global.h` and
+      `FILE *inFILE, *outFILE;` from driver files.
+    - Remove the compatibility aliases/overloads added in 5.11.1.
+    - Fix any remaining direct references; add a `PalpContext const&` or
+      `FILE *` parameter where needed.
+    - Update `lgotwist.cpp` to create a `PalpContext`, link `Rat.cpp`, and
+      remove its local rational helpers.
+    - Run full release/ASAN/UBSAN test sweeps.
+
+  Risk mitigation: because most I/O uses are simple `fprintf`/`fscanf`/`fgetc`,
+  the mechanical changes are safe. The only delicate areas are:
+  - `Coord.cpp` filter-mode (`inFILE = NULL` means "read from stdin and then
+    restore to NULL"); wrap this in a small RAII guard or explicit save/restore.
+  - `cws.cpp` `Npoly2cws`/`IP_Poly_Data` which mutate `inFILE`/`outFILE` inside
+    loops and use temporary files (`zzL.tmp`); pass the temp `FILE*` explicitly.
+  - `Rat.cpp` `Rpr`/`LRpr` used from many library files; keep backward-compat
+    overloads until 5.11.5.
+
 ### Phase 4 — Final cleanup (remaining)
 
 - [ ] Convert any remaining header-level `#define` constants that are safe to
