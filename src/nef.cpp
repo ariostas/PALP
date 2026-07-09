@@ -62,6 +62,7 @@ void Print_Nefinfo(PartList *_PTL, /* Flags *_F,*/ time_t *_Tstart,
 /* Global FILE pointers are referenced from the library code; kept global for
    now while the migration is in progress (see ISSUES.md #40). */
 FILE *inFILE, *outFILE;
+PalpContext palpContext;
 
 namespace {
 constexpr int OSL = 31; /* opt_string's length */

@@ -21,6 +21,7 @@ constexpr Long mod(Long a, Long b) { return a % b; }
 /* Global FILE pointers are referenced from the library code; kept global for
    now while the migration is in progress (see ISSUES.md #40). */
 FILE *inFILE, *outFILE;
+PalpContext palpContext;
 
 typedef struct {
   int u[NFmax];

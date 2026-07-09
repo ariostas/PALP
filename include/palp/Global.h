@@ -121,10 +121,18 @@ constexpr int MAXLD = 26;
 Used in the handling of large lists of weight systems (cf. C5stats)
 */
 
+struct PalpContext {
+  FILE *in = stdin;
+  FILE *out = stdout;
+};
+
 extern FILE *inFILE, *outFILE;
+extern PalpContext palpContext; /* global context used by legacy code */
 /*
 Ascii-files for input and output. If not given in the parameter list they
 default to stdin and stdout, respectively.
+palpContext.in/out are the preferred explicit handles; inFILE/outFILE are
+kept as a compatibility layer during the migration to PalpContext.
 */
 
 /*  ==========         Global typedefs           		==========  */

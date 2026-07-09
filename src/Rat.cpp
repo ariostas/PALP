@@ -85,10 +85,12 @@ int rC(Rat a, Rat b) /* Compare = [1 / 0 / -1] iff a [gt/eq/lt] b */
   } else
     return 0;
 }
-void Rpr(Rat c) /* write "c.N/c.D" -> outFN */
+void Rpr(FILE *out, Rat c) /* write "c.N/c.D" -> out */
 {
-  fprintf(outFILE, "%ld/%ld", (long)c.N, (long)c.D);
-} /*  ==========  	  END of Rational Operations		==========  */
+  fprintf(out, "%ld/%ld", (long)c.N, (long)c.D);
+}
+void Rpr(Rat c) { Rpr(outFILE, c); }
+/*  ==========  	  END of Rational Operations		==========  */
 
 /*  ==========		(Extended) Greatest Common Divisor	 =========  */
 /*
@@ -332,11 +334,13 @@ int LrC(LRat a, LRat b) /* Compare = [1 / 0 / -1] iff a [gt/eq/lt] b */
   } else
     return 0;
 }
-void LRpr(LRat c) /* write "c.N/c.D" -> outFN */
+void LRpr(FILE *out, LRat c) /* write "c.N/c.D" -> out */
 {
-  fprintf(outFILE, "%lld/%lld", static_cast<long long>(c.N),
+  fprintf(out, "%lld/%lld", static_cast<long long>(c.N),
           static_cast<long long>(c.D));
-} /*  ==========  	  END of LRational OpeLRations		==========  */
+}
+void LRpr(LRat c) { LRpr(outFILE, c); }
+/*  ==========  	  END of LRational OpeLRations		==========  */
 
 /*  ==========		(Extended) Greatest Common Divisor	 =========  */
 /*

@@ -27,6 +27,7 @@
 /* Global FILE pointers are referenced from the library code; kept global for
    now while the migration is in progress (see ISSUES.md #40). */
 FILE *inFILE, *outFILE;
+PalpContext palpContext;
 
 void PrintExtOptions(void) {
   puts("Extended/experimental options:");

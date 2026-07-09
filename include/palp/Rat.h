@@ -24,25 +24,27 @@ LLong LEgcd(LLong, LLong, LLong *, LLong *); /*  extended gcd(a,b)  */
 LLong LREgcd(LLong *vec_in, int *d, LLong *vec_out);
 /* extended gcd(a_1,...a_d) */
 
-Rat rI(Long a);         /*  conversion  Long -> Rat  */
-Rat rR(Long a, Long b); /*  conversion  a/b  -> Rat  */
-Rat irP(Long a, Rat b); /*  a b		integer * Rat */
-Rat rS(Rat a, Rat b);   /*  a + b	rational Sum */
-Rat rD(Rat a, Rat b);   /*  a - b	rational Difference */
-Rat rP(Rat a, Rat b);   /*  a * b	rational Product   */
-Rat rQ(Rat a, Rat b);   /*  a / b	rational Quotient */
-int rC(Rat a, Rat b);   /* Compare = [1 / 0 / -1] if a [gt/eq/lt] b */
-void Rpr(Rat c);        /*  write  "c.N/c.D"  to outFN */
+Rat rI(Long a);             /*  conversion  Long -> Rat  */
+Rat rR(Long a, Long b);     /*  conversion  a/b  -> Rat  */
+Rat irP(Long a, Rat b);     /*  a b		integer * Rat */
+Rat rS(Rat a, Rat b);       /*  a + b	rational Sum */
+Rat rD(Rat a, Rat b);       /*  a - b	rational Difference */
+Rat rP(Rat a, Rat b);       /*  a * b	rational Product   */
+Rat rQ(Rat a, Rat b);       /*  a / b	rational Quotient */
+int rC(Rat a, Rat b);       /* Compare = [1 / 0 / -1] if a [gt/eq/lt] b */
+void Rpr(Rat c);            /*  write  "c.N/c.D"  to global outFILE */
+void Rpr(FILE *out, Rat c); /*  write  "c.N/c.D"  to explicit file    */
 
-LRat LrI(LLong a);          /*  conversion  LLong -> LRat  	*/
-LRat LrR(LLong a, LLong b); /*  conversion  a/b   -> LRat  	*/
-LRat LirP(LLong a, LRat b); /*  a b		integer * LRat 		*/
-LRat LrS(LRat a, LRat b);   /*  a + b	LRational Sum 		*/
-LRat LrD(LRat a, LRat b);   /*  a - b	LRational Difference	*/
-LRat LrP(LRat a, LRat b);   /*  a * b	LRational Product   	*/
-LRat LrQ(LRat a, LRat b);   /*  a / b	LRational Quotient 	*/
-int LrC(LRat a, LRat b);    /* Compare = [1 / 0 / -1] if a [gt/eq/lt] b */
-void LRpr(LRat c);          /*  write  "c.N/c.D"  to outFN */
+LRat LrI(LLong a);            /*  conversion  LLong -> LRat  	*/
+LRat LrR(LLong a, LLong b);   /*  conversion  a/b   -> LRat  	*/
+LRat LirP(LLong a, LRat b);   /*  a b		integer * LRat 		*/
+LRat LrS(LRat a, LRat b);     /*  a + b	LRational Sum 		*/
+LRat LrD(LRat a, LRat b);     /*  a - b	LRational Difference	*/
+LRat LrP(LRat a, LRat b);     /*  a * b	LRational Product   	*/
+LRat LrQ(LRat a, LRat b);     /*  a / b	LRational Quotient 	*/
+int LrC(LRat a, LRat b);      /* Compare = [1 / 0 / -1] if a [gt/eq/lt] b */
+void LRpr(LRat c);            /*  write  "c.N/c.D"  to global outFILE */
+void LRpr(FILE *out, LRat c); /*  write  "c.N/c.D"  to explicit file    */
 
 /*   Map Permutations: Do "ArgFun" for all permutations pi of *d elements */
 using ARG_FUN = void (*)(int *d, int *pi, int *pinv, void *info);

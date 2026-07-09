@@ -21,6 +21,7 @@ constexpr int OSL = 42; /* opt_string's length */
 }
 
 FILE *inFILE, *outFILE;
+PalpContext palpContext;
 
 void PrintUsage(char *c) {
   int i;

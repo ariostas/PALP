@@ -21,6 +21,7 @@
 /* Global FILE pointers are referenced from the library code; kept global for
    now while the migration is in progress (see ISSUES.md #40). */
 FILE *inFILE, *outFILE;
+PalpContext palpContext;
 
 void PrintUsage(char *c) {
   printf("This is ``%s'':  star triangulations of a polytope P* in N\n", c);
