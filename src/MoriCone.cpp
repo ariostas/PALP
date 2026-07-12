@@ -447,17 +447,17 @@ int Check_Mori(PolyPointList *P, int p, triang *T) { // strongly convex(?)
   if (r != p - d) {
     Matrix GR;
     R.v = ngen;
-    Print_LMatrix(R, "R");
-    Print_LMatrix(G, "GLZ");
+    Print_LMatrix(R, "R", outFILE);
+    Print_LMatrix(G, "GLZ", outFILE);
     Init_Matrix(&GR, R.v, p);
     for (i = 0; i < R.v; i++)
       for (j = 0; j < p; j++)
         GR.x[i][j] = VxV(G.x[j], R.x[i], p);
-    Print_LMatrix(GR, "GR");
+    Print_LMatrix(GR, "GR", outFILE);
     printf("rank=%d != p-d !!!\n", r);
     exit(1);
   }
-  // Print_LMatrix(R,"Matrix of all rays");
+  // Print_LMatrix(R, "Matrix of all rays", outFILE);
   if (UT->np >= POINT_Nmax) {
     fprintf(outFILE, "need POINT_Nmax>=%d\n", UT->np + 1);
     exit(1);
@@ -569,17 +569,17 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I) {
   if (r != p - d) {
     Matrix GR;
     R.v = ngen;
-    Print_LMatrix(R, "R");
-    Print_LMatrix(G, "GLZ");
+    Print_LMatrix(R, "R", outFILE);
+    Print_LMatrix(G, "GLZ", outFILE);
     Init_Matrix(&GR, R.v, p);
     for (i = 0; i < R.v; i++)
       for (j = 0; j < p; j++)
         GR.x[i][j] = VxV(G.x[j], R.x[i], p);
-    Print_LMatrix(GR, "GR");
+    Print_LMatrix(GR, "GR", outFILE);
     printf("rank=%d != p-d !!!\n", r);
     exit(1);
   }
-  // Print_LMatrix(R,"Matrix of all rays");
+  // Print_LMatrix(R, "Matrix of all rays", outFILE);
   if (UT->np >= POINT_Nmax) {
     fprintf(outFILE, "need POINT_Nmax>=%d\n", UT->np + 1);
     exit(1);
@@ -1247,7 +1247,8 @@ int Triang2dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
     if (B.x[k][0] || B.x[k][1])
       U += makeN(F[Z[z++] = k]);
 #if (TRACE_TRIANGULATION)
-  Print_CMatrix(B, "Gale"); // Print_LMatrix(A,"bi-circuit"); 	// Z_k<z
+  Print_CMatrix(B,
+                "Gale"); // Print_LMatrix(A, "bi-circuit", outFILE); 	// Z_k<z
 #endif
   nr = 1;
   nrp[0] = 1;
@@ -2340,11 +2341,11 @@ void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
           cd++;
 
       /* Prints the single rows of the matrix */
-      Aux_IPS_Print_WP(F->W[i], cp, cd); // if(F->ZS)
+      Aux_IPS_Print_WP(F->W[i], cp, cd, outFILE); // if(F->ZS)
 
       /* Prints the quotient group if any */
       if (F->nz[i])
-        Print_QuotZ(&F->Z[F->n0[i]], &F->M[F->n0[i]], cp, F->nz[i]);
+        Print_QuotZ(&F->Z[F->n0[i]], &F->M[F->n0[i]], cp, F->nz[i], outFILE);
       fprintf(outFILE, "\n");
     }
   } /* End of P-flag */
@@ -2756,17 +2757,17 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
   if (r != P->np - P->n - 1) {
     Matrix GR;
     R.v = ngen;
-    Print_LMatrix(R, "R");
-    Print_LMatrix(G, "GLZ");
+    Print_LMatrix(R, "R", outFILE);
+    Print_LMatrix(G, "GLZ", outFILE);
     Init_Matrix(&GR, R.v, p);
     for (i = 0; i < R.v; i++)
       for (j = 0; j < p; j++)
         GR.x[i][j] = VxV(G.x[j], R.x[i], p);
-    Print_LMatrix(GR, "GR");
+    Print_LMatrix(GR, "GR", outFILE);
     printf("rank=%d != P.np-P.n-1 !!!\n", r);
     exit(1);
   }
-  // Print_LMatrix(R,"Matrix of all rays");
+  // Print_LMatrix(R, "Matrix of all rays", outFILE);
   if (UT->np >= POINT_Nmax) {
     fprintf(outFILE, "need POINT_Nmax>=%d\n", UT->np + 1);
     exit(1);

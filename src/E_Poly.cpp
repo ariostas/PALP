@@ -16,7 +16,7 @@ void part_nef(PolyPointList *, VertexNumList *, EqList *, PartList *, int *,
 
 void IP_Fiber_Data(PolyPointList *, PolyPointList *, int nv,
                    Long G[VERT_Nmax][POLY_Dmax][POLY_Dmax], int fd[VERT_Nmax],
-                   int *nf, int CD);
+                   int *nf, int CD, FILE *out);
 
 /*   ===============	End of Typedefs and Headers	===================  */
 
@@ -348,7 +348,7 @@ void PRINT_Fibrations(VertexNumList *_V, PolyPointList *_P,
 
   if (_P->np >= VERT_Nmax)
     Die("Need _P->np < VERT_Nmax in PRINT_Fibrations");
-  IP_Fiber_Data(_P, _P_AUX.get(), _V->nv, G, dim, &nf, CD);
+  IP_Fiber_Data(_P, _P_AUX.get(), _V->nv, G, dim, &nf, CD, out);
   if (nf >= VERT_Nmax)
     Die("Need  nf < VERT_Nmax in PRINT_Fibrations");
 

@@ -323,7 +323,8 @@ Routines for handling the structure C5stats
 
 int Make_Poly_Sym_NF(PolyPointList *P, VertexNumList *VNL, EqList *EL,
                      int *SymNum, int V_perm[][VERT_Nmax],
-                     Long NF[POLY_Dmax][VERT_Nmax], int t, int S, int N);
+                     Long NF[POLY_Dmax][VERT_Nmax], int t, int S, int N,
+                     FILE *out = outFILE);
 void Poly_Sym(PolyPointList *_P, VertexNumList *_V, EqList *_F, int *sym_num,
               int V_perm[][VERT_Nmax]);
 int GLZ_Make_Trian_NF(Long X[][VERT_Nmax], int *n, int *nv,
@@ -331,7 +332,7 @@ int GLZ_Make_Trian_NF(Long X[][VERT_Nmax], int *n, int *nv,
 void SL2Z_Make_Poly_UTriang(PolyPointList *P);
 void IP_Fiber_Data(PolyPointList *PD, PolyPointList *AuxP, int nv,
                    Long G[VERT_Nmax][POLY_Dmax][POLY_Dmax], int fd[VERT_Nmax],
-                   int *nf, int CD);
+                   int *nf, int CD, FILE *out = outFILE);
 /*
 Given *P, *VNL and *EL, the following objects are determined:
 the number *SymNum of GL(n,Z)-symmetries of the polytope,
@@ -355,7 +356,8 @@ It is assumed that p<=VERT_Nmax and that W can hold at least Wmax sets of
 coefficients.
 */
 
-void IP_Simplices(PolyPointList *P, int nv, int PS, int VS, int CD);
+void IP_Simplices(PolyPointList *P, int nv, int PS, int VS, int CD,
+                  FILE *out = outFILE);
 /*
 Realizes the -P,-V,-Z, and fibration options of poly (the results of this
 routine are displayed as output; *P is not modified).
@@ -408,7 +410,8 @@ int Fano5d(PolyPointList *, VertexNumList *, EqList *);
 Realizes the -U5 option of poly.
 */
 
-void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E);
+void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E,
+                     FILE *out = outFILE);
 /*
 Realizes the -E option of poly.
 */

@@ -161,12 +161,12 @@ typedef struct {
 } Matrix;
 void Init_Matrix(Matrix *M, int v, int d);
 void Free_Matrix(Matrix *M);
-void Print_LMatrix(Matrix M, char *s);
+void Print_LMatrix(Matrix M, char *s, FILE *out);
 Long VxV(Long *X, Long *Y, int d);
 int Make_G_for_GxMT_UT(Matrix M, Matrix G);
 
 /* IP-simplex / fibration helpers from Polynf.cpp */
 void IP_Simplex_Fiber(Long PM[][POLY_Dmax], int p, int d, FibW *F, int Wmax,
                       int CD);
-void Aux_IPS_Print_WP(Long *W, int w, int cd);
-void Print_QuotZ(int Z[][VERT_Nmax], int *M, int p, int n);
+void Aux_IPS_Print_WP(Long *W, int w, int cd, FILE *out = outFILE);
+void Print_QuotZ(int Z[][VERT_Nmax], int *M, int p, int n, FILE *out = outFILE);

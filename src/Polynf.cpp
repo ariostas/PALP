@@ -398,18 +398,18 @@ void New_pNF_Order(int *v, int *f, PERM *CL, int *ns,
   }
 }
 
-void Print_vNF(int *v, int *f, Long VPM[][VERT_Nmax],
-               Long VPM_NF[][VERT_Nmax]) {
+void Print_vNF(int *v, int *f, Long VPM[][VERT_Nmax], Long VPM_NF[][VERT_Nmax],
+               FILE *out) {
   int i, j;
-  fprintf(outFILE, "\nVPM NF (v=%d f=%d):\n", *v, *f);
+  fprintf(out, "\nVPM NF (v=%d f=%d):\n", *v, *f);
   fflush(stdout);
   for (i = 0; i < *f; i++) {
     for (j = 0; j < *v; j++)
-      fprintf(outFILE, "%3d", (int)VPM[i][j]);
-    fprintf(outFILE, " =>");
+      fprintf(out, "%3d", (int)VPM[i][j]);
+    fprintf(out, " =>");
     fflush(stdout);
     for (j = 0; j < *v; j++)
-      fprintf(outFILE, "%3d", (int)VPM_NF[i][j]);
+      fprintf(out, "%3d", (int)VPM_NF[i][j]);
     Fputs("");
     fflush(stdout);
   }
@@ -425,7 +425,7 @@ void Eval_Poly_NF(int *d, int *v, int *f, Long VM[POLY_Dmax][VERT_Nmax],
   int ns;
   Make_VPM_NF(v, f, VPM, CL.get(), &ns, VPM_NF.get());
   if (t)
-    Print_vNF(v, f, VPM, VPM_NF.get());
+    Print_vNF(v, f, VPM, VPM_NF.get(), outFILE);
   New_pNF_Order(v, f, CL.get(), &ns, VPM_NF.get());
   Aux_pNF_from_vNF(CL.get(), &ns, v, d, VM, pNF, &t);
 #ifdef WARN_BIG_NS
@@ -659,18 +659,18 @@ int Aux_XltY_Poly_NF(Long X[][VERT_Nmax], Long Y[][VERT_Nmax], int *n,
       }
   return 0;
 }
-void Print_Perm(int *p, int v, const char *s);
+void Print_Perm(int *p, int v, const char *s, FILE *out);
 void TEST_pNF(int *C, Long V[][VERT_Nmax], Long X[][VERT_Nmax], int *n, int *nv,
-              int *try_) {
+              int *try_, FILE *out) {
   int i, j;
-  fprintf(outFILE, "Poly NF try[%d]:   C=", *try_);
-  Print_Perm(C, *nv, "\n");
+  fprintf(out, "Poly NF try[%d]:   C=", *try_);
+  Print_Perm(C, *nv, "\n", outFILE);
   for (i = 0; i < *n; i++) {
     for (j = 0; j < *nv; j++)
-      fprintf(outFILE, " %3d", (int)V[i][j]);
-    fprintf(outFILE, " =>");
+      fprintf(out, " %3d", (int)V[i][j]);
+    fprintf(out, " =>");
     for (j = 0; j < *nv; j++)
-      fprintf(outFILE, " %3d", (int)X[i][j]);
+      fprintf(out, " %3d", (int)X[i][j]);
     Fputs("");
   }
 }
@@ -687,7 +687,7 @@ void Aux_Make_Triang(PERM *CL, int ns, Long V[][VERT_Nmax], int *n, int *nv,
              /*  -1: calc CL.s */
   if (*t) {
     if (*t > 0)
-      TEST_pNF(CL->C, V, X, n, nv, &g);
+      TEST_pNF(CL->C, V, X, n, nv, &g, outFILE);
     else {
       CL->s = 1;
       if (*t + 1) {
@@ -711,7 +711,7 @@ void Aux_Make_Triang(PERM *CL, int ns, Long V[][VERT_Nmax], int *n, int *nv,
 
       if (*t) {
         if (*t > 0)
-          TEST_pNF(CL[s].C, V, X, n, nv, &s);
+          TEST_pNF(CL[s].C, V, X, n, nv, &s, outFILE);
         if (x == 0) {
           if (*t < 0) {
             int k;
@@ -741,7 +741,7 @@ void Aux_Make_Triang(PERM *CL, int ns, Long V[][VERT_Nmax], int *n, int *nv,
 
       if (*t) {
         if (*t > 0)
-          TEST_pNF(CL[s].C, V, Y, n, nv, &s);
+          TEST_pNF(CL[s].C, V, Y, n, nv, &s, outFILE);
         if (x == 1) {
           if (*t < 0) {
             int k;
@@ -837,7 +837,7 @@ int Make_Poly_NF(PolyPointList *_P, VertexNumList *_V, EqList *_F,
 void Poly_Sym(PolyPointList *_P, VertexNumList *_V, EqList *_F, int *sym_num,
               int V_perm[][VERT_Nmax]) {
   Long pNF[POLY_Dmax][VERT_Nmax];
-  Make_Poly_Sym_NF(_P, _V, _F, sym_num, V_perm, pNF, 0, 0, 0);
+  Make_Poly_Sym_NF(_P, _V, _F, sym_num, V_perm, pNF, 0, 0, 0, outFILE);
 }
 int PermChar(int n) {
   if (n < 10)
@@ -852,15 +852,15 @@ int PermChar(int n) {
   }
   return 0;
 }
-void Print_Perm(int *p, int v, const char *s) {
+void Print_Perm(int *p, int v, const char *s, FILE *out) {
   int i;
   if (v < 63)
     for (i = 0; i < v; i++)
-      fprintf(outFILE, "%c", PermChar(p[i]));
+      fprintf(out, "%c", PermChar(p[i]));
   else
     for (i = 0; i < v; i++)
-      fprintf(outFILE, "%d ", p[i]);
-  /*puts("");for(i=48;i<128;i++)printf("%c",i);*/ fprintf(outFILE, "%s", s);
+      fprintf(out, "%d ", p[i]);
+  /*puts("");for(i=48;i<128;i++)printf("%c",i);*/ fprintf(out, "%s", s);
 }
 int Perm_String(int *p, int v, char *s) {
   int i = 0;
@@ -872,7 +872,8 @@ int Perm_String(int *p, int v, char *s) {
 }
 int Make_Poly_Sym_NF(PolyPointList *_P, VertexNumList *_V, EqList *_F,
                      int *SymNum, int V_perm[][VERT_Nmax],
-                     Long NF[POLY_Dmax][VERT_Nmax], int traced, int S, int N) {
+                     Long NF[POLY_Dmax][VERT_Nmax], int traced, int S, int N,
+                     FILE *out) {
   int i, j, ns, t = -1, *d = &_P->n, *v = &_V->nv, *f = &_F->ne, *C;
   auto CL = std::make_unique<PERM[]>(SYM_Nmax + 1);
   Long VM[POLY_Dmax][VERT_Nmax];
@@ -907,14 +908,13 @@ int Make_Poly_Sym_NF(PolyPointList *_P, VertexNumList *_V, EqList *_F,
     exit(1);
   }
   if (traced) {
-    fprintf(outFILE,
-            "\nV_perm made by Poly_Sym (order refers to VertNumList):\n");
+    fprintf(out, "\nV_perm made by Poly_Sym (order refers to VertNumList):\n");
     for (i = 0; i < *SymNum; i++)
-      Print_Perm(V_perm[i], _V->nv, "\n");
+      Print_Perm(V_perm[i], _V->nv, "\n", out);
     /*{for(j=0;j<_V->nv;j++)printf("%c",PermChar(V_perm[i][j]));puts("");}*/
   }
   if (S)
-    fprintf(outFILE, "#GL(Z,%d)-Symmetries=%d, #VPM-Symmetries=%d\n", _P->n,
+    fprintf(out, "#GL(Z,%d)-Symmetries=%d, #VPM-Symmetries=%d\n", _P->n,
             *SymNum, ns);
   if (N) {
     char c[VERT_Nmax + 38] = "Normal form of vertices of P";
@@ -1354,27 +1354,28 @@ int PM_to_GLZ_for_UTriang(Long M[][VERT_Nmax], int *d, int *v, /* return rank */
 }
 typedef Long PoMat[VERT_Nmax][POLY_Dmax];
 typedef Long VMat[POLY_Dmax][VERT_Nmax];
-void Print2_PM(Long PM[][POLY_Dmax], int d, int p) {
+void Print2_PM(Long PM[][POLY_Dmax], int d, int p, FILE *out) {
   int i, j;
   for (i = 0; i < d; i++)
     for (j = 0; j < p; j++)
-      fprintf(outFILE, "%2ld%c", PM[j][i], (j == p - 1) ? '\n' : ' ');
+      fprintf(out, "%2ld%c", PM[j][i], (j == p - 1) ? '\n' : ' ');
 }
-void Print2_VM(VMat VM, int d, int p) {
+void Print2_VM(VMat VM, int d, int p, FILE *out) {
   int i, j;
   for (i = 0; i < d; i++)
     for (j = 0; j < p; j++)
-      fprintf(outFILE, "%2ld%c", VM[i][j], (j == p - 1) ? '\n' : ' ');
+      fprintf(out, "%2ld%c", VM[i][j], (j == p - 1) ? '\n' : ' ');
 }
 typedef struct {
   int p[SYM_Nmax][VERT_Nmax];
 } VPerm;
-int InvariantSubspace(PolyPointList *P, VertexNumList *V, EqList *E) {
+int InvariantSubspace(PolyPointList *P, VertexNumList *V, EqList *E,
+                      FILE *out) {
   int i, v, r = 0, p = 0, pri, EVsn, sn;
   VPerm VP;
   Long NF[POLY_Dmax][VERT_Nmax];
   VMat Inv;
-  EVsn = Make_Poly_Sym_NF(P, V, E, &sn, VP.p, NF, 0, 0, 0);
+  EVsn = Make_Poly_Sym_NF(P, V, E, &sn, VP.p, NF, 0, 0, 0, out);
   for (v = 0; v < V->nv; v++) {
     Long X[POLY_Dmax], g = 0;
     for (i = 0; i < P->n; i++) {
@@ -1399,11 +1400,11 @@ int InvariantSubspace(PolyPointList *P, VertexNumList *V, EqList *E) {
   }
   pri = p;
   if (p > V->nv) {
-    fprintf(outFILE, "p=%d v=%d\n", p, V->nv);
+    fprintf(out, "p=%d v=%d\n", p, V->nv);
     exit(1);
   }
   if (pri)
-    fprintf(outFILE, "%d %d  #Sym=%d (<=%d)  ", P->n, V->nv, sn, EVsn);
+    fprintf(out, "%d %d  #Sym=%d (<=%d)  ", P->n, V->nv, sn, EVsn);
   if (p) {
     GL_Long G[POLY_Dmax][POLY_Dmax], B[POLY_Dmax][POLY_Dmax];
     r = PM_to_GLZ_for_UTriang(Inv, &P->n, &p, G);
@@ -1423,21 +1424,21 @@ int InvariantSubspace(PolyPointList *P, VertexNumList *V, EqList *E) {
             }
           }
         }
-      fprintf(outFILE, "InvSubspace: dim=%d <(", r);
+      fprintf(out, "InvSubspace: dim=%d <(", r);
       INV_GLZmatrix(G, &P->n, B);
       for (i = 0; i < r; i++)
         for (v = 0; v < P->n; v++)
-          fprintf(outFILE, "%ld%s", B[v][i],
+          fprintf(out, "%ld%s", B[v][i],
                   (v < P->n - 1) ? "," : ((i + 1 == r) ? "" : "),("));
-      fprintf(outFILE, ")>\n");
+      fprintf(out, ")>\n");
     }
   } else if (pri)
-    fprintf(outFILE, "symmetric\n");
+    fprintf(out, "symmetric\n");
   if (pri) {
     for (v = 0; v < V->nv; v++)
       for (i = 0; i < P->n; i++)
         Inv[i][v] = P->x[V->v[v]][i];
-    Print2_VM(Inv, P->n, V->nv);
+    Print2_VM(Inv, P->n, V->nv, outFILE);
   }
   if (pri)
     fflush(0);
@@ -1510,9 +1511,9 @@ Long SimplexVolume(Long *V[POLY_Dmax + 1], int d) {
   }
   return I;
 }
-void Print_GLZ(GL_Long G[][POLY_Dmax], int d, const char *c);
+void Print_GLZ(GL_Long G[][POLY_Dmax], int d, const char *c, FILE *out);
 Long Aux_Vol_Barycent(PolyPointList *A, VertexNumList *V, EqList *E, Long *_B,
-                      Long *_N) {
+                      Long *_N, FILE *out) {
   Long P[VERT_Nmax][POLY_Dmax], F[POLY_Dmax][VERT_Nmax], B[POLY_Dmax], g,
       vol = 0;
   int i, j, e, p = A->np - 1, D = A->n, ne = 0;
@@ -1585,10 +1586,10 @@ Long Aux_Vol_Barycent(PolyPointList *A, VertexNumList *V, EqList *E, Long *_B,
       }
     }
     INV_GLZmatrix(G, &D, GI);
-    /* if(D==4){Print_PPL(A,"GxP");Print_GLZ(GI,D,"GI");} */
-    Ve = Aux_Vol_Barycent(A, V, E, Be, &Ne) * Eq[e].c;
+    /* if(D==4){Print_PPL(A,"GxP");Print_GLZ(GI, D, "GI", outFILE);} */
+    Ve = Aux_Vol_Barycent(A, V, E, Be, &Ne, outFILE) * Eq[e].c;
     vol += Ve;
-    /* if(D==4){fprintf(outFILE,"%d<%d: E.c=%d V=%d ",e,ne,Eq[e].c,Ve);
+    /* if(D==4){fprintf(out,"%d<%d: E.c=%d V=%d ",e,ne,Eq[e].c,Ve);
        for(i=0;i<D-1;i++)printf(" %d",Be[i]);printf("/%d = B/N\n",Ne);} */
     for (i = 0; i < D; i++) {
       ZB[i] = 0;
@@ -1643,7 +1644,7 @@ Long LatVol_Barycent(PolyPointList *P, VertexNumList *V, /* bary=B/N */
   for (i = 0; i < V->nv; i++)
     for (j = 0; j < P->n; j++)
       A->x[i][j] = P->x[V->v[i]][j];
-  vol = Aux_Vol_Barycent(A.get(), &aV, e, B, N);
+  vol = Aux_Vol_Barycent(A.get(), &aV, e, B, N, outFILE);
   for (i = 0; i < P->n; i++)
     if (B[i])
       break;
@@ -1719,12 +1720,12 @@ void Free_Matrix(Matrix *M) {
   free(M->x);
   M->v = M->d = 0;
 }
-void Print_LMatrix(Matrix M, char *s) {
+void Print_LMatrix(Matrix M, char *s, FILE *out) {
   int i, j;
-  fprintf(outFILE, "%d %d LV %s\n", M.v, M.d, s);
+  fprintf(out, "%d %d LV %s\n", M.v, M.d, s);
   for (i = 0; i < M.v; i++) {
     for (j = 0; j < M.d; j++)
-      fprintf(outFILE, "%2ld%s", M.x[i][j], (j + 1 == M.d) ? "\n" : " ");
+      fprintf(out, "%2ld%s", M.x[i][j], (j + 1 == M.d) ? "\n" : " ");
   }
 }
 Long VxV(Long *X, Long *Y, int d) {
@@ -1874,8 +1875,8 @@ void Circuit(int d, Long **P,
   }
   if (T.v != Make_G_for_GxMT_UT(T, G)) {
     puts("Error in Circuit");
-    Print_LMatrix(G, "GLZ");
-    Print_LMatrix(T, "circuit");
+    Print_LMatrix(G, "GLZ", outFILE);
+    Print_LMatrix(T, "circuit", outFILE);
   }
   for (i = 0; i < T.d; i++)
     C[i] = G.x[T.v][i];
@@ -2024,14 +2025,15 @@ int LinRelSimplexVolume(Long *X[POLY_Dmax], int v, int d) /* S-dim=v<=dim */
 #endif
   return det;
 }
-void PrettyPrintDualVert(PolyPointList *P, int vn, EqList *E, int dpn) {
+void PrettyPrintDualVert(PolyPointList *P, int vn, EqList *E, int dpn,
+                         FILE *out) {
   int i, j;
-  fprintf(outFILE, "%d %d  %sM:%d %d N:%d %d\n", P->n, E->ne,
+  fprintf(out, "%d %d  %sM:%d %d N:%d %d\n", P->n, E->ne,
           "Vertices of P* (N-lattice)    ", P->np, vn, dpn, E->ne);
   for (j = 0; j < P->n; j++) {
     for (i = 0; i < E->ne - 1; i++)
-      fprintf(outFILE, "%2ld ", E->e[i].a[j]);
-    fprintf(outFILE, "%2ld\n", E->e[i].a[j]);
+      fprintf(out, "%2ld ", E->e[i].a[j]);
+    fprintf(out, "%2ld\n", E->e[i].a[j]);
   }
   for (i = 0; i < E->ne; i++) {
     if (E->e[i].c != 1) {
@@ -2040,7 +2042,7 @@ void PrettyPrintDualVert(PolyPointList *P, int vn, EqList *E, int dpn) {
     }
   }
 }
-void PrintFanoVert(PolyPointList *P, VertexNumList *V) {
+void PrintFanoVert(PolyPointList *P, VertexNumList *V, FILE *out) {
   Long *Z = P->x[0], *N[4 * VERT_Nmax];
   int i, j, n = 0;
   if (P->n != 4) {
@@ -2062,15 +2064,15 @@ void PrintFanoVert(PolyPointList *P, VertexNumList *V) {
           if ((X[3] - Z[3]) % 2 == 0)
             N[n++] = X;
   }
-  fprintf(outFILE, "P/2: %d points (%d vertices) of P'=P/2 (M-lattice):\n",
+  fprintf(out, "P/2: %d points (%d vertices) of P'=P/2 (M-lattice):\n",
           V->nv + n, V->nv);
   for (j = 0; j < P->n; j++) {
-    fprintf(outFILE, "P/2: ");
+    fprintf(out, "P/2: ");
     for (i = 0; i < V->nv; i++)
-      fprintf(outFILE, "%2ld ", (P->x[i][j] - Z[j]) / 2);
+      fprintf(out, "%2ld ", (P->x[i][j] - Z[j]) / 2);
     for (i = 0; i < n; i++)
-      fprintf(outFILE, " %2ld", (N[i][j] - Z[j]) / 2);
-    fprintf(outFILE, "\n");
+      fprintf(out, " %2ld", (N[i][j] - Z[j]) / 2);
+    fprintf(out, "\n");
   }
 }
 void Make_FaceIPs(PolyPointList *_P, VertexNumList *_V, EqList *_E,
@@ -2425,8 +2427,8 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
       printf("pic=%d  deg=%2d  h12=%2d  rk=%d #sq=%d ", pic, vol, h12, rk, nsq);
       printf("#dp=%d py=%d  F=%d %d %d %d #Fano=%d\n", ndpt, py, _FI->nf[0],
              _FI->nf[1], _FI->nf[2], _FI->nf[3], ++fano);
-      PrettyPrintDualVert(P, V->nv, E, dP->np);
-      PrintFanoVert(P, V);
+      PrettyPrintDualVert(P, V->nv, E, dP->np, outFILE);
+      PrintFanoVert(P, V, outFILE);
     }
     free(_FI);
     return 1;
@@ -2479,14 +2481,15 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
       printf(" sing=%d rk=%d #sq=%d #dp=%d  ", sing, rk, nsq, ndpt);
       printf("toric=%d,%d  F=%d %d %d %d #CY=%d\n", BH.h1[1], BH.h1[2],
              _FI->nf[0], _FI->nf[1], _FI->nf[2], _FI->nf[3], ncon);
-      PrettyPrintDualVert(P, V->nv, E, dP->np);
+      PrettyPrintDualVert(P, V->nv, E, dP->np, outFILE);
     }
     free(_FI);
     return nsq;
   }
 }
 
-void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E) {
+void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E,
+                     FILE *out) {
   int i, j, tot = 0, reg = 0, sym = 0, ksum = 0, sum = 0, bary = 0, ssroot = 0,
             nofip = 0, NR = NON_REF;
   PolyPointList *A = (PolyPointList *)malloc(sizeof(PolyPointList));
@@ -2642,7 +2645,7 @@ void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E) {
         Print_PPL(P, "Inconsistent: bary!=0 for kPsum==0");
         exit(1);
       }
-      is = InvariantSubspace(P, V, E);
+      is = InvariantSubspace(P, V, E, outFILE);
       nis = !is;
       if (nis)
         sym++;
@@ -2695,10 +2698,10 @@ void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E) {
     #endif
     */
   }
-  fprintf(outFILE, "#poly=%d ", tot);
+  fprintf(out, "#poly=%d ", tot);
   if (reg)
-    fprintf(outFILE, "(%dfano) ", reg);
-  fprintf(outFILE, "#symm=%d #kPsum=%d #Psum=%d bary=%d ssroot=%d (%d)\n", sym,
+    fprintf(out, "(%dfano) ", reg);
+  fprintf(out, "#symm=%d #kPsum=%d #Psum=%d bary=%d ssroot=%d (%d)\n", sym,
           ksum, sum, bary, ssroot, ssroot - nofip);
   free(A);
   free(root);
@@ -2888,7 +2891,7 @@ void AuxDPolyData(PolyPointList *P, PolyPointList *A, int *v, int *n, int *f) {
   *n = A->np;
 }
 void Test_EK3_Fibration(PolyPointList *P, int edim,
-                        GL_Long G[POLY_Dmax][POLY_Dmax]) {
+                        GL_Long G[POLY_Dmax][POLY_Dmax], FILE *out) {
   int s[VERT_Nmax], t[VERT_Nmax], d = P->n, p = P->np - 1;
   PolyPointList *A;
   A = (PolyPointList *)malloc(sizeof(PolyPointList));
@@ -2925,7 +2928,7 @@ void Test_EK3_Fibration(PolyPointList *P, int edim,
     for (i = 0; i < p; i++)
       if (t[i] == 2)
         s[j++] = i;
-    fprintf(outFILE, "%d %d  ", d, p);
+    fprintf(out, "%d %d  ", d, p);
     for (i = 0; i < e; i++)
       for (j = 0; j < edim; j++)
         A->x[i][j] = PM[s[i]][j];
@@ -2953,16 +2956,15 @@ void Test_EK3_Fibration(PolyPointList *P, int edim,
     for (j = 0; j < d; j++)
       for (i = 0; i < p; i++)
         (P->np > 20)
-            ? fprintf(outFILE, "%2ld%s", PM[s[i]][j], (i == p - 1) ? "\n" : " ")
-            : fprintf(outFILE, "%4ld%s", PM[s[i]][j],
-                      (i == p - 1) ? "\n" : " ");
+            ? fprintf(out, "%2ld%s", PM[s[i]][j], (i == p - 1) ? "\n" : " ")
+            : fprintf(out, "%4ld%s", PM[s[i]][j], (i == p - 1) ? "\n" : " ");
   }
   free(A);
 }
 
 void Print_Elliptic_K3_Fibrations(PolyPointList *P, int edim,
                                   GL_Long G[VERT_Nmax][POLY_Dmax][POLY_Dmax],
-                                  int nk) {
+                                  int nk, FILE *out) {
   int x, s[VERT_Nmax], t[VERT_Nmax], d = P->n, p = P->np - 1;
   PolyPointList *A = NULL;
   if (nk) {
@@ -3002,26 +3004,26 @@ void Print_Elliptic_K3_Fibrations(PolyPointList *P, int edim,
     for (i = 0; i < p; i++)
       if (t[i] == 2)
         s[j++] = i;
-    fprintf(outFILE, "%d %d  ", d, p);
+    fprintf(out, "%d %d  ", d, p);
     for (i = 0; i < e; i++)
       for (j = 0; j < edim; j++)
         A->x[i][j] = PM[s[i]][j];
     A->n = edim;
     A->np = e;
     AuxDPolyData(A, A, &v, &n, &f);
-    fprintf(outFILE, "Em:%d %d n:%d %d", n, f, e + 1, v);
+    fprintf(out, "Em:%d %d n:%d %d", n, f, e + 1, v);
     for (i = 0; i < k; i++)
       for (j = 0; j < edim + 1; j++)
         A->x[i][j] = PM[s[i]][j];
     A->n = edim + 1;
     A->np = k;
     AuxDPolyData(A, A, &v, &n, &f);
-    fprintf(outFILE, "  Km:%d %d n:%d %d  ", n, f, k + 1, v);
+    fprintf(out, "  Km:%d %d n:%d %d  ", n, f, k + 1, v);
     AuxDPolyData(P, A, &v, &n, &f);
-    fprintf(outFILE, "M:%d %d N:%d %d", A->np, f, P->np, v);
+    fprintf(out, "M:%d %d N:%d %d", A->np, f, P->np, v);
     if (p <= FIB_PERM) {
-      fprintf(outFILE, "  p=");
-      Print_Perm(s, p, "\n");
+      fprintf(out, "  p=");
+      Print_Perm(s, p, "\n", outFILE);
     } /*for(i=0;i<p;i++)printf("%d ",s[i]);*/ else
       Fputs("");
     for (i = 0; i < p; i++)
@@ -3033,13 +3035,13 @@ void Print_Elliptic_K3_Fibrations(PolyPointList *P, int edim,
     for (j = 0; j < d; j++)
       for (i = 0; i < p; i++)
         (P->np > 20)
-            ? fprintf(outFILE, "%2ld%s", A->x[i][j], (i == p - 1) ? "\n" : " ")
-            : fprintf(outFILE, "%4ld%s", A->x[i][j], (i == p - 1) ? "\n" : " ");
+            ? fprintf(out, "%2ld%s", A->x[i][j], (i == p - 1) ? "\n" : " ")
+            : fprintf(out, "%4ld%s", A->x[i][j], (i == p - 1) ? "\n" : " ");
   }
   if (nk)
     free(A);
 }
-void All_CDn_Fibrations(PolyPointList *P, int nv, int cd) {
+void All_CDn_Fibrations(PolyPointList *P, int nv, int cd, FILE *out) {
   int x, fdim = P->n - cd;
   ek3fli *F = (ek3fli *)malloc(sizeof(ek3fli));
   PolyPointList *A = &F->F;
@@ -3070,37 +3072,36 @@ void All_CDn_Fibrations(PolyPointList *P, int nv, int cd) {
     for (i = 0; i < p; i++)
       if (t[i] == 1)
         s[j++] = i;
-    fprintf(outFILE, "%d %d  ", d, p);
+    fprintf(out, "%d %d  ", d, p);
     for (i = 0; i < fn; i++)
       for (j = 0; j < fdim; j++)
         A->x[i][j] = PM[s[i]][j];
     A->n = fdim;
     A->np = fn;
     AuxDPolyData(A, A, &v, &n, &f);
-    fprintf(outFILE, "m:%d %d n:%d %d  ", n, f, fn + 1, v);
+    fprintf(out, "m:%d %d n:%d %d  ", n, f, fn + 1, v);
     AuxDPolyData(P, A, &v, &n, &f);
-    fprintf(outFILE, "M:%d %d N:%d %d", A->np, f, P->np, v);
+    fprintf(out, "M:%d %d N:%d %d", A->np, f, P->np, v);
     if (p <= FIB_PERM) {
-      fprintf(outFILE, "  p=");
-      Print_Perm(s, p, "\n");
+      fprintf(out, "  p=");
+      Print_Perm(s, p, "\n", outFILE);
     } /* for(i=0;i<p;i++)printf("%d",s[i]); }puts("");*/ else
       Fputs("");
     for (j = 0; j < d; j++)
       for (i = 0; i < p; i++)
         (P->np > 20)
-            ? fprintf(outFILE, "%2ld%s", PM[s[i]][j], (i == p - 1) ? "\n" : " ")
-            : fprintf(outFILE, "%4ld%s", PM[s[i]][j],
-                      (i == p - 1) ? "\n" : " ");
+            ? fprintf(out, "%2ld%s", PM[s[i]][j], (i == p - 1) ? "\n" : " ")
+            : fprintf(out, "%4ld%s", PM[s[i]][j], (i == p - 1) ? "\n" : " ");
   }
   free(F);
 }
 
-void Print_GLZ(GL_Long G[][POLY_Dmax], int d, const char *c) {
+void Print_GLZ(GL_Long G[][POLY_Dmax], int d, const char *c, FILE *out) {
   int i, j;
   for (i = 0; i < d; i++) {
-    fprintf(outFILE, "%s: ", c);
+    fprintf(out, "%s: ", c);
     for (j = 0; j < d; j++)
-      fprintf(outFILE, "%3ld ", G[i][j]);
+      fprintf(out, "%3ld ", G[i][j]);
     Fputs("");
   }
 }
@@ -3187,14 +3188,14 @@ void Elliptic_K3_Fibration(PolyPointList *P, int nv, int edim) {
             exit(1);
           }
           /* 	printf("\nTest_EK3: e=%d nf=%d  n=%d nb=%d\n",e,F->nf,n,nb);
-                  Test_EK3_Fibration(P,edim,F->GK[nk-1]); */
+                  Test_EK3_Fibration(P,edim,F->GK[nk-1], outFILE); */
         }
         for (i = 0; i < *d; i++)
           ge[i] = GE[i];
         nb = 0;
       }
     }
-  Print_Elliptic_K3_Fibrations(P, edim, F->GK, nk);
+  Print_Elliptic_K3_Fibrations(P, edim, F->GK, nk, outFILE);
   free(F);
 }
 void IP_Simplex_Fiber(Long PM[][POLY_Dmax], int p, int d, /* need PM[i]!=0 */
@@ -3336,41 +3337,41 @@ void Aux_Make_Dual_Poly(PolyPointList *P, VertexNumList *V, EqList *E) {
   }
 }
 void Aux_IPS_Print_Poly(PolyPointList *_P, VertexNumList *_V, int np, int nw,
-                        int VS, int CD) {
+                        int VS, int CD, FILE *out) {
   int j;
   if (VS)
     Print_VL(_P, _V, "vertices of P-dual and IP-simplices");
   else
     Print_PPL(_P, "points of P-dual and IP-simplices");
   for (j = 0; j < np; j++)
-    fprintf(outFILE, "-----");
+    fprintf(out, "-----");
   if (CD)
-    fprintf(outFILE, "         fibrations:\n");
+    fprintf(out, "         fibrations:\n");
   else {
-    fprintf(outFILE, "         #=%d", nw);
+    fprintf(out, "         #=%d", nw);
     if (nw > np - _P->n)
-      fprintf(outFILE, " > %d=#pts-dim", np - _P->n);
-    fputs("\n", outFILE);
+      fprintf(out, " > %d=#pts-dim", np - _P->n);
+    fputs("\n", out);
   }
 }
-void Aux_IPS_Print_W(Long *W, int w, int cd) {
+void Aux_IPS_Print_W(Long *W, int w, int cd, FILE *out) {
   int j, d = 0;
   for (j = 0; j < w; j++) {
-    fprintf(outFILE, " %4d", (int)W[j]);
+    fprintf(out, " %4d", (int)W[j]);
     d += W[j];
   }
-  fprintf(outFILE, " %4d=d  codim=%d", d, cd);
+  fprintf(out, " %4d=d  codim=%d", d, cd);
 }
-void Aux_IPS_Print_WP(Long *W, int w, int cd) {
+void Aux_IPS_Print_WP(Long *W, int w, int cd, FILE *out) {
   int j, d = 0;
   for (j = 0; j < w; j++) {
-    fprintf(outFILE, (w > 19) ? " %2d" : " %4d", (int)W[j]);
+    fprintf(out, (w > 19) ? " %2d" : " %4d", (int)W[j]);
     d += W[j];
   }
-  fprintf(outFILE, " %3d=d  codim=%d", d, cd);
+  fprintf(out, " %3d=d  codim=%d", d, cd);
 }
 void Print_Fiber_PolyData(PolyPointList *P, VertexNumList *V, Long *W, int w,
-                          int n, int nw, int VS, int CD) {
+                          int n, int nw, int VS, int CD, FILE *out) {
   int cd = 0, j, Mmp, Mmv, Mnp, Mnv, Nmp, Nmv, Nnp, Nnv;
   static int f;
   for (j = 0; j < w; j++)
@@ -3378,7 +3379,7 @@ void Print_Fiber_PolyData(PolyPointList *P, VertexNumList *V, Long *W, int w,
       cd++;
   cd = cd + P->n - w + 1;
   if (CD == 0)
-    Aux_IPS_Print_W(W, w, cd);
+    Aux_IPS_Print_W(W, w, cd, out);
   else if (n == 0)
     f = 0;
 
@@ -3436,10 +3437,10 @@ void Print_Fiber_PolyData(PolyPointList *P, VertexNumList *V, Long *W, int w,
     if (fib && CD) {
       if (f == 0) {
         f = 1;
-        Aux_IPS_Print_Poly(P, V, w, nw, VS, CD);
+        Aux_IPS_Print_Poly(P, V, w, nw, VS, CD, out);
       }
-      Aux_IPS_Print_W(W, w, cd);
-      fprintf(outFILE, " fiber m:%d %d n:%d %d\n", Mmp, Mmv, Mnp, Mnv);
+      Aux_IPS_Print_W(W, w, cd, out);
+      fprintf(out, " fiber m:%d %d n:%d %d\n", Mmp, Mmv, Mnp, Mnv);
       return;
     }
     s = 0;
@@ -3486,16 +3487,16 @@ void Print_Fiber_PolyData(PolyPointList *P, VertexNumList *V, Long *W, int w,
       Complete_Poly(PM, &e, v.nv, F);
       Nmp = F->np;
       if (fib)
-        fprintf(outFILE, " fiber m:%d %d n:%d %d", Mmp, Mmv, Mnp, Mnv);
+        fprintf(out, " fiber m:%d %d n:%d %d", Mmp, Mmv, Mnp, Mnv);
       else
-        fprintf(outFILE, " m:%d %d f:%d // m:%d %d n:%d %d", Mmp, Mmv, Mnv, Nmp,
+        fprintf(out, " m:%d %d f:%d // m:%d %d n:%d %d", Mmp, Mmv, Mnv, Nmp,
                 Nmv, Nnp, Nnv);
     } else
-      fprintf(outFILE, " m:%d %d f:%d // f:%d n:%d %d", Mmp, Mmv, Mnv, Nmv, Nnp,
+      fprintf(out, " m:%d %d f:%d // f:%d n:%d %d", Mmp, Mmv, Mnv, Nmv, Nnp,
               Nnv);
     free(F);
   }
-  fprintf(outFILE, "\n");
+  fprintf(out, "\n");
 }
 void Check_New_Fiber(Long PM[][POLY_Dmax], int *d, int *s, int r, FibW *F) {
   int i, j, c, l, *n = &F->nf;
@@ -3553,7 +3554,7 @@ void Check_New_Fiber(Long PM[][POLY_Dmax], int *d, int *s, int r, FibW *F) {
       F->nw--;
   }
 }
-void Print_Fibrations(PolyPointList *P, FibW *F) {
+void Print_Fibrations(PolyPointList *P, FibW *F, FILE *out) {
   int n;
   char C[VERT_Nmax];
   VertexNumList V;
@@ -3583,9 +3584,9 @@ void Print_Fibrations(PolyPointList *P, FibW *F) {
     for (i = 0; i < V.nv; i++)
       C[s[V.v[i]]] = 'v';
     for (i = 0; i < P->np - 1; i++)
-      fprintf(outFILE, "%s%c", (P->np > 20) ? "  " : "    ", C[i]);
+      fprintf(out, "%s%c", (P->np > 20) ? "  " : "    ", C[i]);
     N = F->P->np + 1;
-    fprintf(outFILE, "  cd=%d  ", *d - r);
+    fprintf(out, "  cd=%d  ", *d - r);
     EL_to_PPL(&E, F->P, &r);
     if (!Ref_Check(F->P, &V, &E)) {
       fputs("Error: Print_Fibrations dual fiber polytope not reflexive\n",
@@ -3597,7 +3598,7 @@ void Print_Fibrations(PolyPointList *P, FibW *F) {
       Make_VEPM(F->P, &V, &E, X);
       Complete_Poly(X, &E, V.nv, F->P);
     }
-    fprintf(outFILE, "m:%d %d n:%d %d\n", F->P->np, V.nv, N, E.ne);
+    fprintf(out, "m:%d %d n:%d %d\n", F->P->np, V.nv, N, E.ne);
   }
 }
 void IP_Simplices_Docu(void) {
@@ -3608,27 +3609,28 @@ void IP_Simplices_Docu(void) {
   puts("NNn with n=1,2,3: same as NN and n\n");
   exit(1);
 }
-void Print_QuotZ(int Z[][VERT_Nmax], int *M, int p, int n) {
+void Print_QuotZ(int Z[][VERT_Nmax], int *M, int p, int n, FILE *out) {
   int i, j;
   for (i = 0; i < n; i++) {
-    fprintf(outFILE, " /Z%d:", M[i]);
+    fprintf(out, " /Z%d:", M[i]);
     for (j = 0; j < p; j++)
-      fprintf(outFILE, " %d", Z[i][j]);
+      fprintf(out, " %d", Z[i][j]);
   }
 }
-void Print_Quotient(Long *V[VERT_Nmax], int d, int v) {
+void Print_Quotient(Long *V[VERT_Nmax], int d, int v, FILE *out) {
   Long Z[POLY_Dmax][VERT_Nmax], G[POLY_Dmax][POLY_Dmax], M[POLY_Dmax],
       D[POLY_Dmax];
   int i, j, r;
-  fprintf(outFILE, " I=%d", Sublattice_Basis(d, v, V, Z, M, &r, G, D));
+  fprintf(out, " I=%d", Sublattice_Basis(d, v, V, Z, M, &r, G, D));
   for (i = 0; i < r; i++) {
-    fprintf(outFILE, " /Z%ld:", M[i]);
+    fprintf(out, " /Z%ld:", M[i]);
     for (j = 0; j < v; j++)
-      fprintf(outFILE, " %ld", Z[i][j]);
+      fprintf(out, " %ld", Z[i][j]);
   }
 }
 
-void IP_Simplices(PolyPointList *_P, int nv, int PS, int VS, int CDin) {
+void IP_Simplices(PolyPointList *_P, int nv, int PS, int VS, int CDin,
+                  FILE *out) {
   int i, j, CD = 0, np = _P->np - 1;
   FibW *F = (FibW *)malloc(sizeof(FibW));
   VertexNumList V;
@@ -3686,7 +3688,7 @@ void IP_Simplices(PolyPointList *_P, int nv, int PS, int VS, int CDin) {
   if (VS) {
     Print_VL(_P, &V, "vertices of P-dual and IP-simplices");
     for (i = 0; i < V.nv; i++)
-      fprintf(outFILE, "-----");
+      fprintf(out, "-----");
     if (V.nv == nv)
       IP_Simplex_Fiber(_P->x, nv, _P->n, F, FIB_Nmax, 0);
     else {
@@ -3696,14 +3698,14 @@ void IP_Simplices(PolyPointList *_P, int nv, int PS, int VS, int CDin) {
           P[i][j] = _P->x[V.v[i]][j];
       IP_Simplex_Fiber(P, V.nv, _P->n, F, FIB_Nmax, 0);
     }
-    fprintf(outFILE, "   #IP-simp=%d", F->nw);
+    fprintf(out, "   #IP-simp=%d", F->nw);
     if (F->nw > V.nv - _P->n)
-      fprintf(outFILE, " > %d=#pts-dim", V.nv - _P->n);
+      fprintf(out, " > %d=#pts-dim", V.nv - _P->n);
     if (F->ZS) {
       Long *pl[VERT_Nmax];
       for (i = 0; i < V.nv; i++)
         pl[i] = _P->x[V.v[i]];
-      Print_Quotient(pl, _P->n, V.nv);
+      Print_Quotient(pl, _P->n, V.nv, out);
     }
     fputs("\n", outFILE);
     for (i = 0; i < F->nw; i++) {
@@ -3711,11 +3713,11 @@ void IP_Simplices(PolyPointList *_P, int nv, int PS, int VS, int CDin) {
       for (j = 0; j < V.nv; j++)
         if (!F->W[i][j])
           cd++;
-      Aux_IPS_Print_W(F->W[i], V.nv, cd);
+      Aux_IPS_Print_W(F->W[i], V.nv, cd, out);
       if (F->ZS)
         if (F->nz[i])
-          Print_QuotZ(&F->Z[F->n0[i]], &F->M[F->n0[i]], nv, F->nz[i]);
-      fprintf(outFILE, "\n");
+          Print_QuotZ(&F->Z[F->n0[i]], &F->M[F->n0[i]], nv, F->nz[i], out);
+      fprintf(out, "\n");
     }
   }
   if (CD) {
@@ -3732,51 +3734,51 @@ void IP_Simplices(PolyPointList *_P, int nv, int PS, int VS, int CDin) {
     IP_Simplex_Fiber(_P->x, np, _P->n, F, FIB_Nmax, CD);
     /* else IP_Simplex_Decomp(_P->x,np,_P->n,&F->nw,F->W,FIB_Nmax,CD);*/
     if (F->nw) {
-      fprintf(outFILE, "%d %d  %s\n", _P->n, _P->np,
+      fprintf(out, "%d %d  %s\n", _P->n, _P->np,
               "points of P-dual and IP-simplices");
       for (i = 0; i < _P->n; i++) {
         for (j = 0; j < _P->np; j++)
-          fprintf(outFILE, (_P->np > 20) ? " %2d" : " %4d", (int)_P->x[j][i]);
-        fprintf(outFILE, "\n");
+          fprintf(out, (_P->np > 20) ? " %2d" : " %4d", (int)_P->x[j][i]);
+        fprintf(out, "\n");
       }
     }
     if (PS) {
       for (i = 0; i < np; i++)
-        fprintf(outFILE, (np > 20) ? "---" : "-----");
-      fprintf(outFILE, "    #IP-simp=%d", F->nw);
+        fprintf(out, (np > 20) ? "---" : "-----");
+      fprintf(out, "    #IP-simp=%d", F->nw);
       if (F->nw > np - _P->n)
-        fprintf(outFILE, " > %d=#pts-dim", np - _P->n);
+        fprintf(out, " > %d=#pts-dim", np - _P->n);
       fputs("\n", outFILE);
       for (i = 0; i < F->nw; i++) {
         int cd = _P->n - np + 1;
         for (j = 0; j < np; j++)
           if (!F->W[i][j])
             cd++;
-        Aux_IPS_Print_WP(F->W[i], np, cd);
+        Aux_IPS_Print_WP(F->W[i], np, cd, out);
         if (F->ZS)
           if (F->nz[i])
-            Print_QuotZ(&F->Z[F->n0[i]], &F->M[F->n0[i]], np, F->nz[i]);
-        fprintf(outFILE, "\n");
+            Print_QuotZ(&F->Z[F->n0[i]], &F->M[F->n0[i]], np, F->nz[i], out);
+        fprintf(out, "\n");
       }
     }
     if (CD) {
       for (i = 0; i < np; i++)
-        fprintf(outFILE, (np > 20) ? "---" : "-----");
-      fprintf(outFILE, "    #fibrations=%d", F->nf);
+        fprintf(out, (np > 20) ? "---" : "-----");
+      fprintf(out, "    #fibrations=%d", F->nf);
       fputs("\n", outFILE);
-      Print_Fibrations(_P, F);
+      Print_Fibrations(_P, F, outFILE);
     }
   }
   if (CDin)
     switch (CDin) {
     case 11:
-      All_CDn_Fibrations(_P, nv, 1);
+      All_CDn_Fibrations(_P, nv, 1, outFILE);
       break;
     case 22:
-      All_CDn_Fibrations(_P, nv, 2);
+      All_CDn_Fibrations(_P, nv, 2, outFILE);
       break;
     case 33:
-      All_CDn_Fibrations(_P, nv, 3);
+      All_CDn_Fibrations(_P, nv, 3, outFILE);
       break;
     case 12:
       Elliptic_K3_Fibration(_P, nv, _P->n - 2);
@@ -3793,7 +3795,7 @@ void IP_Simplices(PolyPointList *_P, int nv, int PS, int VS, int CDin) {
 void IP_Fiber_Data(PolyPointList *PD, PolyPointList *AuxP,
                    int nv, /* PD::N-lat.*/
                    Long G[VERT_Nmax][POLY_Dmax][POLY_Dmax], int fd[VERT_Nmax],
-                   int *nf, int CD) {
+                   int *nf, int CD, FILE *out) {
   int i, j, k;
   FibW *F = (FibW *)malloc(sizeof(FibW));
   if (F == NULL) {
@@ -4676,12 +4678,12 @@ void C_to_BrxC(Long **B, Long **C, Long *Xaux, int *r,
       C[n + l][c] = MxV(B[l], Xaux, r);
   }
 }
-void Print_xxG(Long **G, int *d, char *s) {
+void Print_xxG(Long **G, int *d, char *s, FILE *out) {
   int i, j;
   for (i = 0; i < *d; i++) {
     for (j = 0; j < *d; j++)
-      fprintf(outFILE, "%3ld ", G[i][j]);
-    fprintf(outFILE, "%s\n", s);
+      fprintf(out, "%3ld ", G[i][j]);
+    fprintf(out, "%s\n", s);
   }
 }
 int VP_2_CWS(Long *V[], int n, int v, CWS *CW) {
@@ -5040,7 +5042,7 @@ void Make_ANF(PolyPointList *P, VertexNumList *V, /* affine normal form */
   /* Print_PPL(P,"Pout");Print_VL(P,V,"Vout");Print_EL(E,&P->n,0,"Eout");*/
 }
 
-void EPrint_VL(PolyPointList *_P, VertexNumList *V, double f) {
+void EPrint_VL(PolyPointList *_P, VertexNumList *V, double f, FILE *out) {
   int i, j;
   fprintf(stderr, "%d %d  fat=%f\n", _P->n, V->nv, f);
   for (i = 0; i < _P->n; i++) {
@@ -5050,7 +5052,7 @@ void EPrint_VL(PolyPointList *_P, VertexNumList *V, double f) {
   }
 }
 
-void Print_Facets(PolyPointList *P, VertexNumList *V, EqList *E) {
+void Print_Facets(PolyPointList *P, VertexNumList *V, EqList *E, FILE *out) {
   int e, err = 0;
   Long VM[POLY_Dmax][VERT_Nmax];
   for (e = 0; e < E->ne; e++) {
@@ -5078,7 +5080,7 @@ void Print_Facets(PolyPointList *P, VertexNumList *V, EqList *E) {
           fprintf(stderr, " %3ld", VM[i][j]);
         fputs("", stderr);
       }
-      EPrint_VL(P, V, 0);
+      EPrint_VL(P, V, 0, outFILE);
       fputs("Error: Print_Facets facet normal form is not horizontal\n",
             stderr);
       exit(1);
@@ -5118,7 +5120,7 @@ void Make_Facet(PolyPointList *P, VertexNumList *V, EqList *E, int e,
         fprintf(stderr, " %3ld", VM[i][j]);
       fputs("", stderr);
     }
-    EPrint_VL(P, V, 0); /*assert(0);*/
+    EPrint_VL(P, V, 0, outFILE); /*assert(0);*/
   }
   *cc = c;
   /* Print_Matrix(VM,P->n-1,c,""); */
