@@ -71,29 +71,29 @@ int GLZ_Start_Simplex(PolyPointList *_P, VertexNumList *_V, CEqList *_C);
 
 /*   ===============	End of Typedefs and Headers	===================  */
 
-void Print_FVl(FVList *_FVl, const char *comment) {
+void Print_FVl(FVList *_FVl, const char *comment, FILE *out) {
   int i, j;
 
-  fprintf(outFILE, "%s\n", comment);
+  fprintf(out, "%s\n", comment);
   for (i = 0; i < _FVl->nf; i++) {
     for (j = 0; j < _FVl->vl[i].nv; j++)
-      fprintf(outFILE, "  %d  ", _FVl->vl[i].v[j]);
-    fprintf(outFILE, "nv: %d\n", _FVl->vl[i].nv);
+      fprintf(out, "  %d  ", _FVl->vl[i].v[j]);
+    fprintf(out, "nv: %d\n", _FVl->vl[i].nv);
     fflush(0);
   }
 }
 
-void Print_M(MMatrix *_M, int *_nf, const char *comment) {
+void Print_M(MMatrix *_M, int *_nf, const char *comment, FILE *out) {
   int i, j, k;
 
-  fprintf(outFILE, "%s\n", comment);
+  fprintf(out, "%s\n", comment);
   for (i = 0; i < *_nf; i++) {
-    fprintf(outFILE, "\n\n facet %d:\n", i);
+    fprintf(out, "\n\n facet %d:\n", i);
     for (j = 0; j < _M[i].codim; j++) {
-      fprintf(outFILE, "m[%d]: ", j);
+      fprintf(out, "m[%d]: ", j);
       for (k = 0; k < _M[i].d; k++)
-        fprintf(outFILE, "%d ", _M[i].M[k][j]);
-      fprintf(outFILE, "\n");
+        fprintf(out, "%d ", _M[i].M[k][j]);
+      fprintf(out, "\n");
     }
   }
 }
@@ -424,7 +424,7 @@ int Convex_Check(MMatrix *_M, GMatrix *_G, XMatrix *_X, int S[], FVList *_FVl,
     i++;
   }
   if (c_flag && _F->Test)
-    Print_M(_MM, &_FVl->nf, "M-Matrix:");
+    Print_M(_MM, &_FVl->nf, "M-Matrix:", outFILE);
   return c_flag;
 }
 
@@ -689,7 +689,7 @@ void Copy_PTL(PartList *_IN_PTL, PartList *_OUT_PTL) {
 
 void Select_Sv(int S[], V_Flag *_VF, MMatrix *_M, GMatrix *_G, XMatrix *_X,
                XMatrix *_Y, M_Rank *_MR, FVList *_FVl, Step step,
-               PartList *_PTL, NEF_Flags *_F) {
+               PartList *_PTL, NEF_Flags *_F, FILE *out) {
 
   int i;
   if (Next_Step(_FVl, &step)) {
@@ -699,7 +699,7 @@ void Select_Sv(int S[], V_Flag *_VF, MMatrix *_M, GMatrix *_G, XMatrix *_X,
 #ifndef NDEBUG
       if (_F->Test) {
         char c;
-        fprintf(outFILE, "\nold vertex f:%d v:%d\n", step.f, step.v);
+        fprintf(out, "\nold vertex f:%d v:%d\n", step.f, step.v);
         if (scanf("%c", &c) != 1)
           c = '\n';
       }
@@ -708,39 +708,39 @@ void Select_Sv(int S[], V_Flag *_VF, MMatrix *_M, GMatrix *_G, XMatrix *_X,
           (_Y[step.f].X[_MR->m[step.f]][step.v] == 0)) {
         if (Check_Consistence(&step, _Y, _M, S, _MR, _FVl)) {
           if (_F->Test)
-            fprintf(outFILE, "f:%d v:%d consistent\n", step.f, step.v);
-          Select_Sv(S, _VF, _M, _G, _X, _Y, _MR, _FVl, step, _PTL, _F);
+            fprintf(out, "f:%d v:%d consistent\n", step.f, step.v);
+          Select_Sv(S, _VF, _M, _G, _X, _Y, _MR, _FVl, step, _PTL, _F, out);
         }
       } else {
         if (Fix_M(&step, _Y, _M, S, _MR, _FVl)) {
           if (_F->Test)
-            fprintf(outFILE, "f:%d v:%d fixed\n", step.f, step.v);
+            fprintf(out, "f:%d v:%d fixed\n", step.f, step.v);
           Raise_M_Rank(_MR, &step.f);
-          Select_Sv(S, _VF, _M, _G, _X, _Y, _MR, _FVl, step, _PTL, _F);
+          Select_Sv(S, _VF, _M, _G, _X, _Y, _MR, _FVl, step, _PTL, _F, out);
         }
       }
     } else {
       if (_F->Test) {
-        fprintf(outFILE, "\nnew vertex f:%d v:%d", step.f, step.v);
+        fprintf(out, "\nnew vertex f:%d v:%d", step.f, step.v);
       }
       New_VFlag(_VF, /* &_FVl->Nv,*/ &_FVl->vl[step.f].v[step.v]);
       for (i = 0; i < _M[step.f].codim; i++) {
         S[_FVl->vl[step.f].v[step.v]] = i;
         if (_F->Test)
-          fprintf(outFILE, "to partition: %d\n", i);
+          fprintf(out, "to partition: %d\n", i);
         if ((_MR->m[step.f] == _M[step.f].d) ||
             (_Y[step.f].X[_MR->m[step.f]][step.v] == 0)) {
           if (Check_Consistence(&step, _Y, _M, S, _MR, _FVl)) {
             if (_F->Test)
-              fprintf(outFILE, "f:%d v:%d consistent\n", step.f, step.v);
-            Select_Sv(S, _VF, _M, _G, _X, _Y, _MR, _FVl, step, _PTL, _F);
+              fprintf(out, "f:%d v:%d consistent\n", step.f, step.v);
+            Select_Sv(S, _VF, _M, _G, _X, _Y, _MR, _FVl, step, _PTL, _F, out);
           }
         } else {
           if (Fix_M(&step, _Y, _M, S, _MR, _FVl)) {
             if (_F->Test)
-              fprintf(outFILE, "f:%d v:%d fixed\n", step.f, step.v);
+              fprintf(out, "f:%d v:%d fixed\n", step.f, step.v);
             Raise_M_Rank(_MR, &step.f);
-            Select_Sv(S, _VF, _M, _G, _X, _Y, _MR, _FVl, step, _PTL, _F);
+            Select_Sv(S, _VF, _M, _G, _X, _Y, _MR, _FVl, step, _PTL, _F, out);
             Lower_M_Rank(_MR, &step.f);
           }
         }
@@ -749,11 +749,11 @@ void Select_Sv(int S[], V_Flag *_VF, MMatrix *_M, GMatrix *_G, XMatrix *_X,
     }
   } else {
     if (_F->Test) {
-      fprintf(outFILE, "\n********************************************\n");
+      fprintf(out, "\n********************************************\n");
       for (i = 0; i < _FVl->Nv; i++)
-        fprintf(outFILE, " %d ", S[i]);
-      fprintf(outFILE, "\n");
-      fprintf(outFILE, "**********************************************\n");
+        fprintf(out, " %d ", S[i]);
+      fprintf(out, "\n");
+      fprintf(out, "**********************************************\n");
       fflush(0);
     }
     if (Codim_Check(S, &_M[step.f - 1].codim, &_FVl->Nv))
@@ -801,7 +801,7 @@ void part_nef(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     INCI_To_FVList(&I, _P, &FVl);
   if (_F->Test) {
     Print_VL(_P, _V, "Vertices of P:");
-    Print_FVl(&FVl, "Facets/Vertices:");
+    Print_FVl(&FVl, "Facets/Vertices:", outFILE);
   }
   std::vector<XMatrix> _X_vec(FVl.nf);
   _X = _X_vec.data();
@@ -817,7 +817,7 @@ void part_nef(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     GLZ_Make_Trian_NF(_Y[i].X, &_P->n, &FVl.vl[i].nv, _G[i].G);
   }
   Initial_Conditions(_M, _Y, &MR, &step, &FVl, &VF, S, _codim, &_P->n, _PTL);
-  Select_Sv(S, &VF, _M, _G, _X, _Y, &MR, &FVl, step, _PTL, _F);
+  Select_Sv(S, &VF, _M, _G, _X, _Y, &MR, &FVl, step, _PTL, _F, outFILE);
   if (_F->Sym) {
     auto _VP = std::make_unique<SYM>();
 

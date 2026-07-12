@@ -513,7 +513,8 @@ limits and 0 otherwise.
 
 /*  ==========   Polytope analysis functions (from Vertex.c)    ==========  */
 
-int Find_Equations(PolyPointList *P, VertexNumList *VNL, EqList *EL);
+int Find_Equations(PolyPointList *P, VertexNumList *VNL, EqList *EL,
+                   FILE *out = outFILE);
 /*
 For the polytope determined by P, *VNL and *EL are calculated.
 *VNL is the complete list of vertices of P.
@@ -522,7 +523,8 @@ Find_Equations returns 1 if P has IP property (i.e., it has the
 origin in its interior) and 0 otherwise.
 */
 
-int IP_Check(PolyPointList *P, VertexNumList *VNL, EqList *EL);
+int IP_Check(PolyPointList *P, VertexNumList *VNL, EqList *EL,
+             FILE *out = outFILE);
 /*
 Same as Find_Equations, but returns immediately without
 calculating *VNL and *EL if P does not have the IP property.

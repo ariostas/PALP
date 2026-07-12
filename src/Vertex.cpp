@@ -1061,7 +1061,8 @@ int Finish_Find_Equations(PolyPointList *_P, VertexNumList *_V, EqList *_F,
   return IP;
 }
 
-int Find_Equations(PolyPointList *_P, VertexNumList *_V, EqList *_F) {
+int Find_Equations(PolyPointList *_P, VertexNumList *_V, EqList *_F,
+                   FILE *out) {
   /* return: IP, finds Vertices and Equations for _P even if not IP */
   int i;
   auto CEq = std::make_unique<CEqList>();
@@ -1077,7 +1078,7 @@ int Find_Equations(PolyPointList *_P, VertexNumList *_V, EqList *_F) {
   _F->ne = 0;
   for (i = 0; i < CEq->ne; i++)
     if (INCI_abs(CEq_I[i] = Eq_To_INCI(&(CEq->e[i]), _P, _V)) < _P->n) {
-      fprintf(outFILE, "Bad CEq in Find_Equations");
+      fprintf(out, "Bad CEq in Find_Equations");
       exit(1);
     }
   i = Finish_Find_Equations(_P, _V, _F, CEq.get(), F_I.data(), CEq_I.data());
@@ -1101,7 +1102,7 @@ int Finish_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F,
   return 1;
 }
 
-int IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F) {
+int IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F, FILE *out) {
   int i;
   auto CEq = std::make_unique<CEqList>();
   std::array<INCI, CEQ_Nmax> CEq_I;
@@ -1111,7 +1112,7 @@ int IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_F) {
   }
   for (i = 0; i < CEq->ne; i++)
     if (INCI_abs(CEq_I[i] = Eq_To_INCI(&(CEq->e[i]), _P, _V)) < _P->n) {
-      fprintf(outFILE, "Bad CEq in IP_Check");
+      fprintf(out, "Bad CEq in IP_Check");
       exit(1);
     }
   _F->ne = 0;
