@@ -283,7 +283,7 @@ int main(int narg, char *fn[]) {
   while (IN_WEIGHT(&W, &CW, D, _P, &F, codim)) {
     /* _P is the M-lattice polytope */
     if (F.G)
-      AnalyseGorensteinCone(&CW, _P, _V, _E, &codim, &F);
+      AnalyseGorensteinCone(&CW, _P, _V, _E, &codim, &F, outFILE);
     else if (Ref_Check(_P, _V, _E)) {
       int nv = _V->nv, ne = _E->ne;
       std::vector<std::array<Long, VERT_Nmax>> PM_vec(EQUA_Nmax);

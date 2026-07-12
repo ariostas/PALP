@@ -22,21 +22,21 @@ void IP_Fiber_Data(PolyPointList *, PolyPointList *, int nv,
 
 /*   ===============	Begin of DYNamical Complete     ===================  */
 
-void Print_DYN_PPL(DYN_PPL *_MP, const char *comment) {
+void Print_DYN_PPL(DYN_PPL *_MP, const char *comment, FILE *out) {
   int i, j;
   if (_MP->np > 20) {
-    fprintf(outFILE, "%d %d  %s\n", (int)_MP->np, _MP->n, comment);
+    fprintf(out, "%d %d  %s\n", (int)_MP->np, _MP->n, comment);
     for (i = 0; i < _MP->np; i++) {
       for (j = 0; j < _MP->n; j++)
-        fprintf(outFILE, "%d ", (int)_MP->L[i].x[j]);
-      fprintf(outFILE, "\n");
+        fprintf(out, "%d ", (int)_MP->L[i].x[j]);
+      fprintf(out, "\n");
     }
   } else {
-    fprintf(outFILE, "%d %d  %s\n", _MP->n, (int)_MP->np, comment);
+    fprintf(out, "%d %d  %s\n", _MP->n, (int)_MP->np, comment);
     for (i = 0; i < _MP->n; i++) {
       for (j = 0; j < _MP->np; j++)
-        fprintf(outFILE, " %4d", (int)_MP->L[j].x[i]);
-      fprintf(outFILE, "\n");
+        fprintf(out, " %4d", (int)_MP->L[j].x[i]);
+      fprintf(out, "\n");
     }
   }
 }
@@ -206,43 +206,44 @@ void DYNMake_VEPM(DYN_PPL *_P, VertexNumList *_V, EqList *_E,
 
 /*   ===============	End of DYNamical Complete	===================  */
 /*   ===============	Begin of FIBRATIONS             ===================  */
-void PRINT_APL(AmbiPointList *_AP, const char *comment) {
+void PRINT_APL(AmbiPointList *_AP, const char *comment, FILE *out) {
   int i, j;
 
-  fprintf(outFILE, "%d %d  %s\n", _AP->N, _AP->np, comment);
+  fprintf(out, "%d %d  %s\n", _AP->N, _AP->np, comment);
   for (i = 0; i < _AP->N; i++) {
     for (j = 0; j < _AP->np; j++)
-      fprintf(outFILE, (_AP->np > 20) ? " %2d" : " %4d", (int)_AP->x[j][i]);
-    fprintf(outFILE, "\n");
+      fprintf(out, (_AP->np > 20) ? " %2d" : " %4d", (int)_AP->x[j][i]);
+    fprintf(out, "\n");
   }
 }
 
-void PRINT_MATRIX(Long *M, int l, int c, int C) {
+void PRINT_MATRIX(Long *M, int l, int c, int C, FILE *out) {
   int i, j;
   for (j = 0; j < l; j++) {
     for (i = 0; i < c; i++)
-      fprintf(outFILE, (c > 20) ? " %3d" : " %4d", (int)*(M + i + C * j));
-    fprintf(outFILE, "\n");
+      fprintf(out, (c > 20) ? " %3d" : " %4d", (int)*(M + i + C * j));
+    fprintf(out, "\n");
   }
 }
 
-void PRINT_TMATRIX(Long *M, int l, int c, int C) {
+void PRINT_TMATRIX(Long *M, int l, int c, int C, FILE *out) {
   int i, j;
 
   for (i = 0; i < c; i++) {
     for (j = 0; j < l; j++)
-      fprintf(outFILE, (l > 20) ? " %3d" : " %4d", (int)*(M + i + C * j));
-    fprintf(outFILE, "\n");
+      fprintf(out, (l > 20) ? " %3d" : " %4d", (int)*(M + i + C * j));
+    fprintf(out, "\n");
   }
 }
 
-void PRINT_PL(PolyPointList *_P, const char *comment) {
+void PRINT_PL(PolyPointList *_P, const char *comment, FILE *out) {
 
-  fprintf(outFILE, "%d %d  %s\n", _P->n, _P->np, comment);
-  PRINT_TMATRIX(&_P->x[0][0], _P->np, _P->n, POLY_Dmax);
+  fprintf(out, "%d %d  %s\n", _P->n, _P->np, comment);
+  PRINT_TMATRIX(&_P->x[0][0], _P->np, _P->n, POLY_Dmax, out);
 }
 
-void PRINT_GORE(PolyPointList *_P, int codim, int n, const char *comment) {
+void PRINT_GORE(PolyPointList *_P, int codim, int n, const char *comment,
+                FILE *out) {
 
   auto _P_AUX = std::make_unique<PolyPointList>();
   VertexNumList _V_AUX_obj;
@@ -285,23 +286,21 @@ void PRINT_GORE(PolyPointList *_P, int codim, int n, const char *comment) {
   /* Find_Equations(_P_AUX, _V_AUX, _E_AUX);  ...  redundant */
   if (n == 0) {
     Sort_PPL(_P_AUX.get(), _V_AUX);
-    fprintf(outFILE, "%d %d %s (nv=%d)\n", _P_AUX->n, _P_AUX->np, comment,
+    fprintf(out, "%d %d %s (nv=%d)\n", _P_AUX->n, _P_AUX->np, comment,
             _V_AUX->nv);
     for (i = 0; i < _P_AUX->n; i++) {
       for (j = 0; j < _P_AUX->np; j++)
-        fprintf(outFILE, (_P_AUX->np > 20) ? " %3d" : " %4d",
-                (int)_P_AUX->x[j][i]);
-      fprintf(outFILE, "\n");
+        fprintf(out, (_P_AUX->np > 20) ? " %3d" : " %4d", (int)_P_AUX->x[j][i]);
+      fprintf(out, "\n");
     } /*PRINT_PL(_P_AUX, comment);*/
   } else {
     Sort_VL(_V_AUX);
     Sort_PPL(_P, _V_AUX);
     if (n == 1)
-      fprintf(outFILE, "%d %d %s (nv=%d)\n", _P->n, _P->np, comment,
-              _V_AUX->nv);
+      fprintf(out, "%d %d %s (nv=%d)\n", _P->n, _P->np, comment, _V_AUX->nv);
     if (n == 2) {
       int o;
-      fprintf(outFILE, "%d %d %s (nv=%d)\n", _P->n + 1, _P->np, comment,
+      fprintf(out, "%d %d %s (nv=%d)\n", _P->n + 1, _P->np, comment,
               _V_AUX->nv);
       for (j = 0; j < _P->np; j++) {
         o = 1;
@@ -311,14 +310,14 @@ void PRINT_GORE(PolyPointList *_P, int codim, int n, const char *comment) {
             o = 0;
           i++;
         }
-        fprintf(outFILE, (_P->np > 20) ? " %3d" : " %4d", o);
+        fprintf(out, (_P->np > 20) ? " %3d" : " %4d", o);
       }
-      fprintf(outFILE, "\n");
+      fprintf(out, "\n");
     }
     for (i = 0; i < _P->n; i++) {
       for (j = 0; j < _P->np; j++)
-        fprintf(outFILE, (_P->np > 20) ? " %3d" : " %4d", (int)_P->x[j][i]);
-      fprintf(outFILE, "\n");
+        fprintf(out, (_P->np > 20) ? " %3d" : " %4d", (int)_P->x[j][i]);
+      fprintf(out, "\n");
     }
   }
 }
@@ -333,8 +332,10 @@ Long G_x_P(Long *Gi, Long *V, int *d) {
   return x;
 }
 
-void PRINT_Fibrations(VertexNumList *_V, PolyPointList *_P, Flags *_F
-                      /* ,PartList *_PTL */) {
+void PRINT_Fibrations(VertexNumList *_V, PolyPointList *_P,
+                      Flags *_F
+                      /* ,PartList *_PTL */,
+                      FILE *out) {
 
   Long G[VERT_Nmax][POLY_Dmax][POLY_Dmax];
   int s[VERT_Nmax], CD = _F->f, n, c, i, j, fib, nf, nv, np, dim[VERT_Nmax];
@@ -353,8 +354,8 @@ void PRINT_Fibrations(VertexNumList *_V, PolyPointList *_P, Flags *_F
 
   if (nf) {
     for (j = 0; j < _P->np - 1; j++)
-      fprintf(outFILE, (_P->np > 20) ? "----" : "-----");
-    fprintf(outFILE, " #fibrations=%d\n", nf);
+      fprintf(out, (_P->np > 20) ? "----" : "-----");
+    fprintf(out, " #fibrations=%d\n", nf);
   }
   for (n = 0; n < nf; n++) {
     c = 0;
@@ -385,7 +386,7 @@ void PRINT_Fibrations(VertexNumList *_V, PolyPointList *_P, Flags *_F
     for (i = 0; i < _V_AUX->nv; i++)
       C[s[_V_AUX->v[i]]] = 'v';
     for (i = 0; i < _P->np - 1; i++)
-      fprintf(outFILE, "%s%c", (_P->np > 20) ? "   " : "    ", C[i]);
+      fprintf(out, "%s%c", (_P->np > 20) ? "   " : "    ", C[i]);
     nv = _V_AUX->nv;
     np = (_P_AUX->np + 1);
     EL_to_PPL(_E_AUX, _P_AUX.get(), &dim[n]);
@@ -399,7 +400,7 @@ void PRINT_Fibrations(VertexNumList *_V, PolyPointList *_P, Flags *_F
       Make_VEPM(_P_AUX.get(), _V_AUX, _E_AUX, X);
       Complete_Poly(X, _E_AUX, _V_AUX->nv, _P_AUX.get());
       /*Dim_Fib_CI(dim, n, _PTL, C);*/
-      fprintf(outFILE, "  cd=%d  m:%3d %2d n:%2d %d\n", (_P->n - dim[n]),
+      fprintf(out, "  cd=%d  m:%3d %2d n:%2d %d\n", (_P->n - dim[n]),
               _P_AUX->np, _V_AUX->nv, np, nv);
     }
   }
@@ -412,9 +413,10 @@ void PRINT_Fibrations(VertexNumList *_V, PolyPointList *_P, Flags *_F
   exit(1);
 }
 
-void Time_Info(time_t *_Tstart, clock_t *_Cstart, const char *comment) {
+void Time_Info(time_t *_Tstart, clock_t *_Cstart, const char *comment,
+               FILE *out = outFILE) {
 
-  fprintf(outFILE, "%s     %dsec  %dcpu\n", comment,
+  fprintf(out, "%s     %dsec  %dcpu\n", comment,
           (int)
           /* CLOCKS_PER_SEC::10^6 */
           difftime(time(NULL), *_Tstart),
@@ -423,7 +425,7 @@ void Time_Info(time_t *_Tstart, clock_t *_Cstart, const char *comment) {
 }
 
 void Print_Nefinfo(PartList *_PTL, /* Flags *_F,*/ time_t *_Tstart,
-                   clock_t *_Cstart) {
+                   clock_t *_Cstart, FILE *out) {
 
   int i, d = 0, p = 0;
 
@@ -435,7 +437,7 @@ void Print_Nefinfo(PartList *_PTL, /* Flags *_F,*/ time_t *_Tstart,
     if (_PTL->Proj[i])
       p++;
   }
-  fprintf(outFILE, "np=%d d:%d p:%d %4dsec  %4dcpu\n", _PTL->n - d - p, d, p,
+  fprintf(out, "np=%d d:%d p:%d %4dsec  %4dcpu\n", _PTL->n - d - p, d, p,
           /* CLOCKS_PER_SEC::10^6 */ (int)difftime(time(NULL), *_Tstart),
           (int)((((long long)clock() - *_Cstart) / (long long)CLOCKS_PER_SEC)));
   fflush(0);
@@ -450,7 +452,7 @@ int N_Part(PartList *_PTL) {
   return 0;
 }
 
-void Print_L(LInfo *_L, int p, int v) {
+void Print_L(LInfo *_L, int p, int v, FILE *out) {
   int codim, D, i, j, N;
 
   if (v && p)
@@ -462,16 +464,16 @@ void Print_L(LInfo *_L, int p, int v) {
       fputs("Error: Print_L vertex count exceeds FIB_POINT_Nmax\n", stderr);
       exit(1);
     }
-    fprintf(outFILE, "%d %d Vertices in N-lattice:\n", _L->d, N);
+    fprintf(out, "%d %d Vertices in N-lattice:\n", _L->d, N);
     for (j = 0; j < _L->d; j++) {
       for (i = 0; i < N; i++)
-        fprintf(outFILE, (_L->nv > 20) ? " %3d" : " %4d", (int)_L->VM[i][j]);
-      fprintf(outFILE, "\n");
+        fprintf(out, (_L->nv > 20) ? " %3d" : " %4d", (int)_L->VM[i][j]);
+      fprintf(out, "\n");
     }
   }
   for (j = 0; j < N; j++)
-    fprintf(outFILE, (_L->nv > 20) ? "----" : "-----");
-  fprintf(outFILE, "\n");
+    fprintf(out, (_L->nv > 20) ? "----" : "-----");
+  fprintf(out, "\n");
   if (FIB_Nmax < _L->nw) {
     fputs("Error: Print_L weight count exceeds FIB_Nmax\n", stderr);
     exit(1);
@@ -489,9 +491,9 @@ void Print_L(LInfo *_L, int p, int v) {
         codim++;
     }
     for (j = 0; j < _L->nv; j++)
-      fprintf(outFILE, (N > 20) ? " %3d" : " %4d", (int)_L->W[i][j]);
-    fprintf(outFILE, "  d=%d  ", D);
-    fprintf(outFILE, "codim=%d\n", codim + _L->d - _L->nv + 1);
+      fprintf(out, (N > 20) ? " %3d" : " %4d", (int)_L->W[i][j]);
+    fprintf(out, "  d=%d  ", D);
+    fprintf(out, "codim=%d\n", codim + _L->d - _L->nv + 1);
   }
 }
 
@@ -652,95 +654,96 @@ int Max_S(PartList *_PTL, int *_n) {
 }
 
 void PrintDegrees(/*Flags *_F,*/ LInfo *_L, PartList *_PTL, int m,
-                  /*int n,   */ int S[VERT_Nmax]) {
+                  /*int n,   */ int S[VERT_Nmax], FILE *out) {
   int d[POLY_Dmax], i, j;
 
   for (i = 0; i < _L->nw; i++) {
-    fprintf(outFILE, " (");
+    fprintf(out, " (");
     for (j = 0; j < _PTL->codim; j++)
       d[j] = 0;
     for (j = 0; j < _L->nv; j++)
       d[S[j]] += _L->W[i][j];
     for (j = 0; j < _PTL->codim; j++)
       if (j != m)
-        fprintf(outFILE, "%d ", d[j]);
-    fprintf(outFILE, "%d", d[m]);
-    fprintf(outFILE, ")");
+        fprintf(out, "%d ", d[j]);
+    fprintf(out, "%d", d[m]);
+    fprintf(out, ")");
   }
 }
 
-void PrintWeights(CWS *_W) {
+void PrintWeights(CWS *_W, FILE *out) {
   int i, j;
   for (i = 0; i < _W->nw; i++) {
-    fprintf(outFILE, "%ld", (long)_W->d[i]);
+    fprintf(out, "%ld", (long)_W->d[i]);
     for (j = 0; j < _W->N; j++)
-      fprintf(outFILE, " %ld", (long)_W->W[i][j]);
+      fprintf(out, " %ld", (long)_W->W[i][j]);
     if (i != (_W->nw - 1))
-      fprintf(outFILE, "  ");
+      fprintf(out, "  ");
   }
 }
 
-void PrintDiamond(int h[][POLY_Dmax], int dim) {
+void PrintDiamond(int h[][POLY_Dmax], int dim, FILE *out) {
   int i, j;
 
-  fprintf(outFILE, "\n\n");
+  fprintf(out, "\n\n");
   fflush(0);
   for (i = 0; i <= dim; i++) {
-    fprintf(outFILE, "        ");
+    fprintf(out, "        ");
     for (j = 0; j <= (dim - i); j++)
-      fprintf(outFILE, "     ");
+      fprintf(out, "     ");
     for (j = 0; j <= i; j++)
-      fprintf(outFILE, "   h%2d%2d   ", i - j, j);
-    fprintf(outFILE, "\n\n");
+      fprintf(out, "   h%2d%2d   ", i - j, j);
+    fprintf(out, "\n\n");
     fflush(0);
   }
   for (i = 1; i <= dim; i++) {
-    fprintf(outFILE, "        ");
+    fprintf(out, "        ");
     for (j = 0; j <= i; j++)
-      fprintf(outFILE, "     ");
+      fprintf(out, "     ");
     for (j = i; j <= dim; j++)
-      fprintf(outFILE, "   h%2d%2d   ", dim - j + i, j);
-    fprintf(outFILE, "\n\n");
+      fprintf(out, "   h%2d%2d   ", dim - j + i, j);
+    fprintf(out, "\n\n");
     fflush(0);
   }
-  fprintf(outFILE, "\n\n");
+  fprintf(out, "\n\n");
   fflush(0);
   for (i = 0; i <= dim; i++) {
-    fprintf(outFILE, "     ");
+    fprintf(out, "     ");
     for (j = 0; j <= (dim - i); j++)
-      fprintf(outFILE, "     ");
+      fprintf(out, "     ");
     for (j = 0; j <= i; j++)
-      fprintf(outFILE, "%10d", h[i - j][j]);
-    fprintf(outFILE, "\n\n");
+      fprintf(out, "%10d", h[i - j][j]);
+    fprintf(out, "\n\n");
   }
   for (i = 1; i <= dim; i++) {
-    fprintf(outFILE, "     ");
+    fprintf(out, "     ");
     for (j = 0; j <= i; j++)
-      fprintf(outFILE, "     ");
+      fprintf(out, "     ");
     for (j = i; j <= dim; j++)
-      fprintf(outFILE, "%10d", h[dim - j + i][j]);
-    fprintf(outFILE, "\n\n");
+      fprintf(out, "%10d", h[dim - j + i][j]);
+    fprintf(out, "\n\n");
   }
   fflush(0);
 }
 
-void Print_Points(PolyPointList *_P, int c, int nv, int S[VERT_Nmax]) {
+void Print_Points(PolyPointList *_P, int c, int nv, int S[VERT_Nmax],
+                  FILE *out) {
 
   int i, P = 0;
 
   for (i = nv; i < (_P->np - 1); i++)
     if (S[i] == c) {
-      fprintf(outFILE, "%d ", i);
+      fprintf(out, "%d ", i);
       P = 1;
     }
   if (P)
-    fprintf(outFILE, " ");
+    fprintf(out, " ");
 }
 
 void Output(PolyPointList *_P,                        /* PolyPointList * _DP,*/
             PolyPointList *_P_D, CWS *_W, EPoly *_EP, /* EqList * _E,*/
-            VertexNumList *_V, int *_n, PartList *_PTL, int *_codim,
-            FILE *outFILE, Flags *_F, int *_D, LInfo *_L) {
+            VertexNumList *_V, int *_n, PartList *_PTL, int *_codim, FILE *out,
+            Flags *_F, int *_D, LInfo *_L) {
   int i, j, k, m, chi = 0, D = (_P_D->n + 1), dim = (_P->n - *_codim);
   int h[POLY_Dmax][POLY_Dmax] = {}, S[VERT_Nmax];
 
@@ -749,25 +752,25 @@ void Output(PolyPointList *_P,                        /* PolyPointList * _DP,*/
       ((!_PTL->Proj[*_n]) || _F->Proj)) {
     if (_F->H == 0) {
       if (_F->w) {
-        PrintWeights(_W);
-        fprintf(outFILE, " ");
+        PrintWeights(_W, out);
+        fprintf(out, " ");
       }
       if constexpr (write_cws) {
         if (_F->Msum == 1)
-          fprintf(outFILE, " d=%d %d", (int)_D[0], (int)_D[1]);
+          fprintf(out, " d=%d %d", (int)_D[0], (int)_D[1]);
       }
       if (!_F->p) {
         chi = Make_Mirror(_EP, h, D, dim);
-        fprintf(outFILE, "H:");
+        fprintf(out, "H:");
         for (i = 1; i < dim; i++)
-          fprintf(outFILE, "%d ", h[1][i]);
-        fprintf(outFILE, "[%d]", chi);
+          fprintf(out, "%d ", h[1][i]);
+        fprintf(out, "[%d]", chi);
         for (i = 1; i <= dim / 2; i++)
           if (h[0][i] != 0)
-            fprintf(outFILE, " h%d=%d", i, h[0][i]);
+            fprintf(out, " h%d=%d", i, h[0][i]);
         if (h[0][0] != 1) {
           if (_PTL->DirProduct[*_n])
-            fprintf(outFILE, " h%d=%d", 0, h[0][0]);
+            fprintf(out, " h%d=%d", 0, h[0][0]);
           else
             Die("\nh00 not 1 !!!\n");
         }
@@ -780,45 +783,45 @@ void Output(PolyPointList *_P,                        /* PolyPointList * _DP,*/
               S[i] = (j + 1);
         }
       if (*_codim == 2) {
-        fprintf(outFILE, " P:%d V:", *_n);
+        fprintf(out, " P:%d V:", *_n);
         i = 0;
         if (m == 0)
           i = 1;
         for (j = 0; j < _PTL->nv; j++)
           if (_PTL->S[*_n][j] == i)
-            fprintf(outFILE, "%d ", j);
-        fprintf(outFILE, " ");
+            fprintf(out, "%d ", j);
+        fprintf(out, " ");
         if ((_P_D->np - *_codim) <= VERT_Nmax)
-          Print_Points(_P, i, _V->nv, S);
+          Print_Points(_P, i, _V->nv, S, out);
         else
-          fprintf(outFILE, " _P->np > VERT_Nmax! ");
+          fprintf(out, " _P->np > VERT_Nmax! ");
       } else {
-        fprintf(outFILE, " P:%d ", *_n);
+        fprintf(out, " P:%d ", *_n);
         j = 0;
         for (i = 0; i < *_codim; i++)
           if (i != m) {
-            fprintf(outFILE, "V%d:", j);
+            fprintf(out, "V%d:", j);
             for (k = 0; k < _PTL->nv; k++)
               if (_PTL->S[*_n][k] == i)
-                fprintf(outFILE, "%d ", k);
-            fprintf(outFILE, " ");
+                fprintf(out, "%d ", k);
+            fprintf(out, " ");
             j++;
             if ((_P_D->np - *_codim) <= VERT_Nmax)
-              Print_Points(_P, i, _V->nv, S);
+              Print_Points(_P, i, _V->nv, S, out);
             else
-              fprintf(outFILE, " _P->np > VERT_Nmax! ");
+              fprintf(out, " _P->np > VERT_Nmax! ");
           }
       }
       if (_PTL->DProj[*_n])
-        fprintf(outFILE, "DP ");
+        fprintf(out, "DP ");
       if (_PTL->DirProduct[*_n])
-        fprintf(outFILE, " D");
+        fprintf(out, " D");
       if (_F->Lv || (_F->Lp && (_P_D->np - *_codim) <= VERT_Nmax))
-        PrintDegrees(/*_F,*/ _L, _PTL, m, /* *_n,*/ S);
+        PrintDegrees(/*_F,*/ _L, _PTL, m, /* *_n,*/ S, out);
       fflush(0);
     } else {
       chi = Make_Mirror(_EP, h, D, dim);
-      PrintDiamond(h, dim);
+      PrintDiamond(h, dim, out);
     }
   }
 }
@@ -1339,7 +1342,7 @@ void Compute_E_Poly(EPoly *_EP, PolyPointList *_P_D, VertexNumList *_V_D,
   free(_BL);
 }
 
-void Make_E_Poly(FILE *outFILE, CWS *_W, PolyPointList *_CP, VertexNumList *_CV,
+void Make_E_Poly(FILE *out, CWS *_W, PolyPointList *_CP, VertexNumList *_CV,
                  EqList *_CE, int *_codim, Flags *_F, int *_D) {
   time_t Tstart;
   clock_t Cstart;
@@ -1415,31 +1418,30 @@ void Make_E_Poly(FILE *outFILE, CWS *_W, PolyPointList *_CP, VertexNumList *_CV,
     NF.Sort = _F->Sort;
     part_nef(_P, _V, _E, _PTL, _codim, &NF);
     if (_F->y && (_PTL->n != 0) && (_W->nw == 0))
-      fprintf(outFILE, "%d %d Vertices of Poly in M-lattice:  ", _DP->n,
-              _DV->nv);
+      fprintf(out, "%d %d Vertices of Poly in M-lattice:  ", _DP->n, _DV->nv);
     if (!(_F->y && (_PTL->n == 0))) {
-      fprintf(outFILE, "M:%d %d N:%d %d ", _DP->np, _E->ne, _P->np, _V->nv);
-      fprintf(outFILE, " codim=%d", *_codim);
-      fprintf(outFILE, " #part=");
+      fprintf(out, "M:%d %d N:%d %d ", _DP->np, _E->ne, _P->np, _V->nv);
+      fprintf(out, " codim=%d", *_codim);
+      fprintf(out, " #part=");
       fflush(0);
-      fprintf(outFILE, "%d\n", _PTL->n);
+      fprintf(out, "%d\n", _PTL->n);
       fflush(0);
     }
   }
   if (_F->y && (_W->nw == 0) && (_PTL->n != 0))
-    PRINT_TMATRIX(&_DP->x[0][0], _DV->nv, _DP->n, POLY_Dmax);
+    PRINT_TMATRIX(&_DP->x[0][0], _DV->nv, _DP->n, POLY_Dmax, out);
   if (_F->V)
     Print_VL(_P, _V, "Vertices of P:");
   if ((!_F->Lv) && (!_F->n) && _F->Lp)
-    PRINT_PL(_P, "Points of Poly in N-Lattice:");
+    PRINT_PL(_P, "Points of Poly in N-Lattice:", out);
   if (_F->Lv || _F->Lp) {
     Make_L(_P, _V, _L, _F->Lp, _F->Lv);
-    Print_L(_L, _F->Lp, _F->Lv);
+    Print_L(_L, _F->Lp, _F->Lv, out);
   }
   if (_F->f) {
     if (_F->Lv)
-      PRINT_PL(_P, "Points of Poly in N-Lattice:");
-    PRINT_Fibrations(_V, _P, _F /*, _PTL*/);
+      PRINT_PL(_P, "Points of Poly in N-Lattice:", out);
+    PRINT_Fibrations(_V, _P, _F /*, _PTL*/, out);
   }
   for (n = 0; n < _PTL->n; n++) {
     /*if ((!_PTL->DirProduct[n]) || _F->Dir){*/
@@ -1462,33 +1464,33 @@ void Make_E_Poly(FILE *outFILE, CWS *_W, PolyPointList *_CP, VertexNumList *_CV,
                      &Tstart, &Cstart);
     }
     /*for (i=0;i<=10;i++){
-      for (j=0;j<=10;j++) fprintf(outFILE,"%d ",EP.E[i][j]);
-      fprintf(outFILE,"\n");}*/
+      for (j=0;j<=10;j++) fprintf(out,"%d ",EP.E[i][j]);
+      fprintf(out,"\n");}*/
 
     if (!_F->n && !_F->g && !_F->d && !_F->y) {
       Output(_P, /*_DP,*/ _P_D, _W, &EP, /*_E,*/
-             _V, &n, _PTL, _codim, outFILE, _F, _D, _L);
+             _V, &n, _PTL, _codim, out, _F, _D, _L);
       if (((!_PTL->Proj[n]) || _F->Proj) && ((!_PTL->DirProduct[n]) || _F->Dir))
-        Time_Info(&Tstart, &Cstart, "");
+        Time_Info(&Tstart, &Cstart, "", out);
     }
     if (((!_PTL->Proj[n]) || _F->Proj) && ((!_PTL->DirProduct[n]) || _F->Dir)) {
       if (_F->g)
-        PRINT_GORE(_P_D, *_codim, _F->gd, "Points of PG:");
+        PRINT_GORE(_P_D, *_codim, _F->gd, "Points of PG:", out);
       if (_F->d)
-        PRINT_GORE(_P_N, *_codim, _F->dd, "Points of dual PG:");
+        PRINT_GORE(_P_N, *_codim, _F->dd, "Points of dual PG:", out);
     }
   }
   if (!_F->n && !_F->g && !_F->d && !_F->y)
     Print_Nefinfo(_PTL, /* _F,*/
-                  &Tstart, &Cstart);
+                  &Tstart, &Cstart, out);
   if (_F->n && N_Part(_PTL))
-    PRINT_PL(_P, "Points of Poly in N-Lattice:");
+    PRINT_PL(_P, "Points of Poly in N-Lattice:", out);
 }
 
 void SL2Z_Make_Poly_UTriang(PolyPointList *P);
 
 void AnalyseGorensteinCone(CWS *_CW, PolyPointList *_P, VertexNumList *_V,
-                           EqList *_E, int *_codim, Flags *_F) {
+                           EqList *_E, int *_codim, Flags *_F, FILE *out) {
   /* _P should be the Gorenstein-polytope in M - what is called _P_N in
      certain other parts of the program                                */
 
@@ -1573,11 +1575,11 @@ void AnalyseGorensteinCone(CWS *_CW, PolyPointList *_P, VertexNumList *_V,
   Cstart = clock();
   _F->Test = 0;
   for (i = 0; i < _CW->nw; i++) {
-    fprintf(outFILE, "%d ", (int)_CW->d[i]);
+    fprintf(out, "%d ", (int)_CW->d[i]);
     for (j = 0; j < _CW->N; j++)
-      fprintf(outFILE, "%d ", (int)_CW->W[i][j]);
+      fprintf(out, "%d ", (int)_CW->W[i][j]);
     if (i + 1 < _CW->nw)
-      fprintf(outFILE, " ");
+      fprintf(out, " ");
   }
   fflush(0);
 
@@ -1660,24 +1662,24 @@ void AnalyseGorensteinCone(CWS *_CW, PolyPointList *_P, VertexNumList *_V,
       _V = _auxV;
       _E = _auxE;
     }
-    fprintf(outFILE, "M:%d %d ", _P->np, _V->nv);
-    fprintf(outFILE, "N:%d %d ", _P_D->np, _V_D->nv);
+    fprintf(out, "M:%d %d ", _P->np, _V->nv);
+    fprintf(out, "N:%d %d ", _P_D->np, _V_D->nv);
     if (!_F->g && !_F->d) {
       Compute_E_Poly(&EP, _P_D, _V_D, _new_E_D, _P, _V, _E, _codim, _F, &Tstart,
                      &Cstart);
       chi = Make_Mirror(&EP, h, _P_D->n + 1, dim);
-      fprintf(outFILE, "H:");
+      fprintf(out, "H:");
       for (i = 1; i < dim; i++)
-        fprintf(outFILE, "%d ", h[1][i]);
-      fprintf(outFILE, "[%d]", chi);
+        fprintf(out, "%d ", h[1][i]);
+      fprintf(out, "[%d]", chi);
       for (i = 1; i <= dim / 2; i++)
         if (h[0][i] != 0)
-          fprintf(outFILE, " h%d=%d", i, h[0][i]);
+          fprintf(out, " h%d=%d", i, h[0][i]);
       if (h[0][0] != 1)
-        fprintf(outFILE, " h%d=%d", 0, h[0][0]);
+        fprintf(out, " h%d=%d", 0, h[0][0]);
       puts("");
       if (_F->H)
-        PrintDiamond(h, dim);
+        PrintDiamond(h, dim, out);
     } else
       puts("");
     if (_F->V)
@@ -1687,7 +1689,7 @@ void AnalyseGorensteinCone(CWS *_CW, PolyPointList *_P, VertexNumList *_V,
     if (_F->d)
       Print_PPL(_P, "Points  of support in M:");
     if (_F->t)
-      Time_Info(&Tstart, &Cstart, "");
+      Time_Info(&Tstart, &Cstart, "", out);
     if (_F->N) { /* revert M-N-swap  */
       PolyPointList *_auxP = _P_D;
       VertexNumList *_auxV = _V_D;
@@ -1701,10 +1703,10 @@ void AnalyseGorensteinCone(CWS *_CW, PolyPointList *_P, VertexNumList *_V,
     }
   } else {
     if (_F->N)
-      fprintf(outFILE, "N:%d %d ", _P->np, _V->nv);
+      fprintf(out, "N:%d %d ", _P->np, _V->nv);
     else
-      fprintf(outFILE, "M:%d %d ", _P->np, _V->nv);
-    fprintf(outFILE, "F:%d ", _E->ne);
+      fprintf(out, "M:%d %d ", _P->np, _V->nv);
+    fprintf(out, "F:%d ", _E->ne);
     puts("");
     if ((_F->Rv) || ((_F->V) && (_F->N)))
       Print_VL(_P, _V, "Vertices of input polytope:");
