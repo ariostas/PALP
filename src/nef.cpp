@@ -32,7 +32,8 @@ struct Pstat {
 
 /*  ==========          l o c a l  P R O T O T Y P E s          ==========  */
 
-int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index);
+int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index,
+               FILE *out);
 
 void Compute_E_Poly(EPoly *_EP, PolyPointList *_P_D, VertexNumList *_V_D,
                     EqList *_E_D, PolyPointList *_P_N, VertexNumList *_V_N,
@@ -605,8 +606,8 @@ int IN_WEIGHT(Weight *_W, CWS *_CW, int *_D, PolyPointList *_P, Flags *_F,
   if (_F->Msum)
     return Make_WPCICY(_W, _CW, _D, _P);
   if (_F->G)
-    return ReadCwsPp(_CW, _P, 1, codim);
-  return ReadCwsPp(_CW, _P, codim, 1);
+    return ReadCwsPp(_CW, _P, 1, codim, outFILE);
+  return ReadCwsPp(_CW, _P, codim, 1, outFILE);
 }
 
 void OUT_CWS(CWS *_W, int *_D, int *_M_Flag, FILE *out) {

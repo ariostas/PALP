@@ -81,7 +81,7 @@ int Read_HyperSurf(int *he, int divclassnr, int maxline,
 }
 
 void HyperSurfSingular(PolyPointList *P, triang *T, triang *SR,
-                       MORI_Flags *_Flag, FibW *F, int *cp) {
+                       MORI_Flags *_Flag, FibW *F, int *cp, FILE *out) {
   int p = SR->v, d = SR->d, i, j, r, N = 0; /* N=not(0th)=offset(IP) */
   int divclassnr = *cp;
   int TORDIM = P->n;
@@ -137,7 +137,7 @@ void HyperSurfSingular(PolyPointList *P, triang *T, triang *SR,
     }
   }
   dprintf(SF, ";");
-  DivClassBasis(SF, P, p, D, B, outFILE);
+  DivClassBasis(SF, P, p, D, B, out);
 
   /* STANLEY REISNER */
   dprintf(SF, "ideal sr=");
@@ -203,11 +203,11 @@ void HyperSurfSingular(PolyPointList *P, triang *T, triang *SR,
       }
     }
     if (_Flag->Read_HyperSurfCounter == 0) {
-      fprintf(outFILE, "Hypersurface degrees: (");
+      fprintf(out, "Hypersurface degrees: (");
       for (i = 0; i < F->nw; i++) {
-        fprintf(outFILE, " %d ", DegreeVec[i]);
+        fprintf(out, " %d ", DegreeVec[i]);
       }
-      fprintf(outFILE, ")\n");
+      fprintf(out, ")\n");
     }
 
     //	_Flag->Read_HyperSurfCounter++;

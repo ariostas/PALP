@@ -195,7 +195,7 @@ void checkDimension(int polyDim, int codim, int index) {
   }
 }
 
-int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index)
+int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index, FILE *out)
 /*   _P is always an M-lattice polytope
      codim = 1, index = 1: CY hypersurface
      codim > 1, index = 1: _P reflexive, CICY with codimension codim
@@ -384,14 +384,14 @@ MAP:
       puts("-h gives you help\n");
     return 0;
   }
-  Make_CWS_Points(_CW, _P, outFILE);
+  Make_CWS_Points(_CW, _P, out);
   if (FilterFlag)
     inFILE = NULL;
   return 1;
 }
 
 int Read_CWS_PP(CWS *_CW, PolyPointList *_P) {
-  return ReadCwsPp(_CW, _P, 1, 1);
+  return ReadCwsPp(_CW, _P, 1, 1, outFILE);
 }
 
 int Read_PP(PolyPointList *_P) {
@@ -498,7 +498,7 @@ int Read_PP(PolyPointList *_P) {
   return 1;
 }
 
-int Read_CWS(CWS *_CW, PolyPointList *_P) {
+int Read_CWS(CWS *_CW, PolyPointList *_P, FILE *out) {
   int i, j, FilterFlag = (inFILE == NULL);
   std::array<int, AMBI_Dmax *(AMBI_Dmax + 1)> IN;
   int S;
@@ -633,7 +633,7 @@ MAP:
       puts("-h gives you help\n");
     return 0;
   }
-  Make_CWS_Points(_CW, _P, outFILE); /* now make POLY */
+  Make_CWS_Points(_CW, _P, out); /* now make POLY */
   if (FilterFlag)
     inFILE = NULL;
   return 1;

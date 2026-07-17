@@ -175,9 +175,10 @@ int main(int narg, char *fn[]) {
     // Flag.g=1;
   }
 
+  FILE *out;
   if (Flag.FilterFlag) {
     inFILE = NULL;
-    outFILE = stdout;
+    out = outFILE = stdout;
   }
 
   else {
@@ -192,14 +193,14 @@ int main(int narg, char *fn[]) {
     }
 
     if (narg > ++n)
-      outFILE = fopen(fn[n], "w");
+      out = outFILE = fopen(fn[n], "w");
     else
-      outFILE = stdout;
+      out = outFILE = stdout;
   }
 
-  while ((Flag.D ? Read_PP(_P) : Read_CWS(CW, _P))) {
+  while ((Flag.D ? Read_PP(_P) : Read_CWS(CW, _P, out))) {
     if (!Ref_Check(_P, &V, E)) {
-      fprintf(outFILE, "Input not reflexive!\n");
+      fprintf(out, "Input not reflexive!\n");
       continue;
     }
     if (Flag.D == 0) { /* dualize: _P should become the N-polytope! */
@@ -242,8 +243,8 @@ int main(int narg, char *fn[]) {
         exit(1);
       }
     }
-    HyperSurfDivisorsQ(_P, &V, E, &Flag, outFILE);
-    fflush(outFILE);
+    HyperSurfDivisorsQ(_P, &V, E, &Flag, out);
+    fflush(out);
   }
   return 0;
 }

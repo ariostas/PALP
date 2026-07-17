@@ -68,4 +68,4 @@ void Write_Weight(Weight *_W, FILE *out = outFILE);
 void Write_WH(Weight *_W, BaHo *_BH, VaHo *_VH, int rc, int tc,
               PolyPointList *_P, VertexNumList *_V, EqList *_E,
               FILE *out = outFILE);
-void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP);
+void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP, FILE *out = outFILE);

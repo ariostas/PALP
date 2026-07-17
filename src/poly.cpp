@@ -223,9 +223,10 @@ int main(int narg, char *fn[]) {
     puts("\n-T: Please specify desired output, e.g. via -v or -p \n");
     exit(1);
   }
+  FILE *out;
   if (FilterFlag) {
     inFILE = NULL;
-    outFILE = stdout;
+    out = outFILE = stdout;
   } else {
     if (narg > ++n)
       inFILE = fopen(fn[n], "r");
@@ -236,9 +237,9 @@ int main(int narg, char *fn[]) {
       exit(1);
     }
     if (narg > ++n)
-      outFILE = fopen(fn[n], "w");
+      out = outFILE = fopen(fn[n], "w");
     else
-      outFILE = stdout;
+      out = outFILE = stdout;
   }
   if (U) {
     dd = CD;
@@ -253,7 +254,7 @@ int main(int narg, char *fn[]) {
   if (Q)
     Initialize_C5S(&C5S, POLY_Dmax); // Initialize statistics
   if (Einstein)
-    Einstein_Metric(CW, _P, &V, E, outFILE);
+    Einstein_Metric(CW, _P, &V, E, out);
   while (lg ? Read_W_PP(&W, _P) : Read_CWS_PP(CW, _P)) {
     if (q || Q) {
       FaceInfo FI;
@@ -262,7 +263,7 @@ int main(int narg, char *fn[]) {
           C5S.n_nonIP++;
         continue;
       } // non-IP
-      Print_CWH(CW, &BH, outFILE);
+      Print_CWH(CW, &BH, out);
       if (Q)
         Update_C5S(&BH, FI.nf, CW->W[0], &C5S);
       continue;
@@ -289,7 +290,7 @@ int main(int narg, char *fn[]) {
     } else if (o && !IP)
       continue;
     if (D && !R) {
-      fprintf(outFILE, "Input not reflexive!\n");
+      fprintf(out, "Input not reflexive!\n");
       continue;
     }
     if (r && !R)
@@ -331,16 +332,16 @@ int main(int narg, char *fn[]) {
         RC_Calc_BaHo(_P, &V, E, _DP, &BH);
       if (lg) {
         if ((Tr = Trans_Check(W)))
-          LGO_VaHo(&W, &VH);
-        Write_WH(&W, &BH, &VH, R, Tr, _P, &V, E, outFILE);
+          LGO_VaHo(&W, &VH, out);
+        Write_WH(&W, &BH, &VH, R, Tr, _P, &V, E, out);
       } else
-        Print_CWH(CW, &BH, outFILE);
+        Print_CWH(CW, &BH, out);
     }
     if (s && CW->nw)
       if (!Span_Check(E, &(CW->B), &_P->n))
-        fprintf(outFILE, "No Span\n");
+        fprintf(out, "No Span\n");
     if (I && !IP)
-      fprintf(outFILE, "No IP\n");
+      fprintf(out, "No IP\n");
     if (p)
       Print_PPL(_P, "Points of P");
     if (v)
@@ -355,7 +356,7 @@ int main(int narg, char *fn[]) {
     }
     if (m)
       Print_Matrix(PM, E->ne, V.nv,
-                   "Pairing matrix of vertices and equations of P", outFILE);
+                   "Pairing matrix of vertices and equations of P", out);
     if (d && (_DP->np > E->ne))
       Print_PPL(_DP, "Points of P-dual");
     if (S || N || t) {
@@ -392,15 +393,15 @@ int main(int narg, char *fn[]) {
       Long VM[POLY_Dmax][VERT_Nmax];
       for (j = 0; j < E->ne; j++) {
         Make_Facet(_P, &V, E, j, VM, &cc);
-        Print_Matrix(VM, _P->n - 1, cc, "", outFILE);
+        Print_Matrix(VM, _P->n - 1, cc, "", out);
       }
     }
     if (A) {
       Long ANF[POLY_Dmax][VERT_Nmax];
       Make_ANF(_P, &V, E, ANF);
-      Print_Matrix(ANF, _P->n, V.nv, "Affine normal form", outFILE);
+      Print_Matrix(ANF, _P->n, V.nv, "Affine normal form", out);
     }
-    fflush(outFILE);
+    fflush(out);
   }
   if (Q)
     Print_C5S(&C5S);

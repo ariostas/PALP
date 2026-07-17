@@ -86,13 +86,13 @@ Triang2dSFan() or Triang2dSFan(). If dim (2ndary fan) > 3 then exit(1);
 */
 
 void InterSectionRing(Inci64 *Tri, int *t, PolyPointList *P, int p,
-                      MORI_Flags *_Flag, FibW *F);
+                      MORI_Flags *_Flag, FibW *F, FILE *out = outFILE);
 /*
 Print triangulation and call StanleyReisner(SR,T). Call
 HyperSurfaceSingular(P,T,SR...). Call Print_Mori(P,p,t,Tri).
 */
 
-void StanleyReisner(triang *SR, triang *T);
+void StanleyReisner(triang *SR, triang *T, FILE *out = outFILE);
 /*
 Determine and print the SR ideal.
 */
@@ -104,8 +104,6 @@ Find basis for divisor classes, i.e. integral basis of intersection ring.
 Simply trying to find toric divisors that span the lattice of DivClasses i.e.
 find subdeterminants=volumes=1 for elimination.
 */
-
-void StanleyReisner(triang *SR, triang *T);
 /*
 Determine and print the SR ideal.
 */
@@ -131,7 +129,8 @@ print (Inci64) triangulation
 
 /*** from SingularInput.c ***/
 void HyperSurfSingular(PolyPointList *P, triang *T, triang *SR,
-                       MORI_Flags *_Flag, FibW *F, int *cp);
+                       MORI_Flags *_Flag, FibW *F, int *cp,
+                       FILE *out = outFILE);
 /*
 Interface between the Mori and SINGULAR. Given the polytope P and the linear
 relations among their points, the triangulation T and the SR ideal it generates

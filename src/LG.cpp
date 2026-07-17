@@ -55,7 +55,8 @@ int auxString2SInt(char *c, int *n) {
       j++;
   return j;
 }
-int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
+int Read_WZ_PP(Weight *WZ,
+               FILE *out) /* read "d w_i" [ or "w_i d" if last=max ] */
 {
   int i, j, k, a, n, d, shift = 1, I[W_Nmax + 2], *nz = &WZ->M;
   int FilterFlag = (inFILE == NULL);
@@ -205,7 +206,7 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
         WZ->M = 0;
       }
 #else
-        Write_Weight(WZ, outFILE);
+        Write_Weight(WZ, out);
         exit(1);
       }
 #endif
@@ -316,7 +317,7 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
       printf("%2ld ", X);
     }
     puts("=B.rI");
-    Write_Weight(WZ, outFILE);
+    Write_Weight(WZ, out);
   }
 
   {
@@ -700,7 +701,7 @@ void Ambi_2_Lattice(Long *A, AmbiLatticeBasis *B, Long *P) {
       P[p] /= B->x[p][a];
   }
 }
-void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP) {
+void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP, FILE *out) {
   AmbiLatticeBasis B;
   Weight *_W = _W_in;
   int /* index=0,*/ nip;
@@ -724,7 +725,7 @@ void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP) {
   WeightMakePoints(_W, _AP);
   if constexpr (TEST_LG) {
     puts("\nWeights:");
-    Write_Weight(_W, outFILE);
+    Write_Weight(_W, out);
     puts("AmbiPoints:");
     TEST_WeightMakePoints(_AP);
     puts("Basis:");
@@ -764,13 +765,13 @@ void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP) {
 #if (WZinput)
 int Read_W_PP(Weight *W, PolyPointList *P) {
   W->P = P;
-  return Read_WZ_PP(W);
+  return Read_WZ_PP(W, outFILE);
 }
 #else
 int Read_W_PP(Weight *_W, PolyPointList *_PP) {
   if (!Read_Weight(_W))
     return 0;
-  Make_Poly_Points(_W, _PP);
+  Make_Poly_Points(_W, _PP, outFILE);
   return 1;
 }
 #endif
@@ -922,28 +923,29 @@ int ChangeToTrianBasis(AmbiPointList *_AP, AmbiLatticeBasis *_B,
   return nIP;
 }
 /*  =============		make weights		===========  */
-int IfRefWWrite(Weight *W, PolyPointList *P) {
+int IfRefWWrite(Weight *W, PolyPointList *P, FILE *out) {
   VertexNumList V;
   EqList E;
-  Make_Poly_Points(W, P);
+  Make_Poly_Points(W, P, out);
   if (Ref_Check(P, &V, &E)) {
-    Write_Weight(W, outFILE);
+    Write_Weight(W, out);
     fflush(stdout);
     return 1;
   } else
     return 0;
 }
 void Rec_RefWeights(Weight *W, PolyPointList *P, int g, int sum, int *npp,
-                    int *nrp, int n) {
+                    int *nrp, int n, FILE *out) {
   int wmax = W->d / (W->N - n + 1);
   wmax = palp::min(wmax, W->w[n + 1]);
   wmax = palp::min(wmax, sum - n);
   if (n)
     for (W->w[n] = wmax; (n + 1) * W->w[n] >= sum; W->w[n]--)
-      Rec_RefWeights(W, P, Fgcd(g, W->w[n]), sum - W->w[n], npp, nrp, n - 1);
+      Rec_RefWeights(W, P, Fgcd(g, W->w[n]), sum - W->w[n], npp, nrp, n - 1,
+                     out);
   else if (1 == Fgcd(g, W->w[0] = sum)) {
     (*npp)++;
-    if (IfRefWWrite(W, P))
+    if (IfRefWWrite(W, P, out))
       (*nrp)++;
   };
 }
@@ -959,7 +961,7 @@ void MakeRefWeights(int N, int from_d, int to_d, FILE *out) {
   for (W.d = from_d; W.d <= to_d; W.d++)
     for (W.w[N - 1] = W.d / 2; W.d <= N * W.w[N - 1]; W.w[N - 1]--)
       Rec_RefWeights(&W, &P, Fgcd(W.d, W.w[W.N - 1]), W.d - W.w[W.N - 1], &npp,
-                     &nrp, N - 2);
+                     &nrp, N - 2, out);
   fprintf(out, "#primepartitions=%d #refpolys=%d\n", npp, nrp);
   exit(1);
 }
@@ -1348,12 +1350,13 @@ int DoHodgeTest(VaHo *V) /*[holo] Poincare duality, Hodge duality, sum rule */
   }
   return (V->h[0][0] == 1);
 }
-int Hodge_Test(VaHo *V) /* [holo] Poincare duality, Hodge duality, sum rule */
+int Hodge_Test(VaHo *V,
+               FILE *out) /* [holo] Poincare duality, Hodge duality, sum rule */
 {
   if (DoHodgeTest(V))
     return 1;
   else {
-    Print_VaHo(V, outFILE);
+    Print_VaHo(V, out);
     return 0;
   }
 }
@@ -1582,7 +1585,7 @@ void Fast_c9_VaHo(Weight *W, VaHo *V,
         if ((mask[j] & i) == mask[j])
           prod = rP(prod, rR(W->w[j] - W->d, W->w[j]));
       if (prod.D != 1) {
-        fprintf(outFILE, "\nDenominator != 1 in Fast_c9_VaHo (LG.c)\n");
+        fprintf(stderr, "\nDenominator != 1 in Fast_c9_VaHo (LG.c)\n");
         exit(1);
       }
       zsum1 += woG[i] * prod.N;
@@ -1682,7 +1685,7 @@ int WIndex_HTrace(Weight *W, int *WI, int *T) /* T=sum(Hij), return over=H00 */
         if ((mask[j] & i) == mask[j])
           prod = rP(prod, rR(W->w[j] - W->d, W->w[j]));
       if (prod.D != 1) {
-        fprintf(outFILE, "\nDenominator != 1 in Fast_c9_VaHo (LG.c)\n");
+        fprintf(stderr, "\nDenominator != 1 in Fast_c9_VaHo (LG.c)\n");
         exit(1);
       }
       zsum1 += woG[i] * prod.N;
@@ -1718,7 +1721,8 @@ int WIndex_HTrace(Weight *W, int *WI, int *T) /* T=sum(Hij), return over=H00 */
  * 	proj: g|h> = (-1)^(Kg*Kh) \e(g,h)(\det g_h)/(det g)|h>, thus	     *
  *	K=\e=0 => ph[j] is the sum of the phases on invariant fields.	     *
  */
-int Test_BottomUpQuot(PoCoLi *Num, PoCoLi *Den, PoCoLi *Quo, PoCoLi *Rem) {
+int Test_BottomUpQuot(PoCoLi *Num, PoCoLi *Den, PoCoLi *Quo, PoCoLi *Rem,
+                      FILE *out) {
   int i = BottomUpQuot(Num, Den, Quo, Rem);
   if (Rem->n) {
     if (i != 0) {
@@ -1731,13 +1735,13 @@ int Test_BottomUpQuot(PoCoLi *Num, PoCoLi *Den, PoCoLi *Quo, PoCoLi *Rem) {
   if (i)
     return 1;
   printf("Num=");
-  PrintPoCoLi(Num, outFILE);
+  PrintPoCoLi(Num, out);
   printf("Den=");
-  PrintPoCoLi(Den, outFILE);
+  PrintPoCoLi(Den, out);
   printf("Quo=");
-  PrintPoCoLi(Quo, outFILE);
+  PrintPoCoLi(Quo, out);
   printf("Rem=");
-  PrintPoCoLi(Rem, outFILE);
+  PrintPoCoLi(Rem, out);
   /* printf("N=%d D=%d Q=%d
    * R=%d\n",Num.A,Den.A,Quo.A,Rem.A);exit(1);fflush(0);*/
   {
@@ -1818,7 +1822,7 @@ void FreeMobius(MobiusData *M) {
   M->data_storage.clear();
   M->mt_storage.clear();
 }
-void Calc_VaHo(Weight *W, VaHo *V, FILE *out = outFILE);
+void Calc_VaHo(Weight *W, VaHo *V, FILE *out);
 void PoincarePoly(int N, int *w, int d, PoCoLi *P, PoCoLi *Z, PoCoLi *R,
                   FILE *out);
 void Aux_Phase_Poly(PoCoLi *P, int w, int d, int r, int s, int x);
@@ -2280,7 +2284,7 @@ void LGO_VaHo(Weight *W, VaHo *V, FILE *out) {
     FreeMobius(&MX);
     Free_PoCoLi(&Rem);
     Free_PoCoLi(&Quo);
-    if (!Hodge_Test(V)) {
+    if (!Hodge_Test(V, out)) {
       fputs("Error: LGO_VaHo final Hodge test failed\n", stderr);
       exit(1);
     }
@@ -2377,7 +2381,7 @@ void Calc_VaHo(Weight *W, VaHo *V, FILE *out) {
     if constexpr (TEST_PP)
       if (P->n < 99) {
         printf("PP =");
-        PrintPoCoLi(P, outFILE);
+        PrintPoCoLi(P, out);
       } else
         printf("#(Exp,Co)=%d  Exp<=%d  Coeff<=%d  sum=%lld\n", n, P->e[n - 1],
                cM, sum);

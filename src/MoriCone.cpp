@@ -341,7 +341,7 @@ void IDerr(void) {
   puts("\n       ********       INPUT DATA ERROR    	  ********");
 }
 
-int Make_triCD2F(triang *T, Inci64 *cd2I) {
+int Make_triCD2F(triang *T, Inci64 *cd2I, FILE *out) {
   int i, j, cd2n = 0;
   for (i = 1; i < T->n; i++)
     for (j = 0; j < i; j++) {
@@ -360,16 +360,17 @@ int Make_triCD2F(triang *T, Inci64 *cd2I) {
       break;
   if ((i < cd2n) || (cd2n * 2 != T->n * T->d)) {
     IDerr();
-    PRNtriang(T, "Triangulation ERROR", outFILE);
+    PRNtriang(T, "Triangulation ERROR", out);
     T->n = cd2n;
     T->I = cd2I;
-    PRNtriang(T, "Codim-2 faces:", outFILE);
+    PRNtriang(T, "Codim-2 faces:", out);
     exit(1);
   }
   return cd2n;
 }
 
-int Check_Mori(PolyPointList *P, int p, triang *T) { // strongly convex(?)
+int Check_Mori(PolyPointList *P, int p, triang *T,
+               FILE *out) { // strongly convex(?)
   int nI = T->n;
   Inci64 *I = T->I, cd2F[CD2F_Nmax];
   int i, j, r = 0, d = P->n, ngen = 0, /*ng0,*/ nv, np;
@@ -386,7 +387,7 @@ int Check_Mori(PolyPointList *P, int p, triang *T) { // strongly convex(?)
   Init_Matrix(&VT, d, d + 1);
   Init_Matrix(&R, ngen, p);
   Init_Matrix(&G, p, p); // ng0=ngen;
-  if (ngen != Make_triCD2F(T, cd2F)) {
+  if (ngen != Make_triCD2F(T, cd2F, out)) {
     fputs("Error: Check_Mori inconsistent number of generators\n", stderr);
     exit(1);
   }
@@ -447,24 +448,24 @@ int Check_Mori(PolyPointList *P, int p, triang *T) { // strongly convex(?)
   if (r != p - d) {
     Matrix GR;
     R.v = ngen;
-    Print_LMatrix(R, "R", outFILE);
-    Print_LMatrix(G, "GLZ", outFILE);
+    Print_LMatrix(R, "R", out);
+    Print_LMatrix(G, "GLZ", out);
     Init_Matrix(&GR, R.v, p);
     for (i = 0; i < R.v; i++)
       for (j = 0; j < p; j++)
         GR.x[i][j] = VxV(G.x[j], R.x[i], p);
-    Print_LMatrix(GR, "GR", outFILE);
+    Print_LMatrix(GR, "GR", out);
     printf("rank=%d != p-d !!!\n", r);
     exit(1);
   }
-  // Print_LMatrix(R, "Matrix of all rays", outFILE);
+  // Print_LMatrix(R, "Matrix of all rays", out);
   if (UT->np >= POINT_Nmax) {
-    fprintf(outFILE, "need POINT_Nmax>=%d\n", UT->np + 1);
+    fprintf(out, "need POINT_Nmax>=%d\n", UT->np + 1);
     exit(1);
   }
   UT->n = r;
   if (r > POLY_Dmax) {
-    fprintf(outFILE, "need POLY_Dmax>=%d\n", UT->n);
+    fprintf(out, "need POLY_Dmax>=%d\n", UT->n);
     exit(1);
   }
   for (i = 0; i < ngen; i++)
@@ -489,7 +490,7 @@ int Check_Mori(PolyPointList *P, int p, triang *T) { // strongly convex(?)
   Free_Matrix(&G);
 
   if (np != V.v[nv]) {
-    PRNtriang(T, "Non-coherent Triangulation", outFILE);
+    PRNtriang(T, "Non-coherent Triangulation", out);
     return 0;
   } else
     return 1;
@@ -569,17 +570,17 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I, FILE *out) {
   if (r != p - d) {
     Matrix GR;
     R.v = ngen;
-    Print_LMatrix(R, "R", outFILE);
-    Print_LMatrix(G, "GLZ", outFILE);
+    Print_LMatrix(R, "R", out);
+    Print_LMatrix(G, "GLZ", out);
     Init_Matrix(&GR, R.v, p);
     for (i = 0; i < R.v; i++)
       for (j = 0; j < p; j++)
         GR.x[i][j] = VxV(G.x[j], R.x[i], p);
-    Print_LMatrix(GR, "GR", outFILE);
+    Print_LMatrix(GR, "GR", out);
     printf("rank=%d != p-d !!!\n", r);
     exit(1);
   }
-  // Print_LMatrix(R, "Matrix of all rays", outFILE);
+  // Print_LMatrix(R, "Matrix of all rays", out);
   if (UT->np >= POINT_Nmax) {
     fprintf(out, "need POINT_Nmax>=%d\n", UT->np + 1);
     exit(1);
@@ -608,7 +609,7 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I, FILE *out) {
   if (np != V.v[nv]) {
     IDerr();
     puts("MORI CONE not strictly convex:");
-    Print_Inci64_list(nI, I, p, outFILE);
+    Print_Inci64_list(nI, I, p, out);
     puts("... non-convex triangulation?\n");
     exit(1);
   }
@@ -749,8 +750,8 @@ void Triang_from_SR(triang *TR, triang *SR) { /* consistency check ... */
   free(A);
 }
 
-void StanleyReisner(triang *SR,
-                    triang *T) { /* pre-allocate and compute SR(T) */
+void StanleyReisner(triang *SR, triang *T,
+                    FILE *out) { /* pre-allocate and compute SR(T) */
   Inci64 *S = SR->I, *I = T->I, *A, *M, *N, U = 1;
   long long binco = T->v; /* Binom.Coeff */
   int i = 1, p = T->v, j = p / 2, d = T->d, nI = T->n, s = 0, m = 0, k, l, r;
@@ -867,9 +868,9 @@ void StanleyReisner(triang *SR,
     if (ok)
       free(A);
     else {
-      PRNtriang(T, "Triangulation", outFILE);
-      PRNtriang(SR, "SR-ideal", outFILE);
-      PRNtriang(&TeST, "Tri(SR) ... test failed !!!", outFILE);
+      PRNtriang(T, "Triangulation", out);
+      PRNtriang(SR, "SR-ideal", out);
+      PRNtriang(&TeST, "Tri(SR) ... test failed !!!", out);
       fputs("Error: Stanley-Reisner self-consistency check failed\n", stderr);
       exit(1);
     }
@@ -879,7 +880,7 @@ void StanleyReisner(triang *SR,
 //	INTERSECTION RING (Singular)  /  MORI CONE  /  TRIANGULATIONS
 
 void InterSectionRing(Inci64 *Tri, int *t, PolyPointList *P, int p,
-                      MORI_Flags *_Flag, FibW *F) {
+                      MORI_Flags *_Flag, FibW *F, FILE *out) {
   triang T, SR;
   Inci64 srI[VERT_Nmax];
   T.v = p;
@@ -891,16 +892,16 @@ void InterSectionRing(Inci64 *Tri, int *t, PolyPointList *P, int p,
   SR.n = 0;
   SR.v = p;
   SR.nmax = T.nmax = VERT_Nmax;
-  if (Check_Mori(P, p, &T)) {
+  if (Check_Mori(P, p, &T, out)) {
     if (_Flag->g)
-      PRNtriang(&T, "Triangulation", outFILE);
-    StanleyReisner(&SR, &T);
+      PRNtriang(&T, "Triangulation", out);
+    StanleyReisner(&SR, &T, out);
     if (_Flag->g)
-      PRNtriang(&SR, "SR-ideal", outFILE);
+      PRNtriang(&SR, "SR-ideal", out);
     if (_Flag->i || _Flag->t || _Flag->c || _Flag->d || _Flag->a || _Flag->b ||
         _Flag->H) {
       if (P->n < (POLY_Dmax + 1)) {
-        HyperSurfSingular(P, &T, &SR, _Flag, F, &p);
+        HyperSurfSingular(P, &T, &SR, _Flag, F, &p, out);
       } else {
         printf("Intersection ring implemented only for polytopes up to "
                "dim=%d \n",
@@ -908,7 +909,7 @@ void InterSectionRing(Inci64 *Tri, int *t, PolyPointList *P, int p,
       }
     }
     if (_Flag->m)
-      Print_Mori(P, p, *t, Tri, outFILE);
+      Print_Mori(P, p, *t, Tri, out);
   }
 }
 
@@ -1151,8 +1152,8 @@ void Print_MaxTrian(Inci64 C, Inci64 *CT[ANtri], int nmt, int *nt, int p,
 }
 
 int Triang1dSFan(PolyPointList *P, int p, Inci64 I, Inci64 *X,
-                 Inci64 *CT[ANtri], int *nmt,
-                 int *nt) // P,p,F[c],X,CT[nmf],&nmt[nmf],nt[nmf]
+                 Inci64 *CT[ANtri], int *nmt, int *nt,
+                 FILE *out) // P,p,F[c],X,CT[nmf],&nmt[nmf],nt[nmf]
 {
   int d = P->n, i, j, k = 0, tnt = 0, F[POLY_Dmax + 1];
   Inci64 CI = 0;
@@ -1188,7 +1189,7 @@ int Triang1dSFan(PolyPointList *P, int p, Inci64 I, Inci64 *X,
   }
   prnI(p, CI);
   printf("=C -> ");
-  Print_CMatrix(B, "Gale", outFILE);
+  Print_CMatrix(B, "Gale", out);
 #endif
   if (i > 1) {
     CT[*nmt] = X;
@@ -1209,8 +1210,8 @@ int Triang1dSFan(PolyPointList *P, int p, Inci64 I, Inci64 *X,
     (*nmt)++;
   }
 #if (TRACE_TRIANGULATION)
-  Print_MaxTrian(CI, CT, *nmt, nt,
-                 p); // printf("i=%d j=%d nmt=%d\n",i,j,*nmt);
+  Print_MaxTrian(CI, CT, *nmt, nt, p,
+                 out); // printf("i=%d j=%d nmt=%d\n",i,j,*nmt);
 #endif
   if (*nmt != (i * j + 1 > i + j) + 1) {
     fputs("Error: Triang1dSFan unexpected number of maximal triangulations\n",
@@ -1223,8 +1224,8 @@ int Triang1dSFan(PolyPointList *P, int p, Inci64 I, Inci64 *X,
 }
 
 int Triang2dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
-                 Inci64 *CT[ANtri], int *nmt,
-                 int *nt) // P,p,F[c],X,CT[nmf],&nmt[nmf],nt[nmf]
+                 Inci64 *CT[ANtri], int *nmt, int *nt,
+                 FILE *out) // P,p,F[c],X,CT[nmf],&nmt[nmf],nt[nmf]
 {
   int d = P->n, v = d + 2, i, j, k = 0, r, F[POLY_Dmax + 2], Z[POLY_Dmax + 2],
       z = 0, // GKZ polygon:
@@ -1249,8 +1250,8 @@ int Triang2dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
     if (B.x[k][0] || B.x[k][1])
       U += makeN(F[Z[z++] = k]);
 #if (TRACE_TRIANGULATION)
-  Print_CMatrix(B,
-                "Gale"); // Print_LMatrix(A, "bi-circuit", outFILE); 	// Z_k<z
+  Print_CMatrix(B, "Gale",
+                out); // Print_LMatrix(A, "bi-circuit", out); 	// Z_k<z
 #endif
   nr = 1;
   nrp[0] = 1;
@@ -1383,7 +1384,7 @@ int Triang2dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
     exit(1);
   }
 #if (TRACE_TRIANGULATION)
-  Print_MaxTrian(U, CT, *nmt, nt, p, outFILE);
+  Print_MaxTrian(U, CT, *nmt, nt, p, out);
 #endif
   return tnt;
 } // nmt = # maximal triangulations
@@ -1412,7 +1413,7 @@ int XYZcone(Long *A, Long *B, Long *C) { //  1: B inside cone <AC>_+
 }
 
 int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
-                 Inci64 *CT[ANtri], int *nmt, int *nt) {
+                 Inci64 *CT[ANtri], int *nmt, int *nt, FILE *out) {
   Matrix A, B;
   Inci64 C = 0;
   int tmt = 0;                                        // #triang in max.tri's
@@ -1466,12 +1467,12 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
 #if (TRACE_TRIANGULATION)
   prnI(p, C);
   printf("=C(Gale) ");
-  Print_CMatrix(B, "Gale", outFILE);
+  Print_CMatrix(B, "Gale", out);
   if (f != A.v) {
     fputs("Error: Triang3dSFan facet point count mismatch\n", stderr);
     exit(1);
   }
-  AuxPrintRays(R, nrp, r, outFILE);
+  AuxPrintRays(R, nrp, r, out);
   if (z < r) {
     fputs("Error: Triang3dSFan fewer non-zero Gale points than rays\n", stderr);
     exit(1);
@@ -1976,7 +1977,7 @@ int Compatible_Tri(Inci64 CA, Inci64 CB, int a, Inci64 *A, int b, Inci64 *B,
 //	forall compatible max triangulations make (induced) triang of facets
 
 void GKZsubdivide(Inci64 *F, int f, PolyPointList *P, int p, int *Tp, int *ntp,
-                  int nPS, MORI_Flags *_Flag, FibW *_F) {
+                  int nPS, MORI_Flags *_Flag, FibW *_F, FILE *out) {
   int c, d = P->n, d2, i, j, t = 00; // d2=dim(2ndaryFan)
   Inci64 T[naT], *X = &T[nPS], C[ANfan],
                  *CT[ANfan][ANtri]; // C=circuit, CT=triang
@@ -2004,13 +2005,13 @@ void GKZsubdivide(Inci64 *F, int f, PolyPointList *P, int p, int *Tp, int *ntp,
         if (j == nmf)
           switch (d2) { // TRIANGULATE POLY_CIRCUITS:
           case 1:
-            t = Triang1dSFan(P, p, F[c], X, CT[nmf], &nmt[nmf], nt[nmf]);
+            t = Triang1dSFan(P, p, F[c], X, CT[nmf], &nmt[nmf], nt[nmf], out);
             break;
           case 2:
-            t = Triang2dSFan(P, p, F[c], X, CT[nmf], &nmt[nmf], nt[nmf]);
+            t = Triang2dSFan(P, p, F[c], X, CT[nmf], &nmt[nmf], nt[nmf], out);
             break;
           case 3:
-            t = Triang3dSFan(P, p, F[c], X, CT[nmf], &nmt[nmf], nt[nmf]);
+            t = Triang3dSFan(P, p, F[c], X, CT[nmf], &nmt[nmf], nt[nmf], out);
             break;
           default:
             printf("dim(2ndaryFan)=%d: to be done!\n", d2);
@@ -2085,7 +2086,7 @@ void GKZsubdivide(Inci64 *F, int f, PolyPointList *P, int p, int *Tp, int *ntp,
                                    d);
             break;
           }
-      InterSectionRing(MT, &mt, P, p, _Flag, _F);
+      InterSectionRing(MT, &mt, P, p, _Flag, _F, out);
     }
     t--;
   } while (Multiloop(nmt, I, &c, &nmf));
@@ -2106,7 +2107,7 @@ void GKZsubdivide(Inci64 *F, int f, PolyPointList *P, int p, int *Tp, int *ntp,
  *    -> find points on edge = at intersection of >= 3 max-dim. triangles
  */
 void Subdivide(PolyPointList *P, int v, Inci64 I[], int p, Inci64 *T, int *t,
-               MORI_Flags *_Flag, FibW *F) {
+               MORI_Flags *_Flag, FibW *F, FILE *out) {
   int i, j, ni = *t, d = P->n, ns2 = 0, nPS = 0, nVS = 0,
             num_facetIPs = P->np - 1 - p, // ni=E.ne
       C[3][3], c[3] = {0, 0, 0}, ntp[VERT_Nmax], Tv[VERT_Nmax], Tp[VERT_Nmax];
@@ -2154,7 +2155,7 @@ void Subdivide(PolyPointList *P, int v, Inci64 I[], int p, Inci64 *T, int *t,
   } // ns2= # on triangles  =>  p-v-ns2 on edges
 
   if (nPS == 0) { // no triang. needed
-    InterSectionRing(T, t, P, p, _Flag, F);
+    InterSectionRing(T, t, P, p, _Flag, F, out);
     return;
   } else if ((P->n != 4) || (p > v + 3)) {
     printf("P* requires triangulation. The present routinwes can ");
@@ -2200,7 +2201,7 @@ void Subdivide(PolyPointList *P, int v, Inci64 I[], int p, Inci64 *T, int *t,
       ns2++;
   } // ns2 = #pts @ codim2=triangle
 
-  GKZsubdivide(I, ni, P, p, Tp, ntp, nPS, _Flag, F);
+  GKZsubdivide(I, ni, P, p, Tp, ntp, nPS, _Flag, F, out);
   return;
 }
 
@@ -2347,7 +2348,7 @@ void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
 
       /* Prints the quotient group if any */
       if (F->nz[i])
-        Print_QuotZ(&F->Z[F->n0[i]], &F->M[F->n0[i]], cp, F->nz[i], outFILE);
+        Print_QuotZ(&F->Z[F->n0[i]], &F->M[F->n0[i]], cp, F->nz[i], out);
       fprintf(out, "\n");
     }
   } /* End of P-flag */
@@ -2452,7 +2453,7 @@ void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
     TriList_to_MoriList(_P, F.get(), _Flag);
   else if (_Flag->g || _Flag->m || _Flag->b || _Flag->i || _Flag->c ||
            _Flag->t || _Flag->d || _Flag->H)
-    Subdivide(_P, V->nv, I, cp, T, &t, _Flag, F.get());
+    Subdivide(_P, V->nv, I, cp, T, &t, _Flag, F.get(), out);
 }
 
 /****************************************************************
@@ -2512,7 +2513,7 @@ int ReadInt(void) {
 }
 
 /*needed from Read_Tri*/
-Inci64 Read_INCI(int p) {
+Inci64 Read_INCI(int p, FILE *out) {
   Inci64 X =
       Inci64_1(); /* dirty: starts with the 1 required by the old format */
   char c;
@@ -2531,7 +2532,7 @@ Inci64 Read_INCI(int p) {
     IFerr();
     printf("Input format error: INCI string too %s\n\n",
            (p > 0) ? "short" : "long");
-    fprintf(outFILE, "Type -h for help.\n");
+    fprintf(out, "Type -h for help.\n");
     exit(1);
   }
   ungetc(c, inFILE);
@@ -2598,7 +2599,7 @@ void Test_INCI(int *nI, Inci64 *ILi, int p) {
   }
 }
 
-void Read_Tri(int p, int *nI, int *nIA, Inci64 **_I) {
+void Read_Tri(int p, int *nI, int *nIA, Inci64 **_I, FILE *out) {
   int i;
   Inci64 *I = *_I;
   if (0 > *nIA) {
@@ -2618,7 +2619,7 @@ void Read_Tri(int p, int *nI, int *nIA, Inci64 **_I) {
   }
   /* TODO: this is caller-owned realloc logic; defer unique_ptr conversion. */
   for (i = 0; i < *nI; i++)
-    I[i] = Read_INCI(p - 1);
+    I[i] = Read_INCI(p - 1, out);
   Read_EOL();
   Test_INCI(nI, I, p);
 }
@@ -2759,17 +2760,17 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I, FILE *out) {
   if (r != P->np - P->n - 1) {
     Matrix GR;
     R.v = ngen;
-    Print_LMatrix(R, "R", outFILE);
-    Print_LMatrix(G, "GLZ", outFILE);
+    Print_LMatrix(R, "R", out);
+    Print_LMatrix(G, "GLZ", out);
     Init_Matrix(&GR, R.v, p);
     for (i = 0; i < R.v; i++)
       for (j = 0; j < p; j++)
         GR.x[i][j] = VxV(G.x[j], R.x[i], p);
-    Print_LMatrix(GR, "GR", outFILE);
+    Print_LMatrix(GR, "GR", out);
     printf("rank=%d != P.np-P.n-1 !!!\n", r);
     exit(1);
   }
-  // Print_LMatrix(R, "Matrix of all rays", outFILE);
+  // Print_LMatrix(R, "Matrix of all rays", out);
   if (UT->np >= POINT_Nmax) {
     fprintf(out, "need POINT_Nmax>=%d\n", UT->np + 1);
     exit(1);
@@ -2990,7 +2991,7 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag,
 
   for (n = 0; n < Ntri; n++) {
     Inci64 *IOF; /* Same as I but keeps old format till the end   */
-    Read_Tri(_P->np, &nI, &nIA, &I); /* gives everything in the old format
+    Read_Tri(_P->np, &nI, &nIA, &I, out); /* gives everything in the old format
                                         from input without leading 1   */
     auto IOF_owner = std::make_unique<Inci64[]>(nI);
     IOF = IOF_owner.get();
@@ -3081,7 +3082,7 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag,
       //				fprintf(out, "\n");
       //			}
 
-      HyperSurfSingular(_P, &T, &SR, _Flag, F, &cp);
+      HyperSurfSingular(_P, &T, &SR, _Flag, F, &cp, out);
     }
     /****** End -DMi ********************************************************/
     else

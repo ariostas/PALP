@@ -252,13 +252,14 @@ either P->n = #columns and P->np = #lines or vice versa (the result is
 unique because of P->np > P->n).
 */
 
-int Read_CWS(CWS *_CW, PolyPointList *_P);
+int Read_CWS(CWS *_CW, PolyPointList *_P, FILE *out = outFILE);
 /*
  Reads CWS input *C, the PolyPointList *P determined by *C is calculated.
 */
 
 int Read_PP(PolyPointList *_P);
-int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index);
+int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index,
+              FILE *out = outFILE);
 int IsNextDigit(void);
 void Make_CWS_Points(CWS *_C, PolyPointList *_P, FILE *out = outFILE);
 void Print_CWS_Zinfo(CWS *CW, FILE *out = outFILE);
