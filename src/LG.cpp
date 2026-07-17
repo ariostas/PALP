@@ -947,7 +947,7 @@ void Rec_RefWeights(Weight *W, PolyPointList *P, int g, int sum, int *npp,
       (*nrp)++;
   };
 }
-void MakeRefWeights(int N, int from_d, int to_d) {
+void MakeRefWeights(int N, int from_d, int to_d, FILE *out) {
   int npp = 0, nrp = 0;
   Weight W;
   PolyPointList P;
@@ -960,7 +960,7 @@ void MakeRefWeights(int N, int from_d, int to_d) {
     for (W.w[N - 1] = W.d / 2; W.d <= N * W.w[N - 1]; W.w[N - 1]--)
       Rec_RefWeights(&W, &P, Fgcd(W.d, W.w[W.N - 1]), W.d - W.w[W.N - 1], &npp,
                      &nrp, N - 2);
-  fprintf(outFILE, "#primepartitions=%d #refpolys=%d\n", npp, nrp);
+  fprintf(out, "#primepartitions=%d #refpolys=%d\n", npp, nrp);
   exit(1);
 }
 
@@ -1252,7 +1252,8 @@ void Free_PoCoLi(PoCoLi *P) {
   P->c.clear();
   P->n = 0;
 } /* free P.e and P.c */
-void PoincarePoly(int N, int *w, int d, PoCoLi *P, PoCoLi *Z, PoCoLi *R) {
+void PoincarePoly(int N, int *w, int d, PoCoLi *P, PoCoLi *Z, PoCoLi *R,
+                  FILE *out) {
   int i;
   PoCoLi B;
   B.A = 2;
@@ -1283,7 +1284,7 @@ void PoincarePoly(int N, int *w, int d, PoCoLi *P, PoCoLi *Z, PoCoLi *R) {
     aux = Out;
     Out = In;
     In = aux;
-  } /* printf("Q =");PrintPoCoLi(P, outFILE); */
+  } /* printf("Q =");PrintPoCoLi(P, out); */
   if (R->n != 0) {
     fputs("Error: PoincarePoly final remainder is not zero\n", stderr);
     exit(1);
@@ -1479,9 +1480,8 @@ int Count_b01(Weight *W) {
   }
   return b;
 }
-void Fast_c9_VaHo(Weight *W,
-                  VaHo *V) /* -->> V.D<=3 <<--  via index and trace */
-{
+void Fast_c9_VaHo(Weight *W, VaHo *V,
+                  FILE *out) /* -->> V.D<=3 <<--  via index and trace */ {
   int i, j, k, l, c, b01 = 0; /* ... from "proced" in lgotwist.c */
   int fac, wort, nvar, expo, ns = W->M, N = W->N, R, mask[W_Nmax + 1], n = N;
   Long zsum1 = 0, zsum2 = 0, mo = W->d, ng, ngb, kgV = mo, omega[POLY_Dmax];
@@ -1818,8 +1818,9 @@ void FreeMobius(MobiusData *M) {
   M->data_storage.clear();
   M->mt_storage.clear();
 }
-void Calc_VaHo(Weight *W, VaHo *V);
-void PoincarePoly(int N, int *w, int d, PoCoLi *P, PoCoLi *Z, PoCoLi *R);
+void Calc_VaHo(Weight *W, VaHo *V, FILE *out = outFILE);
+void PoincarePoly(int N, int *w, int d, PoCoLi *P, PoCoLi *Z, PoCoLi *R,
+                  FILE *out);
 void Aux_Phase_Poly(PoCoLi *P, int w, int d, int r, int s, int x);
 int Index_Trace_Test(VaHo *V, int WI, int T) {
   int i, j, D = V->D;
@@ -1843,7 +1844,7 @@ int Index_Trace_Test(VaHo *V, int WI, int T) {
  * untwisted sector can be reconstructed from "WIndex_HTrace(W,&WI,&T)".     *
  * goint twice over the group is not too costly if the projection is reduced *
  * to the effectively acting subgroup for each twisted sector		     */
-void LGO_VaHo(Weight *W, VaHo *V) {
+void LGO_VaHo(Weight *W, VaHo *V, FILE *out) {
   int i, d = W->d, D = 0;
   for (i = 0; i < W->N; i++)
     D += d - 2 * W->w[i];
@@ -1865,10 +1866,10 @@ void LGO_VaHo(Weight *W, VaHo *V) {
   if ((V->sts == 0) && (W->M == 0)) { /* V->sts ... lg-flag set to 2,
                                         W->M ... # of Z_n symmetries */
     if (D <= 3) {
-      Fast_c9_VaHo(W, V);
+      Fast_c9_VaHo(W, V, out);
       return;
     } else {
-      Calc_VaHo(W, V);
+      Calc_VaHo(W, V, out);
       return;
     }
   }
@@ -2246,21 +2247,21 @@ void LGO_VaHo(Weight *W, VaHo *V) {
               V->h[D - i][i + dQ] += h[i];
         if (V->sts)
           if (hn) {
-            fprintf(outFILE, "sec[%d", k);
+            fprintf(out, "sec[%d", k);
             for (j = 0; j < J; j++)
-              fprintf(outFILE, "%s%d", j ? "," : ":", I[j]);
-            fputs("]", outFILE);
-            fprintf(outFILE, " th=%2ld", th[0]);
+              fprintf(out, "%s%d", j ? "," : ":", I[j]);
+            fputs("]", out);
+            fprintf(out, " th=%2ld", th[0]);
             for (i = 1; i < W->N; i++)
-              fprintf(outFILE, " %2ld", th[i]); /*fprintf(outFILE,"/%d ",U);*/
-            /*fprintf(outFILE," %d*ph=",U);for(i=0;i<J;i++)printf("%d ",ph[i]);
+              fprintf(out, " %2ld", th[i]); /*fprintf(out,"/%d ",U);*/
+            /*fprintf(out," %d*ph=",U);for(i=0;i<J;i++)printf("%d ",ph[i]);
              */
-            fprintf(outFILE, "  QL=%2ld/%d dQ=%2ld ", QL, d, dQ);
-            /*fprintf(outFILE,"N=%d ",N);*/
+            fprintf(out, "  QL=%2ld/%d dQ=%2ld ", QL, d, dQ);
+            /*fprintf(out,"N=%d ",N);*/
             for (i = 0; i <= D; i++)
               if (h[i])
-                fprintf(outFILE, " q%d%ld+=%d", i, i + dQ, h[i]);
-            fputs("\n", outFILE);
+                fprintf(out, " q%d%ld+=%d", i, i + dQ, h[i]);
+            fputs("\n", out);
           }
         /* if(!cont)exit(1); */
         if (a <= 0) {
@@ -2318,7 +2319,7 @@ void Aux_Phase_Poly(PoCoLi *P, int w, int d, int r, int s, int x) {
       Add_Mono_2_Poly(i, -1, P);
 }
 
-void Calc_VaHo(Weight *W, VaHo *V) {
+void Calc_VaHo(Weight *W, VaHo *V, FILE *out) {
   int i, j, k, D = 0, w[W_Nmax], N = W->N, d = W->d;
   PoCoLi A, B, C, *Z = &A, *R = &B, *P = &C;
   for (i = 0; i < N; i++) {

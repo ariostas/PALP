@@ -29,7 +29,8 @@ void PolyCopy(PoCoLi *X, PoCoLi *Y);                          /*  Y = X   */
 void PrintPoCoLi(PoCoLi *P, FILE *out = outFILE);
 void UnitPoly(PoCoLi *P);
 void Init1_xN(PoCoLi *P, int N); /* 1 - x^N */
-void PoincarePoly(int N, int *w, int d, PoCoLi *PP, PoCoLi *Naux, PoCoLi *Raux);
+void PoincarePoly(int N, int *w, int d, PoCoLi *PP, PoCoLi *Naux, PoCoLi *Raux,
+                  FILE *out = outFILE);
 
 int IsDigit(char c);
 
@@ -62,7 +63,7 @@ void WeightMakePoints(Weight *_W, AmbiPointList *_P);
 int ChangeToTrianBasis(AmbiPointList *_AP, AmbiLatticeBasis *_B,
                        PolyPointList *_PP);
 int Trans_Check(Weight);
-void LGO_VaHo(Weight *, VaHo *);
+void LGO_VaHo(Weight *, VaHo *, FILE *out = outFILE);
 void Write_Weight(Weight *_W, FILE *out = outFILE);
 void Write_WH(Weight *_W, BaHo *_BH, VaHo *_VH, int rc, int tc,
               PolyPointList *_P, VertexNumList *_V, EqList *_E,
