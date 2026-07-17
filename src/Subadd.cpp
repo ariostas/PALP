@@ -68,8 +68,9 @@ int IntSqrt(int q) /* sqrt(q) => r=1; r'=(q+r*r)/(2r); */
 
 /*  ==========	Auxiliary routines from Polynf.c                ==========  */
 void Eval_Poly_NF(int *d, int *v, int *f, Long VM[POLY_Dmax][VERT_Nmax],
-                  Long VPM[VERT_Nmax][VERT_Nmax],                 /* in */
-                  Long pNF[POLY_Dmax][VERT_Nmax], int t);         /* out */
+                  Long VPM[VERT_Nmax][VERT_Nmax],        /* in */
+                  Long pNF[POLY_Dmax][VERT_Nmax], int t, /* out */
+                  FILE *out);
 int Init_rVM_VPM(PolyPointList *P, VertexNumList *_V, EqList *_F, /* in */
                  int *d, int *v, int *f,
                  Long VM[POLY_Dmax][VERT_Nmax],   /* out */
@@ -1791,7 +1792,7 @@ void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
     exit(1);
   } /* make ref VPM */
   if (MS < 2) {
-    Eval_Poly_NF(&P->n, &V->nv, &E->ne, VM, VPM, V_NF, 0); /* V_NF */
+    Eval_Poly_NF(&P->n, &V->nv, &E->ne, VM, VPM, V_NF, 0, outFILE); /* V_NF */
     vone = BminOff(V_NF, &P->n, &V->nv, &vo, &vbmin);
 #ifdef USE_UNIT_ENCODE
     if (vone)
@@ -1820,7 +1821,8 @@ void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
       for (i = mi; i < V->nv; i++)
         for (j = 0; j < E->ne; j++)
           VPM[i][j] = VPM[j][i];
-    Eval_Poly_NF(&P->n, &E->ne, &V->nv, VM, VPM, F_NF, 0); /* compute F_NF */
+    Eval_Poly_NF(&P->n, &E->ne, &V->nv, VM, VPM, F_NF, 0,
+                 outFILE); /* compute F_NF */
     fone = BminOff(F_NF, &P->n, &E->ne, &fo, &fbmin);
 #ifdef USE_UNIT_ENCODE
     if (fone)
@@ -2527,7 +2529,7 @@ void ANF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
 {
   int vb, vo, vnuc, vbmin, vone = 0, MSone;
   Long V_NF[POLY_Dmax][VERT_Nmax];
-  Make_ANF(P, V, E, V_NF); /* Affine V_NF */
+  Make_ANF(P, V, E, V_NF, outFILE); /* Affine V_NF */
   vone = BminOff(V_NF, &P->n, &V->nv, &vo, &vbmin);
 #ifdef USE_UNIT_ENCODE
   if (vone)

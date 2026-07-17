@@ -821,7 +821,7 @@ void part_nef(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   if (_F->Sym) {
     auto _VP = std::make_unique<SYM>();
 
-    Poly_Sym(_P, _V, _E, &_VP->ns, _VP->Vp);
+    Poly_Sym(_P, _V, _E, &_VP->ns, _VP->Vp, outFILE);
     Remove_Sym(_VP.get(), _PTL, _OUT_PTL);
   } else
     Copy_PTL(_PTL, _OUT_PTL);

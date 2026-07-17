@@ -67,9 +67,9 @@ using vNF = struct {
   int nv, nf, ns;
 };
 
-inline void Fputs(const char *S) {
-  fputs(S, outFILE);
-  fputs("\n", outFILE);
+inline void Fputs(const char *S, FILE *out) {
+  fputs(S, out);
+  fputs("\n", out);
 }
 
 /*   ------	some useful routines	------ */
@@ -88,16 +88,18 @@ int Init_rVM_VPM(PolyPointList *P, VertexNumList *_V, EqList *_F, /* in */
                  Long VPM[VERT_Nmax][VERT_Nmax]); /* return reflexive */
 
 void Eval_Poly_NF(int *d, int *v, int *f, Long VM[POLY_Dmax][VERT_Nmax],
-                  Long VPM[VERT_Nmax][VERT_Nmax],         /* in */
-                  Long pNF[POLY_Dmax][VERT_Nmax], int t); /* out */
+                  Long VPM[VERT_Nmax][VERT_Nmax],        /* in */
+                  Long pNF[POLY_Dmax][VERT_Nmax], int t, /* out */
+                  FILE *out);
 
 void Make_VPM_NF(int *v, int *f, Long VPM[VERT_Nmax][VERT_Nmax], /* in */
                  PERM *CL, int *ns,
                  Long VPM_NF[VERT_Nmax][VERT_Nmax]); /* out */
 
 void Aux_pNF_from_vNF(PERM *CL, int *ns, int *v, int *d,
-                      Long VM[POLY_Dmax][VERT_Nmax],           /* in */
-                      Long pNF[POLY_Dmax][VERT_Nmax], int *t); /* out */
+                      Long VM[POLY_Dmax][VERT_Nmax],          /* in */
+                      Long pNF[POLY_Dmax][VERT_Nmax], int *t, /* out */
+                      FILE *out);
 
 void New_pNF_Order(int *v, int *f, PERM *CL, int *ns, Long VPM_NF[][VERT_Nmax]);
 
@@ -410,24 +412,24 @@ void Print_vNF(int *v, int *f, Long VPM[][VERT_Nmax], Long VPM_NF[][VERT_Nmax],
     fflush(stdout);
     for (j = 0; j < *v; j++)
       fprintf(out, "%3d", (int)VPM_NF[i][j]);
-    Fputs("");
+    Fputs("", out);
     fflush(stdout);
   }
-  Fputs("");
+  Fputs("", out);
 }
 
 void Eval_Poly_NF(int *d, int *v, int *f, Long VM[POLY_Dmax][VERT_Nmax],
                   Long VPM[VERT_Nmax][VERT_Nmax],        /* in */
-                  Long pNF[POLY_Dmax][VERT_Nmax], int t) /* out */
-{
+                  Long pNF[POLY_Dmax][VERT_Nmax], int t, /* out */
+                  FILE *out) {
   auto CL = std::make_unique<PERM[]>(SYM_Nmax + 1);
   auto VPM_NF = std::make_unique<Long[][VERT_Nmax]>(VERT_Nmax);
   int ns;
   Make_VPM_NF(v, f, VPM, CL.get(), &ns, VPM_NF.get());
   if (t)
-    Print_vNF(v, f, VPM, VPM_NF.get(), outFILE);
+    Print_vNF(v, f, VPM, VPM_NF.get(), out);
   New_pNF_Order(v, f, CL.get(), &ns, VPM_NF.get());
-  Aux_pNF_from_vNF(CL.get(), &ns, v, d, VM, pNF, &t);
+  Aux_pNF_from_vNF(CL.get(), &ns, v, d, VM, pNF, &t, out);
 #ifdef WARN_BIG_NS
 #ifdef SHOW_BIG_NS
   if (SHOW_BIG_NS <= ns) {
@@ -664,19 +666,19 @@ void TEST_pNF(int *C, Long V[][VERT_Nmax], Long X[][VERT_Nmax], int *n, int *nv,
               int *try_, FILE *out) {
   int i, j;
   fprintf(out, "Poly NF try[%d]:   C=", *try_);
-  Print_Perm(C, *nv, "\n", outFILE);
+  Print_Perm(C, *nv, "\n", out);
   for (i = 0; i < *n; i++) {
     for (j = 0; j < *nv; j++)
       fprintf(out, " %3d", (int)V[i][j]);
     fprintf(out, " =>");
     for (j = 0; j < *nv; j++)
       fprintf(out, " %3d", (int)X[i][j]);
-    Fputs("");
+    Fputs("", out);
   }
 }
 
 void Aux_Make_Triang(PERM *CL, int ns, Long V[][VERT_Nmax], int *n, int *nv,
-                     int *t) {
+                     int *t, FILE *out) {
   int i, j, s, x = 0, g = 0, ps = 1; /* x :: make X :: if X>Y */
   Long X[POLY_Dmax][VERT_Nmax], Y[POLY_Dmax][VERT_Nmax];
   for (i = 0; i < *n; i++)
@@ -687,7 +689,7 @@ void Aux_Make_Triang(PERM *CL, int ns, Long V[][VERT_Nmax], int *n, int *nv,
              /*  -1: calc CL.s */
   if (*t) {
     if (*t > 0)
-      TEST_pNF(CL->C, V, X, n, nv, &g, outFILE);
+      TEST_pNF(CL->C, V, X, n, nv, &g, out);
     else {
       CL->s = 1;
       if (*t + 1) {
@@ -711,7 +713,7 @@ void Aux_Make_Triang(PERM *CL, int ns, Long V[][VERT_Nmax], int *n, int *nv,
 
       if (*t) {
         if (*t > 0)
-          TEST_pNF(CL[s].C, V, X, n, nv, &s, outFILE);
+          TEST_pNF(CL[s].C, V, X, n, nv, &s, out);
         if (x == 0) {
           if (*t < 0) {
             int k;
@@ -741,7 +743,7 @@ void Aux_Make_Triang(PERM *CL, int ns, Long V[][VERT_Nmax], int *n, int *nv,
 
       if (*t) {
         if (*t > 0)
-          TEST_pNF(CL[s].C, V, Y, n, nv, &s, outFILE);
+          TEST_pNF(CL[s].C, V, Y, n, nv, &s, out);
         if (x == 1) {
           if (*t < 0) {
             int k;
@@ -762,7 +764,7 @@ void Aux_Make_Triang(PERM *CL, int ns, Long V[][VERT_Nmax], int *n, int *nv,
       }
     }
   if (*t > 0)
-    fprintf(outFILE,
+    fprintf(out,
             "\nPoly NF:  NormalForm=try[%d]  #Sym(VPM)=%d  #Sym(Poly)=%d\n", g,
             ns, ps);
   if (x)
@@ -814,13 +816,13 @@ void Make_VPM_NF(int *v, int *f, Long x[VERT_Nmax][VERT_Nmax],         /* in */
 
 void Aux_pNF_from_vNF(PERM *CL, int *ns, int *v, int *d,
                       Long VM[POLY_Dmax][VERT_Nmax],          /* in */
-                      Long pNF[POLY_Dmax][VERT_Nmax], int *t) /* out */
-{
+                      Long pNF[POLY_Dmax][VERT_Nmax], int *t, /* out */
+                      FILE *out) {
   int i, j;
   for (i = 0; i < *d; i++)
     for (j = 0; j < *v; j++)
       pNF[i][j] = VM[i][j];
-  Aux_Make_Triang(CL, *ns, pNF, d, v, t);
+  Aux_Make_Triang(CL, *ns, pNF, d, v, t, out);
 }
 
 int Make_Poly_NF(PolyPointList *_P, VertexNumList *_V, EqList *_F,
@@ -830,14 +832,14 @@ int Make_Poly_NF(PolyPointList *_P, VertexNumList *_V, EqList *_F,
   Long VM[POLY_Dmax][VERT_Nmax];
   auto VPM = std::make_unique<Long[][VERT_Nmax]>(VERT_Nmax);
   int ref = Init_rVM_VPM(_P, _V, _F, &d, &v, &f, VM, VPM.get());
-  Eval_Poly_NF(&d, &v, &f, VM, VPM.get(), pNF, 0);
+  Eval_Poly_NF(&d, &v, &f, VM, VPM.get(), pNF, 0, outFILE);
   return ref;
 }
 
 void Poly_Sym(PolyPointList *_P, VertexNumList *_V, EqList *_F, int *sym_num,
-              int V_perm[][VERT_Nmax]) {
+              int V_perm[][VERT_Nmax], FILE *out) {
   Long pNF[POLY_Dmax][VERT_Nmax];
-  Make_Poly_Sym_NF(_P, _V, _F, sym_num, V_perm, pNF, 0, 0, 0, outFILE);
+  Make_Poly_Sym_NF(_P, _V, _F, sym_num, V_perm, pNF, 0, 0, 0, out);
 }
 int PermChar(int n) {
   if (n < 10)
@@ -882,10 +884,10 @@ int Make_Poly_Sym_NF(PolyPointList *_P, VertexNumList *_V, EqList *_F,
 
   Init_rVM_VPM(_P, _V, _F, d, v, f, VM, VPM.get());
   if (traced)
-    Eval_Poly_NF(&_P->n, &_V->nv, &_F->ne, VM, VPM.get(), NF, 1);
+    Eval_Poly_NF(&_P->n, &_V->nv, &_F->ne, VM, VPM.get(), NF, 1, out);
   Make_VPM_NF(v, f, VPM.get(), CL.get(), &ns, VPM_NF.get());
   New_pNF_Order(v, f, CL.get(), &ns, VPM_NF.get());
-  Aux_pNF_from_vNF(CL.get(), &ns, v, d, VM, NF, &t);
+  Aux_pNF_from_vNF(CL.get(), &ns, v, d, VM, NF, &t, out);
   *SymNum = -t;
   i = 0;
   while (0 == CL[i].s)
@@ -1438,7 +1440,7 @@ int InvariantSubspace(PolyPointList *P, VertexNumList *V, EqList *E,
     for (v = 0; v < V->nv; v++)
       for (i = 0; i < P->n; i++)
         Inv[i][v] = P->x[V->v[v]][i];
-    Print2_VM(Inv, P->n, V->nv, outFILE);
+    Print2_VM(Inv, P->n, V->nv, out);
   }
   if (pri)
     fflush(0);
@@ -1587,7 +1589,7 @@ Long Aux_Vol_Barycent(PolyPointList *A, VertexNumList *V, EqList *E, Long *_B,
     }
     INV_GLZmatrix(G, &D, GI);
     /* if(D==4){Print_PPL(A,"GxP");Print_GLZ(GI, D, "GI", outFILE);} */
-    Ve = Aux_Vol_Barycent(A, V, E, Be, &Ne, outFILE) * Eq[e].c;
+    Ve = Aux_Vol_Barycent(A, V, E, Be, &Ne, out) * Eq[e].c;
     vol += Ve;
     /* if(D==4){fprintf(out,"%d<%d: E.c=%d V=%d ",e,ne,Eq[e].c,Ve);
        for(i=0;i<D-1;i++)printf(" %d",Be[i]);printf("/%d = B/N\n",Ne);} */
@@ -1633,7 +1635,7 @@ Long Aux_Vol_Barycent(PolyPointList *A, VertexNumList *V, EqList *E, Long *_B,
 }
 
 Long LatVol_Barycent(PolyPointList *P, VertexNumList *V, /* bary=B/N */
-                     Long *B, Long *N) {
+                     Long *B, Long *N, FILE *out) {
   auto A = std::make_unique<PolyPointList>();
   int i, j;
   VertexNumList aV;
@@ -1644,7 +1646,7 @@ Long LatVol_Barycent(PolyPointList *P, VertexNumList *V, /* bary=B/N */
   for (i = 0; i < V->nv; i++)
     for (j = 0; j < P->n; j++)
       A->x[i][j] = P->x[V->v[i]][j];
-  vol = Aux_Vol_Barycent(A.get(), &aV, e, B, N, outFILE);
+  vol = Aux_Vol_Barycent(A.get(), &aV, e, B, N, out);
   for (i = 0; i < P->n; i++)
     if (B[i])
       break;
@@ -1860,8 +1862,8 @@ int Make_G_for_GxMT_UT(Matrix M, Matrix G) { /* GxM upper trian, return rank */
   return r;
 }
 
-void Circuit(int d, Long **P,
-             Long *C) { /* find C[d+1] with C.P=0 for P[d+1][d] */
+void Circuit(int d, Long **P, Long *C,
+             FILE *out) { /* find C[d+1] with C.P=0 for P[d+1][d] */
   int i, j;
   Matrix G, T;
   Init_Matrix(&T, d, d + 1);
@@ -1875,8 +1877,8 @@ void Circuit(int d, Long **P,
   }
   if (T.v != Make_G_for_GxMT_UT(T, G)) {
     puts("Error in Circuit");
-    Print_LMatrix(G, "GLZ", outFILE);
-    Print_LMatrix(T, "circuit", outFILE);
+    Print_LMatrix(G, "GLZ", out);
+    Print_LMatrix(T, "circuit", out);
   }
   for (i = 0; i < T.d; i++)
     C[i] = G.x[T.v][i];
@@ -2235,7 +2237,7 @@ namespace {
 constexpr bool FANO_CONIFOLD = false; /* default: 0=CY-conifold, 1=FANO */
 } // namespace
 int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
-                 PolyPointList *dP, EqList *dE, int divby) {
+                 PolyPointList *dP, EqList *dE, int divby, FILE *out) {
   int i, j, nf = 0, nsq = 0, ndpt = 0, rk = 0,
             CF, /* #cd2face #squares #double-pts.*/
       C[SQnum_Max];
@@ -2288,9 +2290,9 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
     INCI I = FInc[j];
     int f = INCI_abs(I);
     if (f < 3) {
-      Print_EL(E, &dP->n, 0, "E", outFILE);
+      Print_EL(E, &dP->n, 0, "E", out);
       Print_PPL(dP, "dP");
-      Print_EL(dE, &dP->n, 0, "dE", outFILE);
+      Print_EL(dE, &dP->n, 0, "dE", out);
       printf("e<3: nf=%d I=", nf);
       Print_INCI(FInc[j]);
     }
@@ -2427,8 +2429,8 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
       printf("pic=%d  deg=%2d  h12=%2d  rk=%d #sq=%d ", pic, vol, h12, rk, nsq);
       printf("#dp=%d py=%d  F=%d %d %d %d #Fano=%d\n", ndpt, py, _FI->nf[0],
              _FI->nf[1], _FI->nf[2], _FI->nf[3], ++fano);
-      PrettyPrintDualVert(P, V->nv, E, dP->np, outFILE);
-      PrintFanoVert(P, V, outFILE);
+      PrettyPrintDualVert(P, V->nv, E, dP->np, out);
+      PrintFanoVert(P, V, out);
     }
     free(_FI);
     return 1;
@@ -2442,7 +2444,7 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
     int pic, cs,
         Ind = Divisibility_Index(P, V), I3 = Ind * Ind * Ind,
         sing = Obstructed_Conifold_Deformations(S, M, nsq, rk, E->ne, rel, C);
-    Long xB[POLY_Dmax], xN, vol = LatVol_Barycent(P, V, xB, &xN),
+    Long xB[POLY_Dmax], xN, vol = LatVol_Barycent(P, V, xB, &xN, out),
                             c2h = 12 * (P->np - 1) - 2 * vol;
     /*  VertexNumList dV; EqList *auxE=(EqList *) malloc(sizeof(EqList));
         int volN;
@@ -2481,7 +2483,7 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
       printf(" sing=%d rk=%d #sq=%d #dp=%d  ", sing, rk, nsq, ndpt);
       printf("toric=%d,%d  F=%d %d %d %d #CY=%d\n", BH.h1[1], BH.h1[2],
              _FI->nf[0], _FI->nf[1], _FI->nf[2], _FI->nf[3], ncon);
-      PrettyPrintDualVert(P, V->nv, E, dP->np, outFILE);
+      PrettyPrintDualVert(P, V->nv, E, dP->np, out);
     }
     free(_FI);
     return nsq;
@@ -2645,7 +2647,7 @@ void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E,
         Print_PPL(P, "Inconsistent: bary!=0 for kPsum==0");
         exit(1);
       }
-      is = InvariantSubspace(P, V, E, outFILE);
+      is = InvariantSubspace(P, V, E, out);
       nis = !is;
       if (nis)
         sym++;
@@ -3023,9 +3025,9 @@ void Print_Elliptic_K3_Fibrations(PolyPointList *P, int edim,
     fprintf(out, "M:%d %d N:%d %d", A->np, f, P->np, v);
     if (p <= FIB_PERM) {
       fprintf(out, "  p=");
-      Print_Perm(s, p, "\n", outFILE);
+      Print_Perm(s, p, "\n", out);
     } /*for(i=0;i<p;i++)printf("%d ",s[i]);*/ else
-      Fputs("");
+      Fputs("", out);
     for (i = 0; i < p; i++)
       for (j = 0; j < d; j++)
         A->x[i][j] = PM[s[i]][j];
@@ -3084,9 +3086,9 @@ void All_CDn_Fibrations(PolyPointList *P, int nv, int cd, FILE *out) {
     fprintf(out, "M:%d %d N:%d %d", A->np, f, P->np, v);
     if (p <= FIB_PERM) {
       fprintf(out, "  p=");
-      Print_Perm(s, p, "\n", outFILE);
+      Print_Perm(s, p, "\n", out);
     } /* for(i=0;i<p;i++)printf("%d",s[i]); }puts("");*/ else
-      Fputs("");
+      Fputs("", out);
     for (j = 0; j < d; j++)
       for (i = 0; i < p; i++)
         (P->np > 20)
@@ -3102,13 +3104,13 @@ void Print_GLZ(GL_Long G[][POLY_Dmax], int d, const char *c, FILE *out) {
     fprintf(out, "%s: ", c);
     for (j = 0; j < d; j++)
       fprintf(out, "%3ld ", G[i][j]);
-    Fputs("");
+    Fputs("", out);
   }
 }
 typedef struct {
   GL_Long x[POLY_Dmax][POLY_Dmax];
 } DxD; /* workaround for -O3 */
-void Elliptic_K3_Fibration(PolyPointList *P, int nv, int edim) {
+void Elliptic_K3_Fibration(PolyPointList *P, int nv, int edim, FILE *out) {
   int c, e, *d = &P->n, /*p=P->np-1,*/ cd = P->n - edim, nb = 0, nk = 0;
   GL_Long GE[POLY_Dmax][POLY_Dmax], *ge[POLY_Dmax];
   ek3fli *F = (ek3fli *)malloc(sizeof(ek3fli));
@@ -3195,7 +3197,7 @@ void Elliptic_K3_Fibration(PolyPointList *P, int nv, int edim) {
         nb = 0;
       }
     }
-  Print_Elliptic_K3_Fibrations(P, edim, F->GK, nk, outFILE);
+  Print_Elliptic_K3_Fibrations(P, edim, F->GK, nk, out);
   free(F);
 }
 void IP_Simplex_Fiber(Long PM[][POLY_Dmax], int p, int d, /* need PM[i]!=0 */
@@ -3707,7 +3709,7 @@ void IP_Simplices(PolyPointList *_P, int nv, int PS, int VS, int CDin,
         pl[i] = _P->x[V.v[i]];
       Print_Quotient(pl, _P->n, V.nv, out);
     }
-    fputs("\n", outFILE);
+    fputs("\n", out);
     for (i = 0; i < F->nw; i++) {
       int cd = _P->n - V.nv + 1;
       for (j = 0; j < V.nv; j++)
@@ -3748,7 +3750,7 @@ void IP_Simplices(PolyPointList *_P, int nv, int PS, int VS, int CDin,
       fprintf(out, "    #IP-simp=%d", F->nw);
       if (F->nw > np - _P->n)
         fprintf(out, " > %d=#pts-dim", np - _P->n);
-      fputs("\n", outFILE);
+      fputs("\n", out);
       for (i = 0; i < F->nw; i++) {
         int cd = _P->n - np + 1;
         for (j = 0; j < np; j++)
@@ -3765,26 +3767,26 @@ void IP_Simplices(PolyPointList *_P, int nv, int PS, int VS, int CDin,
       for (i = 0; i < np; i++)
         fprintf(out, (np > 20) ? "---" : "-----");
       fprintf(out, "    #fibrations=%d", F->nf);
-      fputs("\n", outFILE);
-      Print_Fibrations(_P, F, outFILE);
+      fputs("\n", out);
+      Print_Fibrations(_P, F, out);
     }
   }
   if (CDin)
     switch (CDin) {
     case 11:
-      All_CDn_Fibrations(_P, nv, 1, outFILE);
+      All_CDn_Fibrations(_P, nv, 1, out);
       break;
     case 22:
-      All_CDn_Fibrations(_P, nv, 2, outFILE);
+      All_CDn_Fibrations(_P, nv, 2, out);
       break;
     case 33:
-      All_CDn_Fibrations(_P, nv, 3, outFILE);
+      All_CDn_Fibrations(_P, nv, 3, out);
       break;
     case 12:
-      Elliptic_K3_Fibration(_P, nv, _P->n - 2);
+      Elliptic_K3_Fibration(_P, nv, _P->n - 2, out);
       break;
     case 23:
-      Elliptic_K3_Fibration(_P, nv, _P->n - 3);
+      Elliptic_K3_Fibration(_P, nv, _P->n - 3, out);
       break;
     }
   if (CD)
@@ -4929,7 +4931,7 @@ void IPs_degD(PolyPointList *P, VertexNumList *V, EqList *E, int g) {
   free(gP);
 }
 
-int Check_ANF_Form(Long VM[][VERT_Nmax], int d, int v) {
+int Check_ANF_Form(Long VM[][VERT_Nmax], int d, int v, FILE *out) {
   int i, r = 1, c = 0;
   Long G[POLY_Dmax];
   for (i = 0; i <= d; i++)
@@ -4942,14 +4944,14 @@ int Check_ANF_Form(Long VM[][VERT_Nmax], int d, int v) {
   c += (i == d + 1);
   c += (VM[0][1] == 1);
   if (c != 3) {
-    Print_Matrix(VM, d + 1, v + 1, "unexpected AFF-NF", outFILE);
+    Print_Matrix(VM, d + 1, v + 1, "unexpected AFF-NF", out);
     return 1;
   }
   G[0] = 1;
   for (c = 2; c <= v; c++) {
     for (i = r + 1; i <= d; i++)
       if (VM[i][c]) {
-        Print_Matrix(VM, d + 1, v + 1, "rank increase>1 in AFF-NF", outFILE);
+        Print_Matrix(VM, d + 1, v + 1, "rank increase>1 in AFF-NF", out);
         return 1;
       }
     if (VM[r][c]) /* rank++ => solve G.Vc==1 */
@@ -4961,7 +4963,7 @@ int Check_ANF_Form(Long VM[][VERT_Nmax], int d, int v) {
         G[r] = g / VM[r][c];
         r++;
       } else {
-        Print_Matrix(VM, d + 1, v + 1, "inconsistent ANF (r++)", outFILE);
+        Print_Matrix(VM, d + 1, v + 1, "inconsistent ANF (r++)", out);
         return 1;
       }
     } else /*  check G.Vc==1  */
@@ -4970,7 +4972,7 @@ int Check_ANF_Form(Long VM[][VERT_Nmax], int d, int v) {
       for (i = 0; i < r; i++)
         g -= G[i] * VM[i][c];
       if (g) {
-        Print_Matrix(VM, d + 1, v + 1, "inconsistent ANF (G)", outFILE);
+        Print_Matrix(VM, d + 1, v + 1, "inconsistent ANF (G)", out);
         return 1;
       }
     }
@@ -4986,7 +4988,7 @@ void Reduce_ANF_Form(Long VM[][VERT_Nmax], int d, int v) {
 }
 
 void Make_ANF(PolyPointList *P, VertexNumList *V, /* affine normal form */
-              EqList *E, Long VM[POLY_Dmax][VERT_Nmax]) {
+              EqList *E, Long VM[POLY_Dmax][VERT_Nmax], FILE *out) {
   int i, j, d = P->n, v = V->nv, e = E->ne, p = P->np;
   if (V->nv >= VERT_Nmax) {
     fputs("Error: Make_ANF vertex count exceeds VERT_Nmax\n", stderr);
@@ -5025,7 +5027,7 @@ void Make_ANF(PolyPointList *P, VertexNumList *V, /* affine normal form */
      Make_VEPM(P,V,E,PM); Print_Matrix(PM, E->ne, V->nv, "AFF-PM", outFILE); */
 
   Make_Poly_NF(P, V, E, VM);
-  if (Check_ANF_Form(VM, d, v)) {
+  if (Check_ANF_Form(VM, d, v, out)) {
     Print_PPL(P, "unexpected in ANF");
     fprintf(stderr, "unexpected ANF");
     exit(1);
@@ -5081,17 +5083,17 @@ void Print_Facets(PolyPointList *P, VertexNumList *V, EqList *E, FILE *out) {
           fprintf(stderr, " %3ld", VM[i][j]);
         fputs("", stderr);
       }
-      EPrint_VL(P, V, 0, outFILE);
+      EPrint_VL(P, V, 0, out);
       fputs("Error: Print_Facets facet normal form is not horizontal\n",
             stderr);
       exit(1);
     }
-    Print_Matrix(VM, P->n - 1, c, "", outFILE);
+    Print_Matrix(VM, P->n - 1, c, "", out);
   }
 }
 
 void Make_Facet(PolyPointList *P, VertexNumList *V, EqList *E, int e,
-                Long VM[POLY_Dmax][VERT_Nmax], int *cc) {
+                Long VM[POLY_Dmax][VERT_Nmax], int *cc, FILE *out) {
   /* writes the e'th facet to VM, cc...      */
   if (e >= E->ne) {
     fputs("Error: Make_Facet facet index out of range\n", stderr);
@@ -5121,7 +5123,7 @@ void Make_Facet(PolyPointList *P, VertexNumList *V, EqList *E, int e,
         fprintf(stderr, " %3ld", VM[i][j]);
       fputs("", stderr);
     }
-    EPrint_VL(P, V, 0, outFILE); /*assert(0);*/
+    EPrint_VL(P, V, 0, out); /*assert(0);*/
   }
   *cc = c;
   /* Print_Matrix(VM,P->n-1,c, "", outFILE); */
@@ -5241,7 +5243,7 @@ int getNI(int N, INCIbits I) { return (I >> N) % 2; } /* read INCIDENCE */
 int Make_Fano5d(PolyPointList *, int *, EqList *, int symDP, int nc,
                 int CC[FPcirNmax][FanoProjNPmax]);
 
-int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
+int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E, FILE *out) {
   int e, d = P->n, np = P->np - 1, z, n = V->nv, nc = 0, D[VERT_Nmax],
          p[POLY_Dmax], symDP = 1;
   char s[99] = "FanoProjection candidate #nnn";
@@ -5304,7 +5306,7 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
         fputs("Error: Fano5d circuit face has unexpected size\n", stderr);
         exit(1);
       }
-      Circuit(d, Y, C);
+      Circuit(d, Y, C, out);
       for (i = 0; i <= d; i++) {
         sum += C[i];
         if (C[i] > 0) {
@@ -5357,8 +5359,8 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
   }
   if (PrintFanoProjCand) {
     int c;
-    FILE *OF = outFILE;
-    outFILE = stdout;
+    FILE *OF = out;
+    out = stdout;
     n = ++FPc;
     e = 99;
     while (n) {
@@ -5368,8 +5370,8 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E) {
     for (n = 26; n < 125 - e; n++)
       s[n] = s[e + n - 26];
     s[n] = 0;
-    Print_PPL(P, s);
-    outFILE = OF;
+    Print_PPL(P, s, out);
+    out = OF;
     printf("Facets[%d]:", E->ne);
     for (e = 0; e < E->ne; e++) {
       printf(" ");

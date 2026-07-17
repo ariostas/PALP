@@ -328,7 +328,7 @@ int Make_Poly_Sym_NF(PolyPointList *P, VertexNumList *VNL, EqList *EL,
                      Long NF[POLY_Dmax][VERT_Nmax], int t, int S, int N,
                      FILE *out = outFILE);
 void Poly_Sym(PolyPointList *_P, VertexNumList *_V, EqList *_F, int *sym_num,
-              int V_perm[][VERT_Nmax]);
+              int V_perm[][VERT_Nmax], FILE *out = outFILE);
 int GLZ_Make_Trian_NF(Long X[][VERT_Nmax], int *n, int *nv,
                       GL_Long G[POLY_Dmax][POLY_Dmax]);
 void SL2Z_Make_Poly_UTriang(PolyPointList *P);
@@ -388,7 +388,7 @@ with minimal entries above the diagonal.
 */
 
 void Make_ANF(PolyPointList *P, VertexNumList *V, EqList *E,
-              Long ANF[][VERT_Nmax]);
+              Long ANF[][VERT_Nmax], FILE *out = outFILE);
 /*
 Given *P, *V and *E, the affine normal form ANF (i.e., a normal form
 that also works for non-reflexive polytopes), is computed.
@@ -402,12 +402,13 @@ If vol is not 0, the return value is 1 if all facets are unimoular
 */
 
 int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
-                 PolyPointList *dP, EqList *dE, int CYorFANO);
+                 PolyPointList *dP, EqList *dE, int CYorFANO,
+                 FILE *out = outFILE);
 /*
 Realizes the -C1 or -C2 options of poly for CYorFANO being 1 or 2, respectively.
 */
 
-int Fano5d(PolyPointList *, VertexNumList *, EqList *);
+int Fano5d(PolyPointList *, VertexNumList *, EqList *, FILE *out = outFILE);
 /*
 Realizes the -U5 option of poly.
 */
@@ -424,7 +425,8 @@ Returns the largest integer g for which *P is a g-fold multiple of some
 other polytope.
 */
 
-Long LatVol_Barycent(PolyPointList *P, VertexNumList *V, Long *B, Long *N);
+Long LatVol_Barycent(PolyPointList *P, VertexNumList *V, Long *B, Long *N,
+                     FILE *out = outFILE);
 /*
 Given *P and *V, the coordinates of the barycenter of *P are computed (with
 the i'th coordinate as B[i] / *N) and the lattice volume of *P is returned.
@@ -438,7 +440,8 @@ information on the type of face of the cone they represent (option -B# of poly).
 */
 
 void Make_Facet(PolyPointList *P, VertexNumList *V, EqList *E, int e,
-                Long vertices_of_facet[POLY_Dmax][VERT_Nmax], int *nv_of_facet);
+                Long vertices_of_facet[POLY_Dmax][VERT_Nmax], int *nv_of_facet,
+                FILE *out = outFILE);
 /*
 The e'th facet of *P is determined as a (P->n-1)-dimensional polytope:
 *nv_of_facet vertices represented by vertices_of_facet.

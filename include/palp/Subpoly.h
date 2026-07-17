@@ -150,7 +150,7 @@ static_assert(FORCE_SAVE_TIME > MIN_W_SAVE_TIME,
               "MIN_W_SAVE_TIME should be smaller than AUX-file save_times");
 
 void Make_ANF(PolyPointList *P, VertexNumList *V, /* affine normal form */
-              EqList *E, Long ANF[POLY_Dmax][VERT_Nmax]);
+              EqList *E, Long ANF[POLY_Dmax][VERT_Nmax], FILE *out);
 void Gen_Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
                          char *polyo, FILE *out = outFILE);
 void Gen_Bin_2_ascii(char *pi, char *dbi, int max, int vf, int vt,
