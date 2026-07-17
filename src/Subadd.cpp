@@ -83,7 +83,7 @@ typedef struct {
 void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
                int *NV, int *nUC, unsigned char *UC,          /* OUT */
                NF_List *StatsL, FILE *out); /* optional stats */
-void Print_Statistics(NF_List *, FILE *out = outFILE);
+void Print_Statistics(NF_List *, FILE *out = stdout);
 void Init_BaseList(Base_List **BL, int *d); /* malloc + init.; BL=&(list) */
 void Insert_PPent_into_Pent(NF_List *S);
 void Read_In_File(NF_List *);

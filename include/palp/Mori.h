@@ -50,7 +50,7 @@ I: INCIDENCE, (Inci64: unsigned long long)
 
 /*** from MoriCone.c ***/
 void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag,
-                         FILE *out = outFILE);
+                         FILE *out = stdout);
 /*
 Having read the Polytope matrix, asks for the triangulation and computes
 SR-Ideal and Mori cone of the ambient space. The user has to specify the
@@ -59,7 +59,7 @@ simplices in INCI format.
  */
 
 void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
-                        MORI_Flags *Flag, FILE *out = outFILE);
+                        MORI_Flags *Flag, FILE *out = stdout);
 /*
 Hypersurface divisors Q(charges) permutes the N-lattice points of
 non-intersecting divisors to the end of the PPL *_P, calls IP_Simplex_Fiber
@@ -86,19 +86,19 @@ Triang2dSFan() or Triang2dSFan(). If dim (2ndary fan) > 3 then exit(1);
 */
 
 void InterSectionRing(Inci64 *Tri, int *t, PolyPointList *P, int p,
-                      MORI_Flags *_Flag, FibW *F, FILE *out = outFILE);
+                      MORI_Flags *_Flag, FibW *F, FILE *out = stdout);
 /*
 Print triangulation and call StanleyReisner(SR,T). Call
 HyperSurfaceSingular(P,T,SR...). Call Print_Mori(P,p,t,Tri).
 */
 
-void StanleyReisner(triang *SR, triang *T, FILE *out = outFILE);
+void StanleyReisner(triang *SR, triang *T, FILE *out = stdout);
 /*
 Determine and print the SR ideal.
 */
 
 void DivClassBasis(int SF, PolyPointList *P, int v, const char *D,
-                   const char *B, FILE *out = outFILE);
+                   const char *B, FILE *out = stdout);
 /*
 Find basis for divisor classes, i.e. integral basis of intersection ring.
 Simply trying to find toric divisors that span the lattice of DivClasses i.e.
@@ -116,21 +116,20 @@ void putN(int N, Inci64 *I); /* make INCIDENCE */
 void setN(int N, Inci64 *I); /* make INCIDENCE */
 int getN(int N, Inci64 I);   /* read INCIDENCE */
 
-void prnI(int N, Inci64 I, FILE *out = outFILE); /* print INCIDENCE */
-void fprI(int N, Inci64 I, FILE *out = outFILE); /* print INCIDENCE to file */
+void prnI(int N, Inci64 I, FILE *out = stdout); /* print INCIDENCE */
+void fprI(int N, Inci64 I, FILE *out = stdout); /* print INCIDENCE to file */
 
 int Inci64_LE(Inci64 A, Inci64 B);
 int Inci64_LT(Inci64 A, Inci64 B);
 
-void PRNtriang(triang *SR, const char *c, FILE *out = outFILE);
+void PRNtriang(triang *SR, const char *c, FILE *out = stdout);
 /*
 print (Inci64) triangulation
 */
 
 /*** from SingularInput.c ***/
 void HyperSurfSingular(PolyPointList *P, triang *T, triang *SR,
-                       MORI_Flags *_Flag, FibW *F, int *cp,
-                       FILE *out = outFILE);
+                       MORI_Flags *_Flag, FibW *F, int *cp, FILE *out = stdout);
 /*
 Interface between the Mori and SINGULAR. Given the polytope P and the linear
 relations among their points, the triangulation T and the SR ideal it generates
@@ -168,5 +167,5 @@ int Make_G_for_GxMT_UT(Matrix M, Matrix G);
 /* IP-simplex / fibration helpers from Polynf.cpp */
 void IP_Simplex_Fiber(Long PM[][POLY_Dmax], int p, int d, FibW *F, int Wmax,
                       int CD);
-void Aux_IPS_Print_WP(Long *W, int w, int cd, FILE *out = outFILE);
-void Print_QuotZ(int Z[][VERT_Nmax], int *M, int p, int n, FILE *out = outFILE);
+void Aux_IPS_Print_WP(Long *W, int w, int cd, FILE *out = stdout);
+void Print_QuotZ(int Z[][VERT_Nmax], int *M, int p, int n, FILE *out = stdout);

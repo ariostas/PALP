@@ -44,14 +44,14 @@ void Sort_PPL(PolyPointList *_P, VertexNumList *_V);
 void NormTriangularBasis(AmbiLatticeBasis *_B);
 
 void MakeRefWeights(int N, int from_d, int to_d);
-int IN_WEIGHT(Weight *, CWS *, int *, PolyPointList *, Flags *, int);
+int IN_WEIGHT(Weight *, CWS *, int *, PolyPointList *, Flags *, int, FILE *out);
 
-void OUT_CWS(CWS *, int *, int *, FILE *out = outFILE);
+void OUT_CWS(CWS *, int *, int *, FILE *out = stdout);
 
 void Print_VP(PolyPointList *, VertexNumList *, int, int, Pstat *,
-              FILE *out = outFILE);
+              FILE *out = stdout);
 
-void Print_Pstat(Pstat *, int, int, int, FILE *out = outFILE);
+void Print_Pstat(Pstat *, int, int, int, FILE *out = stdout);
 
 [[noreturn]] void Die(const char *);
 
@@ -282,7 +282,7 @@ int main(int narg, char *fn[]) {
     else
       out = outFILE = stdout;
   }
-  while (IN_WEIGHT(&W, &CW, D, _P, &F, codim)) {
+  while (IN_WEIGHT(&W, &CW, D, _P, &F, codim, out)) {
     /* _P is the M-lattice polytope */
     if (F.G)
       AnalyseGorensteinCone(&CW, _P, _V, _E, &codim, &F, out);
@@ -602,12 +602,12 @@ int Make_WPCICY(Weight *_W, CWS *_CW, int *_D, PolyPointList *_P) {
 void Make_RGC_Points(CWS *Cin, PolyPointList *_P);
 
 int IN_WEIGHT(Weight *_W, CWS *_CW, int *_D, PolyPointList *_P, Flags *_F,
-              int codim) {
+              int codim, FILE *out) {
   if (_F->Msum)
     return Make_WPCICY(_W, _CW, _D, _P);
   if (_F->G)
-    return ReadCwsPp(_CW, _P, 1, codim, outFILE);
-  return ReadCwsPp(_CW, _P, codim, 1, outFILE);
+    return ReadCwsPp(_CW, _P, 1, codim, out);
+  return ReadCwsPp(_CW, _P, codim, 1, out);
 }
 
 void OUT_CWS(CWS *_W, int *_D, int *_M_Flag, FILE *out) {

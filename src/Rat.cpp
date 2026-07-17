@@ -89,7 +89,7 @@ void Rpr(FILE *out, Rat c) /* write "c.N/c.D" -> out */
 {
   fprintf(out, "%ld/%ld", (long)c.N, (long)c.D);
 }
-void Rpr(Rat c) { Rpr(outFILE, c); }
+
 /*  ==========  	  END of Rational Operations		==========  */
 
 /*  ==========		(Extended) Greatest Common Divisor	 =========  */
@@ -339,7 +339,7 @@ void LRpr(FILE *out, LRat c) /* write "c.N/c.D" -> out */
   fprintf(out, "%lld/%lld", static_cast<long long>(c.N),
           static_cast<long long>(c.D));
 }
-void LRpr(LRat c) { LRpr(outFILE, c); }
+
 /*  ==========  	  END of LRational OpeLRations		==========  */
 
 /*  ==========		(Extended) Greatest Common Divisor	 =========  */

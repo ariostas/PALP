@@ -255,7 +255,7 @@ int main(int narg, char *fn[]) {
     Initialize_C5S(&C5S, POLY_Dmax); // Initialize statistics
   if (Einstein)
     Einstein_Metric(CW, _P, &V, E, out);
-  while (lg ? Read_W_PP(&W, _P) : Read_CWS_PP(CW, _P)) {
+  while (lg ? Read_W_PP(&W, _P, out) : Read_CWS_PP(CW, _P)) {
     if (q || Q) {
       FaceInfo FI;
       if (!QuickAnalysis(_P, &BH, &FI)) {

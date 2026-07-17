@@ -32,7 +32,6 @@ Rat rD(Rat a, Rat b);       /*  a - b	rational Difference */
 Rat rP(Rat a, Rat b);       /*  a * b	rational Product   */
 Rat rQ(Rat a, Rat b);       /*  a / b	rational Quotient */
 int rC(Rat a, Rat b);       /* Compare = [1 / 0 / -1] if a [gt/eq/lt] b */
-void Rpr(Rat c);            /*  write  "c.N/c.D"  to global outFILE */
 void Rpr(FILE *out, Rat c); /*  write  "c.N/c.D"  to explicit file    */
 
 LRat LrI(LLong a);            /*  conversion  LLong -> LRat  	*/
@@ -43,7 +42,6 @@ LRat LrD(LRat a, LRat b);     /*  a - b	LRational Difference	*/
 LRat LrP(LRat a, LRat b);     /*  a * b	LRational Product   	*/
 LRat LrQ(LRat a, LRat b);     /*  a / b	LRational Quotient 	*/
 int LrC(LRat a, LRat b);      /* Compare = [1 / 0 / -1] if a [gt/eq/lt] b */
-void LRpr(LRat c);            /*  write  "c.N/c.D"  to global outFILE */
 void LRpr(FILE *out, LRat c); /*  write  "c.N/c.D"  to explicit file    */
 
 /*   Map Permutations: Do "ArgFun" for all permutations pi of *d elements */

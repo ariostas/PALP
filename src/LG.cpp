@@ -448,7 +448,7 @@ int Read_WZ_PP(Weight *WZ,
 // constexpr flags for this translation unit are at the top of the file:
 //   TEST_PP, TEST_PD
 
-extern FILE *inFILE, *outFILE;
+extern FILE *inFILE;
 
 /* nef.c also uses AmbiLatticeBasis via LG.h. */
 
@@ -763,15 +763,15 @@ void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP, FILE *out) {
 #endif
 }
 #if (WZinput)
-int Read_W_PP(Weight *W, PolyPointList *P) {
+int Read_W_PP(Weight *W, PolyPointList *P, FILE *out) {
   W->P = P;
-  return Read_WZ_PP(W, outFILE);
+  return Read_WZ_PP(W, out);
 }
 #else
-int Read_W_PP(Weight *_W, PolyPointList *_PP) {
+int Read_W_PP(Weight *_W, PolyPointList *_PP, FILE *out) {
   if (!Read_Weight(_W))
     return 0;
-  Make_Poly_Points(_W, _PP, outFILE);
+  Make_Poly_Points(_W, _PP, out);
   return 1;
 }
 #endif

@@ -390,10 +390,6 @@ MAP:
   return 1;
 }
 
-int Read_CWS_PP(CWS *_CW, PolyPointList *_P) {
-  return ReadCwsPp(_CW, _P, 1, 1, outFILE);
-}
-
 int Read_CWS_PP(CWS *_CW, PolyPointList *_P, FILE *out) {
   return ReadCwsPp(_CW, _P, 1, 1, out);
 }

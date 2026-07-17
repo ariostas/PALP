@@ -106,7 +106,7 @@ typedef struct {
 } DYN_PPL;
 
 void part_nef(PolyPointList *, VertexNumList *, EqList *, PartList *, int *,
-              NEF_Flags *, FILE *out = outFILE);
+              NEF_Flags *, FILE *out = stdout);
 
 void Mink_WPCICY(AmbiPointList *_AP_1, AmbiPointList *_AP_2,
                  AmbiPointList *_AP);
@@ -124,4 +124,4 @@ void Print_CWS_Zinfo(CWS *);
 
 void AnalyseGorensteinCone(CWS *_CW, PolyPointList *_P, VertexNumList *_V,
                            EqList *_E, int *_codim, Flags *_F,
-                           FILE *out = outFILE);
+                           FILE *out = stdout);

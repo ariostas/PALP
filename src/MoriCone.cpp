@@ -2344,7 +2344,7 @@ void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
           cd++;
 
       /* Prints the single rows of the matrix */
-      Aux_IPS_Print_WP(F->W[i], cp, cd, outFILE); // if(F->ZS)
+      Aux_IPS_Print_WP(F->W[i], cp, cd, out); // if(F->ZS)
 
       /* Prints the quotient group if any */
       if (F->nz[i])

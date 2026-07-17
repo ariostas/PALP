@@ -238,7 +238,7 @@ statistics on large lists of weight systems, cf. classification of 4fold weights
 
 /*  ==========         I/O functions (from Coord.c)		==========  */
 
-int Read_CWS_PP(CWS *C, PolyPointList *P, FILE *out = outFILE);
+int Read_CWS_PP(CWS *C, PolyPointList *P, FILE *out = stdout);
 /*
 Reads either a CWS or a PolyPointList.
 If *C is read, the PolyPointList *P determined by *C is calculated, otherwise
@@ -252,30 +252,30 @@ either P->n = #columns and P->np = #lines or vice versa (the result is
 unique because of P->np > P->n).
 */
 
-int Read_CWS(CWS *_CW, PolyPointList *_P, FILE *out = outFILE);
+int Read_CWS(CWS *_CW, PolyPointList *_P, FILE *out = stdout);
 /*
  Reads CWS input *C, the PolyPointList *P determined by *C is calculated.
 */
 
 int Read_PP(PolyPointList *_P);
 int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index,
-              FILE *out = outFILE);
+              FILE *out = stdout);
 int IsNextDigit(void);
-void Make_CWS_Points(CWS *_C, PolyPointList *_P, FILE *out = outFILE);
-void Print_CWS_Zinfo(CWS *CW, FILE *out = outFILE);
+void Make_CWS_Points(CWS *_C, PolyPointList *_P, FILE *out = stdout);
+void Print_CWS_Zinfo(CWS *CW, FILE *out = stdout);
 void Sort_PPL(PolyPointList *_P, VertexNumList *_V);
 int GLZ_Start_Simplex(PolyPointList *_P, VertexNumList *_V, CEqList *_C);
 /*
 Reads the PolyPointList input *P
 */
 
-void Print_PPL(PolyPointList *P, const char *comment, FILE *out = outFILE);
+void Print_PPL(PolyPointList *P, const char *comment, FILE *out = stdout);
 void Print_VL(PolyPointList *P, VertexNumList *V, const char *comment,
-              FILE *out = outFILE);
+              FILE *out = stdout);
 void Print_EL(EqList *EL, int *n, int suppress_c, const char *comment,
-              FILE *out = outFILE);
+              FILE *out = stdout);
 void Print_Matrix(Long Matrix[][VERT_Nmax], int n_lines, int n_columns,
-                  const char *comment, FILE *out = outFILE);
+                  const char *comment, FILE *out = stdout);
 /*
 Each of these routines prints a matrix in the format
 #columns #lines  *comment
@@ -291,7 +291,7 @@ otherwise the last entry EL->e[i].c is suppressed so that the
 resulting output can be used as input for Read_CWS_PP.
 */
 
-void Print_CWH(CWS *C, BaHo *BH, FILE *out = outFILE);
+void Print_CWH(CWS *C, BaHo *BH, FILE *out = stdout);
 /*
 Writes a single line that reproduces *C (if C->nw isn't 0, i.e. if the
 input was of CWS type), information on the numbers of points and
@@ -327,15 +327,15 @@ Routines for handling the structure C5stats
 int Make_Poly_Sym_NF(PolyPointList *P, VertexNumList *VNL, EqList *EL,
                      int *SymNum, int V_perm[][VERT_Nmax],
                      Long NF[POLY_Dmax][VERT_Nmax], int t, int S, int N,
-                     FILE *out = outFILE);
+                     FILE *out = stdout);
 void Poly_Sym(PolyPointList *_P, VertexNumList *_V, EqList *_F, int *sym_num,
-              int V_perm[][VERT_Nmax], FILE *out = outFILE);
+              int V_perm[][VERT_Nmax], FILE *out = stdout);
 int GLZ_Make_Trian_NF(Long X[][VERT_Nmax], int *n, int *nv,
                       GL_Long G[POLY_Dmax][POLY_Dmax]);
 void SL2Z_Make_Poly_UTriang(PolyPointList *P);
 void IP_Fiber_Data(PolyPointList *PD, PolyPointList *AuxP, int nv,
                    Long G[VERT_Nmax][POLY_Dmax][POLY_Dmax], int fd[VERT_Nmax],
-                   int *nf, int CD, FILE *out = outFILE);
+                   int *nf, int CD, FILE *out = stdout);
 /*
 Given *P, *VNL and *EL, the following objects are determined:
 the number *SymNum of GL(n,Z)-symmetries of the polytope,
@@ -360,7 +360,7 @@ coefficients.
 */
 
 void IP_Simplices(PolyPointList *P, int nv, int PS, int VS, int CD,
-                  FILE *out = outFILE);
+                  FILE *out = stdout);
 /*
 Realizes the -P,-V,-Z, and fibration options of poly (the results of this
 routine are displayed as output; *P is not modified).
@@ -389,7 +389,7 @@ with minimal entries above the diagonal.
 */
 
 void Make_ANF(PolyPointList *P, VertexNumList *V, EqList *E,
-              Long ANF[][VERT_Nmax], FILE *out = outFILE);
+              Long ANF[][VERT_Nmax], FILE *out = stdout);
 /*
 Given *P, *V and *E, the affine normal form ANF (i.e., a normal form
 that also works for non-reflexive polytopes), is computed.
@@ -404,18 +404,18 @@ If vol is not 0, the return value is 1 if all facets are unimoular
 
 int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
                  PolyPointList *dP, EqList *dE, int CYorFANO,
-                 FILE *out = outFILE);
+                 FILE *out = stdout);
 /*
 Realizes the -C1 or -C2 options of poly for CYorFANO being 1 or 2, respectively.
 */
 
-int Fano5d(PolyPointList *, VertexNumList *, EqList *, FILE *out = outFILE);
+int Fano5d(PolyPointList *, VertexNumList *, EqList *, FILE *out = stdout);
 /*
 Realizes the -U5 option of poly.
 */
 
 void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E,
-                     FILE *out = outFILE);
+                     FILE *out = stdout);
 /*
 Realizes the -E option of poly.
 */
@@ -427,7 +427,7 @@ other polytope.
 */
 
 Long LatVol_Barycent(PolyPointList *P, VertexNumList *V, Long *B, Long *N,
-                     FILE *out = outFILE);
+                     FILE *out = stdout);
 /*
 Given *P and *V, the coordinates of the barycenter of *P are computed (with
 the i'th coordinate as B[i] / *N) and the lattice volume of *P is returned.
@@ -442,7 +442,7 @@ information on the type of face of the cone they represent (option -B# of poly).
 
 void Make_Facet(PolyPointList *P, VertexNumList *V, EqList *E, int e,
                 Long vertices_of_facet[POLY_Dmax][VERT_Nmax], int *nv_of_facet,
-                FILE *out = outFILE);
+                FILE *out = stdout);
 /*
 The e'th facet of *P is determined as a (P->n-1)-dimensional polytope:
 *nv_of_facet vertices represented by vertices_of_facet.
@@ -523,7 +523,7 @@ limits and 0 otherwise.
 /*  ==========   Polytope analysis functions (from Vertex.c)    ==========  */
 
 int Find_Equations(PolyPointList *P, VertexNumList *VNL, EqList *EL,
-                   FILE *out = outFILE);
+                   FILE *out = stdout);
 /*
 For the polytope determined by P, *VNL and *EL are calculated.
 *VNL is the complete list of vertices of P.
@@ -533,7 +533,7 @@ origin in its interior) and 0 otherwise.
 */
 
 int IP_Check(PolyPointList *P, VertexNumList *VNL, EqList *EL,
-             FILE *out = outFILE);
+             FILE *out = stdout);
 /*
 Same as Find_Equations, but returns immediately without
 calculating *VNL and *EL if P does not have the IP property.
@@ -710,7 +710,7 @@ void QuotZ_2_SublatG(Long Z[][VERT_Nmax], int *zm, Long *M, int *d,
 int Improve_Coords(PolyPointList *_P, VertexNumList *_V);
 Long V_to_G_GI(Long *V, int d, Long G[][POLY_Dmax], Long GI[][POLY_Dmax]);
 int Make_Poly_NF(PolyPointList *_P, VertexNumList *_V, EqList *_E,
-                 Long pNF[POLY_Dmax][VERT_Nmax], FILE *out = outFILE);
+                 Long pNF[POLY_Dmax][VERT_Nmax], FILE *out = stdout);
 int Init_rVM_VPM(PolyPointList *P, VertexNumList *_V, EqList *_F, int *d,
                  int *v, int *f, Long VM[POLY_Dmax][VERT_Nmax],
                  Long VPM[VERT_Nmax][VERT_Nmax]);

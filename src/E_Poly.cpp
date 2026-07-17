@@ -414,7 +414,7 @@ void PRINT_Fibrations(VertexNumList *_V, PolyPointList *_P,
 }
 
 void Time_Info(time_t *_Tstart, clock_t *_Cstart, const char *comment,
-               FILE *out = outFILE) {
+               FILE *out) {
 
   fprintf(out, "%s     %dsec  %dcpu\n", comment,
           (int)
@@ -1302,7 +1302,7 @@ void Compute_E_Poly(EPoly *_EP, PolyPointList *_P_D, VertexNumList *_V_D,
   Make_PosetList(_C_D, &PEL_D);
   Make_PosetList(_C_N, &PEL_N);
   if (_F->t)
-    Time_Info(_Tstart, _Cstart, "   BEGIN S-Poly");
+    Time_Info(_Tstart, _Cstart, "   BEGIN S-Poly", stderr);
 
   _S_D = (SPoly *)calloc(PEL_D.n, sizeof(SPoly));
   if (_S_D == NULL)
@@ -1315,7 +1315,7 @@ void Compute_E_Poly(EPoly *_EP, PolyPointList *_P_D, VertexNumList *_V_D,
   Make_S_Poly(_C_D, _V_N, _E_N, _P_N, &PEL_N, _S_N, _F->S, _F->T);
 
   if (_F->t)
-    Time_Info(_Tstart, _Cstart, "   BEGIN B-Poly");
+    Time_Info(_Tstart, _Cstart, "   BEGIN B-Poly", stderr);
 
   IL.L =
       (Interval *)calloc(((1 + PEL_D.n) / 2 + 1) * PEL_D.n, sizeof(Interval));
@@ -1331,7 +1331,7 @@ void Compute_E_Poly(EPoly *_EP, PolyPointList *_P_D, VertexNumList *_V_D,
   Make_B_Poly(_C_D, &PEL_D, &IL, _BL);
 
   if (_F->t)
-    Time_Info(_Tstart, _Cstart, "   BEGIN E-Poly");
+    Time_Info(_Tstart, _Cstart, "   BEGIN E-Poly", stderr);
   SB_To_E(_EP, _C_D, &PEL_D, _BL, &IL, _S_D, _S_N, _codim);
 
   free(PEL_D.L);
