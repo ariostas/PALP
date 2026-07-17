@@ -332,7 +332,7 @@ int main(int narg, char *fn[]) {
       if (lg) {
         if ((Tr = Trans_Check(W)))
           LGO_VaHo(&W, &VH);
-        Write_WH(&W, &BH, &VH, R, Tr, _P, &V, E);
+        Write_WH(&W, &BH, &VH, R, Tr, _P, &V, E, outFILE);
       } else
         Print_CWH(CW, &BH);
     }

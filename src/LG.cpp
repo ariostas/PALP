@@ -205,7 +205,7 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
         WZ->M = 0;
       }
 #else
-        Write_Weight(WZ);
+        Write_Weight(WZ, outFILE);
         exit(1);
       }
 #endif
@@ -316,7 +316,7 @@ int Read_WZ_PP(Weight *WZ) /* read "d w_i" [ or "w_i d" if last=max ] */
       printf("%2ld ", X);
     }
     puts("=B.rI");
-    Write_Weight(WZ);
+    Write_Weight(WZ, outFILE);
   }
 
   {
@@ -456,24 +456,24 @@ Long Wperm_to_GLZ(Long *W, int *d, Long **G, int *P);
 /*  ==========  	  I/O functions:                	==========  */
 
 int IsDigit(char c) { return (('0' <= c) && (c <= '9')); }
-void Write_Weight(Weight *W) {
+void Write_Weight(Weight *W, FILE *out) {
   int n;
-  fprintf(outFILE, "%d", (int)W->d);
+  fprintf(out, "%d", (int)W->d);
   for (n = 0; n < W->N; n++)
-    fprintf(outFILE, " %d", (int)W->w[n]);
+    fprintf(out, " %d", (int)W->w[n]);
 #if WZinput
   {
     int i, j;
     if (W->M > 0)
       printf(" ");
     for (i = 0; i < W->M; i++) {
-      fprintf(outFILE, "/Z%d: ", W->m[i]);
+      fprintf(out, "/Z%d: ", W->m[i]);
       for (j = 0; j < W->N; j++)
-        fprintf(outFILE, "%d ", W->z[i][j]);
+        fprintf(out, "%d ", W->z[i][j]);
     }
   }
 #endif
-  fprintf(outFILE, "\n"); /* puts("  = d  w_1 ... w_N"); */
+  fprintf(out, "\n"); /* puts("  = d  w_1 ... w_N"); */
 }
 int Read_Weight(Weight *_W) /* read "d w_i" [ or "w_i d" if last=max ] */
 {
@@ -538,37 +538,37 @@ namespace {
 constexpr bool StandardOutput = true;
 }
 void Write_WH(Weight *_W, BaHo *_BH, VaHo *_VH, int rc, int tc,
-              PolyPointList *_P, VertexNumList *_V, EqList *_E) {
+              PolyPointList *_P, VertexNumList *_V, EqList *_E, FILE *out) {
   int i, j;
   if constexpr (StandardOutput) {
-    fprintf(outFILE, "%d ", (int)_W->d);
+    fprintf(out, "%d ", (int)_W->d);
     for (i = 0; i < _W->N; i++)
-      fprintf(outFILE, "%d ", (int)_W->w[i]);
+      fprintf(out, "%d ", (int)_W->w[i]);
   } else {
     for (i = 0; i < _W->N; i++)
-      fprintf(outFILE, "%d ", (int)_W->w[i]);
-    fprintf(outFILE, "%d=d ", (int)_W->d);
+      fprintf(out, "%d ", (int)_W->w[i]);
+    fprintf(out, "%d=d ", (int)_W->d);
   }
 #if WZinput
   for (i = 0; i < _W->M; i++) {
-    fprintf(outFILE, "/Z%d: ", (int)_W->m[i]);
+    fprintf(out, "/Z%d: ", (int)_W->m[i]);
     for (j = 0; j < _W->N; j++)
-      fprintf(outFILE, "%d ", (int)_W->z[i][j]);
+      fprintf(out, "%d ", (int)_W->z[i][j]);
   }
 #endif
-  fprintf(outFILE, "M:%d %d ", _P->np, _V->nv); /* PolyData */
+  fprintf(out, "M:%d %d ", _P->np, _V->nv); /* PolyData */
   if (rc)
-    fprintf(outFILE, "N:%d %d ", _BH->np, _E->ne);
+    fprintf(out, "N:%d %d ", _BH->np, _E->ne);
   else
-    fprintf(outFILE, "F:%d ", _E->ne); /* END of PolyData */
+    fprintf(out, "F:%d ", _E->ne); /* END of PolyData */
   if (tc && (_P->n != 1 + _VH->D)) {
     int D = 0, d = _W->d; /* LG non-geometric */
-    fprintf(outFILE, "LG: ");
+    fprintf(out, "LG: ");
     for (i = 0; i < _W->N; i++)
       D += d - 2 * _W->w[i];
     if (D % d) {
       int g = Fgcd(D, d);
-      fprintf(outFILE, "c/3=%d/%d\n", D / g, d / g);
+      fprintf(out, "c/3=%d/%d\n", D / g, d / g);
     } else {
       int r = _W->N - (D /= d);
       if ((r % 2) || (r <= 2))
@@ -579,25 +579,25 @@ void Write_WH(Weight *_W, BaHo *_BH, VaHo *_VH, int rc, int tc,
         exit(1);
       }
       for (i = 0; i <= D; i++) {
-        fprintf(outFILE, "%sH%d:", i ? " " : "", i);
+        fprintf(out, "%sH%d:", i ? " " : "", i);
         for (j = 0; j <= D - i; j++)
-          fprintf(outFILE, "%s%d", j ? "," : "", (int)_VH->h[i][j]);
+          fprintf(out, "%s%d", j ? "," : "", (int)_VH->h[i][j]);
       }
 #if WZinput
       /* if(r) fputs(_W->R ? " RefGC": " NOrgc",outFILE); */
       if (r) {
         if (_W->R)
-          fprintf(outFILE, " RefI%d", _W->r);
+          fprintf(out, " RefI%d", _W->r);
         else
-          fputs(" nonRG", outFILE);
+          fputs(" nonRG", out);
       }
 #endif
-      fputs("\n", outFILE);
+      fputs("\n", out);
     }
     return;
   }
   if ((!tc) && (!rc)) {
-    fprintf(outFILE, "not transverse\n");
+    fprintf(out, "not transverse\n");
     return;
   }
   if (_P->n > 2) {
@@ -612,32 +612,32 @@ void Write_WH(Weight *_W, BaHo *_BH, VaHo *_VH, int rc, int tc,
         }
     if (tc) {
       Pint chi = (_P->n % 2 ? 4 : 0);
-      fprintf(outFILE, "V:%ld", (long)_VH->h[1][1]);
+      fprintf(out, "V:%ld", (long)_VH->h[1][1]);
       for (i = 2; i < _P->n - 1; i++)
-        fprintf(outFILE, ",%ld", (long)_VH->h[1][i]);
+        fprintf(out, ",%ld", (long)_VH->h[1][i]);
       if (_P->n > 5) {
         for (j = 2; 2 * j <= _P->n - 1; j++) {
-          fprintf(outFILE, ";%ld", (long)_VH->h[j][j]);
+          fprintf(out, ";%ld", (long)_VH->h[j][j]);
           for (i = j + 1; i < _P->n - j; i++)
-            fprintf(outFILE, ",%ld", (long)_VH->h[j][i]);
+            fprintf(out, ",%ld", (long)_VH->h[j][i]);
         }
       }
       for (i = 1; i < _P->n - 1; i++)
         for (j = 1; j < _P->n - 1; j++) {
           chi += ((i + j) % 2 ? -_VH->h[j][i] : _VH->h[j][i]);
         }
-      fprintf(outFILE, " [%ld]\n", (long)chi);
+      fprintf(out, " [%ld]\n", (long)chi);
     } else {
       if (!rc) {
         fputs("Error: Write_WH unexpected non-reflexive non-transverse case\n",
               stderr);
         exit(1);
       }
-      fprintf(outFILE, "H:%d", _BH->h1[1]);
+      fprintf(out, "H:%d", _BH->h1[1]);
       for (i = 2; i < _P->n - 1; i++)
-        fprintf(outFILE, ",%d", _BH->h1[i]);
+        fprintf(out, ",%d", _BH->h1[i]);
       if (6 < _P->n)
-        fprintf(outFILE, " [???]\n");
+        fprintf(out, " [???]\n");
       else /* Euler number */ {
         int chi = 0, *ho = _BH->h1; // if(tc) ho=_VH->h[1];
         if (_P->n == 3)
@@ -648,11 +648,11 @@ void Write_WH(Weight *_W, BaHo *_BH, VaHo *_VH, int rc, int tc,
           chi = 48 + 6 * (ho[1] - ho[2] + ho[3]);
         if (_P->n == 6)
           chi = 24 * (ho[1] - ho[2] + ho[3] - ho[4]);
-        fprintf(outFILE, " [%d]\n", chi);
+        fprintf(out, " [%d]\n", chi);
       }
     }
   } else
-    fprintf(outFILE, "\n");
+    fprintf(out, "\n");
 }
 
 void TEST_LatticeBasis(AmbiLatticeBasis *_B) /* print AmbiLatticeBasis */
@@ -724,7 +724,7 @@ void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP) {
   WeightMakePoints(_W, _AP);
   if constexpr (TEST_LG) {
     puts("\nWeights:");
-    Write_Weight(_W);
+    Write_Weight(_W, outFILE);
     puts("AmbiPoints:");
     TEST_WeightMakePoints(_AP);
     puts("Basis:");
@@ -927,7 +927,7 @@ int IfRefWWrite(Weight *W, PolyPointList *P) {
   EqList E;
   Make_Poly_Points(W, P);
   if (Ref_Check(P, &V, &E)) {
-    Write_Weight(W);
+    Write_Weight(W, outFILE);
     fflush(stdout);
     return 1;
   } else
@@ -966,7 +966,7 @@ void MakeRefWeights(int N, int from_d, int to_d) {
 
 /*  =============	Landau-Ginzburg-Calculations:		===========  */
 
-void PrintPoCoLi(PoCoLi *P) {
+void PrintPoCoLi(PoCoLi *P, FILE *out) {
   int i;
   for (i = 0; i < P->n; i++) {
 #if ABBREV_POLY_PRINT
@@ -1283,7 +1283,7 @@ void PoincarePoly(int N, int *w, int d, PoCoLi *P, PoCoLi *Z, PoCoLi *R) {
     aux = Out;
     Out = In;
     In = aux;
-  } /* printf("Q =");PrintPoCoLi(P); */
+  } /* printf("Q =");PrintPoCoLi(P, outFILE); */
   if (R->n != 0) {
     fputs("Error: PoincarePoly final remainder is not zero\n", stderr);
     exit(1);
@@ -1305,12 +1305,12 @@ void PoincarePoly(int N, int *w, int d, PoCoLi *P, PoCoLi *Z, PoCoLi *R) {
 
 /* ======	I N D E X  &  T R A C E / b01  computation of VaHo	==== */
 
-void Print_VaHo(VaHo *V) {
+void Print_VaHo(VaHo *V, FILE *out) {
   int i, j, D = V->D;
   for (i = 0; i <= D; i++) {
-    fprintf(outFILE, "H%d*: ", i);
+    fprintf(out, "H%d*: ", i);
     for (j = 0; j <= D; j++)
-      fprintf(outFILE, "%ld ", (long)V->h[i][j]);
+      fprintf(out, "%ld ", (long)V->h[i][j]);
   }
 }
 int DoHodgeTest(VaHo *V) /*[holo] Poincare duality, Hodge duality, sum rule */
@@ -1352,7 +1352,7 @@ int Hodge_Test(VaHo *V) /* [holo] Poincare duality, Hodge duality, sum rule */
   if (DoHodgeTest(V))
     return 1;
   else {
-    Print_VaHo(V);
+    Print_VaHo(V, outFILE);
     return 0;
   }
 }
@@ -1731,13 +1731,13 @@ int Test_BottomUpQuot(PoCoLi *Num, PoCoLi *Den, PoCoLi *Quo, PoCoLi *Rem) {
   if (i)
     return 1;
   printf("Num=");
-  PrintPoCoLi(Num);
+  PrintPoCoLi(Num, outFILE);
   printf("Den=");
-  PrintPoCoLi(Den);
+  PrintPoCoLi(Den, outFILE);
   printf("Quo=");
-  PrintPoCoLi(Quo);
+  PrintPoCoLi(Quo, outFILE);
   printf("Rem=");
-  PrintPoCoLi(Rem);
+  PrintPoCoLi(Rem, outFILE);
   /* printf("N=%d D=%d Q=%d
    * R=%d\n",Num.A,Den.A,Quo.A,Rem.A);exit(1);fflush(0);*/
   {
@@ -2376,7 +2376,7 @@ void Calc_VaHo(Weight *W, VaHo *V) {
     if constexpr (TEST_PP)
       if (P->n < 99) {
         printf("PP =");
-        PrintPoCoLi(P);
+        PrintPoCoLi(P, outFILE);
       } else
         printf("#(Exp,Co)=%d  Exp<=%d  Coeff<=%d  sum=%lld\n", n, P->e[n - 1],
                cM, sum);

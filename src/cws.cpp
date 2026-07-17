@@ -1223,7 +1223,7 @@ int IfIpWWrite(Weight *W, PolyPointList *P, int *rFlag, int *tFlag) {
       return 1;
     }
     if (*rFlag && r) {
-      Write_Weight(W);
+      Write_Weight(W, outFILE);
       fflush(stdout);
       return 1;
     }
@@ -1388,7 +1388,7 @@ void Make_Trans_Weights(int n, int dmin, int dmax /*,int rFlag */) {
         W.w[j] = X.wli[i][j + 1];
       W.M = 0;
       if (Trans_Check(W))
-        Write_Weight(&W);
+        Write_Weight(&W, outFILE);
     }
     fflush(outFILE);
   }
