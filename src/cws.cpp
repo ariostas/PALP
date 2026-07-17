@@ -238,7 +238,7 @@ void RgcAddweight(Equation wn, RgcClassData *X) {
     RgcInsertat(wn, 0, X);
 }
 
-void PrintPoint(int n, RgcClassData *X) {
+void PrintPoint(int n, RgcClassData *X, FILE *out) {
   int i;
   if (n >= POLY_Dmax) {
     fprintf(stderr, "Error: PrintPoint n=%d out of range\n", n);
@@ -252,7 +252,7 @@ void PrintPoint(int n, RgcClassData *X) {
   printf("\n");
 }
 
-void PrintQ(int n, RgcClassData *X) {
+void PrintQ(int n, RgcClassData *X, FILE *out) {
   int i, j;
   if (n >= POLY_Dmax) {
     fprintf(stderr, "Error: PrintQ n=%d out of range\n", n);
@@ -269,7 +269,7 @@ void PrintQ(int n, RgcClassData *X) {
   }
 }
 
-void PrintEquation(Equation *q, int d /*, char *c, int j*/) {
+void PrintEquation(Equation *q, int d /*, char *c, int j*/, FILE *out) {
   int i;
   printf("%d  ", (int)-q->c);
   for (i = 0; i < d; i++)
@@ -405,7 +405,7 @@ int ComputeAndAddAverageWeight(Equation *q, int n, RgcClassData *X) {
   q->c = -1;
   for (i = 0; i < X->q[n].ne; i++) {
     if (X->q[n].e[i].c >= 0) {
-      PrintQ(n, X);
+      PrintQ(n, X, outFILE);
       exit(1);
     }
     q->c = -Flcm(-q->c, -X->q[n].e[i].c);
@@ -589,7 +589,7 @@ void RgcWeights(int narg, char *fn[]) {
     for (i = 0; i < X->wnum; i++) {
       j = WsIpCheck(&X->wli[i], d);
       if (j) {
-        PrintEquation(&X->wli[i], X->d);
+        PrintEquation(&X->wli[i], X->d, outFILE);
         printf("  np=%d\n", j);
         X->winum++;
       /*else PrintEquation(&X->wli[i], X->d, "n");*/ }
@@ -635,7 +635,7 @@ void AddHalf(void) {
 
 void Make_IP_Weights(int d, int Dmin, int Dmax, int rFlag, int tFlag);
 void MakeMoonWeights(int d, int Dmin, int Dmax);
-void Make_34_Weights(int d, int tFlag);
+void Make_34_Weights(int d, int tFlag, FILE *out = outFILE);
 void Init_IP_Weights(int narg, char *fn[]) {
   int n = 1, d, L = 0, H = 0, rf = 0, tf = 0;
   char *c = &fn[1][2];
@@ -1087,8 +1087,8 @@ void makesubsets(WSaux *X) {
       }
     }
 }
-void WRITE_Weight(Weight *_W);
-void Make_34_Weights(int d, int tFlag) {
+void WRITE_Weight(Weight *_W, FILE *out);
+void Make_34_Weights(int d, int tFlag, FILE *out) {
   int i, Info = 0;
   auto X = std::make_unique<WSaux>();
   auto P = std::make_unique<PolyPointList>();
@@ -1188,17 +1188,17 @@ void Make_34_Weights(int d, int tFlag) {
         c[3] = (t) ? 't' : 0;
         if (Info++)
           puts("");
-        WRITE_Weight(&W);
+        WRITE_Weight(&W, outFILE);
         printf("%s", c);
       }
     }
   }
-  fprintf(outFILE, "  #=%d  #cand=%d\n", Info, X->wnum);
+  fprintf(out, "  #=%d  #cand=%d\n", Info, X->wnum);
 }
 /*  ==========       End of  ALL  IP  WEIGHTS  in  d <= 4     	==========  */
 /*  ==========  	      MAKE WEIGHTS d>4:                	==========  */
 
-void WRITE_Weight(Weight *_W) {
+void WRITE_Weight(Weight *_W, FILE *out) {
   int n;
   fprintf(outFILE, "%d ", (int)_W->d);
   for (n = 0; n < _W->N; n++)
@@ -1215,7 +1215,7 @@ int IfIpWWrite(Weight *W, PolyPointList *P, int *rFlag, int *tFlag) {
       if (E.e[i].c != 1)
         r = 0;
     if (*tFlag && Trans_Check(*W)) {
-      WRITE_Weight(W);
+      WRITE_Weight(W, outFILE);
       if (r)
         fprintf(outFILE, " r");
       fprintf(outFILE, "\n");
@@ -1228,7 +1228,7 @@ int IfIpWWrite(Weight *W, PolyPointList *P, int *rFlag, int *tFlag) {
       return 1;
     }
     if (!*tFlag && !*rFlag) {
-      WRITE_Weight(W);
+      WRITE_Weight(W, outFILE);
       if (r)
         fprintf(outFILE, " r");
       fprintf(outFILE, "\n");
