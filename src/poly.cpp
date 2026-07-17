@@ -262,7 +262,7 @@ int main(int narg, char *fn[]) {
           C5S.n_nonIP++;
         continue;
       } // non-IP
-      Print_CWH(CW, &BH);
+      Print_CWH(CW, &BH, outFILE);
       if (Q)
         Update_C5S(&BH, FI.nf, CW->W[0], &C5S);
       continue;
@@ -334,7 +334,7 @@ int main(int narg, char *fn[]) {
           LGO_VaHo(&W, &VH);
         Write_WH(&W, &BH, &VH, R, Tr, _P, &V, E, outFILE);
       } else
-        Print_CWH(CW, &BH);
+        Print_CWH(CW, &BH, outFILE);
     }
     if (s && CW->nw)
       if (!Span_Check(E, &(CW->B), &_P->n))
@@ -355,7 +355,7 @@ int main(int narg, char *fn[]) {
     }
     if (m)
       Print_Matrix(PM, E->ne, V.nv,
-                   "Pairing matrix of vertices and equations of P");
+                   "Pairing matrix of vertices and equations of P", outFILE);
     if (d && (_DP->np > E->ne))
       Print_PPL(_DP, "Points of P-dual");
     if (S || N || t) {
@@ -392,13 +392,13 @@ int main(int narg, char *fn[]) {
       Long VM[POLY_Dmax][VERT_Nmax];
       for (j = 0; j < E->ne; j++) {
         Make_Facet(_P, &V, E, j, VM, &cc);
-        Print_Matrix(VM, _P->n - 1, cc, "");
+        Print_Matrix(VM, _P->n - 1, cc, "", outFILE);
       }
     }
     if (A) {
       Long ANF[POLY_Dmax][VERT_Nmax];
       Make_ANF(_P, &V, E, ANF);
-      Print_Matrix(ANF, _P->n, V.nv, "Affine normal form");
+      Print_Matrix(ANF, _P->n, V.nv, "Affine normal form", outFILE);
     }
     fflush(outFILE);
   }

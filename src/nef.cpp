@@ -621,5 +621,5 @@ void OUT_CWS(CWS *_W, int *_D, int *_M_Flag, FILE *out) {
   }
   if (*_M_Flag)
     fprintf(outFILE, "d=%d %d ", (int)_D[1], _D[0]);
-  Print_CWS_Zinfo(_W);
+  Print_CWS_Zinfo(_W, out);
 }

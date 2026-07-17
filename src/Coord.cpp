@@ -29,40 +29,41 @@ int IsNextDigit(void) {
     return 1;
 }
 
-void Print_PPL(PolyPointList *_P, const char *comment) {
+void Print_PPL(PolyPointList *_P, const char *comment, FILE *out) {
   int i, j;
   if (_P->np > 20) {
-    fprintf(outFILE, "%d %d  %s\n", _P->np, _P->n, comment);
+    fprintf(out, "%d %d  %s\n", _P->np, _P->n, comment);
     for (i = 0; i < _P->np; i++) {
       for (j = 0; j < _P->n; j++)
-        fprintf(outFILE, "%d ", (int)_P->x[i][j]);
-      fprintf(outFILE, "\n");
+        fprintf(out, "%d ", (int)_P->x[i][j]);
+      fprintf(out, "\n");
     }
   } else {
-    fprintf(outFILE, "%d %d  %s\n", _P->n, _P->np, comment);
+    fprintf(out, "%d %d  %s\n", _P->n, _P->np, comment);
     for (i = 0; i < _P->n; i++) {
       for (j = 0; j < _P->np; j++)
-        fprintf(outFILE, " %4d", (int)_P->x[j][i]);
-      fprintf(outFILE, "\n");
+        fprintf(out, " %4d", (int)_P->x[j][i]);
+      fprintf(out, "\n");
     }
   }
 }
 
-void Print_VL(PolyPointList *_P, VertexNumList *_V, const char *comment) {
+void Print_VL(PolyPointList *_P, VertexNumList *_V, const char *comment,
+              FILE *out) {
   int i, j;
   if (_V->nv > 20) {
-    fprintf(outFILE, "%d %d  %s\n", _V->nv, _P->n, comment);
+    fprintf(out, "%d %d  %s\n", _V->nv, _P->n, comment);
     for (i = 0; i < _V->nv; i++) {
       for (j = 0; j < _P->n; j++)
-        fprintf(outFILE, "%d ", (int)_P->x[_V->v[i]][j]);
-      fprintf(outFILE, "\n");
+        fprintf(out, "%d ", (int)_P->x[_V->v[i]][j]);
+      fprintf(out, "\n");
     }
   } else {
-    fprintf(outFILE, "%d %d  %s\n", _P->n, _V->nv, comment);
+    fprintf(out, "%d %d  %s\n", _P->n, _V->nv, comment);
     for (i = 0; i < _P->n; i++) {
       for (j = 0; j < _V->nv; j++)
-        fprintf(outFILE, " %4d", (int)_P->x[_V->v[j]][i]);
-      fprintf(outFILE, "\n");
+        fprintf(out, " %4d", (int)_P->x[_V->v[j]][i]);
+      fprintf(out, "\n");
     }
   }
 }
@@ -80,13 +81,13 @@ void Print_EL(EqList *_E, int *n, int suppress_c, const char *comment) {
 }
 
 void Print_Matrix(Long Matrix[][VERT_Nmax], int n_lines, int n_columns,
-                  const char *comment) {
+                  const char *comment, FILE *out) {
   int i, j;
-  fprintf(outFILE, "%d %d  %s\n", n_lines, n_columns, comment);
+  fprintf(out, "%d %d  %s\n", n_lines, n_columns, comment);
   for (i = 0; i < n_lines; i++) {
     for (j = 0; j < n_columns; j++)
-      fprintf(outFILE, " %3d", (int)Matrix[i][j]);
-    fprintf(outFILE, "\n");
+      fprintf(out, " %3d", (int)Matrix[i][j]);
+    fprintf(out, "\n");
   }
 }
 int auxString2Int(char *c, int *n) {
@@ -103,13 +104,13 @@ void CWSZerror(char *c) {
   printf("Format error %s in Read_CWS_Zinfo\n", c);
   exit(1);
 }
-void Print_CWS_Zinfo(CWS *CW) {
+void Print_CWS_Zinfo(CWS *CW, FILE *out) {
   int i, j;
   if (CW->nw)
     for (i = 0; i < CW->nz; i++) {
-      fprintf(outFILE, "/Z%d: ", CW->m[i]);
+      fprintf(out, "/Z%d: ", CW->m[i]);
       for (j = 0; j < CW->N; j++)
-        fprintf(outFILE, "%d ", CW->z[i][j]);
+        fprintf(out, "%d ", CW->z[i][j]);
     }
 }
 int Read_CWS_Zinfo(FILE *inFILE, CWS *CW) /* return !EOF */
@@ -637,38 +638,37 @@ MAP:
   return 1;
 }
 
-void Print_CWH(CWS *_W, BaHo *_BH) {
+void Print_CWH(CWS *_W, BaHo *_BH, FILE *out) {
   int i, j;
   for (i = 0; i < _W->nw; i++) {
-    fprintf(outFILE, "%d ", (int)_W->d[i]);
+    fprintf(out, "%d ", (int)_W->d[i]);
     for (j = 0; j < _W->N; j++)
-      fprintf(outFILE, "%d ", (int)_W->W[i][j]);
+      fprintf(out, "%d ", (int)_W->W[i][j]);
     if (i + 1 < _W->nw)
-      fprintf(outFILE, " ");
+      fprintf(out, " ");
   }
-  Print_CWS_Zinfo(_W);
+  Print_CWS_Zinfo(_W, out);
   if (_BH->np) {
-    fprintf(outFILE, "M:%d %d N:%d %d", _BH->mp, _BH->mv, _BH->np, _BH->nv);
+    fprintf(out, "M:%d %d N:%d %d", _BH->mp, _BH->mv, _BH->np, _BH->nv);
     if (_BH->n == 3)
-      fprintf(outFILE, " Pic:%d Cor:%d", _BH->pic, _BH->cor);
+      fprintf(out, " Pic:%d Cor:%d", _BH->pic, _BH->cor);
     if (_BH->n > 3) {
-      fprintf(outFILE, " H:%d", _BH->h1[1]);
+      fprintf(out, " H:%d", _BH->h1[1]);
       for (i = 2; i < _BH->n - 1; i++)
-        fprintf(outFILE, ",%d", _BH->h1[i]);
+        fprintf(out, ",%d", _BH->h1[i]);
       if (_BH->n == 4)
-        fprintf(outFILE, " [%d]", 2 * (_BH->h1[1] - _BH->h1[2]));
+        fprintf(out, " [%d]", 2 * (_BH->h1[1] - _BH->h1[2]));
       if (_BH->n == 5)
-        fprintf(outFILE, " [%d]",
-                48 + 6 * (_BH->h1[1] - _BH->h1[2] + _BH->h1[3]));
+        fprintf(out, " [%d]", 48 + 6 * (_BH->h1[1] - _BH->h1[2] + _BH->h1[3]));
       if (_BH->n == 6)
-        fprintf(outFILE, " [%d]",
+        fprintf(out, " [%d]",
                 24 * (_BH->h1[1] - _BH->h1[2] + _BH->h1[3] - _BH->h1[4]));
     }
   } else if (_BH->mp)
-    fprintf(outFILE, "M:%d %d F:%d", _BH->mp, _BH->mv, _BH->nv);
+    fprintf(out, "M:%d %d F:%d", _BH->mp, _BH->mv, _BH->nv);
   else
-    fprintf(outFILE, "V:%d F:%d", _BH->mv, _BH->nv);
-  fprintf(outFILE, "\n");
+    fprintf(out, "V:%d F:%d", _BH->mv, _BH->nv);
+  fprintf(out, "\n");
 }
 
 /*  ==========  	      END of I/O functions		==========  */

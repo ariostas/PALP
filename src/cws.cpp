@@ -1799,7 +1799,7 @@ void Make_34_CWS(int d) {
 
 /*  ==========  	        MAKE CWS d>4               	==========  */
 
-void Print_CWS_Zinfo(CWS *CW);
+void Print_CWS_Zinfo(CWS *CW, FILE *out);
 void Print_CWS(CWS *_W) {
   int i, j;
 
@@ -1810,7 +1810,7 @@ void Print_CWS(CWS *_W) {
     if (i + 1 < _W->nw)
       fprintf(outFILE, " ");
   }
-  Print_CWS_Zinfo(_W);
+  Print_CWS_Zinfo(_W, outFILE);
 }
 
 void print_W(Weight *_s, Weight *_W, FILE *auxFILE) {

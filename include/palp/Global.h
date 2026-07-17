@@ -261,18 +261,19 @@ int Read_PP(PolyPointList *_P);
 int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index);
 int IsNextDigit(void);
 void Make_CWS_Points(CWS *_C, PolyPointList *_P);
-void Print_CWS_Zinfo(CWS *CW);
+void Print_CWS_Zinfo(CWS *CW, FILE *out = outFILE);
 void Sort_PPL(PolyPointList *_P, VertexNumList *_V);
 int GLZ_Start_Simplex(PolyPointList *_P, VertexNumList *_V, CEqList *_C);
 /*
 Reads the PolyPointList input *P
 */
 
-void Print_PPL(PolyPointList *P, const char *comment);
-void Print_VL(PolyPointList *P, VertexNumList *V, const char *comment);
+void Print_PPL(PolyPointList *P, const char *comment, FILE *out = outFILE);
+void Print_VL(PolyPointList *P, VertexNumList *V, const char *comment,
+              FILE *out = outFILE);
 void Print_EL(EqList *EL, int *n, int suppress_c, const char *comment);
 void Print_Matrix(Long Matrix[][VERT_Nmax], int n_lines, int n_columns,
-                  const char *comment);
+                  const char *comment, FILE *out = outFILE);
 /*
 Each of these routines prints a matrix in the format
 #columns #lines  *comment
@@ -288,7 +289,7 @@ otherwise the last entry EL->e[i].c is suppressed so that the
 resulting output can be used as input for Read_CWS_PP.
 */
 
-void Print_CWH(CWS *C, BaHo *BH);
+void Print_CWH(CWS *C, BaHo *BH, FILE *out = outFILE);
 /*
 Writes a single line that reproduces *C (if C->nw isn't 0, i.e. if the
 input was of CWS type), information on the numbers of points and

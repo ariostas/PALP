@@ -923,7 +923,7 @@ int Make_Poly_Sym_NF(PolyPointList *_P, VertexNumList *_V, EqList *_F,
         strcpy(&c[28], "    perm");
         c[36] = '=';
       }
-    Print_Matrix(NF, _P->n, _V->nv, c);
+    Print_Matrix(NF, _P->n, _V->nv, c, out);
   }
   return ns;
 }
@@ -4942,14 +4942,14 @@ int Check_ANF_Form(Long VM[][VERT_Nmax], int d, int v) {
   c += (i == d + 1);
   c += (VM[0][1] == 1);
   if (c != 3) {
-    Print_Matrix(VM, d + 1, v + 1, "unexpected AFF-NF");
+    Print_Matrix(VM, d + 1, v + 1, "unexpected AFF-NF", outFILE);
     return 1;
   }
   G[0] = 1;
   for (c = 2; c <= v; c++) {
     for (i = r + 1; i <= d; i++)
       if (VM[i][c]) {
-        Print_Matrix(VM, d + 1, v + 1, "rank increase>1 in AFF-NF");
+        Print_Matrix(VM, d + 1, v + 1, "rank increase>1 in AFF-NF", outFILE);
         return 1;
       }
     if (VM[r][c]) /* rank++ => solve G.Vc==1 */
@@ -4961,7 +4961,7 @@ int Check_ANF_Form(Long VM[][VERT_Nmax], int d, int v) {
         G[r] = g / VM[r][c];
         r++;
       } else {
-        Print_Matrix(VM, d + 1, v + 1, "inconsistent ANF (r++)");
+        Print_Matrix(VM, d + 1, v + 1, "inconsistent ANF (r++)", outFILE);
         return 1;
       }
     } else /*  check G.Vc==1  */
@@ -4970,11 +4970,11 @@ int Check_ANF_Form(Long VM[][VERT_Nmax], int d, int v) {
       for (i = 0; i < r; i++)
         g -= G[i] * VM[i][c];
       if (g) {
-        Print_Matrix(VM, d + 1, v + 1, "inconsistent ANF (G)");
+        Print_Matrix(VM, d + 1, v + 1, "inconsistent ANF (G)", outFILE);
         return 1;
       }
     }
-  } /* Print_Matrix(VM, d+1, v+1,"Affine-NF"); */
+  } /* Print_Matrix(VM, d+1, v+1, "Affine-NF", outFILE); */
   return 0;
 }
 
@@ -5002,7 +5002,7 @@ void Make_ANF(PolyPointList *P, VertexNumList *V, /* affine normal form */
   }
 
   /* Print_PPL(P,"in");Print_VL(P,V,"vertices");Print_EL(E,&P->n,0,"eq-in");
-     PairMat PM; Make_VEPM(P,V,E,PM); Print_Matrix(PM, E->ne, V->nv,"PM");*/
+     PairMat PM; Make_VEPM(P,V,E,PM); Print_Matrix(PM, E->ne, V->nv, "PM", outFILE);*/
   for (i = 0; i < v; i++)
     P->x[V->v[i]][d] = 1;
   P->n = d + 1;
@@ -5021,7 +5021,7 @@ void Make_ANF(PolyPointList *P, VertexNumList *V, /* affine normal form */
   E->e[e].c = 1;
   E->ne++;
   /* Print_PPL(P,"AFF");Print_VL(P,V,"AFFvert");Print_EL(E,&P->n,0,"AFFeq");
-     Make_VEPM(P,V,E,PM); Print_Matrix(PM, E->ne, V->nv,"AFF-PM"); */
+     Make_VEPM(P,V,E,PM); Print_Matrix(PM, E->ne, V->nv, "AFF-PM", outFILE); */
 
   Make_Poly_NF(P, V, E, VM);
   if (Check_ANF_Form(VM, d, v)) {
@@ -5066,9 +5066,9 @@ void Print_Facets(PolyPointList *P, VertexNumList *V, EqList *E, FILE *out) {
     for (j = 0; j < P->n; j++)
       for (v = 0; v < c; v++)
         VM[j][v] -= VM[j][c - 1];
-    /*  Print_Matrix(VM,P->n,c,"");*/
+    /*  Print_Matrix(VM,P->n,c, "", outFILE);*/
     Aux_Make_Poly_NF(VM, &P->n, &c);
-    /*  Print_Matrix(VM,P->n,c,"");*/
+    /*  Print_Matrix(VM,P->n,c, "", outFILE);*/
     for (j = 0; j < c; j++)
       if (VM[P->n - 1][j] != 0)
         err = 1;
@@ -5085,7 +5085,7 @@ void Print_Facets(PolyPointList *P, VertexNumList *V, EqList *E, FILE *out) {
             stderr);
       exit(1);
     }
-    Print_Matrix(VM, P->n - 1, c, "");
+    Print_Matrix(VM, P->n - 1, c, "", outFILE);
   }
 }
 
@@ -5106,9 +5106,9 @@ void Make_Facet(PolyPointList *P, VertexNumList *V, EqList *E, int e,
   for (j = 0; j < P->n; j++)
     for (v = 0; v < c; v++)
       VM[j][v] -= VM[j][c - 1];
-  /*  Print_Matrix(VM,P->n,c,"");*/
+  /*  Print_Matrix(VM,P->n,c, "", outFILE);*/
   SL2Z_Aux_Make_Poly_NF(VM, &P->n, &c);
-  /* Print_Matrix(VM,P->n,c,"");*/
+  /* Print_Matrix(VM,P->n,c, "", outFILE);*/
   for (j = 0; j < c; j++)
     if (VM[P->n - 1][j] != 0)
       err = 1;
@@ -5123,7 +5123,7 @@ void Make_Facet(PolyPointList *P, VertexNumList *V, EqList *E, int e,
     EPrint_VL(P, V, 0, outFILE); /*assert(0);*/
   }
   *cc = c;
-  /* Print_Matrix(VM,P->n-1,c,""); */
+  /* Print_Matrix(VM,P->n-1,c, "", outFILE); */
 }
 
 #ifdef FIND_OCTAHEDRON

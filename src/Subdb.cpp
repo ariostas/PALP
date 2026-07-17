@@ -3102,7 +3102,7 @@ void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P) {
             Find_Equations(_P, &VNL, &EL);
             Small_Make_Dual(_P, &VNL, &EL);
             Make_Poly_NF(_P, &VNL, &EL, NF);
-            Print_Matrix(NF, _P->n, VNL.nv, com);
+            Print_Matrix(NF, _P->n, VNL.nv, com, outFILE);
           }
         }
         if (ferror(Fh)) {

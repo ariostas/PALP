@@ -1607,9 +1607,9 @@ void AnalyseGorensteinCone(CWS *_CW, PolyPointList *_P, VertexNumList *_V,
     /* Print_EL(_E_D, &_P_D->n, 0, "_E_D"); */
     Sort_VL(_V_D);
     /* Make_VEPM(_P, _V, _E, VPM); */
-    /* Print_Matrix(VPM, _E->ne, _V->nv, "VPM"); */
+    /* Print_Matrix(VPM, _E->ne, _V->nv, "VPM", out); */
     Make_VEPM(_P_D, _V_D, _E_D, VPM_D);
-    /* Print_Matrix(VPM_D, _E_D->ne, _V_D->nv, "VPM_D"); */
+    /* Print_Matrix(VPM_D, _E_D->ne, _V_D->nv, "VPM_D", out); */
     Complete_Poly(VPM_D, _E_D, _V_D->nv, _P_D);
     /* Print_PPL(_P_D, "_P_D after Complete_Poly"); */
     if (_E_D->ne != _V->nv) {
@@ -1637,8 +1637,8 @@ void AnalyseGorensteinCone(CWS *_CW, PolyPointList *_P, VertexNumList *_V,
       }
       if (k >= _V->nv) {
         printf("k = %d, _V->nv = %d\n", k, _V->nv);
-        Print_Matrix(VPM, _E->ne, _V->nv, "VPM");
-        Print_Matrix(VPM_D, _E_D->ne, _V_D->nv, "VPM_D");
+        Print_Matrix(VPM, _E->ne, _V->nv, "VPM", out);
+        Print_Matrix(VPM_D, _E_D->ne, _V_D->nv, "VPM_D", out);
       }
       if (k >= _V->nv) {
         fprintf(stderr,
@@ -1650,7 +1650,7 @@ void AnalyseGorensteinCone(CWS *_CW, PolyPointList *_P, VertexNumList *_V,
     }
     /* Print_EL(_new_E_D, &_P_D->n, 0, "_new_E_D");
        Make_VEPM(_P_D, _V_D, _new_E_D, VPM_D);
-       Print_Matrix(VPM_D, _E_D->ne, _V_D->nv, "VPM_D"); */
+       Print_Matrix(VPM_D, _E_D->ne, _V_D->nv, "VPM_D", out); */
     if (_F->N) { /* swap M and N  */
       PolyPointList *_auxP = _P_D;
       VertexNumList *_auxV = _V_D;
