@@ -32,8 +32,7 @@ struct Pstat {
 
 /*  ==========          l o c a l  P R O T O T Y P E s          ==========  */
 
-int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index,
-               FILE *out);
+int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index, FILE *out);
 
 void Compute_E_Poly(EPoly *_EP, PolyPointList *_P_D, VertexNumList *_V_D,
                     EqList *_E_D, PolyPointList *_P_N, VertexNumList *_V_N,
@@ -265,9 +264,10 @@ int main(int narg, char *fn[]) {
       }
     }
   n--;
+  FILE *out;
   if (FilterFlag) {
     inFILE = NULL;
-    outFILE = stdout;
+    out = outFILE = stdout;
   } else {
     if (narg > ++n)
       inFILE = fopen(fn[n], "r");
@@ -278,14 +278,14 @@ int main(int narg, char *fn[]) {
       exit(1);
     }
     if (narg > ++n)
-      outFILE = fopen(fn[n], "w");
+      out = outFILE = fopen(fn[n], "w");
     else
-      outFILE = stdout;
+      out = outFILE = stdout;
   }
   while (IN_WEIGHT(&W, &CW, D, _P, &F, codim)) {
     /* _P is the M-lattice polytope */
     if (F.G)
-      AnalyseGorensteinCone(&CW, _P, _V, _E, &codim, &F, outFILE);
+      AnalyseGorensteinCone(&CW, _P, _V, _E, &codim, &F, out);
     else if (Ref_Check(_P, _V, _E)) {
       int nv = _V->nv, ne = _E->ne;
       std::vector<std::array<Long, VERT_Nmax>> PM_vec(EQUA_Nmax);
@@ -308,7 +308,7 @@ int main(int narg, char *fn[]) {
       }
       if (!F.VP) {
         if constexpr (write_cws) {
-          OUT_CWS(&CW, D, &F.Msum, outFILE);
+          OUT_CWS(&CW, D, &F.Msum, out);
         }
         if (POLY_Dmax < (_P->n + codim - 1)) {
           printf("Please increase POLY_Dmax to at least %d = %d + %d - 1\n",
@@ -316,10 +316,10 @@ int main(int narg, char *fn[]) {
           printf("(%s requires POLY_Dmax >= dim N + codim - 1)\n", fn[0]);
           exit(1);
         }
-        Make_E_Poly(outFILE, &CW, _P, _V, _E, &codim, &F, &D[0]);
+        Make_E_Poly(out, &CW, _P, _V, _E, &codim, &F, &D[0]);
       } else {
         N++;
-        Print_VP(_P, _V, VPmax, VPmin, _PS, outFILE);
+        Print_VP(_P, _V, VPmax, VPmin, _PS, out);
       }
     } else {
       if ((F.Rv == 1) || ((F.V == 1) && (F.N == 1))) {
@@ -338,7 +338,7 @@ int main(int narg, char *fn[]) {
       fprintf(stderr, "Error: nef VPmax=%d less than VPmin=%d\n", VPmax, VPmin);
       exit(1);
     }
-    Print_Pstat(_PS, N, VPmax, VPmin, outFILE);
+    Print_Pstat(_PS, N, VPmax, VPmin, out);
   }
   return 0;
 }

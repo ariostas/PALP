@@ -12,7 +12,7 @@ constexpr bool write_cws = true; /* output CWS data in E-poly printing */
 
 void Sort_PPL(PolyPointList *_P, VertexNumList *_V);
 void part_nef(PolyPointList *, VertexNumList *, EqList *, PartList *, int *,
-              NEF_Flags *);
+              NEF_Flags *, FILE *out);
 
 void IP_Fiber_Data(PolyPointList *, PolyPointList *, int nv,
                    Long G[VERT_Nmax][POLY_Dmax][POLY_Dmax], int fd[VERT_Nmax],
@@ -1416,7 +1416,7 @@ void Make_E_Poly(FILE *out, CWS *_W, PolyPointList *_CP, VertexNumList *_CV,
     NF.noconvex = _F->noconvex;
     NF.Test = 0;
     NF.Sort = _F->Sort;
-    part_nef(_P, _V, _E, _PTL, _codim, &NF);
+    part_nef(_P, _V, _E, _PTL, _codim, &NF, out);
     if (_F->y && (_PTL->n != 0) && (_W->nw == 0))
       fprintf(out, "%d %d Vertices of Poly in M-lattice:  ", _DP->n, _DV->nv);
     if (!(_F->y && (_PTL->n == 0))) {

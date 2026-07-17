@@ -826,13 +826,13 @@ void Aux_pNF_from_vNF(PERM *CL, int *ns, int *v, int *d,
 }
 
 int Make_Poly_NF(PolyPointList *_P, VertexNumList *_V, EqList *_F,
-                 Long pNF[POLY_Dmax][VERT_Nmax]) /* 1 if reflexive */
+                 Long pNF[POLY_Dmax][VERT_Nmax], FILE *out) /* 1 if reflexive */
 {
   int d, v, f;
   Long VM[POLY_Dmax][VERT_Nmax];
   auto VPM = std::make_unique<Long[][VERT_Nmax]>(VERT_Nmax);
   int ref = Init_rVM_VPM(_P, _V, _F, &d, &v, &f, VM, VPM.get());
-  Eval_Poly_NF(&d, &v, &f, VM, VPM.get(), pNF, 0, outFILE);
+  Eval_Poly_NF(&d, &v, &f, VM, VPM.get(), pNF, 0, out);
   return ref;
 }
 
@@ -5026,7 +5026,7 @@ void Make_ANF(PolyPointList *P, VertexNumList *V, /* affine normal form */
   /* Print_PPL(P,"AFF");Print_VL(P,V,"AFFvert");Print_EL(E,&P->n,0,"AFFeq");
      Make_VEPM(P,V,E,PM); Print_Matrix(PM, E->ne, V->nv, "AFF-PM", outFILE); */
 
-  Make_Poly_NF(P, V, E, VM);
+  Make_Poly_NF(P, V, E, VM, out);
   if (Check_ANF_Form(VM, d, v, out)) {
     Print_PPL(P, "unexpected in ANF");
     fprintf(stderr, "unexpected ANF");

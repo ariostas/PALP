@@ -386,7 +386,7 @@ void M_TO_MM(MMatrix *_M, MMatrix *_MM, GMatrix *_G, int *_nf) {
 }
 
 int Convex_Check(MMatrix *_M, GMatrix *_G, XMatrix *_X, int S[], FVList *_FVl,
-                 NEF_Flags *_F) {
+                 NEF_Flags *_F, FILE *out) {
   int c_flag = 1, i, j, k, l, d, IP;
 
   if (_F->noconvex)
@@ -424,7 +424,7 @@ int Convex_Check(MMatrix *_M, GMatrix *_G, XMatrix *_X, int S[], FVList *_FVl,
     i++;
   }
   if (c_flag && _F->Test)
-    Print_M(_MM, &_FVl->nf, "M-Matrix:", outFILE);
+    Print_M(_MM, &_FVl->nf, "M-Matrix:", out);
   return c_flag;
 }
 
@@ -757,7 +757,7 @@ void Select_Sv(int S[], V_Flag *_VF, MMatrix *_M, GMatrix *_G, XMatrix *_X,
       fflush(0);
     }
     if (Codim_Check(S, &_M[step.f - 1].codim, &_FVl->Nv))
-      if (Convex_Check(_M, _G, _X, S, _FVl, _F)) {
+      if (Convex_Check(_M, _G, _X, S, _FVl, _F, out)) {
         if (_PTL->n >= Nef_Max) {
           fputs("Error: Recursive_Nef partition list overflow\n", stderr);
           exit(1);
@@ -770,7 +770,7 @@ void Select_Sv(int S[], V_Flag *_VF, MMatrix *_M, GMatrix *_G, XMatrix *_X,
 }
 
 void part_nef(PolyPointList *_P, VertexNumList *_V, EqList *_E,
-              PartList *_OUT_PTL, int *_codim, NEF_Flags *_F) {
+              PartList *_OUT_PTL, int *_codim, NEF_Flags *_F, FILE *out) {
 
   FaceInfo I;
   FVList FVl_temp, FVl;
@@ -801,7 +801,7 @@ void part_nef(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     INCI_To_FVList(&I, _P, &FVl);
   if (_F->Test) {
     Print_VL(_P, _V, "Vertices of P:");
-    Print_FVl(&FVl, "Facets/Vertices:", outFILE);
+    Print_FVl(&FVl, "Facets/Vertices:", out);
   }
   std::vector<XMatrix> _X_vec(FVl.nf);
   _X = _X_vec.data();
@@ -817,11 +817,11 @@ void part_nef(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     GLZ_Make_Trian_NF(_Y[i].X, &_P->n, &FVl.vl[i].nv, _G[i].G);
   }
   Initial_Conditions(_M, _Y, &MR, &step, &FVl, &VF, S, _codim, &_P->n, _PTL);
-  Select_Sv(S, &VF, _M, _G, _X, _Y, &MR, &FVl, step, _PTL, _F, outFILE);
+  Select_Sv(S, &VF, _M, _G, _X, _Y, &MR, &FVl, step, _PTL, _F, out);
   if (_F->Sym) {
     auto _VP = std::make_unique<SYM>();
 
-    Poly_Sym(_P, _V, _E, &_VP->ns, _VP->Vp, outFILE);
+    Poly_Sym(_P, _V, _E, &_VP->ns, _VP->Vp, out);
     Remove_Sym(_VP.get(), _PTL, _OUT_PTL);
   } else
     Copy_PTL(_PTL, _OUT_PTL);

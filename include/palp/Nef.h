@@ -106,7 +106,7 @@ typedef struct {
 } DYN_PPL;
 
 void part_nef(PolyPointList *, VertexNumList *, EqList *, PartList *, int *,
-              NEF_Flags *);
+              NEF_Flags *, FILE *out = outFILE);
 
 void Mink_WPCICY(AmbiPointList *_AP_1, AmbiPointList *_AP_2,
                  AmbiPointList *_AP);

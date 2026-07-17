@@ -154,7 +154,7 @@ void Make_ANF(PolyPointList *P, VertexNumList *V, /* affine normal form */
 void Gen_Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
                          char *polyo, FILE *out = outFILE);
 void Gen_Bin_2_ascii(char *pi, char *dbi, int max, int vf, int vt,
-                     PolyPointList *);
+                     PolyPointList *, FILE *out = outFILE);
 
 /*  ==========          Functions from Subpoly.c                 ========== */
 void DPircheck(CWS *_W, PolyPointList *_P, FILE *out = outFILE);
@@ -182,9 +182,10 @@ int Poly_Min_check(PolyPointList *_P, VertexNumList *_V, EqList *_E);
 void Init_DB(NF_List *_NFL);
 void Check_NF_Order(char *polyi, char *polyo, int cFlag, PolyPointList *P,
                     FILE *out = outFILE);
-void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo);
+void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo, FILE *out = outFILE);
 void Polyi_2_DBo(char *polyi, char *dbo);
-void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo);
+void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo,
+                     FILE *out = outFILE);
 void Bin_2_ascii(char *polyi, char *dbi, int max, int vf, int vt,
                  PolyPointList *P, FILE *out = outFILE);
 int Is_in_DB(int *nv, int *nuc, unsigned char *uc, NF_List *_L);
@@ -206,24 +207,26 @@ void VPHM_Sublat_Polys(char sFlag, char mr, char *dbin, char *polyi,
                        char *polyo, PolyPointList *P, FILE *out = outFILE);
 
 /*  ==========        Functions from Subadd.c                    ========== */
-void Add_Polya_2_Polyi(char *polyi, char *polya, char *polyo);
+void Add_Polya_2_Polyi(char *polyi, char *polya, char *polyo,
+                       FILE *out = outFILE);
 void Init_NF_List(NF_List *);
 void Init_FInfoList(FInfoList *FI);
 void Read_File_2_List(char *polyi, NF_List *_NFL);
-void Write_List_2_File(char *polyo, NF_List *_NFL);
+void Write_List_2_File(char *polyo, NF_List *_NFL, FILE *out = outFILE);
 void Print_Weight_Info(CWS *_W, NF_List *_L, FILE *out = outFILE);
 void fputUI(unsigned int l, FILE *F);
 void UCnf2vNF(int *d, int *v, int *nuc, unsigned char *uc, /* IN */
               Long NF[POLY_Dmax][VERT_Nmax], int *MS);     /* OUT */
 int Add_NF_to_List(PolyPointList *_P, VertexNumList *_V, EqList *_F,
-                   NF_List *_NFL); /* 1 if new */
+                   NF_List *_NFL, FILE *out = outFILE); /* 1 if new */
 int RIGHTminusLEFT(unsigned char *ucL, unsigned char *ucR, int *nuc);
 unsigned int fgetUI(FILE *F);
 void Test_ucNF(int *d, int *tnv, int *tnuc, unsigned char *tuc,
                PolyPointList *P, FILE *out = outFILE);
 int InfoSize(int rd, int lists, FInfoList *FI);
 int Make_Poly_NF(PolyPointList *_P, VertexNumList *_V, EqList *_E,
-                 Long pNF[POLY_Dmax][VERT_Nmax]); /* 1 if reflexive */
+                 Long pNF[POLY_Dmax][VERT_Nmax],
+                 FILE *out); /* 1 if reflexive */
 void ANF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
                 int *NV, int *nUC, unsigned char *UC,          /* OUT */
                 NF_List *StatsL = nullptr); /* optional stats */

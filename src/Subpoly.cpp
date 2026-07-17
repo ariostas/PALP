@@ -977,15 +977,15 @@ void Make_All_Subpolys(PolyPointList *_P, EqList *_E, VertexNumList *_V,
       if (_NFL->of <= -2) { /* flags -o0  (break on reflexive) */
         if (_NFL->rd) {     /*    or -oc  (recover missing)	*/
           if (_NFL->of == -2) {
-            Add_NF_to_List(_P, _V, _E, _NFL);
+            Add_NF_to_List(_P, _V, _E, _NFL, out);
             return;
           } /* flag -o0 */
           else {
-            if (!Add_NF_to_List(_P, _V, _E, _NFL))
+            if (!Add_NF_to_List(_P, _V, _E, _NFL, out))
               return;
           } /* flag -oc */
         }
-      } else if (!Add_NF_to_List(_P, _V, _E, _NFL))
+      } else if (!Add_NF_to_List(_P, _V, _E, _NFL, out))
         return;
     } /* standard */
 
@@ -1068,7 +1068,7 @@ void Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
       puts("IP_Check failed in Ascii_to_Binary!\n");
       exit(1);
     }
-    if (Add_NF_to_List(P, &V, &F, _NFL))
+    if (Add_NF_to_List(P, &V, &F, _NFL, out))
       if (out != stdout) {
         int i, j;
         for (i = 0; i < W->nw; i++) {
@@ -1083,7 +1083,7 @@ void Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
         fflush(0);
       }
   }
-  Write_List_2_File(polyo, _NFL);
+  Write_List_2_File(polyo, _NFL, out);
 }
 
 void Do_the_Classification(CWS *W, PolyPointList *P, /* char *fn, */
@@ -1130,14 +1130,14 @@ void Do_the_Classification(CWS *W, PolyPointList *P, /* char *fn, */
     Print_Weight_Info(W, _NFL, out);
     if ((WRITE_DIM <= P->n) && (MIN_NEW <= _NFL->NP))
       if ((int)difftime(time(NULL), W_SAVE_TIME) > MIN_W_SAVE_TIME) {
-        Write_List_2_File(polyo, _NFL);
+        Write_List_2_File(polyo, _NFL, out);
         rFlag = 1;
         _NFL->SAVE = W_SAVE_TIME = time(NULL);
       }
   }
 
   if (rFlag == 0)
-    Write_List_2_File(polyo, _NFL);
+    Write_List_2_File(polyo, _NFL, out);
   _NFL->TIME = time(NULL);
   fputs(ctime(&_NFL->TIME), stdout);
 }
@@ -1262,9 +1262,9 @@ void Make_All_Sublat(NF_List *_L, int n, int v, subl_int diag[POLY_Dmax],
               exit(1);
             }
           if (*mFlag != 'r')
-            Add_NF_to_List(_P, &V, &F, _L);
+            Add_NF_to_List(_P, &V, &F, _L, out);
           else if (Poly_Max_check(_P, &V, &F))
-            if (Add_NF_to_List(_P, &V, &F, _L)) {
+            if (Add_NF_to_List(_P, &V, &F, _L, out)) {
               Print_PPL(_P, "");
             }
         }

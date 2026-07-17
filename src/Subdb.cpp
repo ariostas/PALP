@@ -421,7 +421,7 @@ int Is_in_DB(int *nv, int *nuc, unsigned char *uc, NF_List *_NFL) {
   return 0;
 }
 
-void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
+void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo, FILE *out) {
   FInfoList FIi, FIa, FIo;
   Along Apos, HIpos, HApos, Inp, tnb = 0, tNF = 0;
   unsigned char ucI[NUC_Nmax], ucA[NUC_Nmax], *ucSL = NULL, *uc;
@@ -892,7 +892,7 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
           tnp/=20; tnp/=Tnb; printf("   [p^2/2m=%ldk]",tnp);
        }
   */
-  Print_Expect(&FIo, outFILE);
+  Print_Expect(&FIo, out);
   puts("");
   if (ferror(FA)) {
     fprintf(stderr, "Error: Add_Aux_to_DB aux-file read error\n");
@@ -1208,7 +1208,7 @@ void Check_NF_Order(char *polyi, char *dbi, int cF, PolyPointList *_P,
     exit(1);
   }
   tSM = tNM = 0; /* if(tln>1)printf("  p^2/2m=%ldkCY",tln); */
-  Print_Expect(&L, outFILE);
+  Print_Expect(&L, out);
 
   printf("\nv:");
   if (*polyi)
@@ -1253,7 +1253,7 @@ void Check_NF_Order(char *polyi, char *dbi, int cF, PolyPointList *_P,
 
             if (cF < 0)
               if ((*uc % 4) % 3)
-                Print_Missing_Mirror(&d, &v, &nu, uc, _P, outFILE);
+                Print_Missing_Mirror(&d, &v, &nu, uc, _P, out);
           }
           nbsum += nu * L.NFnum[v][nu];
         }
@@ -1352,7 +1352,8 @@ make && class.x -pi zzu.2 -ps zzu.1 -po zzu.2n
         class.x -pi zzu.2i -ps zzu.1i -po zzu.0B
  *						      1 + 2 = 1n ^ 2n ^ AD  */
 
-void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
+void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo,
+                     FILE *out) {
   FILE *FI = fopen(polyi, "rb"), *FS, *FO = fopen(polyo, "wb");
   FInfoList FIi, FIs, FIo;
   Along Ipos, Spos = 00, HIpos, HSpos = 00, Opos, HOpos, IslNB, SslNB, tnb = 0;
@@ -2028,10 +2029,10 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
   {	long long tnp=(2*FIo.nNF-FIo.nNM-FIo.nSM)/1000; tnp*=tnp;
      tnp/=(2*tnb); printf("   [p^2/2m=%ldM]",tnp);
   }	*/
-  Print_Expect(&FIo, outFILE);
+  Print_Expect(&FIo, out);
   puts("");
   if (ferror(FI)) {
-    fprintf(stderr, "Error: Subtract_Aux_from_DB input file read error\n");
+    fprintf(stderr, "Error: Reduce_Aux_File input file read error\n");
     exit(1);
   }
   fclose(FI);
@@ -2050,7 +2051,7 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
   }
   fclose(FO);
 }
-void Bin2a(char *polyi, int max, PolyPointList *_P) {
+void Bin2a(char *polyi, int max, PolyPointList *_P, FILE *out) {
   FILE *F = fopen(polyi, "rb");
   FInfoList L;
   UPint list_num, tNF = 0;
@@ -2131,14 +2132,14 @@ void Bin2a(char *polyi, int max, PolyPointList *_P) {
           if (MS != 2) /* if(MS!=2) print NF */
             if (!max || Poly_Max_check(_P, &V, &E)) {
               mc++;
-              Print_NF(outFILE, &d, &v, NF);
+              Print_NF(out, &d, &v, NF);
             }
           if (MS > 1) /* if(MS>1); print Mirror */
             if (!max || Poly_Min_check(_P, &V, &E)) {
               mc++;
               Small_Make_Dual(_P, &V, &E);
               Make_Poly_NF(_P, &V, &E, NF);
-              Print_NF(outFILE, &d, &(V.nv), NF);
+              Print_NF(out, &d, &(V.nv), NF);
             }
         }
     }
@@ -2173,7 +2174,8 @@ void DB_fromVF_toVT(DataBase *DB, int vf, int vt) {
   DB->v = vf;
   DB->nVmax = vt;
 }
-void Bin2aDBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P) {
+void Bin2aDBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P,
+               FILE *out) {
   FILE *F;
   FInfoList L;
   int d, v, nu, i, j, list_num, mc = 0, MS, sl_nNF, sl_SM, sl_NM, sl_NB,
@@ -2256,14 +2258,14 @@ void Bin2aDBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P) {
     if (MS != 2) /* if(MS!=2) print NF */
       if (!max || Poly_Max_check(_P, &V, &E)) {
         mc++;
-        Print_NF(outFILE, &d, &v, NF);
+        Print_NF(out, &d, &v, NF);
       }
     if (MS > 1) /* if(MS>1); print Mirror */
       if (!max || Poly_Min_check(_P, &V, &E)) {
         mc++;
         Small_Make_Dual(_P, &V, &E);
         Make_Poly_NF(_P, &V, &E, NF);
-        Print_NF(outFILE, &d, &(V.nv), NF);
+        Print_NF(out, &d, &(V.nv), NF);
       }
   }
   printf("np=%lld+%dsl  ", 2 * L.nNF - L.nSM - L.nNM,
@@ -2279,9 +2281,9 @@ void Bin2aDBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P) {
 void Bin_2_ascii(char *polyi, char *dbin, int max, int vf, int vt,
                  PolyPointList *P, FILE *out) {
   if (*polyi)
-    Bin2a(polyi, max, P);
+    Bin2a(polyi, max, P, out);
   else if (*dbin)
-    Bin2aDBsl(dbin, max, vf, vt, P);
+    Bin2aDBsl(dbin, max, vf, vt, P, out);
   else
     puts("With -b[2a] you have to specify input via -pi or -di");
 }
@@ -2298,8 +2300,8 @@ constexpr int Hod_Min_max = 251;
 } // namespace
 
 #if (POLY_Dmax < 6)
-void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto,
-                 PolyPointList *_P, FILE *out) {
+void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto, PolyPointList *_P,
+                 FILE *out) {
 
   /* Read the database, write the Hodge numbers */
 
@@ -3101,8 +3103,8 @@ void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P,
                      mp, mv, true_H2, true_H1, 2 * (true_H2 - true_H1));
             Find_Equations(_P, &VNL, &EL);
             Small_Make_Dual(_P, &VNL, &EL);
-            Make_Poly_NF(_P, &VNL, &EL, NF);
-            Print_Matrix(NF, _P->n, VNL.nv, com, outFILE);
+            Make_Poly_NF(_P, &VNL, &EL, NF, out);
+            Print_Matrix(NF, _P->n, VNL.nv, com, out);
           }
         }
         if (ferror(Fh)) {
@@ -3516,7 +3518,8 @@ void PrintVPHMusage(void);
 int Make_Lattice_Basis(int d, int p, Long *P[POLY_Dmax], /* index=det(D) */
                        Long G[][POLY_Dmax],
                        Long *D); /* G x P generates diagonal lattice D */
-void PH_Sublat_Polys(char *dbin, int omitFIP, PolyPointList *_P, char sF) {
+void PH_Sublat_Polys(char *dbin, int omitFIP, PolyPointList *_P, char sF,
+                     FILE *out) {
   EqList E;
   VertexNumList V;
   int x = 0, K, B, I = 1; /* index>I only */
@@ -3603,8 +3606,7 @@ void PH_Sublat_Polys(char *dbin, int omitFIP, PolyPointList *_P, char sF) {
                 "Error: PH_Sublat_Polys cover polytope not reflexive\n");
         exit(1);
       }
-      Aux_Print_CoverPoly(&index, &_P->n, &N, RelPts, G, D, &x, Z, M, r,
-                          outFILE);
+      Aux_Print_CoverPoly(&index, &_P->n, &N, RelPts, G, D, &x, Z, M, r, out);
     } else {
       index = Make_Lattice_Basis(_P->n, N, RelPts, G, D);
       if (1 == index)
@@ -3627,7 +3629,7 @@ void PH_Sublat_Polys(char *dbin, int omitFIP, PolyPointList *_P, char sF) {
         exit(1);
       }
       Print_VL(_P, &V, "");
-      Aux_Print_SLpoly(&index, &_P->n, &N, RelPts, G, D, &x, outFILE);
+      Aux_Print_SLpoly(&index, &_P->n, &N, RelPts, G, D, &x, out);
     }
   }
   if (*dbin)
@@ -3635,7 +3637,7 @@ void PH_Sublat_Polys(char *dbin, int omitFIP, PolyPointList *_P, char sF) {
 }
 /*	Lattice generated by vertices; UT-decomp of diag	*/
 void V_Sublat_Polys(char mr, char *dbin, char *polyi, char *polyo,
-                    PolyPointList *_P) {
+                    PolyPointList *_P, FILE *out) {
   NF_List _L_obj;
   NF_List *_L = &_L_obj;
   int max_order = 1;
@@ -3700,13 +3702,13 @@ void V_Sublat_Polys(char mr, char *dbin, char *polyi, char *polyo,
           U[i][j] /= D[i];
         }
       }
-      Make_All_Sublat(_L, _P->n, V.nv, diag, U, &mr, _P, outFILE);
+      Make_All_Sublat(_L, _P->n, V.nv, diag, U, &mr, _P, out);
     }
   }
   if (*dbin)
     Close_DB(DB);
   printf("max_order=%d\n", max_order);
-  Write_List_2_File(polyo, _L);
+  Write_List_2_File(polyo, _L, out);
   _L->TIME = time(NULL);
   fputs(ctime(&_L->TIME), stdout);
 }
@@ -3715,31 +3717,31 @@ void VPHM_Sublat_Polys(char sFlag, char mr, char *dbin, char *polyi,
   switch (sFlag) { /* if(dbin=0) read from inFILE; */
   case 'p':
   case 'P':
-    PH_Sublat_Polys(dbin, 0, _P, sFlag);
+    PH_Sublat_Polys(dbin, 0, _P, sFlag, out);
     break;
   case 'h':
   case 'H':
-    PH_Sublat_Polys(dbin, 1, _P, sFlag);
+    PH_Sublat_Polys(dbin, 1, _P, sFlag, out);
     break;
   case 'b':
   case 'B':
-    PH_Sublat_Polys(dbin, 2, _P, sFlag);
+    PH_Sublat_Polys(dbin, 2, _P, sFlag, out);
     break;
   case 'q':
   case 'Q':
-    PH_Sublat_Polys(dbin, 3, _P, sFlag);
+    PH_Sublat_Polys(dbin, 3, _P, sFlag, out);
     break;
   case 'v':
   case 'V':
-    V_Sublat_Polys(mr, dbin, polyi, polyo, _P);
+    V_Sublat_Polys(mr, dbin, polyi, polyo, _P, out);
     break;
   case 'm':
   case 'M':
-    Find_Sublat_Polys(mr, dbin, polyi, polyo, _P, outFILE);
+    Find_Sublat_Polys(mr, dbin, polyi, polyo, _P, out);
     break;
   default:
     if (('1' < sFlag) && (sFlag <= '9'))
-      PH_Sublat_Polys(dbin, 3, _P, sFlag);
+      PH_Sublat_Polys(dbin, 3, _P, sFlag, out);
     else {
       puts("-s# requires that # is in {v,p,h,b,m,q}");
       PrintVPHMusage();
@@ -3755,7 +3757,7 @@ void PrintVPHMusage(void) {
   exit(1);
 }
 
-void Bin_2_ANF(char *polyi, int max, PolyPointList *_P) {
+void Bin_2_ANF(char *polyi, int max, PolyPointList *_P, FILE *out) {
   FILE *F = fopen(polyi, "rb");
   FInfoList L;
   UPint list_num, tNF = 0;
@@ -3835,14 +3837,14 @@ void Bin_2_ANF(char *polyi, int max, PolyPointList *_P) {
           if (MS != 2) /* if(MS!=2) print NF */
             if (!max || Poly_Max_check(_P, &V, &E)) {
               mc++;
-              Print_NF(outFILE, &d, &v, NF);
+              Print_NF(out, &d, &v, NF);
             }
           if (MS > 1) /* if(MS>1); print Mirror */
             if (!max || Poly_Min_check(_P, &V, &E)) {
               mc++;
               Small_Make_Dual(_P, &V, &E);
               Make_Poly_NF(_P, &V, &E, NF);
-              Print_NF(outFILE, &d, &(V.nv), NF);
+              Print_NF(out, &d, &(V.nv), NF);
             }
         }
     }
@@ -3857,7 +3859,8 @@ void Bin_2_ANF(char *polyi, int max, PolyPointList *_P) {
   puts("");
 }
 
-void Bin_2_ANF_DBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P) {
+void Bin_2_ANF_DBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P,
+                    FILE *out) {
   FILE *F;
   FInfoList L;
   int d, v, nu, i, j, list_num, mc = 0, MS, sl_nNF, sl_SM, sl_NM, sl_NB,
@@ -3941,14 +3944,14 @@ void Bin_2_ANF_DBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P) {
     if (MS != 2) /* if(MS!=2) print NF */
       if (!max || Poly_Max_check(_P, &V, &E)) {
         mc++;
-        Print_NF(outFILE, &d, &v, NF);
+        Print_NF(out, &d, &v, NF);
       }
     if (MS > 1) /* if(MS>1); print Mirror */
       if (!max || Poly_Min_check(_P, &V, &E)) {
         mc++;
         Small_Make_Dual(_P, &V, &E);
         Make_Poly_NF(_P, &V, &E, NF);
-        Print_NF(outFILE, &d, &(V.nv), NF);
+        Print_NF(out, &d, &(V.nv), NF);
       }
   }
   printf("np=%lld+%dsl  ", 2 * L.nNF - L.nSM - L.nNM,
@@ -3963,11 +3966,11 @@ void Bin_2_ANF_DBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P) {
 }
 
 void Gen_Bin_2_ascii(char *pi, char *dbi, int max, int vf, int vt,
-                     PolyPointList *P) {
+                     PolyPointList *P, FILE *out) {
   if (*pi)
-    Bin_2_ANF(pi, max, P);
+    Bin_2_ANF(pi, max, P, out);
   else if (*dbi)
-    Bin_2_ANF_DBsl(dbi, max, vf, vt, P);
+    Bin_2_ANF_DBsl(dbi, max, vf, vt, P, out);
   else
     puts("With -B[2A] you have to specify input via -pi or -di");
 }

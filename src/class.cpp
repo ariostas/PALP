@@ -423,9 +423,10 @@ int main(int narg, char *fn[]) {
       }
   n--;
 
+  FILE *out;
   if (FilterFlag) {
     inFILE = NULL;
-    outFILE = stdout;
+    out = outFILE = stdout;
   } else {
     if (narg > ++n)
       inFILE = fopen(fn[n], "r");
@@ -436,38 +437,38 @@ int main(int narg, char *fn[]) {
       exit(1);
     }
     if (narg > ++n)
-      outFILE = fopen(fn[n], "w");
+      out = outFILE = fopen(fn[n], "w");
     else
-      outFILE = stdout;
+      out = outFILE = stdout;
   }
 
   if (sFlag)
-    VPHM_Sublat_Polys(sFlag, mFlag, dbin, polyi, polyo, _P);
+    VPHM_Sublat_Polys(sFlag, mFlag, dbin, polyi, polyo, _P, out);
   else if (abFlag == 1)
-    Ascii_to_Binary(&W, _P, dbin, polyi, polyo, outFILE);
+    Ascii_to_Binary(&W, _P, dbin, polyi, polyo, out);
   else if (abFlag == -1)
     Bin_2_ascii(polyi, dbin, (mFlag == 'r'), vf, vt, _P);
   else if (abFlag == 2)
-    Gen_Ascii_to_Binary(&W, _P, dbin, polyi, polyo, outFILE);
+    Gen_Ascii_to_Binary(&W, _P, dbin, polyi, polyo, out);
   else if (abFlag == -2)
-    Gen_Bin_2_ascii(polyi, dbin, (mFlag == 'r'), vf, vt, _P);
+    Gen_Bin_2_ascii(polyi, dbin, (mFlag == 'r'), vf, vt, _P, out);
   else if (cFlag)
     Check_NF_Order(polyi, dbin, cFlag, _P);
   else if (mFlag == 'a')
     while (Read_CWS_PP(&W, _P))
-      Overall_check(&W, _P, outFILE);
+      Overall_check(&W, _P, out);
   else if (mFlag == 'r')
     while (Read_CWS_PP(&W, _P))
-      Max_check(&W, _P, outFILE);
+      Max_check(&W, _P, out);
   else if (mFlag == 'v')
     while (Read_CWS_PP(&W, _P))
-      DPvircheck(&W, _P, outFILE);
+      DPvircheck(&W, _P, out);
   else if (mFlag == 'l')
     while (Read_CWS_PP(&W, _P))
-      DPircheck(&W, _P, outFILE);
+      DPircheck(&W, _P, out);
 #if (POLY_Dmax < 6)
   else if (HFlag == 'c')
-    DB_to_Hodge(dbin, dbout, vf, vt, _P, outFILE);
+    DB_to_Hodge(dbin, dbout, vf, vt, _P, out);
   else if (HFlag == 's')
     Sort_Hodge(dbin, dbout);
   else if (HFlag == 'f')
@@ -475,18 +476,18 @@ int main(int narg, char *fn[]) {
   else if (HFlag == 't')
     Test_Hodge_db(dbin);
   else if (HFlag == 'e')
-    Extract_from_Hodge_db(dbin, x_string, _P, outFILE);
+    Extract_from_Hodge_db(dbin, x_string, _P, out);
 #endif
   else if (*dbin && !*polyo)
-    Add_Polya_2_DBi(dbin, polya, dbout);
+    Add_Polya_2_DBi(dbin, polya, dbout, out);
   else if (*dbout)
     Polyi_2_DBo(polyi, dbout);
   else if (*polya)
-    Add_Polya_2_Polyi(polyi, polya, polyo);
+    Add_Polya_2_Polyi(polyi, polya, polyo, out);
   else if (*polys || *dbsub)
-    Reduce_Aux_File(polyi, polys, dbsub, polyo);
+    Reduce_Aux_File(polyi, polys, dbsub, polyo, out);
   else
     Do_the_Classification(&W, _P, /* fn[0], */ oFlag, rFlag, kFlag, polyi,
-                          polyo, dbin, outFILE);
+                          polyo, dbin, out);
   return 0;
 }

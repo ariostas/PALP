@@ -394,6 +394,10 @@ int Read_CWS_PP(CWS *_CW, PolyPointList *_P) {
   return ReadCwsPp(_CW, _P, 1, 1, outFILE);
 }
 
+int Read_CWS_PP(CWS *_CW, PolyPointList *_P, FILE *out) {
+  return ReadCwsPp(_CW, _P, 1, 1, out);
+}
+
 int Read_PP(PolyPointList *_P) {
   int i, j, FilterFlag = (inFILE == NULL);
   std::array<int, AMBI_Dmax *(AMBI_Dmax + 1)> IN;

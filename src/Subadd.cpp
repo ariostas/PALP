@@ -82,7 +82,7 @@ typedef struct {
 
 void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
                int *NV, int *nUC, unsigned char *UC,          /* OUT */
-               NF_List *StatsL = nullptr); /* optional stats */
+               NF_List *StatsL, FILE *out); /* optional stats */
 void Print_Statistics(NF_List *, FILE *out = outFILE);
 void Init_BaseList(Base_List **BL, int *d); /* malloc + init.; BL=&(list) */
 void Insert_PPent_into_Pent(NF_List *S);
@@ -185,7 +185,7 @@ void Test_SLnbMS(NF_List *S) {
 }
 void Test_ucNF(int *d, int *tnv, int *tnuc, unsigned char *tuc,
                PolyPointList *_P);
-void Test_NF_List(NF_List *S, PolyPointList *_P) {
+void Test_NF_List(NF_List *S, PolyPointList *_P, FILE *out) {
   int i;
   if (S->PPEN)
     Insert_PPent_into_Pent(S);
@@ -193,7 +193,7 @@ void Test_NF_List(NF_List *S, PolyPointList *_P) {
   for (i = 0; i < S->PEN; i++) {
     unsigned char *C = &S->NewNF[S->PE[i].c], *uc = &C[2];
     int nv = C[0], nuc = C[1];
-    Test_ucNF(&S->d, &nv, &nuc, uc, _P, outFILE);
+    Test_ucNF(&S->d, &nv, &nuc, uc, _P, out);
     if (i) {
       unsigned char *oldC = &S->NewNF[S->PE[i - 1].c], *olduc = &C[2];
       unsigned int oldn = S->PE[i - 1].n;
@@ -477,7 +477,7 @@ void fputUI(unsigned int l, FILE *F) /* write unsigned int to bin file */
   buf[0] = l;
   fwrite(buf, sizeof(buf[0]), sizeof(buf), F);
 }
-void TestMSbits(NF_List *S, PolyPointList *_P) {
+void TestMSbits(NF_List *S, PolyPointList *_P, FILE *out) {
   int i, v, nu, tc, peNF = 0, peSM = 0, peNM = 0, slNF = 0, slSM = 0, slNM = 0,
                     axSM = 0;
   UPint axNF = 0, axNM = 0;
@@ -530,7 +530,7 @@ void TestMSbits(NF_List *S, PolyPointList *_P) {
     slNF++;
     {
       int nv = *C, nuc = C[1];
-      Test_ucNF(&S->d, &nv, &nuc, &C[2], _P, outFILE);
+      Test_ucNF(&S->d, &nv, &nuc, &C[2], _P, out);
     }
     if (ms == 0)
       (slSM)++;
@@ -586,7 +586,7 @@ void AuxCalcNumbers(NF_List *S, FInfoList *AI) {
  * uchar  "all hNF honest nf's"
  * uchar  "all slNF sublattice {nv nuc nf[]}'s"
  */
-void Write_Bin_File(FILE *F, NF_List *L) {
+void Write_Bin_File(FILE *F, NF_List *L, FILE *out) {
   unsigned int i, j, fi = 0, li = 0, v, nu, tc = 0, pen = 0, tnb;
   UPint NFnum[VERT_Nmax][NUC_Nmax];
   int n;
@@ -606,7 +606,7 @@ void Write_Bin_File(FILE *F, NF_List *L) {
     printf("  u%lld", L->NC * 100 / (L->Aux.nNF + L->PEN + L->PPEN));
 #endif
   AuxCalcNumbers(L, _AI);
-  Print_Expect(_AI, outFILE);
+  Print_Expect(_AI, out);
   fflush(stdout);
   nVmax = palp::max(L->Aux.nVmax, AI.nVmax);
   NUCmax = palp::max(L->Aux.NUCmax, AI.NUCmax);
@@ -744,7 +744,7 @@ void Write_Bin_File(FILE *F, NF_List *L) {
   }
 }
 
-void Write_Aux_File(NF_List *S) {
+void Write_Aux_File(NF_List *S, FILE *out) {
   time_t Tstart = time(NULL);
   FILE *F;
   int NCalloc =
@@ -770,7 +770,7 @@ void Write_Aux_File(NF_List *S) {
     puts("Cannot open!");
     exit(1);
   }
-  Write_Bin_File(F, S);
+  Write_Bin_File(F, S, out);
   if (ferror(F)) {
     puts("File ERROR!!");
     exit(1);
@@ -785,7 +785,7 @@ void Write_Aux_File(NF_List *S) {
 #endif
 }
 
-void Write_List_2_File(char *fn, NF_List *S) {
+void Write_List_2_File(char *fn, NF_List *S, FILE *out) {
   time_t Tstart = time(NULL);
   FILE *F = fopen(fn, "wb");
   printf("Writing %s: ", fn);
@@ -794,7 +794,7 @@ void Write_List_2_File(char *fn, NF_List *S) {
     puts("Cannot open!");
     exit(1);
   }
-  Write_Bin_File(F, S);
+  Write_Bin_File(F, S, out);
   if (ferror(F)) {
     puts("File ERROR!!");
     exit(1);
@@ -804,15 +804,15 @@ void Write_List_2_File(char *fn, NF_List *S) {
   S->SAVE = time(NULL);
   fflush(stdout);
 }
-void ReAlloc_SortList(NF_List *L) {
-  Write_Aux_File(L);
+void ReAlloc_SortList(NF_List *L, FILE *out) {
+  Write_Aux_File(L, out);
   Read_Aux_File(L); /* Test_SLnbMS(L); TestMSbits(L); */
   L->SAVE = time(NULL);
 }
-void CheckLastSaveTime(NF_List *L, int maxsec) {
+void CheckLastSaveTime(NF_List *L, int maxsec, FILE *out) {
   if ((int)difftime(time(NULL), L->SAVE) > maxsec) {
-    Print_Statistics(L, outFILE);
-    ReAlloc_SortList(L);
+    Print_Statistics(L, out);
+    ReAlloc_SortList(L, out);
   }
 }
 int PEntComp(int *FIpos, int *nv, int *nuc, unsigned char *uc, /* pe/pos - uc */
@@ -1128,7 +1128,7 @@ inline bool MirTest(int A, int B) {
  *			0 = SL or Ex(honest)
  *      Search...List = 1 : 0 : -1  iff  honest : new : sublattice
  */
-int ucNF_Sort_Add(int *NV, int *nUC, unsigned char *UC, NF_List *S) {
+int ucNF_Sort_Add(int *NV, int *nUC, unsigned char *UC, NF_List *S, FILE *out) {
   int InPos = 0, FIpos = 0, PEpos = 0, NEWpos = 0, NewH = 0, NewSL = 0;
 #ifdef INCREMENTAL_WRITE
   if (SearchFIList(NV, nUC, UC, &InPos, &S->In))
@@ -1222,22 +1222,22 @@ int ucNF_Sort_Add(int *NV, int *nUC, unsigned char *UC, NF_List *S) {
 
   if (NewH + NewSL)
     if (S->NP % WATCHREF == 0) {
-      Print_Statistics(S, outFILE);
+      Print_Statistics(S, out);
       if (S->NP - S->savedNP > SAVE_INC - WATCHREF)
       /* printf("NP=%d  PEN=%d  peNM=%d  peSM=%d\n", S->NP,S->PEN,S->peNM,
          S->peSM);fflush(stdout);
          if(2 *(S->PEN+S->PPEN) - S->peNM - S->peSM > SAVE_INC - WATCHREF)*/
       {
-        ReAlloc_SortList(S);
+        ReAlloc_SortList(S, out);
         S->con = 0;
       }
     }
   if (S->NP % 1000 == 0)
-    CheckLastSaveTime(S, (19 * GOOD_SAVE_TIME) / 20);
-  CheckLastSaveTime(S, GOOD_SAVE_TIME);
+    CheckLastSaveTime(S, (19 * GOOD_SAVE_TIME) / 20, out);
+  CheckLastSaveTime(S, GOOD_SAVE_TIME, out);
   return NewH;
 Ret0:
-  CheckLastSaveTime(S, FORCE_SAVE_TIME);
+  CheckLastSaveTime(S, FORCE_SAVE_TIME, out);
   return 0;
 }
 /*      ==============================================================      */
@@ -1318,7 +1318,7 @@ void Print_Expect(FInfoList *L, FILE *out) {
  *   SearchPEntLists:={ new::0, found::1 }
  */
 int Add_NF_to_List(PolyPointList *_P, VertexNumList *_V, EqList *_E,
-                   NF_List *_L) {
+                   NF_List *_L, FILE *out) {
   unsigned char UC[NB_MAX];
   int nUC, NV;
   int NewNF;
@@ -1344,9 +1344,9 @@ int Add_NF_to_List(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   if (_L->SL)
     _L->nSLNF++;
 
-  VF_2_ucNF(_P, _V, _E, &NV, &nUC, UC, _L);
+  VF_2_ucNF(_P, _V, _E, &NV, &nUC, UC, _L, out);
 
-  NewNF = ucNF_Sort_Add(&NV, &nUC, UC, _L); /* 1::new::cont. */
+  NewNF = ucNF_Sort_Add(&NV, &nUC, UC, _L, out); /* 1::new::cont. */
 
 #ifdef INCREMENTAL_TIME
   cpuT = clock(), incT = cpuT - _L->CLOCK;
@@ -1774,7 +1774,7 @@ int RIGHTminusLEFT(unsigned char *ucL, unsigned char *ucR, int *nuc) {
 }
 void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
                int *NV, int *nUC, unsigned char *UC,          /* OUT */
-               NF_List *StatsL) /* optional stats */
+               NF_List *StatsL, FILE *out) /* optional stats */
 {
   Long V_NF[POLY_Dmax][VERT_Nmax], F_NF[POLY_Dmax][VERT_Nmax];
   Long VM[POLY_Dmax][VERT_Nmax], VPM[VERT_Nmax][VERT_Nmax];
@@ -1792,7 +1792,7 @@ void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
     exit(1);
   } /* make ref VPM */
   if (MS < 2) {
-    Eval_Poly_NF(&P->n, &V->nv, &E->ne, VM, VPM, V_NF, 0, outFILE); /* V_NF */
+    Eval_Poly_NF(&P->n, &V->nv, &E->ne, VM, VPM, V_NF, 0, out); /* V_NF */
     vone = BminOff(V_NF, &P->n, &V->nv, &vo, &vbmin);
 #ifdef USE_UNIT_ENCODE
     if (vone)
@@ -1822,7 +1822,7 @@ void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
         for (j = 0; j < E->ne; j++)
           VPM[i][j] = VPM[j][i];
     Eval_Poly_NF(&P->n, &E->ne, &V->nv, VM, VPM, F_NF, 0,
-                 outFILE); /* compute F_NF */
+                 out); /* compute F_NF */
     fone = BminOff(F_NF, &P->n, &E->ne, &fo, &fbmin);
 #ifdef USE_UNIT_ENCODE
     if (fone)
@@ -1974,7 +1974,7 @@ void Test_ucNF(int *d, int *v, int *nuc, unsigned char *uc, PolyPointList *_P,
     fprintf(stderr, "Error: Test_ucNF decompressed polytope not reflexive\n");
     exit(1);
   }
-  VF_2_ucNF(_P, &V, &E, &NV, &NUC, UC, nullptr);
+  VF_2_ucNF(_P, &V, &E, &NV, &NUC, UC, nullptr, out);
   if (*v != NV) {
     fprintf(stderr, "Error: Test_ucNF vertex count mismatch %d != %d\n", *v,
             NV);
@@ -2088,7 +2088,7 @@ void AuxPut_hNF(FILE *F, int *v, int *nu, unsigned char *Huc, FInfoList *Io,
 }
 /*	Alloc & read SL; go thru pi / pa; write SL + statistics
  */
-void Add_Polya_2_Polyi(char *polyi, char *polya, char *polyo) {
+void Add_Polya_2_Polyi(char *polyi, char *polya, char *polyo, FILE *out) {
   FILE *FI = fopen(polyi, "rb"), *FA = fopen(polya, "rb"), *FO;
   FInfoList FIi, FIa, FIo;
   Along Ipos, Apos, HIpos, HApos;
@@ -2471,7 +2471,7 @@ void Add_Polya_2_Polyi(char *polyi, char *polya, char *polyo) {
   {	long long tnp=(2*FIo.nNF-FIo.nNM-FIo.nSM)/1000; tnp*=tnp;
      tnp/=(2*tnb); printf("   [p^2/2m=%ldM]",tnp);
   }*/
-  Print_Expect(&FIo, outFILE);
+  Print_Expect(&FIo, out);
   puts("");
   if (ferror(FI)) {
     fputs("Error: Add_Polya_2_Polyi input file read error\n", stderr);
@@ -2525,11 +2525,11 @@ void UCnf_2_ANF(int *d, int *v, int *nuc, unsigned char *uc, /* IN */
 }
 void ANF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
                 int *NV, int *nUC, unsigned char *UC,          /* OUT */
-                NF_List *StatsL) /* optional stats */
+                NF_List *StatsL, FILE *out) /* optional stats */
 {
   int vb, vo, vnuc, vbmin, vone = 0, MSone;
   Long V_NF[POLY_Dmax][VERT_Nmax];
-  Make_ANF(P, V, E, V_NF, outFILE); /* Affine V_NF */
+  Make_ANF(P, V, E, V_NF, out); /* Affine V_NF */
   vone = BminOff(V_NF, &P->n, &V->nv, &vo, &vbmin);
 #ifdef USE_UNIT_ENCODE
   if (vone)
@@ -2601,7 +2601,7 @@ void ANF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
 }
 
 int Add_ANF_to_List(PolyPointList *_P, VertexNumList *_V, EqList *_E,
-                    NF_List *_L) {
+                    NF_List *_L, FILE *out) {
   unsigned char UC[NB_MAX];
   int nUC, NV, NewNF;
 #ifdef INCREMENTAL_TIME
@@ -2626,9 +2626,9 @@ int Add_ANF_to_List(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   if (_L->SL)
     _L->nSLNF++;
 
-  ANF_2_ucNF(_P, _V, _E, &NV, &nUC, UC, _L);
+  ANF_2_ucNF(_P, _V, _E, &NV, &nUC, UC, _L, out);
 
-  NewNF = ucNF_Sort_Add(&NV, &nUC, UC, _L); /* 1::new::cont. */
+  NewNF = ucNF_Sort_Add(&NV, &nUC, UC, _L, out); /* 1::new::cont. */
 
 #ifdef INCREMENTAL_TIME
   cpuT = clock(), incT = cpuT - _L->CLOCK;
@@ -2674,8 +2674,8 @@ void Gen_Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
     }
 
     Find_Equations(P, &V, &F);
-    if (Add_ANF_to_List(P, &V, &F, _NFL))
-      if (outFILE != stdout) {
+    if (Add_ANF_to_List(P, &V, &F, _NFL, out))
+      if (out != stdout) {
         int i, j;
         for (i = 0; i < W->nw; i++) {
           fprintf(out, "%ld ", W->d[i]);
@@ -2689,6 +2689,6 @@ void Gen_Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
         fflush(0);
       }
   }
-  Write_List_2_File(polyo, _NFL);
+  Write_List_2_File(polyo, _NFL, out);
   free(_NFL);
 }

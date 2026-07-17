@@ -238,7 +238,7 @@ statistics on large lists of weight systems, cf. classification of 4fold weights
 
 /*  ==========         I/O functions (from Coord.c)		==========  */
 
-int Read_CWS_PP(CWS *C, PolyPointList *P);
+int Read_CWS_PP(CWS *C, PolyPointList *P, FILE *out = outFILE);
 /*
 Reads either a CWS or a PolyPointList.
 If *C is read, the PolyPointList *P determined by *C is calculated, otherwise
@@ -710,7 +710,7 @@ void QuotZ_2_SublatG(Long Z[][VERT_Nmax], int *zm, Long *M, int *d,
 int Improve_Coords(PolyPointList *_P, VertexNumList *_V);
 Long V_to_G_GI(Long *V, int d, Long G[][POLY_Dmax], Long GI[][POLY_Dmax]);
 int Make_Poly_NF(PolyPointList *_P, VertexNumList *_V, EqList *_E,
-                 Long pNF[POLY_Dmax][VERT_Nmax]);
+                 Long pNF[POLY_Dmax][VERT_Nmax], FILE *out = outFILE);
 int Init_rVM_VPM(PolyPointList *P, VertexNumList *_V, EqList *_F, int *d,
                  int *v, int *f, Long VM[POLY_Dmax][VERT_Nmax],
                  Long VPM[VERT_Nmax][VERT_Nmax]);

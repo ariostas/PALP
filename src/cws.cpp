@@ -92,17 +92,17 @@ int READ_CWS_PP(CWS *_CW, PolyPointList *_P, FILE *INFILE) {
   return Read_CWS_PP(_CW, _P);
 }
 
-void Print_CWS(CWS *_W, FILE *out = outFILE);
-void Conv(int narg, char *fn[], FILE *out = outFILE);
-void SimplexPointCount(int narg, char *fn[], FILE *out = outFILE);
-void Init_IP_Weights(int narg, char *fn[], FILE *out = outFILE);
-void Init_moon_Weights(int narg, char *fn[], FILE *out = outFILE);
-void Init_IP_CWS(int narg, char *fn[], FILE *out = outFILE);
-void IP_Poly_Data(int narg, char *fn[], FILE *out = outFILE);
+void Print_CWS(CWS *_W, FILE *out = stdout);
+void Conv(int narg, char *fn[], FILE *out = stdout);
+void SimplexPointCount(int narg, char *fn[], FILE *out = stdout);
+void Init_IP_Weights(int narg, char *fn[], FILE *out = stdout);
+void Init_moon_Weights(int narg, char *fn[], FILE *out = stdout);
+void Init_IP_CWS(int narg, char *fn[], FILE *out = stdout);
+void IP_Poly_Data(int narg, char *fn[], FILE *out = stdout);
 void Make_CWS_Points(CWS *, PolyPointList *, FILE *out);
-void Npoly2cws(int narg, char *fn[], FILE *out = outFILE);
-void RgcWeights(int narg, char *fn[], FILE *out = outFILE);
-void AddHalf(FILE *out = outFILE);
+void Npoly2cws(int narg, char *fn[], FILE *out = stdout);
+void RgcWeights(int narg, char *fn[], FILE *out = stdout);
+void AddHalf(FILE *out = stdout);
 void PrintCWSextUsage(char *c) {
   printf("This is `%s': -x gives undocumented extensions:\n", c);
   puts("              -ip    printf PolyPointList");
@@ -114,8 +114,9 @@ void PrintCWSextUsage(char *c) {
 }
 
 int main(int narg, char *fn[]) {
+  FILE *out;
   inFILE = stdin;
-  outFILE = stdout;
+  out = stdout;
   if (narg == 1) {
     printf("\nFor help type `%s -h'\n\n", fn[0]);
     exit(1);
@@ -123,27 +124,27 @@ int main(int narg, char *fn[]) {
   if ((fn[1][0] != '-') || (fn[1][1] == 'h'))
     PrintCWSUsage(fn[0]);
   else if (fn[1][1] == 'w')
-    Init_IP_Weights(narg, fn, outFILE);
+    Init_IP_Weights(narg, fn, out);
   else if (fn[1][1] == 'm')
-    Init_moon_Weights(narg, fn, outFILE);
+    Init_moon_Weights(narg, fn, out);
   else if (fn[1][1] == 'c')
-    Init_IP_CWS(narg, fn, outFILE);
+    Init_IP_CWS(narg, fn, out);
   else if (fn[1][1] == 'i')
-    IP_Poly_Data(narg, fn, outFILE);
+    IP_Poly_Data(narg, fn, out);
   else if (fn[1][1] == 'N')
-    Npoly2cws(narg, fn, outFILE);
+    Npoly2cws(narg, fn, out);
   else if (fn[1][1] == 'p')
-    Conv(narg, fn, outFILE);
+    Conv(narg, fn, out);
   else if (fn[1][1] == 'x')
     PrintCWSextUsage(fn[0]);
   else if (fn[1][1] == 'S')
-    SimplexPointCount(narg, fn, outFILE);
+    SimplexPointCount(narg, fn, out);
   else if (fn[1][1] == 'L')
-    SimplexPointCount(narg, fn, outFILE);
+    SimplexPointCount(narg, fn, out);
   else if (fn[1][1] == 'd')
-    RgcWeights(narg, fn, outFILE);
+    RgcWeights(narg, fn, out);
   else if (fn[1][1] == '2')
-    AddHalf(outFILE);
+    AddHalf(out);
   else
     printf("Unknown option '-%c'; use -h for help\n", fn[1][1]);
   return 0;
@@ -398,14 +399,14 @@ void Cancel(Equation *q, int d) {
   }
 }
 
-int ComputeAndAddAverageWeight(Equation *q, int n, RgcClassData *X) {
+int ComputeAndAddAverageWeight(Equation *q, int n, RgcClassData *X, FILE *out) {
   int i, j;
   if (X->q[n].ne < X->d - n)
     return 0;
   q->c = -1;
   for (i = 0; i < X->q[n].ne; i++) {
     if (X->q[n].e[i].c >= 0) {
-      PrintQ(n, X, outFILE);
+      PrintQ(n, X, out);
       exit(1);
     }
     q->c = -Flcm(-q->c, -X->q[n].e[i].c);
@@ -459,7 +460,7 @@ void ComputeAndAddLastQ(RgcClassData *X) {
   RgcAddweight(q, X);
 }
 
-void RecConstructRgcWeights(int n, RgcClassData *X) {
+void RecConstructRgcWeights(int n, RgcClassData *X, FILE *out) {
   /* we have q[n-1], x[n] */
   int k, l;
   Equation q;
@@ -471,7 +472,7 @@ void RecConstructRgcWeights(int n, RgcClassData *X) {
     return;
   else
     ComputeQ(n, X);
-  if (!ComputeAndAddAverageWeight(&q, n, X))
+  if (!ComputeAndAddAverageWeight(&q, n, X, out))
     return;
   if (n >= X->d - 1)
     return;
@@ -497,7 +498,7 @@ void RecConstructRgcWeights(int n, RgcClassData *X) {
       }
       ComputeAndAddLastQ(X);
     } else
-      RecConstructRgcWeights(n + 1, X);
+      RecConstructRgcWeights(n + 1, X, out);
     for (k = X->d - 1; (k >= 0 ? (yq[k] + q.a[k] >= -q.c) : 0); k--)
       y[k] = 0;
   }
@@ -584,12 +585,12 @@ void RgcWeights(int narg, char *fn[], FILE *out) {
   X->winum = 0;
   X->candnum = 0;
   X->allow11 = 0;
-  RecConstructRgcWeights(0, X.get());
+  RecConstructRgcWeights(0, X.get(), out);
   if (X->wnum <= WDIM) {
     for (i = 0; i < X->wnum; i++) {
       j = WsIpCheck(&X->wli[i], d);
       if (j) {
-        PrintEquation(&X->wli[i], X->d, outFILE);
+        PrintEquation(&X->wli[i], X->d, out);
         printf("  np=%d\n", j);
         X->winum++;
       /*else PrintEquation(&X->wli[i], X->d, "n");*/ }
@@ -634,9 +635,9 @@ void AddHalf(FILE *out) {
 }
 
 void Make_IP_Weights(int d, int Dmin, int Dmax, int rFlag, int tFlag,
-                     FILE *out = outFILE);
-void MakeMoonWeights(int d, int Dmin, int Dmax, FILE *out = outFILE);
-void Make_34_Weights(int d, int tFlag, FILE *out = outFILE);
+                     FILE *out = stdout);
+void MakeMoonWeights(int d, int Dmin, int Dmax, FILE *out = stdout);
+void Make_34_Weights(int d, int tFlag, FILE *out = stdout);
 void Init_IP_Weights(int narg, char *fn[], FILE *out) {
   int n = 1, d, L = 0, H = 0, rf = 0, tf = 0;
   char *c = &fn[1][2];
@@ -765,7 +766,6 @@ void Npoly2cws(int narg, char *fn[], FILE *out) {
   EqList E;
   VertexNumList V;
   Long *X[VERT_Nmax];
-  FILE *OF;
   auto P = std::make_unique<PolyPointList>();
   if (strcmp(fn[1], "-N") != 0) {
     fprintf(stderr, "Error: Npoly2cws first argument must be -N, got %s\n",
@@ -788,8 +788,8 @@ void Npoly2cws(int narg, char *fn[], FILE *out) {
         exit(1);
       }
       if (narg > 3) {
-        outFILE = fopen(fn[3], "w");
-        if (outFILE == NULL) {
+        out = fopen(fn[3], "w");
+        if (out == NULL) {
           fprintf(stderr, "Error: Npoly2cws cannot open output file %s\n",
                   fn[3]);
           exit(1);
@@ -797,8 +797,7 @@ void Npoly2cws(int narg, char *fn[], FILE *out) {
       }
     }
   }
-  OF = outFILE;
-  while (Read_CWS_PP(&W, P.get())) {
+  while (Read_CWS_PP(&W, P.get(), out)) {
     if (W.N)
       Die("Only PPL-input in Npoly2cws!");
     if (!IP_Check(P.get(), &V, &E))
@@ -810,15 +809,13 @@ void Npoly2cws(int narg, char *fn[], FILE *out) {
       Print_CWS(&W, out);
       fprintf(out, "\n");
     } else {
-      outFILE = stderr;
-      Print_PPL(P.get(), "CWS not found");
-      outFILE = OF;
+      Print_PPL(P.get(), "CWS not found", stderr);
     }
   }
 }
 
-void Make_IP_CWS(int narg, char *fn[]);
-void Make_34_CWS(int d, FILE *out = outFILE);
+void Make_IP_CWS(int narg, char *fn[], FILE *out);
+void Make_34_CWS(int d, FILE *out = stdout);
 void Init_IP_CWS(int narg, char *fn[], FILE *out) {
   int d, n = 1, nop = 0;
   char *c = &fn[1][2];
@@ -837,9 +834,9 @@ void Init_IP_CWS(int narg, char *fn[], FILE *out) {
     if ((fn[n][0] == '-') && (fn[n][1] == 'n'))
       nop = 1;
   if (nop)
-    Make_IP_CWS(narg, fn);
+    Make_IP_CWS(narg, fn, out);
   else if (d <= 4)
-    Make_34_CWS(d, outFILE);
+    Make_34_CWS(d, out);
   else
     Die("`-c#' has to be followed by `-n' and the weight file names for dim>4");
 }
@@ -1224,8 +1221,9 @@ int IfIpWWrite(Weight *W, PolyPointList *P, int *rFlag, int *tFlag, FILE *out) {
       return 1;
     }
     if (*rFlag && r) {
-      Write_Weight(W, outFILE);
-      fflush(stdout);
+      WRITE_Weight(W, out);
+      fprintf(out, "\n");
+      fflush(out);
       return 1;
     }
     if (!*tFlag && !*rFlag) {
@@ -1606,12 +1604,12 @@ const wei4 W4[95] = {
     {54, {4, 5, 18, 27}}, {66, {5, 6, 22, 33}}};
 
 void MakeSelections(FILE *, FILE *, int);
-void Make2CWS(FILE *, FILE *, int, int);
+void Make2CWS(FILE *AUXFILE1, FILE *AUXFILE2, int u, int ef, FILE *out);
 void RW_TO_CWS(CWS *, Weight *, int, int, int, int);
 void W_TO_CWS(CWS *, Weight *, int, int, int, int);
-void PRINT_CWS(CWS *, FILE *out = outFILE);
-void Make_111_CWS(FILE **, int *);
-void Make_nno_CWS(FILE **, int, int);
+void PRINT_CWS(CWS *, FILE *out = stdout);
+void Make_111_CWS(FILE *AUXFILE[], int ef[], FILE *out);
+void Make_nno_CWS(FILE *AUXFILE[], int u, int ef, FILE *out);
 
 void STtmp(FILE *w2FILE, FILE *w3FILE, FILE *w4FILE) {
   int i, j;
@@ -1639,7 +1637,7 @@ void STtmp(FILE *w2FILE, FILE *w3FILE, FILE *w4FILE) {
 
 void mkold2(char *outfile, FILE *INFILE1, FILE *INFILE2, int u, int ef) {
 
-  FILE *AUXFILE1, *AUXFILE2;
+  FILE *AUXFILE1, *AUXFILE2, *out;
 
   if ((AUXFILE1 = tmpfile()) == NULL)
     Die("Unable to open tmpfile for read/write");
@@ -1649,22 +1647,25 @@ void mkold2(char *outfile, FILE *INFILE1, FILE *INFILE2, int u, int ef) {
   MakeSelections(INFILE1, AUXFILE1, u);
   MakeSelections(INFILE2, AUXFILE2, u);
 
-  if (strcmp(outfile, ""))
-    if ((outFILE = fopen(outfile, "w")) == NULL) {
+  if (strcmp(outfile, "")) {
+    if ((out = fopen(outfile, "w")) == NULL) {
       printf("\nUnable to open file %s for write\n", outfile);
       exit(1);
     }
+  } else
+    out = stdout;
 
-  Make2CWS(AUXFILE1, AUXFILE2, u, ef);
+  Make2CWS(AUXFILE1, AUXFILE2, u, ef, out);
   fclose(AUXFILE1);
   fclose(AUXFILE2);
   if (strcmp(outfile, ""))
-    fclose(outFILE);
+    fclose(out);
 }
 
 void mk2xxx(char *outfile, int n) {
   int i, j, d = 0;
   CWS CW;
+  FILE *out;
   CW.nz = 0;
 
   CW.N = 2 * n;
@@ -1679,19 +1680,21 @@ void mk2xxx(char *outfile, int n) {
     }
     d = d + 2;
   }
-  if (strcmp(outfile, ""))
-    if ((outFILE = fopen(outfile, "w")) == NULL) {
+  if (strcmp(outfile, "")) {
+    if ((out = fopen(outfile, "w")) == NULL) {
       printf("\nUnable to open file %s for write\n", outfile);
       exit(1);
     }
-  PRINT_CWS(&CW, outFILE);
+  } else
+    out = stdout;
+  PRINT_CWS(&CW, out);
   if (strcmp(outfile, ""))
-    fclose(outFILE);
+    fclose(out);
 }
 
 void mk3u3u3(char *outfile, FILE *INFILE) {
 
-  FILE *AUXFILE[3] = {NULL};
+  FILE *AUXFILE[3] = {NULL}, *out;
   int i, u = 1, eq[2];
 
   for (i = 0; i < 3; i++) {
@@ -1699,23 +1702,25 @@ void mk3u3u3(char *outfile, FILE *INFILE) {
       Die("Unable to open tmpfile for read/write");
     MakeSelections(INFILE, AUXFILE[i], u);
   }
-  if (strcmp(outfile, ""))
-    if ((outFILE = fopen(outfile, "w")) == NULL) {
+  if (strcmp(outfile, "")) {
+    if ((out = fopen(outfile, "w")) == NULL) {
       printf("\nUnable to open file %s for write\n", outfile);
       exit(1);
     }
+  } else
+    out = stdout;
 
   eq[0] = eq[1] = 1;
-  Make_111_CWS(AUXFILE, eq);
+  Make_111_CWS(AUXFILE, eq, out);
   for (i = 0; i < 3; i++)
     fclose(AUXFILE[i]);
   if (strcmp(outfile, ""))
-    fclose(outFILE);
+    fclose(out);
 }
 
 void mkold_nno(char *outfile, FILE *INFILE1, FILE *INFILE2, FILE *INFILE3,
                int u, int eq) {
-  FILE *AUXFILE[3];
+  FILE *AUXFILE[3], *out;
 
   if ((AUXFILE[0] = tmpfile()) == NULL)
     Die("Unable to open tmpfile for read/write");
@@ -1726,17 +1731,19 @@ void mkold_nno(char *outfile, FILE *INFILE1, FILE *INFILE2, FILE *INFILE3,
   MakeSelections(INFILE2, AUXFILE[1], u);
 
   AUXFILE[2] = INFILE3;
-  if (strcmp(outfile, ""))
-    if ((outFILE = fopen(outfile, "w")) == NULL) {
+  if (strcmp(outfile, "")) {
+    if ((out = fopen(outfile, "w")) == NULL) {
       printf("\nUnable to open file %s for write\n", outfile);
       exit(1);
     }
+  } else
+    out = stdout;
 
-  Make_nno_CWS(AUXFILE, u, eq);
+  Make_nno_CWS(AUXFILE, u, eq, out);
   fclose(AUXFILE[0]);
   fclose(AUXFILE[1]);
   if (strcmp(outfile, ""))
-    fclose(outFILE);
+    fclose(out);
 }
 
 void Make_34_CWS(int d, FILE *out) {
@@ -1813,7 +1820,7 @@ void Print_CWS(CWS *_W, FILE *out) {
     if (i + 1 < _W->nw)
       fprintf(out, " ");
   }
-  Print_CWS_Zinfo(_W, outFILE);
+  Print_CWS_Zinfo(_W, out);
 }
 
 void print_W(Weight *_s, Weight *_W, FILE *auxFILE) {
@@ -2015,7 +2022,7 @@ int Wcomp(Weight *_W1, Weight *_W2) {
   return 0;
 }
 
-void Make_nno_CWS(FILE *AUXFILE[], int u, int ef) {
+void Make_nno_CWS(FILE *AUXFILE[], int u, int ef, FILE *out) {
   int n = 0, l[2];
   Weight W[3];
   CWS CW;
@@ -2032,7 +2039,7 @@ void Make_nno_CWS(FILE *AUXFILE[], int u, int ef) {
           RW_TO_CWS(&CW, &W[0], n, (W[1].N + W[2].N - u), n, n);
           W_TO_CWS(&CW, &W[1], (W[0].N - u), W[2].N, n, n);
           W_TO_CWS(&CW, &W[2], (W[0].N + W[1].N - u), n, n, n);
-          PRINT_CWS(&CW, outFILE);
+          PRINT_CWS(&CW, out);
           if (u == 2)
             if ((W[0].w[0] != W[0].w[1]) && (W[1].w[0] != W[1].w[1])) {
               SWAP(&W[1].w[0], &W[1].w[1]);
@@ -2040,7 +2047,7 @@ void Make_nno_CWS(FILE *AUXFILE[], int u, int ef) {
               RW_TO_CWS(&CW, &W[0], n, (W[1].N + W[2].N - u), n, n);
               W_TO_CWS(&CW, &W[1], (W[0].N - u), W[2].N, n, n);
               W_TO_CWS(&CW, &W[2], (W[0].N + W[1].N), n, n, n);
-              PRINT_CWS(&CW, outFILE);
+              PRINT_CWS(&CW, out);
             }
         }
       }
@@ -2051,7 +2058,7 @@ void Make_nno_CWS(FILE *AUXFILE[], int u, int ef) {
   rewind(AUXFILE[0]);
 }
 
-void Make_111_CWS(FILE *AUXFILE[], int ef[]) {
+void Make_111_CWS(FILE *AUXFILE[], int ef[], FILE *out) {
   int u = 1, n = 0, l[3];
   Weight W[3];
   CWS CW;
@@ -2070,7 +2077,7 @@ void Make_111_CWS(FILE *AUXFILE[], int ef[]) {
           RW_TO_CWS(&CW, &W[0], n, (W[1].N + W[2].N - 2 * u), n, n);
           W_TO_CWS(&CW, &W[1], (W[0].N - u), (W[2].N - u), n, n);
           W_TO_CWS(&CW, &W[2], (W[0].N - u), n, (W[1].N - u), u);
-          PRINT_CWS(&CW, outFILE);
+          PRINT_CWS(&CW, out);
         }
       }
       rewind(AUXFILE[2]);
@@ -2080,7 +2087,7 @@ void Make_111_CWS(FILE *AUXFILE[], int ef[]) {
   rewind(AUXFILE[0]);
 }
 
-void Make_222_CWS(FILE *AUXFILE[], int ef[]) {
+void Make_222_CWS(FILE *AUXFILE[], int ef[], FILE *out) {
   int u = 2, n = 0, l[3];
   Weight W[3];
   CWS CW;
@@ -2099,7 +2106,7 @@ void Make_222_CWS(FILE *AUXFILE[], int ef[]) {
           RW_TO_CWS(&CW, &W[0], n, (W[1].N + W[2].N - 2 * u), n, n);
           W_TO_CWS(&CW, &W[1], (W[0].N - u), (W[2].N - u), n, n);
           W_TO_CWS(&CW, &W[2], (W[0].N - u), n, (W[1].N - u), u);
-          PRINT_CWS(&CW, outFILE);
+          PRINT_CWS(&CW, out);
           if (W[0].w[0] == W[0].w[1]) {
             if ((W[1].w[0] != W[1].w[1]) && (W[2].w[0] != W[2].w[1])) {
               SWAP(&W[1].w[0], &W[1].w[1]);
@@ -2107,7 +2114,7 @@ void Make_222_CWS(FILE *AUXFILE[], int ef[]) {
               RW_TO_CWS(&CW, &W[0], n, (W[1].N + W[2].N - 2 * u), n, n);
               W_TO_CWS(&CW, &W[1], (W[0].N - u), (W[2].N - u), n, n);
               W_TO_CWS(&CW, &W[2], (W[0].N - u), n, (W[1].N - u), u);
-              PRINT_CWS(&CW, outFILE);
+              PRINT_CWS(&CW, out);
             }
           } else {
             if ((W[1].w[0] != W[1].w[1]) || (W[2].w[0] != W[2].w[1])) {
@@ -2116,7 +2123,7 @@ void Make_222_CWS(FILE *AUXFILE[], int ef[]) {
               RW_TO_CWS(&CW, &W[0], n, (W[1].N + W[2].N - 2 * u), n, n);
               W_TO_CWS(&CW, &W[1], (W[0].N - u), (W[2].N - u), n, n);
               W_TO_CWS(&CW, &W[2], (W[0].N - u), n, (W[1].N - u), u);
-              PRINT_CWS(&CW, outFILE);
+              PRINT_CWS(&CW, out);
             }
             if ((W[1].w[0] != W[1].w[1]) && (W[2].w[0] != W[2].w[1])) {
               SWAP(&W[1].w[0], &W[1].w[1]);
@@ -2124,7 +2131,7 @@ void Make_222_CWS(FILE *AUXFILE[], int ef[]) {
               RW_TO_CWS(&CW, &W[0], n, (W[1].N + W[2].N - 2 * u), n, n);
               W_TO_CWS(&CW, &W[1], (W[0].N - u), (W[2].N - u), n, n);
               W_TO_CWS(&CW, &W[2], (W[0].N - u), n, (W[1].N - u), u);
-              PRINT_CWS(&CW, outFILE);
+              PRINT_CWS(&CW, out);
             }
           }
         }
@@ -2136,7 +2143,7 @@ void Make_222_CWS(FILE *AUXFILE[], int ef[]) {
   rewind(AUXFILE[0]);
 }
 
-void Make_221_CWS(FILE *AUXFILE[], int ef) {
+void Make_221_CWS(FILE *AUXFILE[], int ef, FILE *out) {
   int n = 0, U = 2, u = 1, i = 0, l[2];
   Weight W[3];
   CWS CW;
@@ -2154,14 +2161,14 @@ void Make_221_CWS(FILE *AUXFILE[], int ef) {
           RW_TO_CWS(&CW, &W[0], n, (W[1].N + W[2].N - U - u), n, n);
           W_TO_CWS(&CW, &W[1], (W[0].N - U), (W[2].N - u), n, n);
           W_TO_CWS(&CW, &W[2], (W[0].N - U + i), n, (W[1].N - U + 1 - i), u);
-          PRINT_CWS(&CW, outFILE);
+          PRINT_CWS(&CW, out);
           if ((W[0].w[0] != W[0].w[1]) && (W[1].w[0] != W[1].w[1])) {
             SWAP(&W[1].w[0], &W[1].w[1]);
             CW.nw = 0;
             RW_TO_CWS(&CW, &W[0], n, (W[1].N + W[2].N - U - u), n, n);
             W_TO_CWS(&CW, &W[1], (W[0].N - U), (W[2].N - u), n, n);
             W_TO_CWS(&CW, &W[2], (W[0].N - U + i), n, (W[1].N - U + 1 - i), u);
-            PRINT_CWS(&CW, outFILE);
+            PRINT_CWS(&CW, out);
           }
           if ((W[0].w[0] != W[0].w[1]) || (W[1].w[0] != W[1].w[1])) {
             i = 1;
@@ -2169,7 +2176,7 @@ void Make_221_CWS(FILE *AUXFILE[], int ef) {
             RW_TO_CWS(&CW, &W[0], n, (W[1].N + W[2].N - U - u), n, n);
             W_TO_CWS(&CW, &W[1], (W[0].N - U), (W[2].N - u), n, n);
             W_TO_CWS(&CW, &W[2], (W[0].N - U + i), n, (W[1].N - U + 1 - i), u);
-            PRINT_CWS(&CW, outFILE);
+            PRINT_CWS(&CW, out);
             if ((W[0].w[0] != W[0].w[1]) && (W[1].w[0] != W[1].w[1])) {
               SWAP(&W[1].w[0], &W[1].w[1]);
               CW.nw = 0;
@@ -2177,7 +2184,7 @@ void Make_221_CWS(FILE *AUXFILE[], int ef) {
               W_TO_CWS(&CW, &W[1], (W[0].N - U), (W[2].N - u), n, n);
               W_TO_CWS(&CW, &W[2], (W[0].N - U + i), n, (W[1].N - U + 1 - i),
                        u);
-              PRINT_CWS(&CW, outFILE);
+              PRINT_CWS(&CW, out);
             }
           }
         }
@@ -2189,7 +2196,7 @@ void Make_221_CWS(FILE *AUXFILE[], int ef) {
   rewind(AUXFILE[0]);
 }
 
-void Make_211_CWS(FILE *AUXFILE[], int ef) {
+void Make_211_CWS(FILE *AUXFILE[], int ef, FILE *out) {
   int u = 1, n = 0, l[3];
   Weight W[3];
   CWS CW;
@@ -2206,14 +2213,14 @@ void Make_211_CWS(FILE *AUXFILE[], int ef) {
           RW_TO_CWS(&CW, &W[0], n, (W[1].N + W[2].N - 2 * u), n, n);
           W_TO_CWS(&CW, &W[1], (W[0].N - u), (W[2].N - u), n, n);
           W_TO_CWS(&CW, &W[2], (W[0].N - 2 * u), n, W[1].N, u);
-          PRINT_CWS(&CW, outFILE);
+          PRINT_CWS(&CW, out);
           if ((W[0].w[0] != W[0].w[1]) && (W[1].w[0] != W[2].w[0])) {
             SWAP(&W[0].w[0], &W[0].w[1]);
             CW.nw = 0;
             RW_TO_CWS(&CW, &W[0], n, (W[1].N + W[2].N - 2 * u), n, n);
             W_TO_CWS(&CW, &W[1], (W[0].N - u), (W[2].N - u), n, n);
             W_TO_CWS(&CW, &W[2], (W[0].N - 2 * u), n, W[1].N, u);
-            PRINT_CWS(&CW, outFILE);
+            PRINT_CWS(&CW, out);
           }
         }
       }
@@ -2224,7 +2231,7 @@ void Make_211_CWS(FILE *AUXFILE[], int ef) {
   rewind(AUXFILE[0]);
 }
 
-void Make2CWS(FILE *AUXFILE1, FILE *AUXFILE2, int u, int ef) {
+void Make2CWS(FILE *AUXFILE1, FILE *AUXFILE2, int u, int ef, FILE *out) {
 
   Weight W1, W2;
   int n = 0, l[2];
@@ -2242,14 +2249,14 @@ void Make2CWS(FILE *AUXFILE1, FILE *AUXFILE2, int u, int ef) {
         CW.nw = 0;
         RW_TO_CWS(&CW, &W1, n, (W2.N - u), n, n);
         W_TO_CWS(&CW, &W2, (W1.N - u), n, n, n);
-        PRINT_CWS(&CW, outFILE);
+        PRINT_CWS(&CW, out);
         if (u == 2)
           if ((W1.w[0] != W1.w[1]) && (W2.w[0] != W2.w[1])) {
             SWAP(&W2.w[0], &W2.w[1]);
             CW.nw = 0;
             RW_TO_CWS(&CW, &W1, n, (W2.N - u), n, n);
             W_TO_CWS(&CW, &W2, (W1.N - u), n, n, n);
-            PRINT_CWS(&CW, outFILE);
+            PRINT_CWS(&CW, out);
           }
       }
     }
@@ -2283,7 +2290,7 @@ void PrintCWSTypes(void) {
   exit(1);
 }
 
-void Make_IP_CWS(int narg, char *fn[]) {
+void Make_IP_CWS(int narg, char *fn[], FILE *out) {
   FILE *INFILE[NFmax] = {NULL}, *AUXFILE[NFmax] = {NULL};
   char *infile[NFmax] = {NULL}, *outfile = NULL, *a;
   int n = 0, d = 0, u = -1, nF = 0, i, D[NFmax];
@@ -2371,9 +2378,9 @@ void Make_IP_CWS(int narg, char *fn[]) {
   if (t.nu && (t.nu != nF))
     Die("if input is -nN -t k_1,...,k_n then N must be equal to n!");
   if (outfile == NULL)
-    outFILE = stdout;
-  else if ((outFILE = fopen(outfile, "w")) == NULL) {
-    printf("\nUnable to open file %s for write\n", fn[n]);
+    out = stdout;
+  else if ((out = fopen(outfile, "w")) == NULL) {
+    printf("\nUnable to open file %s for write\n", outfile);
     exit(1);
   }
   scan_dim(nF, infile, D);
@@ -2399,7 +2406,7 @@ void Make_IP_CWS(int narg, char *fn[]) {
     }
     for (i = 0; i < nF; i++)
       MakeSelections(INFILE[i], AUXFILE[i], u);
-    Make2CWS(AUXFILE[0], AUXFILE[1], u, !strcmp(infile[0], infile[1]));
+    Make2CWS(AUXFILE[0], AUXFILE[1], u, !strcmp(infile[0], infile[1]), out);
   }
   if (nF == 3) {
     if (!t.nu)
@@ -2424,9 +2431,9 @@ void Make_IP_CWS(int narg, char *fn[]) {
         for (i = 0; i < nF; i++)
           MakeSelections(INFILE[i], AUXFILE[i], t.u[i]);
       if (t.u[0] == 1)
-        Make_111_CWS(AUXFILE, eq);
+        Make_111_CWS(AUXFILE, eq, out);
       else
-        Make_222_CWS(AUXFILE, eq);
+        Make_222_CWS(AUXFILE, eq, out);
     } else if (((t.u[0] == 2) && (t.u[1] == 1) && (t.u[2] == 1)) ||
                ((t.u[0] == 2) && (t.u[1] == 2) && (t.u[2] == 1))) {
       if ((D[0] + D[1] + D[2] - (t.u[1] + t.u[2]) - d) != 0)
@@ -2434,15 +2441,15 @@ void Make_IP_CWS(int narg, char *fn[]) {
       for (i = 0; i < nF; i++)
         MakeSelections(INFILE[i], AUXFILE[i], t.u[i]);
       if (t.u[1] == 2)
-        Make_221_CWS(AUXFILE, !strcmp(infile[1], infile[2]));
+        Make_221_CWS(AUXFILE, !strcmp(infile[1], infile[2]), out);
       else
-        Make_211_CWS(AUXFILE, !strcmp(infile[0], infile[1]));
+        Make_211_CWS(AUXFILE, !strcmp(infile[0], infile[1]), out);
     } else if ((t.u[0] == t.u[1]) && (t.u[2] == 0)) {
       if ((D[0] + D[1] + D[2] - t.u[0] - d) != 0)
         Die("wrong DIM -cDIM or wrong TYPES -t TYPE1 TYPE2 TYPE3");
       for (i = 0; i < nF; i++)
         MakeSelections(INFILE[i], AUXFILE[i], t.u[i]);
-      Make_nno_CWS(AUXFILE, t.u[0], !strcmp(infile[0], infile[1]));
+      Make_nno_CWS(AUXFILE, t.u[0], !strcmp(infile[0], infile[1]), out);
     } else
       PrintCWSTypes();
   }
@@ -2492,7 +2499,7 @@ void IP_Poly_Data(int narg, char *fn[], FILE *out) {
     }
   }
   if (narg > ++n) {
-    if ((outFILE = fopen(fn[n], "w")) == NULL) {
+    if ((out = fopen(fn[n], "w")) == NULL) {
       printf("\nUnable to open file %s for write\n", fn[n]);
       exit(1);
     }
@@ -2514,9 +2521,9 @@ void IP_Poly_Data(int narg, char *fn[], FILE *out) {
           fprintf(out, " F:%d N:%d", _E->ne, _DP->np);
       }
       if (p)
-        Print_PPL(_P.get(), "");
+        Print_PPL(_P.get(), "", out);
       if (d)
-        Print_PPL(_DP.get(), "");
+        Print_PPL(_DP.get(), "", out);
       if (!IP_Check(_DP.get(), _V, _E)) {
         fputs("Error: cws main dual polytope not reflexive\n", stderr);
         exit(1);
@@ -2603,14 +2610,14 @@ void Conv(int narg, char *fn[], FILE *out) {
       Die("Unable to open infile to read");
   if (outfile == NULL)
     out = stdout;
-  else if ((outFILE = fopen(outfile, "w")) == NULL) {
-    printf("\nUnable to open file %s for write\n", fn[n]);
+  else if ((out = fopen(outfile, "w")) == NULL) {
+    printf("\nUnable to open file %s for write\n", outfile);
     exit(1);
   }
   while (READ_CWS_PP(&CW[0], &P[0], INFILE[0])) {
     while (READ_CWS_PP(&CW[1], &P[1], INFILE[1]))
       if (ConvHull(&P[0], &P[1], &PP, &V, (P[0].n - x)))
-        Print_VL(&PP, &V, "Vertices of P");
+        Print_VL(&PP, &V, "Vertices of P", out);
     rewind(INFILE[1]);
   }
 }
@@ -2621,7 +2628,6 @@ void td_Print_EL(EqList *_E, int *n, int suppress_c, const char *comment,
                  FILE *out) {
   int i, j;
   remove("zzL.tmp");
-  outFILE = fopen("zzL.tmp", "w");
   fprintf(out, "%d %d  %s\n", _E->ne, (*n) + 1, comment);
   for (i = 0; i < _E->ne; i++) {
     if (!suppress_c)
@@ -2630,24 +2636,27 @@ void td_Print_EL(EqList *_E, int *n, int suppress_c, const char *comment,
       fprintf(out, " %3d", (int)_E->e[i].a[j]);
     fprintf(out, "\n");
   }
-  fclose(outFILE);
 }
 Long NP_use_lat(EqList *_E, PolyPointList *_P, FILE *out) {
   int tmp;
+  FILE *latFILE;
   td_Print_EL(_E, &_P->n, 0, "", out);
   if (system("count zzL.tmp | grep '*' | awk '{print $7}' > zzL.tmp1")) {
     fputs("Error: NP_use_lat lattice count command failed\n", stderr);
     exit(1);
   }
-  outFILE = fopen("zzL.tmp1", "r");
-  while ((fscanf(outFILE, "%d", &tmp)) == 1)
-    ;
-  if (ferror(outFILE)) {
-    fputs("Error: NP_use_lat could not read lattice count\n", stderr);
-    fclose(outFILE);
+  if ((latFILE = fopen("zzL.tmp1", "r")) == NULL) {
+    fputs("Error: NP_use_lat could not open lattice count file\n", stderr);
     exit(1);
   }
-  fclose(outFILE);
+  while ((fscanf(latFILE, "%d", &tmp)) == 1)
+    ;
+  if (ferror(latFILE)) {
+    fputs("Error: NP_use_lat could not read lattice count\n", stderr);
+    fclose(latFILE);
+    exit(1);
+  }
+  fclose(latFILE);
   return tmp;
 }
 Long L_Point_Count(Weight *W, PolyPointList *P, VertexNumList *V, EqList *E,
