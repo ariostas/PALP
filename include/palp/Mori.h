@@ -49,7 +49,8 @@ I: INCIDENCE, (Inci64: unsigned long long)
 /* =========         P R O T O T Y P E s        ========= */
 
 /*** from MoriCone.c ***/
-void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag);
+void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag,
+                         FILE *out = outFILE);
 /*
 Having read the Polytope matrix, asks for the triangulation and computes
 SR-Ideal and Mori cone of the ambient space. The user has to specify the
@@ -58,7 +59,7 @@ simplices in INCI format.
  */
 
 void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
-                        MORI_Flags *Flag);
+                        MORI_Flags *Flag, FILE *out = outFILE);
 /*
 Hypersurface divisors Q(charges) permutes the N-lattice points of
 non-intersecting divisors to the end of the PPL *_P, calls IP_Simplex_Fiber
@@ -97,7 +98,7 @@ Determine and print the SR ideal.
 */
 
 void DivClassBasis(int SF, PolyPointList *P, int v, const char *D,
-                   const char *B);
+                   const char *B, FILE *out = outFILE);
 /*
 Find basis for divisor classes, i.e. integral basis of intersection ring.
 Simply trying to find toric divisors that span the lattice of DivClasses i.e.
@@ -117,8 +118,8 @@ void putN(int N, Inci64 *I); /* make INCIDENCE */
 void setN(int N, Inci64 *I); /* make INCIDENCE */
 int getN(int N, Inci64 I);   /* read INCIDENCE */
 
-void prnI(int N, Inci64 I); /* print INCIDENCE */
-void fprI(int N, Inci64 I); /* print INCIDENCE to file */
+void prnI(int N, Inci64 I, FILE *out = outFILE); /* print INCIDENCE */
+void fprI(int N, Inci64 I, FILE *out = outFILE); /* print INCIDENCE to file */
 
 int Inci64_LE(Inci64 A, Inci64 B);
 int Inci64_LT(Inci64 A, Inci64 B);

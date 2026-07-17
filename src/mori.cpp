@@ -242,7 +242,7 @@ int main(int narg, char *fn[]) {
         exit(1);
       }
     }
-    HyperSurfDivisorsQ(_P, &V, E, &Flag);
+    HyperSurfDivisorsQ(_P, &V, E, &Flag, outFILE);
     fflush(outFILE);
   }
   return 0;

@@ -137,7 +137,7 @@ void HyperSurfSingular(PolyPointList *P, triang *T, triang *SR,
     }
   }
   dprintf(SF, ";");
-  DivClassBasis(SF, P, p, D, B);
+  DivClassBasis(SF, P, p, D, B, outFILE);
 
   /* STANLEY REISNER */
   dprintf(SF, "ideal sr=");

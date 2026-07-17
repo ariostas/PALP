@@ -70,13 +70,13 @@ Inci64 makeN(int N) { return Inci64(1) << N; }
 void putN(int N, Inci64 *I) { *I |= Inci64(1) << N; } /* make INCIDENCE */
 void setN(int N, Inci64 *I) { *I |= Inci64(1) << N; } /* make INCIDENCE */
 int getN(int N, Inci64 I) { return (I >> N) & 1; }    /* read INCIDENCE */
-void prnI(int N, Inci64 I) {
+void prnI(int N, Inci64 I, FILE *out) {
   for (int i = 0; i < N; i++)
     printf("%d", getN(i, I));
 }
-void fprI(int N, Inci64 I) {
+void fprI(int N, Inci64 I, FILE *out) {
   for (int i = 0; i < N; i++)
-    fprintf(outFILE, "%d", getN(i, I));
+    fprintf(out, "%d", getN(i, I));
 } /* print INCIDENCE */
 
 int Inci64_LE(Inci64 A, Inci64 B) { return (A & B) == A; }
@@ -161,7 +161,7 @@ int Choose(int n, int k, int *C) {
 /*---QUICK-FIX----------------------------------------------------------------*/
 
 void DivClassBasis(int SF, PolyPointList *P, int v, const char *D,
-                   const char *B) {
+                   const char *B, FILE *out) {
   Long cdiv = 0, sv, nok, *X[POLY_Dmax];
   int d = P->n, C[VERT_Nmax];
   nok = Init_Choose(v, d, C);
@@ -2271,7 +2271,7 @@ void NewtonMonomial(Long *X, int d) {
  * and then prints the charges = linear relations
  */
 void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
-                        MORI_Flags *_Flag) {
+                        MORI_Flags *_Flag, FILE *out) {
   int i = V->nv, j, cp = _P->np - 1, t = E->ne, d = _P->n,
       Dh0[VERT_Nmax] /*,Dh2[VERT_Nmax]*/;
   Inci64 I[VERT_Nmax], T[FACE_Nmax];
@@ -2320,18 +2320,18 @@ void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
     Print_PPL(_P, "points of P* and IP-simplices");
 
     for (i = 0; i < cp; i++)
-      fprintf(outFILE, "-----");
+      fprintf(out, "-----");
 
     /* The # IP simplices = the number of weight-relations (dim of matrix W)
      */
-    fprintf(outFILE, "   #IP-simp=%d", F->nw);
+    fprintf(out, "   #IP-simp=%d", F->nw);
 
     /* If there are more weight-relations than prim.div.cl. print the info
      * that there are more IP-simplexes than the Nr. of independent vectors */
     if (F->nw > cp - _P->n)
-      fprintf(outFILE, " > %d=#pts-dim", cp - _P->n);
+      fprintf(out, " > %d=#pts-dim", cp - _P->n);
 
-    fprintf(outFILE, "\n");
+    fprintf(out, "\n");
 
     /* Prints the weight matrix */
     for (i = 0; i < F->nw;
@@ -2348,7 +2348,7 @@ void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
       /* Prints the quotient group if any */
       if (F->nz[i])
         Print_QuotZ(&F->Z[F->n0[i]], &F->M[F->n0[i]], cp, F->nz[i], outFILE);
-      fprintf(outFILE, "\n");
+      fprintf(out, "\n");
     }
   } /* End of P-flag */
   else if (_Flag->M)
@@ -2418,14 +2418,14 @@ void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
      * PRINT INCIDENCES
      */
     /* prints the incidences */
-    fprintf(outFILE, "Incidence:");
+    fprintf(out, "Incidence:");
     /* j runs over the facets */
     for (j = 0; j < E->ne; j++) {
-      fprintf(outFILE, " ");
+      fprintf(out, " ");
       /* prints the incidence of the j-facet*/
       fprI(cp, I[j]);
     }
-    fprintf(outFILE, "\n");
+    fprintf(out, "\n");
     /******************************************************************/
   }
 
@@ -2538,7 +2538,7 @@ Inci64 Read_INCI(int p) {
   return X;
 }
 
-void Write_INCI(Inci64 X, int v) {
+void Write_INCI(Inci64 X, int v, FILE *out) {
   int i;
   char c[VERT_Nmax + 1];
   c[v] = 0;
@@ -2546,10 +2546,10 @@ void Write_INCI(Inci64 X, int v) {
     c[v - i - 1] = '0' + Inci64_M2(X);
     X = Inci64_D2(X);
   }
-  fprintf(outFILE, "%s", c);
+  fprintf(out, "%s", c);
 }
 
-void Var_Write_INCI(Inci64 X, int v)
+void Var_Write_INCI(Inci64 X, int v, FILE *out)
 /* suppresses first entry compared with Write_INCI  */
 {
   int i;
@@ -2559,7 +2559,7 @@ void Var_Write_INCI(Inci64 X, int v)
     c[v - i - 2] = '0' + Inci64_M2(X);
     X = Inci64_D2(X);
   }
-  fprintf(outFILE, "%s", c);
+  fprintf(out, "%s", c);
 }
 
 /*needed from Test_INCI*/
@@ -2623,12 +2623,12 @@ void Read_Tri(int p, int *nI, int *nIA, Inci64 **_I) {
   Test_INCI(nI, I, p);
 }
 
-void Print_INCI_list(int nI, Inci64 *I, int v) {
+void Print_INCI_list(int nI, Inci64 *I, int v, FILE *out) {
   int i;
   printf("INCI[%d]:", nI);
   for (i = 0; i < nI; i++) {
     printf(" ");
-    Write_INCI(I[i], v);
+    Write_INCI(I[i], v, out);
   }
   puts("");
 }
@@ -2648,7 +2648,7 @@ Inci64 Inci64_revert(Inci64 X, int n) {
   return Y;
 }
 
-void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
+void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I, FILE *out) {
   int i, j, k, r = 0, d = P->n, p = P->np, ngen = 0, pli[POLY_Dmax + 1],
                /*ng0,*/ e0 = 0, nm = 0, nv, np;
   int m[VERT_Nmax];
@@ -2694,7 +2694,7 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
           for (a = 0; a <= d; a++)
             printf("%d ", V.v[a]);
           puts("=Ij ... error");
-          Print_INCI_list(nI, I, p);
+          Print_INCI_list(nI, I, p, out);
           exit(1);
         }
         if (pli[k] > V.v[k])
@@ -2771,12 +2771,12 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
   }
   // Print_LMatrix(R, "Matrix of all rays", outFILE);
   if (UT->np >= POINT_Nmax) {
-    fprintf(outFILE, "need POINT_Nmax>=%d\n", UT->np + 1);
+    fprintf(out, "need POINT_Nmax>=%d\n", UT->np + 1);
     exit(1);
   }
   UT->n = r;
   if (r > POLY_Dmax) {
-    fprintf(outFILE, "need POLY_Dmax>=%d\n", UT->n);
+    fprintf(out, "need POLY_Dmax>=%d\n", UT->n);
     exit(1);
   }
   for (i = 0; i < ngen; i++)
@@ -2799,7 +2799,7 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
   if (np != V.v[nv]) {
     IDerr();
     puts("Suspected INCI data error:");
-    Print_INCI_list(nI, I, p);
+    Print_INCI_list(nI, I, p, out);
     puts("... non-convex triangulation?\n");
     exit(1);
   }
@@ -2812,7 +2812,7 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
         IE[j] = Inci64_PN(IE[j], Eval_Eq_on_V(&E->e[i], UT->x[V.v[j]], r));
     } /* compute Eq(0)-INCIs for Vs */
   if (e0 > VERT_Nmax) {
-    fprintf(outFILE, "need VERT_Nmax >= %d\n", e0);
+    fprintf(out, "need VERT_Nmax >= %d\n", e0);
     exit(1);
   }
   // printf("p=%d nm=%d\n",p,nm);
@@ -2829,7 +2829,7 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
           stderr);
     exit(1);
   }
-  fprintf(outFILE,
+  fprintf(out,
           "%d MORI GENERATORS / dim(cone)=%d"
           //    ": rays=%d (%d)  #eq=%d (%d)  #v=%d (%d)"
           "\n",
@@ -2841,12 +2841,12 @@ void Print_Mori_Old(PolyPointList *P, int nI, Inci64 *I) {
     int n = V.v[m[i]];
     Long s = 0;
     for (j = 1; j < p; j++)
-      s += R.x[n][j]; // fprintf(outFILE,"%3ld ",-s);
+      s += R.x[n][j]; // fprintf(out,"%3ld ",-s);
     for (j = 1; j < p; j++)
-      fprintf(outFILE, " %2ld", R.x[n][j]);
-    fputs("   I:", outFILE);
-    Write_INCI(IE[m[i]], e0);
-    fputs("\n", outFILE);
+      fprintf(out, " %2ld", R.x[n][j]);
+    fputs("   I:", out);
+    Write_INCI(IE[m[i]], e0, out);
+    fputs("\n", out);
     fflush(0);
   }
   Free_Matrix(&VT);
@@ -2873,7 +2873,7 @@ long long Compute_Abi(PolyPointList *P) {
 }
 
 void ComputeStanleyReisner(PolyPointList *P, int nI, Inci64 *I, int *NrInz,
-                           Inci64 *SRG, long long Abi) {
+                           Inci64 *SRG, long long Abi, FILE *out) {
   Inci64 *IV, *A, *B, /* *G[POLY_Dmax],*/ *M, *N;
   int i = 1, j = P->np / 2, m, n, nG[POLY_Dmax + 1], g = 0, d, v = P->np - 1;
   if (j > P->n)
@@ -2944,10 +2944,10 @@ void ComputeStanleyReisner(PolyPointList *P, int nI, Inci64 *I, int *NrInz,
   } /* printf("SRI:\n"); */
   /*  for(i=0;i<m;i++){Write_INCI(M[i],v+1);printf(" ");} puts(""); */
   /*
-  fprintf(outFILE,"%d Stanley-Reisner generators:\n",g);
-  for(i=0;i<g;i++){if(i)fprintf(outFILE," ");Write_INCI(SRG[i],v+1);}
+  fprintf(out,"%d Stanley-Reisner generators:\n",g);
+  for(i=0;i<g;i++){if(i)fprintf(out," ");Write_INCI(SRG[i],v+1);}
   */
-  //	fprintf(outFILE, " SR[%d]=%d", i, SRG[i]); //diagnostics
+  //	fprintf(out, " SR[%d]=%d", i, SRG[i]); //diagnostics
   //  fputs("\n",outFILE);
   *NrInz = g;
   free(A);
@@ -2955,7 +2955,8 @@ void ComputeStanleyReisner(PolyPointList *P, int nI, Inci64 *I, int *NrInz,
   free(IV);
 }
 
-void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag) {
+void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag,
+                         FILE *out) {
   int i, j, n, nI, NrInz, nIA = 0, Ntri = 0;
   static Inci64 *I = NULL;
   triang T, SR;
@@ -2964,7 +2965,7 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag) {
   auto _POF_owner = std::make_unique<PolyPointList>();
   PolyPointList *_POF = _POF_owner.get(); /* _P in Old Format */
 
-  //	fprintf(outFILE, "DIAGNOSTICS: pre Read &I=%d , I=%d , nI=%d , nIA=%d
+  //	fprintf(out, "DIAGNOSTICS: pre Read &I=%d , I=%d , nI=%d , nIA=%d
   //\n", &I, I, nI, nIA); // diagnostics
 
   if (_Flag->FilterFlag)
@@ -2984,7 +2985,7 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag) {
   Read_EOL();
   // Print_PPL(_POF, "_POF:");
   if (!_Flag->FilterFlag)
-    fprintf(outFILE, "%d triangulations:\n", Ntri);
+    fprintf(out, "%d triangulations:\n", Ntri);
   fflush(0);
 
   for (n = 0; n < Ntri; n++) {
@@ -2995,18 +2996,18 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag) {
     IOF = IOF_owner.get();
     for (i = 0; i < nI; i++)
       IOF[i] = I[i];
-    ComputeStanleyReisner(_POF, nI, I, &NrInz, SRG, Abi);
+    ComputeStanleyReisner(_POF, nI, I, &NrInz, SRG, Abi, out);
     if (_Flag->g) {
-      fprintf(outFILE, "%d SR-ideal\n", NrInz);
+      fprintf(out, "%d SR-ideal\n", NrInz);
       for (i = 0; i < NrInz; i++) {
         if (i)
-          fprintf(outFILE, " ");
-        Var_Write_INCI(SRG[i], _P->np);
+          fprintf(out, " ");
+        Var_Write_INCI(SRG[i], _P->np, out);
       }
     }
-    // fprintf(outFILE,"\n");  }
+    // fprintf(out,"\n");  }
 
-    //	fprintf(outFILE, "\nDIAGNOSTIC: NrInz= %d ; SRG= %d ; Abi= %d" ,
+    //	fprintf(out, "\nDIAGNOSTIC: NrInz= %d ; SRG= %d ; Abi= %d" ,
     //  NrInz, SRG, Abi);
 
     /*** From here starts the code needed for composite options like
@@ -3040,9 +3041,9 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag) {
       //	int j;
       //	puts(" ");
       //	for(i=0;i<T.n;i++){
-      //		if(i)fprintf(outFILE," ");
-      //			for(j=0;j<T.v;j++){fprintf(outFILE, "%d",
-      //(T.I[i]>>(T.v-j-1))%2);} 		fprintf(outFILE, " T[%d]=%d", i,
+      //		if(i)fprintf(out," ");
+      //			for(j=0;j<T.v;j++){fprintf(out, "%d",
+      //(T.I[i]>>(T.v-j-1))%2);} 		fprintf(out, " T[%d]=%d", i,
       // T.I[i]);// diagnostics
       //	}
 
@@ -3060,9 +3061,9 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag) {
       //
       //	puts(" ");
       //	for(i=0;i<SR.n;i++){
-      //		if(i)fprintf(outFILE," ");
-      //			for(j=0;j<SR.v;j++){fprintf(outFILE, "%d",
-      //(SR.I[i]>>(SR.v-j-1))%2);} 		fprintf(outFILE, " SR[%d]=%d",
+      //		if(i)fprintf(out," ");
+      //			for(j=0;j<SR.v;j++){fprintf(out, "%d",
+      //(SR.I[i]>>(SR.v-j-1))%2);} 		fprintf(out, " SR[%d]=%d",
       // i, SR.I[i]);// diagnostics
       //	}
 
@@ -3074,19 +3075,19 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag) {
       //
       //			for(i=0; i< F->nw;i++){
       //				for(j=0;j<cp;j++){
-      //					fprintf(outFILE, " %d",
+      //					fprintf(out, " %d",
       // F->W[i][j]);
       //				}
-      //				fprintf(outFILE, "\n");
+      //				fprintf(out, "\n");
       //			}
 
       HyperSurfSingular(_P, &T, &SR, _Flag, F, &cp);
     }
     /****** End -DMi ********************************************************/
     else
-      fputs("\n", outFILE);
+      fputs("\n", out);
     if (_Flag->m)
-      Print_Mori_Old(_POF, nI, IOF);
+      Print_Mori_Old(_POF, nI, IOF, out);
   }
   if (I == NULL) {
     fputs("Error: TriList_to_MoriList incidence list was never allocated\n",
