@@ -11,7 +11,7 @@ using CWLatticeBasis = struct {
   int n, N;
 };
 
-void Make_CWS_Points(CWS *_C, PolyPointList *_P);
+void Make_CWS_Points(CWS *_C, PolyPointList *_P, FILE *out);
 void Make_RGC_Points(CWS *Cin, PolyPointList *_P);
 void CWS_to_PermCWS(CWS *Cin, CWS *C, int *pi);
 
@@ -384,7 +384,7 @@ MAP:
       puts("-h gives you help\n");
     return 0;
   }
-  Make_CWS_Points(_CW, _P);
+  Make_CWS_Points(_CW, _P, outFILE);
   if (FilterFlag)
     inFILE = NULL;
   return 1;
@@ -633,7 +633,7 @@ MAP:
       puts("-h gives you help\n");
     return 0;
   }
-  Make_CWS_Points(_CW, _P); /* now make POLY */
+  Make_CWS_Points(_CW, _P, outFILE); /* now make POLY */
   if (FilterFlag)
     inFILE = NULL;
   return 1;
@@ -1018,7 +1018,7 @@ int Compute_X0(int N, CWS *_C, Long *X0) {
   return 0;
 }
 
-void Make_CWS_Points(CWS *Cin, PolyPointList *_P) {
+void Make_CWS_Points(CWS *Cin, PolyPointList *_P, FILE *out) {
   int i, j, Amin[POLY_Dmax + 1], m = Cin->nz;
   Long *x = _P->x[_P->np = 0], xmin[POLY_Dmax], xmax[POLY_Dmax],
        Xmax[AMBI_Dmax], X0[AMBI_Dmax], xaux[POLY_Dmax], L, R;

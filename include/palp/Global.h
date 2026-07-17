@@ -260,7 +260,7 @@ int Read_CWS(CWS *_CW, PolyPointList *_P);
 int Read_PP(PolyPointList *_P);
 int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index);
 int IsNextDigit(void);
-void Make_CWS_Points(CWS *_C, PolyPointList *_P);
+void Make_CWS_Points(CWS *_C, PolyPointList *_P, FILE *out = outFILE);
 void Print_CWS_Zinfo(CWS *CW, FILE *out = outFILE);
 void Sort_PPL(PolyPointList *_P, VertexNumList *_V);
 int GLZ_Start_Simplex(PolyPointList *_P, VertexNumList *_V, CEqList *_C);
