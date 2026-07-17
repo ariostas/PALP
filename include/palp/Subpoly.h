@@ -157,10 +157,10 @@ void Gen_Bin_2_ascii(char *pi, char *dbi, int max, int vf, int vt,
                      PolyPointList *);
 
 /*  ==========          Functions from Subpoly.c                 ========== */
-void DPircheck(CWS *_W, PolyPointList *_P);
-void DPvircheck(CWS *_W, PolyPointList *_P);
-void Max_check(CWS *_W, PolyPointList *_P);
-void Overall_check(CWS *_W, PolyPointList *_P);
+void DPircheck(CWS *_W, PolyPointList *_P, FILE *out = outFILE);
+void DPvircheck(CWS *_W, PolyPointList *_P, FILE *out = outFILE);
+void Max_check(CWS *_W, PolyPointList *_P, FILE *out = outFILE);
+void Overall_check(CWS *_W, PolyPointList *_P, FILE *out = outFILE);
 void Do_the_Classification(CWS *W, PolyPointList *P, /* char *fn, */
                            int oFlag, int rFlag, int kFlag, char *polyi,
                            char *polyo, char *dbin);

@@ -345,10 +345,10 @@ int main(int narg, char *fn[]) {
 void Print_Pstat(Pstat *_PS, int N, int VPmax, int VPmin, FILE *out) {
   int i;
 
-  fprintf(outFILE, "\n\n%d  of  %d\n\n", (int)_PS->n, (int)N);
+  fprintf(out, "\n\n%d  of  %d\n\n", (int)_PS->n, (int)N);
   for (i = VPmin; i <= VPmax; i++)
     if (_PS->P[i] != 0)
-      fprintf(outFILE, "%4d# %4d\n", (int)i, (int)_PS->P[i]);
+      fprintf(out, "%4d# %4d\n", (int)i, (int)_PS->P[i]);
 }
 
 void Print_VP(PolyPointList *_P, VertexNumList *_V, int VPmax, int VPmin,
@@ -359,23 +359,23 @@ void Print_VP(PolyPointList *_P, VertexNumList *_V, int VPmax, int VPmin,
     _PS->P[_P->np]++;
     _PS->n++;
     if (_V->nv > 20) {
-      fprintf(outFILE, "%d %d P:%d E", _V->nv, _P->n, _P->np);
+      fprintf(out, "%d %d P:%d E", _V->nv, _P->n, _P->np);
       for (i = 0; i < _V->nv; i++) {
         for (j = 0; j < _P->n; j++)
-          fprintf(outFILE, "%d ", (int)_P->x[_V->v[i]][j]);
+          fprintf(out, "%d ", (int)_P->x[_V->v[i]][j]);
         if (i != (_V->nv - 1))
-          fprintf(outFILE, "E");
+          fprintf(out, "E");
       }
     } else {
-      fprintf(outFILE, "%d %d P:%d E", _P->n, _V->nv, _P->np);
+      fprintf(out, "%d %d P:%d E", _P->n, _V->nv, _P->np);
       for (i = 0; i < _P->n; i++) {
         for (j = 0; j < _V->nv; j++)
-          fprintf(outFILE, " %4d", (int)_P->x[_V->v[j]][i]);
+          fprintf(out, " %4d", (int)_P->x[_V->v[j]][i]);
         if (i != (_P->n - 1))
-          fprintf(outFILE, "E");
+          fprintf(out, "E");
       }
     }
-    fprintf(outFILE, "\n");
+    fprintf(out, "\n");
   }
 }
 
@@ -613,13 +613,13 @@ void OUT_CWS(CWS *_W, int *_D, int *_M_Flag, FILE *out) {
   int i, j;
 
   for (i = 0; i < _W->nw; i++) {
-    fprintf(outFILE, "%d ", (int)_W->d[i]);
+    fprintf(out, "%d ", (int)_W->d[i]);
     for (j = 0; j < _W->N; j++)
-      fprintf(outFILE, "%d ", (int)_W->W[i][j]);
+      fprintf(out, "%d ", (int)_W->W[i][j]);
     if (i + 1 < _W->nw)
-      fprintf(outFILE, " ");
+      fprintf(out, " ");
   }
   if (*_M_Flag)
-    fprintf(outFILE, "d=%d %d ", (int)_D[1], _D[0]);
+    fprintf(out, "d=%d %d ", (int)_D[1], _D[0]);
   Print_CWS_Zinfo(_W, out);
 }

@@ -455,16 +455,16 @@ int main(int narg, char *fn[]) {
     Check_NF_Order(polyi, dbin, cFlag, _P);
   else if (mFlag == 'a')
     while (Read_CWS_PP(&W, _P))
-      Overall_check(&W, _P);
+      Overall_check(&W, _P, outFILE);
   else if (mFlag == 'r')
     while (Read_CWS_PP(&W, _P))
-      Max_check(&W, _P);
+      Max_check(&W, _P, outFILE);
   else if (mFlag == 'v')
     while (Read_CWS_PP(&W, _P))
-      DPvircheck(&W, _P);
+      DPvircheck(&W, _P, outFILE);
   else if (mFlag == 'l')
     while (Read_CWS_PP(&W, _P))
-      DPircheck(&W, _P);
+      DPircheck(&W, _P, outFILE);
 #if (POLY_Dmax < 6)
   else if (HFlag == 'c')
     DB_to_Hodge(dbin, dbout, vf, vt, _P);

@@ -480,7 +480,7 @@ int kept(int i, KeepList *_KL) {
 }
 
 void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
-                   KeepList *_KL, int drop_num, NF_List *_NFL) {
+                   KeepList *_KL, int drop_num, NF_List *_NFL, FILE *out) {
 
   int i, j, n_irrel = 0, IP;
   std::vector<int> new2old(POINT_Nmax);
@@ -526,13 +526,13 @@ void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     }
 
   /* Print_PPL(_P);
-  fprintf(outFILE,"new_E:\n");
+  fprintf(out,"new_E:\n");
   for (i=0;i<new_E->ne;i++){
-    for (j=0;j<_P->n;j++) fprintf(outFILE,"%d ", new_E->e[i].a[j]);
-    fprintf(outFILE," %d\n", new_E->e[i].c);}
-  fprintf(outFILE,"\n");
+    for (j=0;j<_P->n;j++) fprintf(out,"%d ", new_E->e[i].a[j]);
+    fprintf(out," %d\n", new_E->e[i].c);}
+  fprintf(out,"\n");
   Print_PPL(red_P);
-  fprintf(outFILE,"\n");
+  fprintf(out,"\n");
   printf("drop_point: ");
   for (i=0;i<_P->n;i++) printf("%d ", (int) drop_point[i]);
   puts("");*/
@@ -572,55 +572,55 @@ void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
       if (!IP_Check(_P, &test_V, &test_E) || (test_V.nv != red_V.nv) ||
           (test_E.ne != new_E->ne)) {
         int k;
-        fprintf(outFILE, "_V: ");
+        fprintf(out, "_V: ");
         for (i = 0; i < _V->nv; i++)
-          fprintf(outFILE, "%d ", _V->v[i]);
-        fprintf(outFILE, "\n");
-        fprintf(outFILE, "_E:\n");
+          fprintf(out, "%d ", _V->v[i]);
+        fprintf(out, "\n");
+        fprintf(out, "_E:\n");
         for (i = 0; i < _E->ne; i++) {
           for (k = 0; k < _P->n; k++)
-            fprintf(outFILE, "%d ", (int)_E->e[i].a[k]);
-          fprintf(outFILE, " %d\n", (int)_E->e[i].c);
+            fprintf(out, "%d ", (int)_E->e[i].a[k]);
+          fprintf(out, " %d\n", (int)_E->e[i].c);
         }
-        fprintf(outFILE, "\n");
-        fprintf(outFILE, "drop_num: %d\n", drop_num);
-        fprintf(outFILE, "drop_point: ");
+        fprintf(out, "\n");
+        fprintf(out, "drop_num: %d\n", drop_num);
+        fprintf(out, "drop_point: ");
         for (i = 0; i < _P->n; i++)
-          fprintf(outFILE, "%d ", (int)drop_point[i]);
-        fprintf(outFILE, "\n");
-        fprintf(outFILE, "_KL: ");
+          fprintf(out, "%d ", (int)drop_point[i]);
+        fprintf(out, "\n");
+        fprintf(out, "_KL: ");
         for (i = 0; i < _KL->nk; i++)
-          fprintf(outFILE, "%d ", _KL->k[i]);
-        fprintf(outFILE, "\n");
+          fprintf(out, "%d ", _KL->k[i]);
+        fprintf(out, "\n");
 
-        fprintf(outFILE, "red_V: ");
+        fprintf(out, "red_V: ");
         for (i = 0; i < red_V.nv; i++)
-          fprintf(outFILE, "%d ", red_V.v[i]);
-        fprintf(outFILE, "\n");
-        fprintf(outFILE, "new_E:\n");
+          fprintf(out, "%d ", red_V.v[i]);
+        fprintf(out, "\n");
+        fprintf(out, "new_E:\n");
         for (i = 0; i < new_E->ne; i++) {
           for (k = 0; k < _P->n; k++)
-            fprintf(outFILE, "%d ", (int)new_E->e[i].a[k]);
-          fprintf(outFILE, " %d\n", new_E->e[i].c);
+            fprintf(out, "%d ", (int)new_E->e[i].a[k]);
+          fprintf(out, " %d\n", new_E->e[i].c);
         }
-        fprintf(outFILE, "\n");
-        fprintf(outFILE, "n_irrel: %d\n", n_irrel);
-        fprintf(outFILE, "new2old:");
+        fprintf(out, "\n");
+        fprintf(out, "n_irrel: %d\n", n_irrel);
+        fprintf(out, "new2old:");
         for (i = 0; i < red_P->np; i++)
-          fprintf(outFILE, " %d", new2old[i]);
-        fprintf(outFILE, "\n");
+          fprintf(out, " %d", new2old[i]);
+        fprintf(out, "\n");
 
-        fprintf(outFILE, "test_V: ");
+        fprintf(out, "test_V: ");
         for (i = 0; i < test_V.nv; i++)
-          fprintf(outFILE, "%d ", test_V.v[i]);
-        fprintf(outFILE, "\n");
-        fprintf(outFILE, "test_E:\n");
+          fprintf(out, "%d ", test_V.v[i]);
+        fprintf(out, "\n");
+        fprintf(out, "test_E:\n");
         for (i = 0; i < test_E.ne; i++) {
           for (k = 0; k < _P->n; k++)
-            fprintf(outFILE, "%d ", (int)test_E.e[i].a[k]);
-          fprintf(outFILE, " %d\n", (int)test_E.e[i].c);
+            fprintf(out, "%d ", (int)test_E.e[i].a[k]);
+          fprintf(out, " %d\n", (int)test_E.e[i].c);
         }
-        fprintf(outFILE, "\n");
+        fprintf(out, "\n");
 
         exit(1);
       }
@@ -642,7 +642,7 @@ void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   _KL->nk++;
 }
 
-void Start_Make_All_Subpolys(PolyPointList *_P, NF_List *_NFL) {
+void Start_Make_All_Subpolys(PolyPointList *_P, NF_List *_NFL, FILE *out) {
   int i, j;
   VertexNumList V, new_V;
   EqList E, new_E;
@@ -655,7 +655,7 @@ void Start_Make_All_Subpolys(PolyPointList *_P, NF_List *_NFL) {
   _NFL->rd = 0;
 
   if (!IP_Check(_P, &V, &E)) {
-    fprintf(outFILE, "IP_check negative!\n");
+    fprintf(out, "IP_check negative!\n");
     return;
   }
 
@@ -666,26 +666,26 @@ void Start_Make_All_Subpolys(PolyPointList *_P, NF_List *_NFL) {
     _NFL->Nmin = _P->np;
   } /* non-CWS input   */
 
-  /* fprintf(outFILE,"StartMASP:\n");
+  /* fprintf(out,"StartMASP:\n");
   for (i=0;i<V.nv;i++){
-    for (j=0;j<_P->n;j++) fprintf(outFILE,"%d ",(int) _P->x[V.v[i]][j]);
-    fprintf(outFILE,"\n");}
+    for (j=0;j<_P->n;j++) fprintf(out,"%d ",(int) _P->x[V.v[i]][j]);
+    fprintf(out,"\n");}
   for (i=0;i<E.ne;i++){
-    for (j=0;j<_P->n;j++) fprintf(outFILE,"%d ", (int) E.e[i].a[j]);
-    fprintf(outFILE," %d\n", (int) E.e[i].c);}
+    for (j=0;j<_P->n;j++) fprintf(out,"%d ", (int) E.e[i].a[j]);
+    fprintf(out," %d\n", (int) E.e[i].c);}
   fflush(0);*/
 
   KL.nk = 0;
 
   if (_NFL->kf) {
-    fprintf(outFILE, "The vertices are:\n");
+    fprintf(out, "The vertices are:\n");
     for (i = 0; i < V.nv; i++) {
-      fprintf(outFILE, "%d.  ", i);
+      fprintf(out, "%d.  ", i);
       for (j = 0; j < _P->n; j++)
-        fprintf(outFILE, "%d ", (int)_P->x[V.v[i]][j]);
-      fprintf(outFILE, "\n");
+        fprintf(out, "%d ", (int)_P->x[V.v[i]][j]);
+      fprintf(out, "\n");
     }
-    fprintf(outFILE, "How many of them do you want to keep?\n");
+    fprintf(out, "How many of them do you want to keep?\n");
     if (fscanf(inFILE, "%d", &(KL.nk)) != 1) {
       fputs("Error: Keep_list expected number of vertices to keep\n", stderr);
       exit(1);
@@ -694,7 +694,7 @@ void Start_Make_All_Subpolys(PolyPointList *_P, NF_List *_NFL) {
       fprintf(stderr, "Error: Keep_list nk=%d out of range\n", KL.nk);
       exit(1);
     }
-    fprintf(outFILE, "Which %d of them do you want to keep?\n", KL.nk);
+    fprintf(out, "Which %d of them do you want to keep?\n", KL.nk);
     for (i = 0; i < KL.nk; i++) {
       if (fscanf(inFILE, "%d", &j) != 1) {
         fprintf(stderr, "Error: Keep_list expected vertex index %d\n", i);
@@ -706,11 +706,11 @@ void Start_Make_All_Subpolys(PolyPointList *_P, NF_List *_NFL) {
       }
       KL.k[i] = V.v[j];
     }
-    fprintf(outFILE, "Keeping\n");
+    fprintf(out, "Keeping\n");
     for (i = 0; i < KL.nk; i++) {
       for (j = 0; j < _P->n; j++)
-        fprintf(outFILE, "%d ", (int)_P->x[KL.k[i]][j]);
-      fprintf(outFILE, "\n");
+        fprintf(out, "%d ", (int)_P->x[KL.k[i]][j]);
+      fprintf(out, "\n");
     }
   }
 
@@ -1019,7 +1019,7 @@ void Make_All_Subpolys(PolyPointList *_P, EqList *_E, VertexNumList *_V,
   for (i = 0; i < ((badfacet == -1) ? _V->nv : nbadvert); i++)
     if ((kept(_V->v[i], &new_KL) < 0)) {
       _NFL->b[_NFL->rd - 1] = i;
-      Drop_and_Keep(_P, _V, _E, &new_KL, i, _NFL);
+      Drop_and_Keep(_P, _V, _E, &new_KL, i, _NFL, out);
     }
 
   /* If a bad facet is kept, reduce the poly: */
@@ -1127,7 +1127,7 @@ void Do_the_Classification(CWS *W, PolyPointList *P, /* char *fn, */
       Read_File_2_List(polyo, _NFL);
       rFlag = 0;
     }
-    Start_Make_All_Subpolys(P, _NFL);
+    Start_Make_All_Subpolys(P, _NFL, outFILE);
     Print_Weight_Info(W, _NFL, outFILE);
     if ((WRITE_DIM <= P->n) && (MIN_NEW <= _NFL->NP))
       if ((int)difftime(time(NULL), W_SAVE_TIME) > MIN_W_SAVE_TIME) {
@@ -1646,7 +1646,7 @@ int irred(PolyPointList *_P) {
   return 1;
 }
 
-void DPircheck(CWS *_W, PolyPointList *_P) {
+void DPircheck(CWS *_W, PolyPointList *_P, FILE *out) {
   int i, j, k;
   EqList E, DE;
   VertexNumList V, DV;
@@ -1683,13 +1683,13 @@ void DPircheck(CWS *_W, PolyPointList *_P) {
   if (irred(_RDP)) {
     /* Print_PPL(_RDP); */
     for (i = 0; i < _W->nw; i++) {
-      fprintf(outFILE, "%d ", (int)_W->d[i]);
+      fprintf(out, "%d ", (int)_W->d[i]);
       for (j = 0; j < _W->N; j++)
-        fprintf(outFILE, "%d ", (int)_W->W[i][j]);
+        fprintf(out, "%d ", (int)_W->W[i][j]);
       if (i + 1 < _W->nw)
-        fprintf(outFILE, " ");
+        fprintf(out, " ");
     }
-    fprintf(outFILE, "\n");
+    fprintf(out, "\n");
   }
 }
 
@@ -1758,7 +1758,7 @@ int virred(PolyPointList *_P, EqList *B) {
   return 1;
 }
 
-void DPvircheck(CWS *_W, PolyPointList *_P) {
+void DPvircheck(CWS *_W, PolyPointList *_P, FILE *out) {
   int i, j;
   EqList E;
   EqList *B = &_W->B;
@@ -1771,13 +1771,13 @@ void DPvircheck(CWS *_W, PolyPointList *_P) {
   if (virred(_PD, B)) {
     /* Print_PPL(_PD); */
     for (i = 0; i < _W->nw; i++) {
-      fprintf(outFILE, "%d ", (int)_W->d[i]);
+      fprintf(out, "%d ", (int)_W->d[i]);
       for (j = 0; j < _W->N; j++)
-        fprintf(outFILE, "%d ", (int)_W->W[i][j]);
+        fprintf(out, "%d ", (int)_W->W[i][j]);
       if (i + 1 < _W->nw)
-        fprintf(outFILE, " ");
+        fprintf(out, " ");
     }
-    fprintf(outFILE, "\n");
+    fprintf(out, "\n");
   }
 }
 
@@ -1997,20 +1997,20 @@ int Find_Ref_Subpoly(PolyPointList *_P, EqList *_E, VertexNumList *_V,
   return 0;
 }
 
-void Max_check(CWS *_W, PolyPointList *_P) {
+void Max_check(CWS *_W, PolyPointList *_P, FILE *out) {
   int i, j;
   EqList E;
   VertexNumList V;
   IP_Check(_P, &V, &E);
   if (Poly_Max_check(_P, &V, &E)) {
     for (i = 0; i < _W->nw; i++) {
-      fprintf(outFILE, "%d ", (int)_W->d[i]);
+      fprintf(out, "%d ", (int)_W->d[i]);
       for (j = 0; j < _W->N; j++)
-        fprintf(outFILE, "%d ", (int)_W->W[i][j]);
+        fprintf(out, "%d ", (int)_W->W[i][j]);
       if (i + 1 < _W->nw)
-        fprintf(outFILE, " ");
+        fprintf(out, " ");
     }
-    fprintf(outFILE, "\n");
+    fprintf(out, "\n");
   }
 }
 
@@ -2030,7 +2030,7 @@ int Poly_Min_check(PolyPointList *_P, VertexNumList *_V, EqList *_E) {
   return !Start_Find_Ref_Subpoly(_P);
 }
 
-void Overall_check(CWS *_W, PolyPointList *_P) {
+void Overall_check(CWS *_W, PolyPointList *_P, FILE *out) {
   int i, j, k, span, lpm = 0, vm = 0, r = 0;
   EqList E, DE;
   VertexNumList V, DV;
@@ -2047,11 +2047,11 @@ void Overall_check(CWS *_W, PolyPointList *_P) {
   /* assert(Ref_Equations(&E)); */
 
   for (i = 0; i < _W->nw; i++) {
-    fprintf(outFILE, "%d ", (int)_W->d[i]);
+    fprintf(out, "%d ", (int)_W->d[i]);
     for (j = 0; j < _W->N; j++)
-      fprintf(outFILE, "%d ", (int)_W->W[i][j]);
+      fprintf(out, "%d ", (int)_W->W[i][j]);
     if (i + 1 < _W->nw)
-      fprintf(outFILE, " ");
+      fprintf(out, " ");
   }
   fflush(0);
 
@@ -2093,17 +2093,17 @@ void Overall_check(CWS *_W, PolyPointList *_P) {
       vm = 1;
 
   if ((!span && vm) || (!lpm && vm) || (r != vm))
-    fprintf(outFILE, "span:%d lpm:%d vm:%d r:%d\n", span, lpm, vm, r);
+    fprintf(out, "span:%d lpm:%d vm:%d r:%d\n", span, lpm, vm, r);
   else {
     if (r)
-      fprintf(outFILE, "r");
+      fprintf(out, "r");
     if (lpm)
-      fprintf(outFILE, "l");
+      fprintf(out, "l");
     if (span)
-      fprintf(outFILE, "s");
+      fprintf(out, "s");
     if (!r && !lpm && !span)
-      fprintf(outFILE, "-");
-    fprintf(outFILE, "\n");
+      fprintf(out, "-");
+    fprintf(out, "\n");
   }
   fflush(0);
 }
