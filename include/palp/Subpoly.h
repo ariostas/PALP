@@ -152,7 +152,7 @@ static_assert(FORCE_SAVE_TIME > MIN_W_SAVE_TIME,
 void Make_ANF(PolyPointList *P, VertexNumList *V, /* affine normal form */
               EqList *E, Long ANF[POLY_Dmax][VERT_Nmax]);
 void Gen_Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
-                         char *polyo);
+                         char *polyo, FILE *out = outFILE);
 void Gen_Bin_2_ascii(char *pi, char *dbi, int max, int vf, int vt,
                      PolyPointList *);
 
@@ -206,7 +206,7 @@ void Init_NF_List(NF_List *);
 void Init_FInfoList(FInfoList *FI);
 void Read_File_2_List(char *polyi, NF_List *_NFL);
 void Write_List_2_File(char *polyo, NF_List *_NFL);
-void Print_Weight_Info(CWS *_W, NF_List *_L);
+void Print_Weight_Info(CWS *_W, NF_List *_L, FILE *out = outFILE);
 void fputUI(unsigned int l, FILE *F);
 void UCnf2vNF(int *d, int *v, int *nuc, unsigned char *uc, /* IN */
               Long NF[POLY_Dmax][VERT_Nmax], int *MS);     /* OUT */
@@ -225,7 +225,7 @@ void ANF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
 void UCnf_2_ANF(int *d, int *v, int *nuc, unsigned char *uc, /* IN */
                 Long NF[POLY_Dmax][VERT_Nmax], int *MS);     /* OUT */
 
-void Print_Expect(FInfoList *L);
+void Print_Expect(FInfoList *L, FILE *out = outFILE);
 
 /* ====    headers of aux-Routines for Add_Polya_2_DBi in Subadd.c ==== */
 

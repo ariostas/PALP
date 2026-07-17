@@ -82,7 +82,7 @@ typedef struct {
 void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
                int *NV, int *nUC, unsigned char *UC,          /* OUT */
                NF_List *StatsL = nullptr); /* optional stats */
-void Print_Statistics(NF_List *);
+void Print_Statistics(NF_List *, FILE *out = outFILE);
 void Init_BaseList(Base_List **BL, int *d); /* malloc + init.; BL=&(list) */
 void Insert_PPent_into_Pent(NF_List *S);
 void Read_In_File(NF_List *);
@@ -144,7 +144,7 @@ void Init_NF_List(NF_List *L) {
     L->rd = 0;
 }
 
-void PrintNumbers(NF_List *S) {
+void PrintNumbers(NF_List *S, FILE *out) {
   printf("NP=%lld  nSLP=%d  H=2*%lld - %lldnm - %dsm  SL=2*%d - %dnm - %dsm\n",
          S->NP, S->nSLP, S->Aux.nNF + S->PEN + S->PPEN, S->Aux.nNM + S->peNM,
          S->peSM + S->Aux.nSM, S->SLN, S->slNM, S->slSM);
@@ -605,7 +605,7 @@ void Write_Bin_File(FILE *F, NF_List *L) {
     printf("  u%lld", L->NC * 100 / (L->Aux.nNF + L->PEN + L->PPEN));
 #endif
   AuxCalcNumbers(L, _AI);
-  Print_Expect(_AI);
+  Print_Expect(_AI, outFILE);
   fflush(stdout);
   nVmax = palp::max(L->Aux.nVmax, AI.nVmax);
   NUCmax = palp::max(L->Aux.NUCmax, AI.NUCmax);
@@ -810,7 +810,7 @@ void ReAlloc_SortList(NF_List *L) {
 }
 void CheckLastSaveTime(NF_List *L, int maxsec) {
   if ((int)difftime(time(NULL), L->SAVE) > maxsec) {
-    Print_Statistics(L);
+    Print_Statistics(L, outFILE);
     ReAlloc_SortList(L);
   }
 }
@@ -1221,7 +1221,7 @@ int ucNF_Sort_Add(int *NV, int *nUC, unsigned char *UC, NF_List *S) {
 
   if (NewH + NewSL)
     if (S->NP % WATCHREF == 0) {
-      Print_Statistics(S);
+      Print_Statistics(S, outFILE);
       if (S->NP - S->savedNP > SAVE_INC - WATCHREF)
       /* printf("NP=%d  PEN=%d  peNM=%d  peSM=%d\n", S->NP,S->PEN,S->peNM,
          S->peSM);fflush(stdout);
@@ -1242,7 +1242,7 @@ Ret0:
 /*      ==============================================================      */
 
 /*      ==============================================================      */
-void Print_Statistics(NF_List *_L) {
+void Print_Statistics(NF_List *_L, FILE *out) {
   clock_t CLOCK = clock();
   time_t DATE = time(NULL);
   int CPUsec = (CLOCK - _L->CLOCK) / CLOCKS_PER_SEC;  /* CLOCKS_PER_SEC::10^6 */
@@ -1280,7 +1280,7 @@ void Print_Statistics(NF_List *_L) {
   puts("");
   fflush(stdout);
 }
-void Print_Expect(FInfoList *L) {
+void Print_Expect(FInfoList *L, FILE *out) {
   int s = L->nSM;
   Along m = L->nNF - L->nNM - L->nSM, p = L->nNF + m;
   double x = p;
@@ -1357,24 +1357,24 @@ int Add_NF_to_List(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 }
 
 /* 				     #R sl hit #IP #NF TIME( r > u > AddNF) */
-void Print_Weight_Info(CWS *W, NF_List *_L) {
+void Print_Weight_Info(CWS *W, NF_List *_L, FILE *out) {
   int i, j;
 #if POLY_Dmax > 3
-  Print_Statistics(_L);
+  Print_Statistics(_L, out);
 #endif
   for (i = 0; i < W->nw; i++) {
-    fprintf(outFILE, "%ld ", W->d[i]);
+    fprintf(out, "%ld ", W->d[i]);
     for (j = 0; j < W->N; j++)
-      fprintf(outFILE, "%ld ", W->W[i][j]);
+      fprintf(out, "%ld ", W->W[i][j]);
   }
   for (i = 0; i < W->nz; i++) {
-    fprintf(outFILE, "/Z%d: ", W->m[i]);
+    fprintf(out, "/Z%d: ", W->m[i]);
     for (j = 0; j < W->N; j++)
-      fprintf(outFILE, "%d ", W->z[i][j]);
+      fprintf(out, "%d ", W->z[i][j]);
   }
-  fprintf(outFILE, "R=%lld +%dsl hit=%d IP=%d NF=%d (%d)\n", _L->NP - _L->nSLP,
+  fprintf(out, "R=%lld +%dsl hit=%d IP=%d NF=%d (%d)\n", _L->NP - _L->nSLP,
           _L->nSLP, _L->hc, _L->nIP, _L->nNF, _L->nSLNF);
-  fflush(outFILE);
+  fflush(out);
 }
 
 /*   ===============	    compression package		=================== */
@@ -2468,7 +2468,7 @@ void Add_Polya_2_Polyi(char *polyi, char *polya, char *polyo) {
   {	long long tnp=(2*FIo.nNF-FIo.nNM-FIo.nSM)/1000; tnp*=tnp;
      tnp/=(2*tnb); printf("   [p^2/2m=%ldM]",tnp);
   }*/
-  Print_Expect(&FIo);
+  Print_Expect(&FIo, outFILE);
   puts("");
   if (ferror(FI)) {
     fputs("Error: Add_Polya_2_Polyi input file read error\n", stderr);
@@ -2637,7 +2637,7 @@ int Add_ANF_to_List(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 }
 
 void Gen_Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
-                         char *polyo) {
+                         char *polyo, FILE *out) {
   NF_List *_NFL = (NF_List *)malloc(sizeof(NF_List));
   VertexNumList V;
   EqList F;
@@ -2675,13 +2675,13 @@ void Gen_Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
       if (outFILE != stdout) {
         int i, j;
         for (i = 0; i < W->nw; i++) {
-          fprintf(outFILE, "%ld ", W->d[i]);
+          fprintf(out, "%ld ", W->d[i]);
           for (j = 0; j < W->N; j++)
-            fprintf(outFILE, "%ld ", W->W[i][j]);
+            fprintf(out, "%ld ", W->W[i][j]);
           if (i + 1 < W->nw)
-            fprintf(outFILE, " ");
+            fprintf(out, " ");
           else
-            fprintf(outFILE, "\n");
+            fprintf(out, "\n");
         }
         fflush(0);
       }

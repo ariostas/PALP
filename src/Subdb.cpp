@@ -892,7 +892,7 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo) {
           tnp/=20; tnp/=Tnb; printf("   [p^2/2m=%ldk]",tnp);
        }
   */
-  Print_Expect(&FIo);
+  Print_Expect(&FIo, outFILE);
   puts("");
   if (ferror(FA)) {
     fprintf(stderr, "Error: Add_Aux_to_DB aux-file read error\n");
@@ -947,7 +947,7 @@ void Print_NF(FILE *F, int *d, int *v, Long NF[POLY_Dmax][VERT_Nmax]) {
       fprintf(F, "%d%s", (int)NF[i][j], (*v == j + 1) ? "\n" : " ");
 }
 void Print_Missing_Mirror(int *d, int *v, int *nu, unsigned char *uc,
-                          PolyPointList *_P) {
+                          PolyPointList *_P, FILE *out) {
   int I, J, MS;
   Long NF[POLY_Dmax][VERT_Nmax];
   VertexNumList V;
@@ -960,12 +960,12 @@ void Print_Missing_Mirror(int *d, int *v, int *nu, unsigned char *uc,
     for (J = 0; J < *d; J++)
       _P->x[I][J] = NF[J][I];
   if (MS == 2)
-    Print_NF(outFILE, d, v, NF);
+    Print_NF(out, d, v, NF);
   else if (MS == 1) {
     IP_Check(_P, &V, &E);
     Small_Make_Dual(_P, &V, &E);
     Make_Poly_NF(_P, &V, &E, NF);
-    Print_NF(outFILE, d, &(V.nv), NF);
+    Print_NF(out, d, &(V.nv), NF);
   } else {
     puts("Only use Print_Missing_Mirror for MM!");
     exit(1);
@@ -1209,7 +1209,7 @@ void Check_NF_Order(char *polyi, char *dbi, int cF,
     exit(1);
   }
   tSM = tNM = 0; /* if(tln>1)printf("  p^2/2m=%ldkCY",tln); */
-  Print_Expect(&L);
+  Print_Expect(&L, outFILE);
 
   printf("\nv:");
   if (*polyi)
@@ -1254,7 +1254,7 @@ void Check_NF_Order(char *polyi, char *dbi, int cF,
 
             if (cF < 0)
               if ((*uc % 4) % 3)
-                Print_Missing_Mirror(&d, &v, &nu, uc, _P);
+                Print_Missing_Mirror(&d, &v, &nu, uc, _P, outFILE);
           }
           nbsum += nu * L.NFnum[v][nu];
         }
@@ -2029,7 +2029,7 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo) {
   {	long long tnp=(2*FIo.nNF-FIo.nNM-FIo.nSM)/1000; tnp*=tnp;
      tnp/=(2*tnb); printf("   [p^2/2m=%ldM]",tnp);
   }	*/
-  Print_Expect(&FIo);
+  Print_Expect(&FIo, outFILE);
   puts("");
   if (ferror(FI)) {
     fprintf(stderr, "Error: Subtract_Aux_from_DB input file read error\n");
@@ -3408,15 +3408,15 @@ constexpr bool ph_test = true;
 }
 void Aux_Print_CoverPoly(int *I, int *d, int *N, Long *X[POLY_Dmax],
                          Long G[][POLY_Dmax], Long *D, int *x,
-                         Long Z[][VERT_Nmax], Long *M, int r) {
+                         Long Z[][VERT_Nmax], Long *M, int r, FILE *out) {
   int i, j, dia = 1, err = 0;
-  fprintf(outFILE, "%d %d    index=%d  D=%ld", *d, *N, *I, D[0]);
+  fprintf(out, "%d %d    index=%d  D=%ld", *d, *N, *I, D[0]);
   for (i = 1; i < *d; i++)
     printf(" %ld", D[i]);
   for (i = 0; i < r; i++) {
-    fprintf(outFILE, " /Z%ld:", M[i]);
+    fprintf(out, " /Z%ld:", M[i]);
     for (j = 0; j < *N; j++)
-      fprintf(outFILE, " %ld", Z[i][j]);
+      fprintf(out, " %ld", Z[i][j]);
   }
   printf("  #%d\n", *x);
   for (i = 0; i < *d; i++) {
@@ -3449,7 +3449,7 @@ void Aux_Print_CoverPoly(int *I, int *d, int *N, Long *X[POLY_Dmax],
   }
 }
 void Aux_Print_SLpoly(int *I, int *d, int *N, Long *X[POLY_Dmax],
-                      Long G[][POLY_Dmax], Long *D, int *x) {
+                      Long G[][POLY_Dmax], Long *D, int *x, FILE *out) {
   int i, j, dia = 1, err = 0;
   printf("%d %d    index=%d  D=%ld", *d, *N, *I, D[0]);
   for (i = 1; i < *d; i++)
@@ -3603,7 +3603,8 @@ void PH_Sublat_Polys(char *dbin, int omitFIP, PolyPointList *_P, char sF) {
                 "Error: PH_Sublat_Polys cover polytope not reflexive\n");
         exit(1);
       }
-      Aux_Print_CoverPoly(&index, &_P->n, &N, RelPts, G, D, &x, Z, M, r);
+      Aux_Print_CoverPoly(&index, &_P->n, &N, RelPts, G, D, &x, Z, M, r,
+                          outFILE);
     } else {
       index = Make_Lattice_Basis(_P->n, N, RelPts, G, D);
       if (1 == index)
@@ -3626,7 +3627,7 @@ void PH_Sublat_Polys(char *dbin, int omitFIP, PolyPointList *_P, char sF) {
         exit(1);
       }
       Print_VL(_P, &V, "");
-      Aux_Print_SLpoly(&index, &_P->n, &N, RelPts, G, D, &x);
+      Aux_Print_SLpoly(&index, &_P->n, &N, RelPts, G, D, &x, outFILE);
     }
   }
   if (*dbin)

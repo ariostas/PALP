@@ -448,7 +448,7 @@ int main(int narg, char *fn[]) {
   else if (abFlag == -1)
     Bin_2_ascii(polyi, dbin, (mFlag == 'r'), vf, vt, _P);
   else if (abFlag == 2)
-    Gen_Ascii_to_Binary(&W, _P, dbin, polyi, polyo);
+    Gen_Ascii_to_Binary(&W, _P, dbin, polyi, polyo, outFILE);
   else if (abFlag == -2)
     Gen_Bin_2_ascii(polyi, dbin, (mFlag == 'r'), vf, vt, _P);
   else if (cFlag)

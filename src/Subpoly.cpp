@@ -144,7 +144,7 @@ INCI List_Complete(int n, int n_polys, int n_facets, INCI *polys,
 
 void FE_Close_the_Hole(PolyPointList *_P, VertexNumList *_V, EqList *_E,
                        CEqList *_CEq, int n_old_v, INCI *CEq_INCI,
-                       INCI Hole_Vert_INCI) {
+                       INCI Hole_Vert_INCI, FILE *out) {
   static PolyPointList P;
   VertexNumList Hole_Verts;
   EqList BVE;
@@ -195,23 +195,23 @@ void FE_Close_the_Hole(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 void Close_the_Hole(PolyPointList *_P, VertexNumList *_V, EqList *_E,
                     CEqList *_CEq, int old_ne, int n_old_v, int n_Hole_Faces,
                     INCI *E_INCI, INCI *CEq_INCI, INCI Hole_Verts,
-                    INCI *Hole_Faces) {
+                    INCI *Hole_Faces, FILE *out) {
 
   INCI Bad_Vert_INCI, cd2_Faces[CD2F_Nmax];
   int n_cd2_Faces = n_Hole_Faces, np = _P->np, i, j;
 
   /* puts("CTH");
      Print_PPL(_P);
-     fprintf(outFILE,"_E:\n");
+     fprintf(out,"_E:\n");
      for (i=0;i<_E->ne;i++){
-     for (j=0;j<_P->n;j++) fprintf(outFILE,"%d ", _E->e[i].a[j]);
-     fprintf(outFILE," %d\n", _E->e[i].c);}
-     fprintf(outFILE,"n_irrel=%d, n_old_v=%d\n", n_irrel, n_old_v);
-     fprintf(outFILE,"E_INCI: ");
+     for (j=0;j<_P->n;j++) fprintf(out,"%d ", _E->e[i].a[j]);
+     fprintf(out," %d\n", _E->e[i].c);}
+     fprintf(out,"n_irrel=%d, n_old_v=%d\n", n_irrel, n_old_v);
+     fprintf(out,"E_INCI: ");
      for (i=0;i<_E->ne;i++) Print_INCI(E_INCI[i]);
-     fprintf(outFILE,"\nHole_Faces: ");
+     fprintf(out,"\nHole_Faces: ");
      for (i=0;i<n_Hole_Faces;i++) Print_INCI(Hole_Faces[i]);
-     fprintf(outFILE,"\n");
+     fprintf(out,"\n");
      fflush(0); */
 
   for (i = 0; i < n_cd2_Faces; i++)
@@ -231,7 +231,7 @@ void Close_the_Hole(PolyPointList *_P, VertexNumList *_V, EqList *_E,
         not_found = 0;
       }
     if (not_found)
-      fprintf(outFILE, "Equation1 not found in Close_The_Hole!\n");
+      fprintf(out, "Equation1 not found in Close_The_Hole!\n");
     not_found = 1;
     for (j = _E->ne; (j < old_ne) && not_found; j++)
       if (INCI_LE(Hole_Faces[n_Hole_Faces], E_INCI[j])) {
@@ -239,7 +239,7 @@ void Close_the_Hole(PolyPointList *_P, VertexNumList *_V, EqList *_E,
         not_found = 0;
       }
     if (not_found)
-      fprintf(outFILE, "Equation2 not found in Close_The_Hole!\n");
+      fprintf(out, "Equation2 not found in Close_The_Hole!\n");
     INCI_To_VertexNumList(INCI_XOR(Hole_Faces[n_Hole_Faces], Hole_Verts),
                           &Other_Verts, n_old_v);
     for (i = 0; i < Other_Verts.nv; i++) {
@@ -262,13 +262,13 @@ void Close_the_Hole(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   }
 
   /* for (i=0;i<_CEq->ne;i++){
-     fprintf(outFILE,"_CEq->e[%d]: ",i);
-     for (j=0;j<_P->n;j++) fprintf(outFILE," %d",_CEq->e[i].a[j]);
-     fprintf(outFILE,"  %d\n",_CEq->e[i].c);}
+     fprintf(out,"_CEq->e[%d]: ",i);
+     for (j=0;j<_P->n;j++) fprintf(out," %d",_CEq->e[i].a[j]);
+     fprintf(out,"  %d\n",_CEq->e[i].c);}
      for (i=0;i<_E->ne;i++){
-     fprintf(outFILE,"_E->e[%d]: ",i);
-     for (j=0;j<_P->n;j++) fprintf(outFILE," %d",_E->e[i].a[j]);
-     fprintf(outFILE,"  %d\n",_E->e[i].c);}
+     fprintf(out,"_E->e[%d]: ",i);
+     for (j=0;j<_P->n;j++) fprintf(out," %d",_E->e[i].a[j]);
+     fprintf(out,"  %d\n",_E->e[i].c);}
      fflush(0); */
 
   for (i = 0; i < _CEq->ne; i++)
@@ -297,12 +297,12 @@ void Close_the_Hole(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   Bad_Vert_INCI =
       List_Complete(_P->n - 1, _CEq->ne, n_cd2_Faces, CEq_INCI, cd2_Faces);
   if (!INCI_EQ_0(Bad_Vert_INCI))
-    FE_Close_the_Hole(_P, _V, _E, _CEq, n_old_v, CEq_INCI, Bad_Vert_INCI);
+    FE_Close_the_Hole(_P, _V, _E, _CEq, n_old_v, CEq_INCI, Bad_Vert_INCI, out);
   _P->np = np;
 }
 
 int Aided_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_E,
-                   int n_irrel, int n_old_v) {
+                   int n_irrel, int n_old_v, FILE *out) {
 
   /* The first n_old_v entries of _P are the old vertices;
      the first n_irrel entries of _E are the irrelevant old facets (which
@@ -315,7 +315,7 @@ int Aided_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   CEqList CEq;
 
   if (n_irrel == 0) {
-    fprintf(outFILE, "n_irrel=0 in Aided_IP_Check!");
+    fprintf(out, "n_irrel=0 in Aided_IP_Check!");
     exit(1);
   }
 
@@ -398,7 +398,7 @@ int Aided_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_E,
           not_found = 0;
         }
       if (not_found)
-        fprintf(outFILE, "Equation1 not found in Aided_IP_Check!\n");
+        fprintf(out, "Equation1 not found in Aided_IP_Check!\n");
       not_found = 1;
       for (j = n_irrel; (j < old_ne) && not_found; j++)
         if (INCI_LE(Hole_Faces[i], E_INCI[j])) {
@@ -406,7 +406,7 @@ int Aided_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_E,
           not_found = 0;
         }
       if (not_found)
-        fprintf(outFILE, "Equation2 not found in Aided_IP_Check!\n");
+        fprintf(out, "Equation2 not found in Aided_IP_Check!\n");
       CEq.e[i] = EEV_To_Equation(&E1, &E2, _P->x[newvert], _P->n);
       for (j = 0; j < n_old_v; j++)
         if ((dist = Eval_Eq_on_V(&(CEq.e[i]), _P->x[j], _P->n))) {
@@ -430,26 +430,27 @@ int Aided_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   else {
     CEq.ne = 0;
     if constexpr (SIMPLE_CTH)
-      FE_Close_the_Hole(_P, _V, _E, &CEq, n_old_v, CEq_INCI, Hole_Verts);
+      FE_Close_the_Hole(_P, _V, _E, &CEq, n_old_v, CEq_INCI, Hole_Verts,
+                        outFILE);
     else
       Close_the_Hole(_P, _V, _E, &CEq, old_ne, n_old_v, n_Hole_Faces, E_INCI,
-                     CEq_INCI, Hole_Verts, Hole_Faces);
+                     CEq_INCI, Hole_Verts, Hole_Faces, out);
   }
 
   /*Print_PPL(_P);
   Print_VL(_P,_V,"Verts:");
   for (i=0;i<CEq.ne;i++){
-    fprintf(outFILE,"CEq.e[%d]: ",i);
-    for (j=0;j<_P->n;j++) fprintf(outFILE," %d",CEq.e[i].a[j]);
-    fprintf(outFILE,"  %d\n",CEq.e[i].c);}
-  fprintf(outFILE,"CEq_INCI: ");
+    fprintf(out,"CEq.e[%d]: ",i);
+    for (j=0;j<_P->n;j++) fprintf(out," %d",CEq.e[i].a[j]);
+    fprintf(out,"  %d\n",CEq.e[i].c);}
+  fprintf(out,"CEq_INCI: ");
   for (i=0;i<CEq.ne;i++) Print_INCI(CEq_INCI[i]);
-  fprintf(outFILE,"\n");
+  fprintf(out,"\n");
   for (i=0;i<_E->ne;i++){
-    fprintf(outFILE,"_E->e[%d]: ",i);
-    for (j=0;j<_P->n;j++) fprintf(outFILE," %d",_E->e[i].a[j]);
-    fprintf(outFILE,"  %d\n",_E->e[i].c);}
-  fprintf(outFILE,"E_INCI: ");
+    fprintf(out,"_E->e[%d]: ",i);
+    for (j=0;j<_P->n;j++) fprintf(out," %d",_E->e[i].a[j]);
+    fprintf(out,"  %d\n",_E->e[i].c);}
+  fprintf(out,"E_INCI: ");
   for (i=0;i<_E->ne;i++) Print_INCI(E_INCI[i]);
   fflush(0); */
 
@@ -457,9 +458,9 @@ int Aided_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 }
 
 void Make_All_Subpolys(PolyPointList *_P, EqList *_E, VertexNumList *_V,
-                       KeepList *_KL, NF_List *_NFL);
+                       KeepList *_KL, NF_List *_NFL, FILE *out = outFILE);
 
-int Relevant(Long *X, int *n, EqList *_E, int *n_irrel) {
+int Relevant(Long *X, int *n, EqList *_E, int *n_irrel, FILE *out) {
   int i;
   for (i = 0; i < *n_irrel; i++)
     if (!Eval_Eq_on_V(&(_E->e[i]), X, *n))
@@ -517,7 +518,8 @@ void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
       new2old[red_P->np++] = _V->v[i];
     }
   for (i = 0; i < _P->np; i++)
-    if ((i != _V->v[drop_num]) && Relevant(_P->x[i], &_P->n, new_E, &n_irrel)) {
+    if ((i != _V->v[drop_num]) &&
+        Relevant(_P->x[i], &_P->n, new_E, &n_irrel, outFILE)) {
       for (j = 0; j < _P->n; j++)
         red_P->x[red_P->np][j] = _P->x[i][j];
       new2old[red_P->np++] = i;
@@ -540,7 +542,7 @@ void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   if constexpr (UnAided_IP_Check)
     IP = IP_Check(red_P, &red_V, new_E);
   else
-    IP = Aided_IP_Check(red_P, &red_V, new_E, n_irrel, _V->nv - 1);
+    IP = Aided_IP_Check(red_P, &red_V, new_E, n_irrel, _V->nv - 1, outFILE);
 
   /* puts("After AIP (in D&K):");
   Print_VL(red_P,&red_V);
@@ -623,7 +625,7 @@ void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
         exit(1);
       }
 
-    Make_All_Subpolys(_P, new_E, &new_V, _KL, _NFL);
+    Make_All_Subpolys(_P, new_E, &new_V, _KL, _NFL, outFILE);
 
     /* Reconstruct _P  */
     if (j >= 0)
@@ -730,7 +732,7 @@ void Start_Make_All_Subpolys(PolyPointList *_P, NF_List *_NFL) {
       _P->np++;
     }
 
-  Make_All_Subpolys(_P, &E, &V, &KL, _NFL);
+  Make_All_Subpolys(_P, &E, &V, &KL, _NFL, outFILE);
 }
 
 void IREgcd(Long *vec_in, int *d, Long *vec_out) {
@@ -930,11 +932,11 @@ void Reduce_Poly(PolyPointList *_P, EqList *_E, KeepList *_KL, NF_List *_NFL,
     exit(1);
   }
 
-  Make_All_Subpolys(new_P, _E, &V, &new_KL, _NFL);
+  Make_All_Subpolys(new_P, _E, &V, &new_KL, _NFL, outFILE);
 }
 
 void Make_All_Subpolys(PolyPointList *_P, EqList *_E, VertexNumList *_V,
-                       KeepList *_KL, NF_List *_NFL) {
+                       KeepList *_KL, NF_List *_NFL, FILE *out) {
 
   /* Creates all subpolyhedra of an IP-polyhedron given by _P, _E, _V.
      The basic structure is:
@@ -1126,7 +1128,7 @@ void Do_the_Classification(CWS *W, PolyPointList *P, /* char *fn, */
       rFlag = 0;
     }
     Start_Make_All_Subpolys(P, _NFL);
-    Print_Weight_Info(W, _NFL);
+    Print_Weight_Info(W, _NFL, outFILE);
     if ((WRITE_DIM <= P->n) && (MIN_NEW <= _NFL->NP))
       if ((int)difftime(time(NULL), W_SAVE_TIME) > MIN_W_SAVE_TIME) {
         Write_List_2_File(polyo, _NFL);
@@ -1599,7 +1601,7 @@ void Find_Sublat_Polys(char mFlag, char *dbin, char *polyi, char *polyo,
           x[j][i] = Eval_Eq_on_V(&(Fel.e[j]), _P->x[Vnl.v[i]], _P->n) - 1;
       MakePolyOnSublat(_NFL, x, Vnl.nv, Fel.ne, &max_order, &mFlag, _P);
       if (!mFlag)
-        Print_Weight_Info(&W, _NFL);
+        Print_Weight_Info(&W, _NFL, outFILE);
     }
   }
 
@@ -1822,13 +1824,13 @@ int Find_RSP_Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     }
   for (i = 0; i < _P->np; i++)
     if ((i != _V->v[drop_num]) &&
-        Relevant(_P->x[i], &_P->n, &new_E, &n_irrel)) {
+        Relevant(_P->x[i], &_P->n, &new_E, &n_irrel, outFILE)) {
       for (j = 0; j < _P->n; j++)
         red_P->x[red_P->np][j] = _P->x[i][j];
       new2old[red_P->np++] = i;
     }
 
-  IP = Aided_IP_Check(red_P, &red_V, &new_E, n_irrel, _V->nv - 1);
+  IP = Aided_IP_Check(red_P, &red_V, &new_E, n_irrel, _V->nv - 1, outFILE);
 
   /*  test_IP=IP_Check(red_P,&test_V,&test_E);
   printf("%d %d %d\n", _P->np, red_P->np, *rd); fflush(0);
