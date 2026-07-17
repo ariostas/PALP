@@ -94,15 +94,15 @@ int READ_CWS_PP(CWS *_CW, PolyPointList *_P, FILE *INFILE) {
 
 void Print_CWS(CWS *_W);
 void Conv(int narg, char *fn[]);
-void SimplexPointCount(int narg, char *fn[]);
-void Init_IP_Weights(int narg, char *fn[]);
-void Init_moon_Weights(int narg, char *fn[]);
-void Init_IP_CWS(int narg, char *fn[]);
-void IP_Poly_Data(int narg, char *fn[]);
+void SimplexPointCount(int narg, char *fn[], FILE *out = outFILE);
+void Init_IP_Weights(int narg, char *fn[], FILE *out = outFILE);
+void Init_moon_Weights(int narg, char *fn[], FILE *out = outFILE);
+void Init_IP_CWS(int narg, char *fn[], FILE *out = outFILE);
+void IP_Poly_Data(int narg, char *fn[], FILE *out = outFILE);
 void Make_CWS_Points(CWS *, PolyPointList *);
-void Npoly2cws(int narg, char *fn[]);
-void RgcWeights(int narg, char *fn[]);
-void AddHalf(void);
+void Npoly2cws(int narg, char *fn[], FILE *out = outFILE);
+void RgcWeights(int narg, char *fn[], FILE *out = outFILE);
+void AddHalf(FILE *out = outFILE);
 void PrintCWSextUsage(char *c) {
   printf("This is `%s': -x gives undocumented extensions:\n", c);
   puts("              -ip    printf PolyPointList");
@@ -123,27 +123,27 @@ int main(int narg, char *fn[]) {
   if ((fn[1][0] != '-') || (fn[1][1] == 'h'))
     PrintCWSUsage(fn[0]);
   else if (fn[1][1] == 'w')
-    Init_IP_Weights(narg, fn);
+    Init_IP_Weights(narg, fn, outFILE);
   else if (fn[1][1] == 'm')
-    Init_moon_Weights(narg, fn);
+    Init_moon_Weights(narg, fn, outFILE);
   else if (fn[1][1] == 'c')
-    Init_IP_CWS(narg, fn);
+    Init_IP_CWS(narg, fn, outFILE);
   else if (fn[1][1] == 'i')
-    IP_Poly_Data(narg, fn);
+    IP_Poly_Data(narg, fn, outFILE);
   else if (fn[1][1] == 'N')
-    Npoly2cws(narg, fn);
+    Npoly2cws(narg, fn, outFILE);
   else if (fn[1][1] == 'p')
     Conv(narg, fn);
   else if (fn[1][1] == 'x')
     PrintCWSextUsage(fn[0]);
   else if (fn[1][1] == 'S')
-    SimplexPointCount(narg, fn);
+    SimplexPointCount(narg, fn, outFILE);
   else if (fn[1][1] == 'L')
-    SimplexPointCount(narg, fn);
+    SimplexPointCount(narg, fn, outFILE);
   else if (fn[1][1] == 'd')
-    RgcWeights(narg, fn);
+    RgcWeights(narg, fn, outFILE);
   else if (fn[1][1] == '2')
-    AddHalf();
+    AddHalf(outFILE);
   else
     printf("Unknown option '-%c'; use -h for help\n", fn[1][1]);
   return 0;
@@ -555,7 +555,7 @@ int WsIpCheck(Equation *q, int d) {
   return P.np - 1;
 }
 
-void RgcWeights(int narg, char *fn[]) {
+void RgcWeights(int narg, char *fn[], FILE *out) {
   int i, j, d, n = 1, r2 = 2;
   char *c = &fn[1][2];
   auto X = std::make_unique<RgcClassData>();
@@ -600,7 +600,7 @@ void RgcWeights(int narg, char *fn[]) {
 
 int IsNextDigit(void);
 
-void AddHalf(void) {
+void AddHalf(FILE *out) {
   std::array<int, AMBI_Dmax *(AMBI_Dmax + 1)> IN;
   int i, j, n = 0;
 
@@ -633,10 +633,11 @@ void AddHalf(void) {
   printf("#ws=%d\n", n);
 }
 
-void Make_IP_Weights(int d, int Dmin, int Dmax, int rFlag, int tFlag);
-void MakeMoonWeights(int d, int Dmin, int Dmax);
+void Make_IP_Weights(int d, int Dmin, int Dmax, int rFlag, int tFlag,
+                     FILE *out = outFILE);
+void MakeMoonWeights(int d, int Dmin, int Dmax, FILE *out = outFILE);
 void Make_34_Weights(int d, int tFlag, FILE *out = outFILE);
-void Init_IP_Weights(int narg, char *fn[]) {
+void Init_IP_Weights(int narg, char *fn[], FILE *out) {
   int n = 1, d, L = 0, H = 0, rf = 0, tf = 0;
   char *c = &fn[1][2];
   if (narg > 2)
@@ -700,7 +701,7 @@ void Init_IP_Weights(int narg, char *fn[]) {
   }
 }
 
-void Init_moon_Weights(int narg, char *fn[]) {
+void Init_moon_Weights(int narg, char *fn[], FILE *out) {
   int n = 1, d, L = 0, H = 0;
   char *c = &fn[1][2];
   if (narg > 2)
@@ -758,7 +759,7 @@ void Init_moon_Weights(int narg, char *fn[]) {
 }
 
 int VP_2_CWS(Long *V[], int d, int v, CWS *W);
-void Npoly2cws(int narg, char *fn[]) {
+void Npoly2cws(int narg, char *fn[], FILE *out) {
   int n = 2;
   CWS W;
   EqList E;
@@ -817,8 +818,8 @@ void Npoly2cws(int narg, char *fn[]) {
 }
 
 void Make_IP_CWS(int narg, char *fn[]);
-void Make_34_CWS(int d);
-void Init_IP_CWS(int narg, char *fn[]) {
+void Make_34_CWS(int d, FILE *out = outFILE);
+void Init_IP_CWS(int narg, char *fn[], FILE *out) {
   int d, n = 1, nop = 0;
   char *c = &fn[1][2];
   if (narg > 2)
@@ -838,7 +839,7 @@ void Init_IP_CWS(int narg, char *fn[]) {
   if (nop)
     Make_IP_CWS(narg, fn);
   else if (d <= 4)
-    Make_34_CWS(d);
+    Make_34_CWS(d, outFILE);
   else
     Die("`-c#' has to be followed by `-n' and the weight file names for dim>4");
 }
@@ -1240,21 +1241,22 @@ int IfIpWWrite(Weight *W, PolyPointList *P, int *rFlag, int *tFlag) {
     return 0;
 }
 void Rec_IpWeights(Weight *W, PolyPointList *P, int g, int sum, int *npp,
-                   int *nrp, int n, int *rFlag, int *tFlag) {
+                   int *nrp, int n, int *rFlag, int *tFlag, FILE *out) {
   int wmax = W->d / (W->N - n + 1);
   wmax = palp::min(wmax, W->w[n + 1]);
   wmax = palp::min(wmax, sum - n);
   if (n)
     for (W->w[n] = wmax; (n + 1) * W->w[n] >= sum; W->w[n]--)
       Rec_IpWeights(W, P, Fgcd(g, W->w[n]), sum - W->w[n], npp, nrp, n - 1,
-                    rFlag, tFlag);
+                    rFlag, tFlag, out);
   else if (1 == Fgcd(g, W->w[0] = sum)) {
     (*npp)++;
     if (IfIpWWrite(W, P, rFlag, tFlag))
       (*nrp)++;
   };
 }
-void MakeIpWeights(int N, int from_d, int to_d, int *rFlag, int *tFlag) {
+void MakeIpWeights(int N, int from_d, int to_d, int *rFlag, int *tFlag,
+                   FILE *out) {
   int npp = 0, nrp = 0;
   Weight W;
   auto P = std::make_unique<PolyPointList>();
@@ -1270,7 +1272,7 @@ void MakeIpWeights(int N, int from_d, int to_d, int *rFlag, int *tFlag) {
   for (W.d = from_d; W.d <= to_d; W.d++)
     for (W.w[N - 1] = W.d / 2; W.d <= N * W.w[N - 1]; W.w[N - 1]--)
       Rec_IpWeights(&W, P.get(), Fgcd(W.d, W.w[W.N - 1]), W.d - W.w[W.N - 1],
-                    &npp, &nrp, N - 2, rFlag, tFlag);
+                    &npp, &nrp, N - 2, rFlag, tFlag, out);
   if (*rFlag)
     fprintf(outFILE, "#primepartitions=%d #refpolys=%d\n", npp, nrp);
   if (*tFlag)
@@ -1279,8 +1281,9 @@ void MakeIpWeights(int N, int from_d, int to_d, int *rFlag, int *tFlag) {
     fprintf(outFILE, "#primepartitions=%d #IPpolys=%d\n", npp, nrp);
   exit(1);
 }
-void Make_IP_Weights(int d, int Dmin, int Dmax, int rFlag, int tFlag) {
-  MakeIpWeights(d + 1, Dmin, Dmax, &rFlag, &tFlag);
+void Make_IP_Weights(int d, int Dmin, int Dmax, int rFlag, int tFlag,
+                     FILE *out) {
+  MakeIpWeights(d + 1, Dmin, Dmax, &rFlag, &tFlag, out);
 }
 
 void RecMoonWeights(Weight *W, int g, int sum, long *npp, long *nintPP1,
@@ -1316,7 +1319,7 @@ void RecMoonWeights(Weight *W, int g, int sum, long *npp, long *nintPP1,
   }
 }
 
-void MakeMoonWeights(int N, int from_d, int to_d) {
+void MakeMoonWeights(int N, int from_d, int to_d, FILE *out) {
   /* Fast routine for creating candidates for transverse weight systems;
      conditions: Poincare-polynomial at t=1 integer, chi integer */
   long int npp = 0, nintPP1 = 0, nintchi = 0;
@@ -1736,7 +1739,7 @@ void mkold_nno(char *outfile, FILE *INFILE1, FILE *INFILE2, FILE *INFILE3,
     fclose(outFILE);
 }
 
-void Make_34_CWS(int d) {
+void Make_34_CWS(int d, FILE *out) {
   FILE *w2FILE, *w3FILE, *w4FILE;
   int u, ef;
   char *outfile;
@@ -2458,7 +2461,7 @@ void Make_IP_CWS(int narg, char *fn[]) {
 //   }
 // }
 
-void IP_Poly_Data(int narg, char *fn[]) {
+void IP_Poly_Data(int narg, char *fn[], FILE *out) {
   int r = 1, i, n = 0, p = 0, d = 0;
   CWS CW;
   auto _P = std::make_unique<PolyPointList>();
@@ -2681,7 +2684,7 @@ Long W_Point_Count(Weight *W, PolyPointList *P, VertexNumList *V, EqList *E) {
   /*	char c[50]="#points="; sprintf(&c[8],"%d",P->np);
         if(P->np<20) Print_PPL(P,c); else printf("%s\n",c); */
 }
-void SimplexPointCount(int narg, char *fn[]) {
+void SimplexPointCount(int narg, char *fn[], FILE *out) {
   Weight W;
   VertexNumList V;
   EqList E;
