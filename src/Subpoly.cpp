@@ -160,8 +160,8 @@ void FE_Close_the_Hole(PolyPointList *_P, VertexNumList *_V, EqList *_E,
       puts("");
     }
     Print_VL(_P, _V, "");
-    Print_EL((EqList *)_E, &_P->n, 0, "");
-    Print_EL((EqList *)_CEq, &_P->n, 0, "");
+    Print_EL((EqList *)_E, &_P->n, 0, "", outFILE);
+    Print_EL((EqList *)_CEq, &_P->n, 0, "", outFILE);
     exit(1);
   }
   P.n = _P->n;
@@ -352,7 +352,7 @@ int Aided_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 
   /* puts("AIP:");
   Print_PPL(_P);
-  Print_EL(_E,&_P->n,0);
+  Print_EL(_E,&_P->n,0, outFILE);
   puts("E_INCI:");
   for(i=0;i<_E->ne;i++) {Print_INCI(E_INCI[i]); puts("");}
   printf("n_irrel=%d\n", n_irrel); */
@@ -546,7 +546,7 @@ void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 
   /* puts("After AIP (in D&K):");
   Print_VL(red_P,&red_V);
-  Print_EL(new_E,&red_P->n,0); */
+  Print_EL(new_E,&red_P->n,0, outFILE); */
 
   if (IP) {
 
@@ -951,7 +951,7 @@ void Make_All_Subpolys(PolyPointList *_P, EqList *_E, VertexNumList *_V,
   /* fprintf(outFILE,"MASP:\n");
      Print_PPL(_P);
      Print_VL(_P,_V);
-     Print_EL(_E,&_P->n,0);
+     Print_EL(_E,&_P->n,0, outFILE);
      fflush(0);*/
 
   if (_V->nv > _NFL->VN)

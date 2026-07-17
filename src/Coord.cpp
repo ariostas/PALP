@@ -68,15 +68,16 @@ void Print_VL(PolyPointList *_P, VertexNumList *_V, const char *comment,
   }
 }
 
-void Print_EL(EqList *_E, int *n, int suppress_c, const char *comment) {
+void Print_EL(EqList *_E, int *n, int suppress_c, const char *comment,
+              FILE *out) {
   int i, j;
-  fprintf(outFILE, "%d %d  %s\n", _E->ne, *n, comment);
+  fprintf(out, "%d %d  %s\n", _E->ne, *n, comment);
   for (i = 0; i < _E->ne; i++) {
     for (j = 0; j < *n; j++)
-      fprintf(outFILE, " %3d", (int)_E->e[i].a[j]);
+      fprintf(out, " %3d", (int)_E->e[i].a[j]);
     if (!suppress_c)
-      fprintf(outFILE, " %5d", (int)_E->e[i].c);
-    fprintf(outFILE, "\n");
+      fprintf(out, " %5d", (int)_E->e[i].c);
+    fprintf(out, "\n");
   }
 }
 

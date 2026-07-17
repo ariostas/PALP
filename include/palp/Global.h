@@ -271,7 +271,8 @@ Reads the PolyPointList input *P
 void Print_PPL(PolyPointList *P, const char *comment, FILE *out = outFILE);
 void Print_VL(PolyPointList *P, VertexNumList *V, const char *comment,
               FILE *out = outFILE);
-void Print_EL(EqList *EL, int *n, int suppress_c, const char *comment);
+void Print_EL(EqList *EL, int *n, int suppress_c, const char *comment,
+              FILE *out = outFILE);
 void Print_Matrix(Long Matrix[][VERT_Nmax], int n_lines, int n_columns,
                   const char *comment, FILE *out = outFILE);
 /*

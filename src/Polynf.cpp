@@ -2288,9 +2288,9 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
     INCI I = FInc[j];
     int f = INCI_abs(I);
     if (f < 3) {
-      Print_EL(E, &dP->n, 0, "E");
+      Print_EL(E, &dP->n, 0, "E", outFILE);
       Print_PPL(dP, "dP");
-      Print_EL(dE, &dP->n, 0, "dE");
+      Print_EL(dE, &dP->n, 0, "dE", outFILE);
       printf("e<3: nf=%d I=", nf);
       Print_INCI(FInc[j]);
     }
@@ -5002,7 +5002,8 @@ void Make_ANF(PolyPointList *P, VertexNumList *V, /* affine normal form */
   }
 
   /* Print_PPL(P,"in");Print_VL(P,V,"vertices");Print_EL(E,&P->n,0,"eq-in");
-     PairMat PM; Make_VEPM(P,V,E,PM); Print_Matrix(PM, E->ne, V->nv, "PM", outFILE);*/
+     PairMat PM; Make_VEPM(P,V,E,PM); Print_Matrix(PM, E->ne, V->nv, "PM",
+     outFILE);*/
   for (i = 0; i < v; i++)
     P->x[V->v[i]][d] = 1;
   P->n = d + 1;
