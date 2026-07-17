@@ -160,8 +160,8 @@ void FE_Close_the_Hole(PolyPointList *_P, VertexNumList *_V, EqList *_E,
       puts("");
     }
     Print_VL(_P, _V, "");
-    Print_EL((EqList *)_E, &_P->n, 0, "", outFILE);
-    Print_EL((EqList *)_CEq, &_P->n, 0, "", outFILE);
+    Print_EL((EqList *)_E, &_P->n, 0, "", out);
+    Print_EL((EqList *)_CEq, &_P->n, 0, "", out);
     exit(1);
   }
   P.n = _P->n;
@@ -352,7 +352,7 @@ int Aided_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 
   /* puts("AIP:");
   Print_PPL(_P);
-  Print_EL(_E,&_P->n,0, outFILE);
+  Print_EL(_E,&_P->n,0, out);
   puts("E_INCI:");
   for(i=0;i<_E->ne;i++) {Print_INCI(E_INCI[i]); puts("");}
   printf("n_irrel=%d\n", n_irrel); */
@@ -430,8 +430,7 @@ int Aided_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   else {
     CEq.ne = 0;
     if constexpr (SIMPLE_CTH)
-      FE_Close_the_Hole(_P, _V, _E, &CEq, n_old_v, CEq_INCI, Hole_Verts,
-                        outFILE);
+      FE_Close_the_Hole(_P, _V, _E, &CEq, n_old_v, CEq_INCI, Hole_Verts, out);
     else
       Close_the_Hole(_P, _V, _E, &CEq, old_ne, n_old_v, n_Hole_Faces, E_INCI,
                      CEq_INCI, Hole_Verts, Hole_Faces, out);
@@ -457,9 +456,6 @@ int Aided_IP_Check(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   return Finish_IP_Check(_P, _V, _E, &CEq, E_INCI, CEq_INCI);
 }
 
-void Make_All_Subpolys(PolyPointList *_P, EqList *_E, VertexNumList *_V,
-                       KeepList *_KL, NF_List *_NFL, FILE *out = outFILE);
-
 int Relevant(Long *X, int *n, EqList *_E, int *n_irrel, FILE *out) {
   int i;
   for (i = 0; i < *n_irrel; i++)
@@ -478,6 +474,9 @@ int kept(int i, KeepList *_KL) {
       return j;
   return -1;
 }
+
+void Make_All_Subpolys(PolyPointList *_P, EqList *_E, VertexNumList *_V,
+                       KeepList *_KL, NF_List *_NFL, FILE *out);
 
 void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
                    KeepList *_KL, int drop_num, NF_List *_NFL, FILE *out) {
@@ -519,7 +518,7 @@ void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     }
   for (i = 0; i < _P->np; i++)
     if ((i != _V->v[drop_num]) &&
-        Relevant(_P->x[i], &_P->n, new_E, &n_irrel, outFILE)) {
+        Relevant(_P->x[i], &_P->n, new_E, &n_irrel, out)) {
       for (j = 0; j < _P->n; j++)
         red_P->x[red_P->np][j] = _P->x[i][j];
       new2old[red_P->np++] = i;
@@ -542,11 +541,11 @@ void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   if constexpr (UnAided_IP_Check)
     IP = IP_Check(red_P, &red_V, new_E);
   else
-    IP = Aided_IP_Check(red_P, &red_V, new_E, n_irrel, _V->nv - 1, outFILE);
+    IP = Aided_IP_Check(red_P, &red_V, new_E, n_irrel, _V->nv - 1, out);
 
   /* puts("After AIP (in D&K):");
   Print_VL(red_P,&red_V);
-  Print_EL(new_E,&red_P->n,0, outFILE); */
+  Print_EL(new_E,&red_P->n,0, out); */
 
   if (IP) {
 
@@ -625,7 +624,7 @@ void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
         exit(1);
       }
 
-    Make_All_Subpolys(_P, new_E, &new_V, _KL, _NFL, outFILE);
+    Make_All_Subpolys(_P, new_E, &new_V, _KL, _NFL, out);
 
     /* Reconstruct _P  */
     if (j >= 0)
@@ -732,7 +731,7 @@ void Start_Make_All_Subpolys(PolyPointList *_P, NF_List *_NFL, FILE *out) {
       _P->np++;
     }
 
-  Make_All_Subpolys(_P, &E, &V, &KL, _NFL, outFILE);
+  Make_All_Subpolys(_P, &E, &V, &KL, _NFL, out);
 }
 
 void IREgcd(Long *vec_in, int *d, Long *vec_out) {
@@ -771,7 +770,7 @@ void IREgcd(Long *vec_in, int *d, Long *vec_out) {
   }
 }
 
-int Make_RedVec(Long n, Long *badFE, Long *RedVec) {
+int Make_RedVec(Long n, Long *badFE, Long *RedVec, FILE *out) {
   int i = 0, j;
   Long RV[POLY_Dmax], FE[POLY_Dmax], dist = 0;
   for (j = 0; j < n; j++)
@@ -784,15 +783,15 @@ int Make_RedVec(Long n, Long *badFE, Long *RedVec) {
   for (j = 0; j < i; j++)
     dist += FE[j] * RV[j];
   if ((dist != 1) && (dist != -1)) {
-    fprintf(outFILE, "FE: ");
+    fprintf(out, "FE: ");
     for (j = 0; j < i; j++)
-      fprintf(outFILE, "%d ", (int)FE[j]);
-    fprintf(outFILE, "\n");
-    fprintf(outFILE, "RV: ");
+      fprintf(out, "%d ", (int)FE[j]);
+    fprintf(out, "\n");
+    fprintf(out, "RV: ");
     for (j = 0; j < i; j++)
-      fprintf(outFILE, "%d ", (int)RV[j]);
-    fprintf(outFILE, "\n");
-    fprintf(outFILE, "dist= %d\n", (int)dist);
+      fprintf(out, "%d ", (int)RV[j]);
+    fprintf(out, "\n");
+    fprintf(out, "dist= %d\n", (int)dist);
     return 0;
   }
   i = 0;
@@ -805,7 +804,7 @@ int Make_RedVec(Long n, Long *badFE, Long *RedVec) {
 }
 
 void Reduce_Poly(PolyPointList *_P, EqList *_E, KeepList *_KL, NF_List *_NFL,
-                 int badfacet) {
+                 int badfacet, FILE *out) {
 
   /* reduce _P to the sublattice where badfacet has distance 1;
      call Make_All_Subpolys for the reduced polyhedron new_P;   */
@@ -838,9 +837,9 @@ void Reduce_Poly(PolyPointList *_P, EqList *_E, KeepList *_KL, NF_List *_NFL,
   }
 
   /*   Print_PPL(new_P);
-  fprintf(outFILE,"kept: ");
-  for (j=0;j<new_KL.nk;j++) fprintf(outFILE,"%d ",new_KL.k[j]);
-  fprintf(outFILE,"\n\n"); */
+  fprintf(out,"kept: ");
+  for (j=0;j<new_KL.nk;j++) fprintf(out,"%d ",new_KL.k[j]);
+  fprintf(out,"\n\n"); */
 
   if (new_KL.nk != _KL->nk) {
     return;
@@ -860,20 +859,20 @@ void Reduce_Poly(PolyPointList *_P, EqList *_E, KeepList *_KL, NF_List *_NFL,
   }
 
   /* Generate RedVec: */
-  if (!Make_RedVec(_P->n, BE.a, RedVec)) {
+  if (!Make_RedVec(_P->n, BE.a, RedVec, out)) {
     Print_PPL(_P, "");
-    fprintf(outFILE, "Bad Facet: ");
+    fprintf(out, "Bad Facet: ");
     for (j = 0; j < _P->n; j++)
-      fprintf(outFILE, "%d ", (int)BE.a[j]);
-    fprintf(outFILE, " %d\n", (int)BE.c);
-    fprintf(outFILE, "kept: ");
+      fprintf(out, "%d ", (int)BE.a[j]);
+    fprintf(out, " %d\n", (int)BE.c);
+    fprintf(out, "kept: ");
     for (j = 0; j < _KL->nk; j++)
-      fprintf(outFILE, "%d ", _KL->k[j]);
-    fprintf(outFILE, "\n");
-    fprintf(outFILE, "RedVec: ");
+      fprintf(out, "%d ", _KL->k[j]);
+    fprintf(out, "\n");
+    fprintf(out, "RedVec: ");
     for (j = 0; j < _P->n; j++)
-      fprintf(outFILE, "%d ", (int)RedVec[j]);
-    fprintf(outFILE, "\n");
+      fprintf(out, "%d ", (int)RedVec[j]);
+    fprintf(out, "\n");
     exit(1);
   }
 
@@ -890,22 +889,22 @@ void Reduce_Poly(PolyPointList *_P, EqList *_E, KeepList *_KL, NF_List *_NFL,
   }
 
   /*   Print_PPL(new_P);
-  fprintf(outFILE,"\n\n"); */
+  fprintf(out,"\n\n"); */
 
   if (!New_Improve_Coords(new_P, &V)) {
     Print_PPL(_P, "");
-    fprintf(outFILE, "Bad Facet: ");
+    fprintf(out, "Bad Facet: ");
     for (j = 0; j < _P->n; j++)
-      fprintf(outFILE, "%d ", (int)BE.a[j]);
-    fprintf(outFILE, " %d\n", (int)BE.c);
-    fprintf(outFILE, "kept: ");
+      fprintf(out, "%d ", (int)BE.a[j]);
+    fprintf(out, " %d\n", (int)BE.c);
+    fprintf(out, "kept: ");
     for (j = 0; j < _KL->nk; j++)
-      fprintf(outFILE, "%d ", _KL->k[j]);
-    fprintf(outFILE, "\n");
-    fprintf(outFILE, "RedVec: ");
+      fprintf(out, "%d ", _KL->k[j]);
+    fprintf(out, "\n");
+    fprintf(out, "RedVec: ");
     for (j = 0; j < _P->n; j++)
-      fprintf(outFILE, "%d ", (int)RedVec[j]);
-    fprintf(outFILE, "\n");
+      fprintf(out, "%d ", (int)RedVec[j]);
+    fprintf(out, "\n");
     puts("WARNING: INCOMPLETE SL REDUCTION");
     fflush(stdout);
     if constexpr (INCOMPLETE_SL_REDUCTION) {
@@ -915,7 +914,7 @@ void Reduce_Poly(PolyPointList *_P, EqList *_E, KeepList *_KL, NF_List *_NFL,
   }
 
   if (!IP_Check(new_P, &V, _E)) {
-    fprintf(outFILE, "Trouble in Reduce_Poly!");
+    fprintf(out, "Trouble in Reduce_Poly!");
     exit(1);
   }
 
@@ -928,11 +927,11 @@ void Reduce_Poly(PolyPointList *_P, EqList *_E, KeepList *_KL, NF_List *_NFL,
   }
   if (VPM_checksum_new.D * VPM_checksum_old.N -
       VPM_checksum_new.N * VPM_checksum_old.D) {
-    fprintf(outFILE, "Checksums don't match in Reduce_Poly!");
+    fprintf(out, "Checksums don't match in Reduce_Poly!");
     exit(1);
   }
 
-  Make_All_Subpolys(new_P, _E, &V, &new_KL, _NFL, outFILE);
+  Make_All_Subpolys(new_P, _E, &V, &new_KL, _NFL, out);
 }
 
 void Make_All_Subpolys(PolyPointList *_P, EqList *_E, VertexNumList *_V,
@@ -948,10 +947,10 @@ void Make_All_Subpolys(PolyPointList *_P, EqList *_E, VertexNumList *_V,
   int i, j, badfacet = -1, nbadvert = 0, maxnkept = -1;
   KeepList new_KL = *_KL;
 
-  /* fprintf(outFILE,"MASP:\n");
+  /* fprintf(out,"MASP:\n");
      Print_PPL(_P);
      Print_VL(_P,_V);
-     Print_EL(_E,&_P->n,0, outFILE);
+     Print_EL(_E,&_P->n,0, out);
      fflush(0);*/
 
   if (_V->nv > _NFL->VN)
@@ -1007,7 +1006,7 @@ void Make_All_Subpolys(PolyPointList *_P, EqList *_E, VertexNumList *_V,
   }
 
   if (_NFL->rf && (_NFL->rf < _NFL->rd))
-    fprintf(outFILE, "_NFL->rf<_NFL->rd\n");
+    fprintf(out, "_NFL->rf<_NFL->rd\n");
   if (_NFL->rf == _NFL->rd)
     _NFL->rf = 0;
   if (_NFL->rf)
@@ -1028,7 +1027,7 @@ void Make_All_Subpolys(PolyPointList *_P, EqList *_E, VertexNumList *_V,
       int currentSL = _NFL->SL;
       _NFL->SL = 1;
       _NFL->b[_NFL->rd - 1] = nbadvert;
-      Reduce_Poly(_P, _E, &new_KL, _NFL, badfacet);
+      Reduce_Poly(_P, _E, &new_KL, _NFL, badfacet, out);
       _NFL->SL = currentSL;
     }
 
@@ -1036,7 +1035,7 @@ void Make_All_Subpolys(PolyPointList *_P, EqList *_E, VertexNumList *_V,
 }
 
 void Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
-                     char *polyo) {
+                     char *polyo, FILE *out) {
   NF_List _NFL_obj;
   NF_List *_NFL = &_NFL_obj;
   VertexNumList V;
@@ -1070,16 +1069,16 @@ void Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
       exit(1);
     }
     if (Add_NF_to_List(P, &V, &F, _NFL))
-      if (outFILE != stdout) {
+      if (out != stdout) {
         int i, j;
         for (i = 0; i < W->nw; i++) {
-          fprintf(outFILE, "%d ", (int)W->d[i]);
+          fprintf(out, "%d ", (int)W->d[i]);
           for (j = 0; j < W->N; j++)
-            fprintf(outFILE, "%d ", (int)W->W[i][j]);
+            fprintf(out, "%d ", (int)W->W[i][j]);
           if (i + 1 < W->nw)
-            fprintf(outFILE, " ");
+            fprintf(out, " ");
           else
-            fprintf(outFILE, "\n");
+            fprintf(out, "\n");
         }
         fflush(0);
       }
@@ -1089,7 +1088,7 @@ void Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
 
 void Do_the_Classification(CWS *W, PolyPointList *P, /* char *fn, */
                            int oFlag, int rFlag, int kFlag, char *polyi,
-                           char *polyo, char *dbin) {
+                           char *polyo, char *dbin, FILE *out) {
 
   /* static int nw; */
   NF_List _NFL_obj;
@@ -1127,8 +1126,8 @@ void Do_the_Classification(CWS *W, PolyPointList *P, /* char *fn, */
       Read_File_2_List(polyo, _NFL);
       rFlag = 0;
     }
-    Start_Make_All_Subpolys(P, _NFL, outFILE);
-    Print_Weight_Info(W, _NFL, outFILE);
+    Start_Make_All_Subpolys(P, _NFL, out);
+    Print_Weight_Info(W, _NFL, out);
     if ((WRITE_DIM <= P->n) && (MIN_NEW <= _NFL->NP))
       if ((int)difftime(time(NULL), W_SAVE_TIME) > MIN_W_SAVE_TIME) {
         Write_List_2_File(polyo, _NFL);
@@ -1170,7 +1169,8 @@ void Write_M(FILE *F, int *v, int *f, subl_int x[][POLY_Dmax]) {
 }
 
 void Make_All_Sublat(NF_List *_L, int n, int v, subl_int diag[POLY_Dmax],
-                     subl_int u[][VERT_Nmax], char *mFlag, PolyPointList *_P) {
+                     subl_int u[][VERT_Nmax], char *mFlag, PolyPointList *_P,
+                     FILE *out) {
   /* create all inequivalent decompositions diag=s*t  into upper
      triangular matrices s,t;
      t*(first lines of u) becomes the poly P;
@@ -1189,7 +1189,7 @@ void Make_All_Sublat(NF_List *_L, int n, int v, subl_int diag[POLY_Dmax],
     for (j = 0; j < n; j++)
       t[i][j] = (i >= j) - 1;
   while (col >= 0) {
-    /* fprintf(outFILE,"t[%d][%d]=%lld\n",lin, col, t[lin][col]); */
+    /* fprintf(out,"t[%d][%d]=%lld\n",lin, col, t[lin][col]); */
     if (lin == col) {
       do
         t[lin][col]++;
@@ -1241,12 +1241,12 @@ void Make_All_Sublat(NF_List *_L, int n, int v, subl_int diag[POLY_Dmax],
           _P->np = v;
           if (err) {
             Print_PPL(_P, "");
-            fprintf(outFILE, "u: ");
-            Write_VPM(outFILE, &v, &v, u);
-            fprintf(outFILE, "s: ");
-            Write_M(outFILE, &n, &n, s);
-            fprintf(outFILE, "t: ");
-            Write_M(outFILE, &n, &n, t);
+            fprintf(out, "u: ");
+            Write_VPM(out, &v, &v, u);
+            fprintf(out, "s: ");
+            Write_M(out, &n, &n, s);
+            fprintf(out, "t: ");
+            Write_M(out, &n, &n, t);
           }
           for (i = 0; i < v; i++)
             V.v[i] = i;
@@ -1258,7 +1258,7 @@ void Make_All_Sublat(NF_List *_L, int n, int v, subl_int diag[POLY_Dmax],
           }
           for (i = 0; i < F.ne; i++)
             if (F.e[i].c != 1) {
-              fprintf(outFILE, "Not reflexive in Make_All_Sublat!\n");
+              fprintf(out, "Not reflexive in Make_All_Sublat!\n");
               exit(1);
             }
           if (*mFlag != 'r')
@@ -1355,7 +1355,8 @@ void lin_col_swap(int i, int lin, int col, int v, int f,
 }
 
 void MakePolyOnSublat(NF_List *_L, subl_int x[VERT_Nmax][VERT_Nmax], int v,
-                      int f, int *max_order, char *mFlag, PolyPointList *_P) {
+                      int f, int *max_order, char *mFlag, PolyPointList *_P,
+                      FILE *out) {
 
   /* Decompose the VPM x as x=w*diag*u, where w and u are SL(Z);
      the first lines of u are the coordinates on the coarsest lattices */
@@ -1471,7 +1472,7 @@ void MakePolyOnSublat(NF_List *_L, subl_int x[VERT_Nmax][VERT_Nmax], int v,
     exit(1);
   }
   if (order > 1)
-    Make_All_Sublat(_L, i, v, diag, u, mFlag, _P);
+    Make_All_Sublat(_L, i, v, diag, u, mFlag, _P, out);
 }
 
 void uc_nf_to_P(PolyPointList *_P, int *MS, int *d, int *v, int *nuc,
@@ -1488,7 +1489,7 @@ void uc_nf_to_P(PolyPointList *_P, int *MS, int *d, int *v, int *nuc,
 }
 
 void Find_Sublat_Polys(char mFlag, char *dbin, char *polyi, char *polyo,
-                       PolyPointList *_P) {
+                       PolyPointList *_P, FILE *out) {
   NF_List _NFL_obj;
   NF_List *_NFL = &_NFL_obj;
   VertexNumList Vnl;
@@ -1571,9 +1572,11 @@ void Find_Sublat_Polys(char mFlag, char *dbin, char *polyi, char *polyo,
               for (k = 0; k < Vnl.nv; k++)
                 y[k][j] = x[j][k];
             if (MS != 2)
-              MakePolyOnSublat(_NFL, x, Vnl.nv, Fel.ne, &max_order, &mFlag, _P);
+              MakePolyOnSublat(_NFL, x, Vnl.nv, Fel.ne, &max_order, &mFlag, _P,
+                               out);
             if (MS > 1)
-              MakePolyOnSublat(_NFL, y, Fel.ne, Vnl.nv, &max_order, &mFlag, _P);
+              MakePolyOnSublat(_NFL, y, Fel.ne, Vnl.nv, &max_order, &mFlag, _P,
+                               out);
           }
 
         if (ferror(dbfile)) {
@@ -1599,9 +1602,9 @@ void Find_Sublat_Polys(char mFlag, char *dbin, char *polyi, char *polyo,
       for (j = 0; j < Fel.ne; j++)
         for (i = 0; i < Vnl.nv; i++)
           x[j][i] = Eval_Eq_on_V(&(Fel.e[j]), _P->x[Vnl.v[i]], _P->n) - 1;
-      MakePolyOnSublat(_NFL, x, Vnl.nv, Fel.ne, &max_order, &mFlag, _P);
+      MakePolyOnSublat(_NFL, x, Vnl.nv, Fel.ne, &max_order, &mFlag, _P, out);
       if (!mFlag)
-        Print_Weight_Info(&W, _NFL, outFILE);
+        Print_Weight_Info(&W, _NFL, out);
     }
   }
 
@@ -1693,7 +1696,7 @@ void DPircheck(CWS *_W, PolyPointList *_P, FILE *out) {
   }
 }
 
-int virred(PolyPointList *_P, EqList *B) {
+int virred(PolyPointList *_P, EqList *B, FILE *out) {
   int i, j, k, drop_point[POLY_Dmax], equal;
   VertexNumList V;
   EqList E;
@@ -1704,12 +1707,12 @@ int virred(PolyPointList *_P, EqList *B) {
   for (j = 0; j < _P->n; j++)
     drop_point[j] = 0; /* just to silence the compiler */
   /* for(i=0;(i<V.nv);i++) {
-    for (j=0;(j<_P->n);j++) fprintf(outFILE,"%d ",(int) _P->x[V.v[i]][j]);
-    fprintf(outFILE,"\n");}
-  fprintf(outFILE,"_CL->B:\n");
+    for (j=0;(j<_P->n);j++) fprintf(out,"%d ",(int) _P->x[V.v[i]][j]);
+    fprintf(out,"\n");}
+  fprintf(out,"_CL->B:\n");
   for(k=0;k<B->ne;k++){
-    for (j=0;(j<_P->n);j++) fprintf(outFILE,"%d ",(int) _CL->B[k][j]);
-    fprintf(outFILE,"\n");} */
+    for (j=0;(j<_P->n);j++) fprintf(out,"%d ",(int) _CL->B[k][j]);
+    fprintf(out,"\n");} */
   for (k = 0; k < B->ne; k++) {
     equal = 0;
     for (i = 0; (i < V.nv) && (!equal); i++) {
@@ -1721,18 +1724,18 @@ int virred(PolyPointList *_P, EqList *B) {
     /* if (equal) break;}*/
     i--;
     if (!equal) {
-      fprintf(outFILE, "Vertex not found!\n");
+      fprintf(out, "Vertex not found!\n");
       for (i = 0; (i < V.nv); i++) {
         for (j = 0; (j < _P->n); j++)
-          fprintf(outFILE, "%d ", (int)_P->x[V.v[i]][j]);
-        fprintf(outFILE, "\n");
+          fprintf(out, "%d ", (int)_P->x[V.v[i]][j]);
+        fprintf(out, "\n");
       }
       for (j = 0; j < _P->n; j++)
-        fprintf(outFILE, "%d ", (int)_P->x[V.v[i]][j]);
-      fprintf(outFILE, "\n");
+        fprintf(out, "%d ", (int)_P->x[V.v[i]][j]);
+      fprintf(out, "\n");
       for (j = 0; j < _P->n; j++)
-        fprintf(outFILE, "%d ", (int)B->e[k].a[j]);
-      fprintf(outFILE, "\n");
+        fprintf(out, "%d ", (int)B->e[k].a[j]);
+      fprintf(out, "\n");
       return 1;
     }
     /* Dropping the vertex V.v[i]: */
@@ -1768,7 +1771,7 @@ void DPvircheck(CWS *_W, PolyPointList *_P, FILE *out) {
 
   Ref_Check(_P, &V, &E);
   Make_Dual_Poly(_P, &V, &E, _PD);
-  if (virred(_PD, B)) {
+  if (virred(_PD, B, out)) {
     /* Print_PPL(_PD); */
     for (i = 0; i < _W->nw; i++) {
       fprintf(out, "%d ", (int)_W->d[i]);
@@ -1782,10 +1785,10 @@ void DPvircheck(CWS *_W, PolyPointList *_P, FILE *out) {
 }
 
 int Find_Ref_Subpoly(PolyPointList *_P, EqList *_E, VertexNumList *_V,
-                     KeepList *_KL, int *rd);
+                     KeepList *_KL, int *rd, FILE *out);
 
 int Find_RSP_Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
-                           KeepList *_KL, int drop_num, int *rd) {
+                           KeepList *_KL, int drop_num, int *rd, FILE *out) {
 
   int i, j, n_irrel = 0, IP /*, test_IP*/;
   std::vector<int> new2old(POINT_Nmax);
@@ -1824,13 +1827,13 @@ int Find_RSP_Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     }
   for (i = 0; i < _P->np; i++)
     if ((i != _V->v[drop_num]) &&
-        Relevant(_P->x[i], &_P->n, &new_E, &n_irrel, outFILE)) {
+        Relevant(_P->x[i], &_P->n, &new_E, &n_irrel, out)) {
       for (j = 0; j < _P->n; j++)
         red_P->x[red_P->np][j] = _P->x[i][j];
       new2old[red_P->np++] = i;
     }
 
-  IP = Aided_IP_Check(red_P, &red_V, &new_E, n_irrel, _V->nv - 1, outFILE);
+  IP = Aided_IP_Check(red_P, &red_V, &new_E, n_irrel, _V->nv - 1, out);
 
   /*  test_IP=IP_Check(red_P,&test_V,&test_E);
   printf("%d %d %d\n", _P->np, red_P->np, *rd); fflush(0);
@@ -1839,29 +1842,29 @@ int Find_RSP_Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   if (IP) if ((!test_IP)||(test_V.nv!=red_V.nv)||
       (test_E.ne!=new_E.ne)){
     int k;
-    fprintf(outFILE,"red_P:\n");fflush(0);
+    fprintf(out,"red_P:\n");fflush(0);
     Print_PPL(red_P);
-    fprintf(outFILE,"\n");
-    fprintf(outFILE,"red_V: ");
-    for (i=0;i<red_V.nv;i++) fprintf(outFILE,"%d ",red_V.v[i]);
-    fprintf(outFILE,"\n");
-    fprintf(outFILE,"new_E:\n");
+    fprintf(out,"\n");
+    fprintf(out,"red_V: ");
+    for (i=0;i<red_V.nv;i++) fprintf(out,"%d ",red_V.v[i]);
+    fprintf(out,"\n");
+    fprintf(out,"new_E:\n");
     for (i=0;i<new_E.ne;i++){
-      for (k=0;k<_P->n;k++) fprintf(outFILE,"%d ", (int) new_E.e[i].a[k]);
-      fprintf(outFILE," %d\n", (int) new_E.e[i].c);}
-    fprintf(outFILE,"\n");
-    fprintf(outFILE,"n_irrel: %d\n",n_irrel);
-    fprintf(outFILE,"new2old:");
-    for (i=0;i<red_P->np;i++) fprintf(outFILE," %d", new2old[i]);
-    fprintf(outFILE,"\n");
-    fprintf(outFILE,"test_V: ");
-    for (i=0;i<test_V.nv;i++) fprintf(outFILE,"%d ",test_V.v[i]);
-    fprintf(outFILE,"\n");
-    fprintf(outFILE,"test_E:\n");
+      for (k=0;k<_P->n;k++) fprintf(out,"%d ", (int) new_E.e[i].a[k]);
+      fprintf(out," %d\n", (int) new_E.e[i].c);}
+    fprintf(out,"\n");
+    fprintf(out,"n_irrel: %d\n",n_irrel);
+    fprintf(out,"new2old:");
+    for (i=0;i<red_P->np;i++) fprintf(out," %d", new2old[i]);
+    fprintf(out,"\n");
+    fprintf(out,"test_V: ");
+    for (i=0;i<test_V.nv;i++) fprintf(out,"%d ",test_V.v[i]);
+    fprintf(out,"\n");
+    fprintf(out,"test_E:\n");
     for (i=0;i<test_E.ne;i++){
-      for (k=0;k<_P->n;k++) fprintf(outFILE,"%d ", (int) test_E.e[i].a[k]);
-      fprintf(outFILE," %d\n", (int) test_E.e[i].c);}
-    fprintf(outFILE,"\n");
+      for (k=0;k<_P->n;k++) fprintf(out,"%d ", (int) test_E.e[i].a[k]);
+      fprintf(out," %d\n", (int) test_E.e[i].c);}
+    fprintf(out,"\n");
     exit(1);} */
 
   if (IP) {
@@ -1882,7 +1885,7 @@ int Find_RSP_Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
     if (j >= 0)
       _KL->k[j] = _V->v[drop_num];
 
-    if (Find_Ref_Subpoly(_P, &new_E, &new_V, _KL, rd)) {
+    if (Find_Ref_Subpoly(_P, &new_E, &new_V, _KL, rd, out)) {
       return 1;
     }
 
@@ -1902,7 +1905,7 @@ int Find_RSP_Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   return 0;
 }
 
-int Start_Find_Ref_Subpoly(PolyPointList *_P) {
+int Start_Find_Ref_Subpoly(PolyPointList *_P, FILE *out) {
   int i, j;
   VertexNumList V, new_V;
   EqList E, new_E;
@@ -1911,7 +1914,7 @@ int Start_Find_Ref_Subpoly(PolyPointList *_P) {
   int rd = 0;
 
   if (!IP_Check(_P, &V, &E)) {
-    fprintf(outFILE, "IP_check negative!\n");
+    fprintf(out, "IP_check negative!\n");
     exit(1);
   }
 
@@ -1940,11 +1943,11 @@ int Start_Find_Ref_Subpoly(PolyPointList *_P) {
     _P->np++;
   }
 
-  return Find_Ref_Subpoly(_P, &E, &V, &KL, &rd);
+  return Find_Ref_Subpoly(_P, &E, &V, &KL, &rd, out);
 }
 
 int Find_Ref_Subpoly(PolyPointList *_P, EqList *_E, VertexNumList *_V,
-                     KeepList *_KL, int *rd) {
+                     KeepList *_KL, int *rd, FILE *out) {
 
   /* Creates all subpolyhedra of an IP-polyhedron given by _P, _E, _V.
      The basic structure is:
@@ -1990,7 +1993,7 @@ int Find_Ref_Subpoly(PolyPointList *_P, EqList *_E, VertexNumList *_V,
 
   for (i = 0; i < ((badfacet == -1) ? _V->nv : nbadvert); i++)
     if ((kept(_V->v[i], &new_KL) < 0))
-      if (Find_RSP_Drop_and_Keep(_P, _V, _E, &new_KL, i, rd))
+      if (Find_RSP_Drop_and_Keep(_P, _V, _E, &new_KL, i, rd, out))
         return 1;
 
   (*rd)--;
@@ -2089,7 +2092,7 @@ void Overall_check(CWS *_W, PolyPointList *_P, FILE *out) {
     r = 1;
 
   if (span)
-    if (virred(_PD2, B))
+    if (virred(_PD2, B, out))
       vm = 1;
 
   if ((!span && vm) || (!lpm && vm) || (r != vm))

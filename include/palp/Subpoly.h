@@ -163,42 +163,47 @@ void Max_check(CWS *_W, PolyPointList *_P, FILE *out = outFILE);
 void Overall_check(CWS *_W, PolyPointList *_P, FILE *out = outFILE);
 void Do_the_Classification(CWS *W, PolyPointList *P, /* char *fn, */
                            int oFlag, int rFlag, int kFlag, char *polyi,
-                           char *polyo, char *dbin);
+                           char *polyo, char *dbin, FILE *out = outFILE);
 void Find_Sublat_Polys(char mFlag, char *dbi, char *polyi, char *slout,
-                       PolyPointList *_P);
+                       PolyPointList *_P, FILE *out = outFILE);
 void Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
-                     char *polyo);
-int Start_Find_Ref_Subpoly(PolyPointList *_P /*, NF_List *_NFL*/);
+                     char *polyo, FILE *out = outFILE);
+int Start_Find_Ref_Subpoly(PolyPointList *_P,
+                           FILE *out = outFILE /*, NF_List *_NFL*/);
 void uc_nf_to_P(PolyPointList *_P, int *MS, int *d, int *v, int *nuc,
                 unsigned char *uc);
 void Make_All_Sublat(NF_List *_L, int n, int v, subl_int diag[POLY_Dmax],
-                     subl_int u[][VERT_Nmax], char *mFlag, PolyPointList *P);
+                     subl_int u[][VERT_Nmax], char *mFlag, PolyPointList *P,
+                     FILE *out = outFILE);
 int Poly_Max_check(PolyPointList *_P, VertexNumList *_V, EqList *_E);
 int Poly_Min_check(PolyPointList *_P, VertexNumList *_V, EqList *_E);
 
 /*  ==========        Functions from Subdb.c                     ========== */
 void Init_DB(NF_List *_NFL);
-void Check_NF_Order(char *polyi, char *polyo, int cFlag, PolyPointList *P);
+void Check_NF_Order(char *polyi, char *polyo, int cFlag, PolyPointList *P,
+                    FILE *out = outFILE);
 void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo);
 void Polyi_2_DBo(char *polyi, char *dbo);
 void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo);
 void Bin_2_ascii(char *polyi, char *dbi, int max, int vf, int vt,
-                 PolyPointList *P);
+                 PolyPointList *P, FILE *out = outFILE);
 int Is_in_DB(int *nv, int *nuc, unsigned char *uc, NF_List *_L);
 
 #if (POLY_Dmax < 6)
-void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto, PolyPointList *P);
+void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto, PolyPointList *P,
+                 FILE *out = outFILE);
 void Sort_Hodge(char *dbaux, char *dbout);
 void Test_Hodge_file(char *filename, PolyPointList *_P);
 void Test_Hodge_db(char *dbname);
-void Extract_from_Hodge_db(char *dname, char *x_string, PolyPointList *P);
+void Extract_from_Hodge_db(char *dname, char *x_string, PolyPointList *P,
+                           FILE *out = outFILE);
 #endif
 
 void Open_DB(char *dbin, DataBase **DB, int info);
 int Read_H_poly_from_DB(DataBase *DB, PolyPointList *_P);
 void Close_DB(DataBase *DB);
 void VPHM_Sublat_Polys(char sFlag, char mr, char *dbin, char *polyi,
-                       char *polyo, PolyPointList *P);
+                       char *polyo, PolyPointList *P, FILE *out = outFILE);
 
 /*  ==========        Functions from Subadd.c                    ========== */
 void Add_Polya_2_Polyi(char *polyi, char *polya, char *polyo);
@@ -215,7 +220,7 @@ int Add_NF_to_List(PolyPointList *_P, VertexNumList *_V, EqList *_F,
 int RIGHTminusLEFT(unsigned char *ucL, unsigned char *ucR, int *nuc);
 unsigned int fgetUI(FILE *F);
 void Test_ucNF(int *d, int *tnv, int *tnuc, unsigned char *tuc,
-               PolyPointList *P);
+               PolyPointList *P, FILE *out = outFILE);
 int InfoSize(int rd, int lists, FInfoList *FI);
 int Make_Poly_NF(PolyPointList *_P, VertexNumList *_V, EqList *_E,
                  Long pNF[POLY_Dmax][VERT_Nmax]); /* 1 if reflexive */

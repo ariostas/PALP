@@ -444,7 +444,7 @@ int main(int narg, char *fn[]) {
   if (sFlag)
     VPHM_Sublat_Polys(sFlag, mFlag, dbin, polyi, polyo, _P);
   else if (abFlag == 1)
-    Ascii_to_Binary(&W, _P, dbin, polyi, polyo);
+    Ascii_to_Binary(&W, _P, dbin, polyi, polyo, outFILE);
   else if (abFlag == -1)
     Bin_2_ascii(polyi, dbin, (mFlag == 'r'), vf, vt, _P);
   else if (abFlag == 2)
@@ -467,7 +467,7 @@ int main(int narg, char *fn[]) {
       DPircheck(&W, _P, outFILE);
 #if (POLY_Dmax < 6)
   else if (HFlag == 'c')
-    DB_to_Hodge(dbin, dbout, vf, vt, _P);
+    DB_to_Hodge(dbin, dbout, vf, vt, _P, outFILE);
   else if (HFlag == 's')
     Sort_Hodge(dbin, dbout);
   else if (HFlag == 'f')
@@ -475,7 +475,7 @@ int main(int narg, char *fn[]) {
   else if (HFlag == 't')
     Test_Hodge_db(dbin);
   else if (HFlag == 'e')
-    Extract_from_Hodge_db(dbin, x_string, _P);
+    Extract_from_Hodge_db(dbin, x_string, _P, outFILE);
 #endif
   else if (*dbin && !*polyo)
     Add_Polya_2_DBi(dbin, polya, dbout);
@@ -487,6 +487,6 @@ int main(int narg, char *fn[]) {
     Reduce_Aux_File(polyi, polys, dbsub, polyo);
   else
     Do_the_Classification(&W, _P, /* fn[0], */ oFlag, rFlag, kFlag, polyi,
-                          polyo, dbin);
+                          polyo, dbin, outFILE);
   return 0;
 }

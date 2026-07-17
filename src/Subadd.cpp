@@ -192,7 +192,7 @@ void Test_NF_List(NF_List *S, PolyPointList *_P) {
   for (i = 0; i < S->PEN; i++) {
     unsigned char *C = &S->NewNF[S->PE[i].c], *uc = &C[2];
     int nv = C[0], nuc = C[1];
-    Test_ucNF(&S->d, &nv, &nuc, uc, _P);
+    Test_ucNF(&S->d, &nv, &nuc, uc, _P, outFILE);
     if (i) {
       unsigned char *oldC = &S->NewNF[S->PE[i - 1].c], *olduc = &C[2];
       unsigned int oldn = S->PE[i - 1].n;
@@ -529,7 +529,7 @@ void TestMSbits(NF_List *S, PolyPointList *_P) {
     slNF++;
     {
       int nv = *C, nuc = C[1];
-      Test_ucNF(&S->d, &nv, &nuc, &C[2], _P);
+      Test_ucNF(&S->d, &nv, &nuc, &C[2], _P, outFILE);
     }
     if (ms == 0)
       (slSM)++;
@@ -1954,7 +1954,8 @@ void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
     exit(1);
   }
 }
-void Test_ucNF(int *d, int *v, int *nuc, unsigned char *uc, PolyPointList *_P) {
+void Test_ucNF(int *d, int *v, int *nuc, unsigned char *uc, PolyPointList *_P,
+               FILE *out) {
   Long tNF[POLY_Dmax][VERT_Nmax];
   int i, j, tMS, NV, NUC;
   unsigned char UC[POLY_Dmax * VERT_Nmax];

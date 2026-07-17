@@ -973,9 +973,8 @@ void Print_Missing_Mirror(int *d, int *v, int *nu, unsigned char *uc,
 }
 
 /*   cF->{1::c 2::C (extended output)}  cF->{-1::M (missing mirrors)}   */
-void Check_NF_Order(char *polyi, char *dbi, int cF,
-                    PolyPointList *_P) /* 1=MM */
-{
+void Check_NF_Order(char *polyi, char *dbi, int cF, PolyPointList *_P,
+                    FILE *out) /* 1=MM */ {
   FILE *F = NULL;
   FInfoList L; /* time_t Tstart=time(NULL); */
   unsigned int rd, i, j, list_num, tln = 0, tSM = 0;
@@ -2278,7 +2277,7 @@ void Bin2aDBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P) {
   puts("");
 }
 void Bin_2_ascii(char *polyi, char *dbin, int max, int vf, int vt,
-                 PolyPointList *P) {
+                 PolyPointList *P, FILE *out) {
   if (*polyi)
     Bin2a(polyi, max, P);
   else if (*dbin)
@@ -2300,7 +2299,7 @@ constexpr int Hod_Min_max = 251;
 
 #if (POLY_Dmax < 6)
 void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto,
-                 PolyPointList *_P) {
+                 PolyPointList *_P, FILE *out) {
 
   /* Read the database, write the Hodge numbers */
 
@@ -2809,7 +2808,8 @@ void Test_Hodge_db(char *dbname) {
   fflush(stdout);
 }
 
-void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P) {
+void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P,
+                           FILE *out) {
 
   time_t Tstart;
   char c = *x_string, hext[9], com[64];
@@ -3700,7 +3700,7 @@ void V_Sublat_Polys(char mr, char *dbin, char *polyi, char *polyo,
           U[i][j] /= D[i];
         }
       }
-      Make_All_Sublat(_L, _P->n, V.nv, diag, U, &mr, _P);
+      Make_All_Sublat(_L, _P->n, V.nv, diag, U, &mr, _P, outFILE);
     }
   }
   if (*dbin)
@@ -3711,7 +3711,7 @@ void V_Sublat_Polys(char mr, char *dbin, char *polyi, char *polyo,
   fputs(ctime(&_L->TIME), stdout);
 }
 void VPHM_Sublat_Polys(char sFlag, char mr, char *dbin, char *polyi,
-                       char *polyo, PolyPointList *_P) {
+                       char *polyo, PolyPointList *_P, FILE *out) {
   switch (sFlag) { /* if(dbin=0) read from inFILE; */
   case 'p':
   case 'P':
@@ -3735,7 +3735,7 @@ void VPHM_Sublat_Polys(char sFlag, char mr, char *dbin, char *polyi,
     break;
   case 'm':
   case 'M':
-    Find_Sublat_Polys(mr, dbin, polyi, polyo, _P);
+    Find_Sublat_Polys(mr, dbin, polyi, polyo, _P, outFILE);
     break;
   default:
     if (('1' < sFlag) && (sFlag <= '9'))
