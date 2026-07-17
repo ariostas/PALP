@@ -123,7 +123,7 @@ void fprI(int N, Inci64 I); /* print INCIDENCE to file */
 int Inci64_LE(Inci64 A, Inci64 B);
 int Inci64_LT(Inci64 A, Inci64 B);
 
-void PRNtriang(triang *SR, const char *c);
+void PRNtriang(triang *SR, const char *c, FILE *out = outFILE);
 /*
 print (Inci64) triangulation
 */

@@ -46,11 +46,12 @@ void NormTriangularBasis(AmbiLatticeBasis *_B);
 void MakeRefWeights(int N, int from_d, int to_d);
 int IN_WEIGHT(Weight *, CWS *, int *, PolyPointList *, Flags *, int);
 
-void OUT_CWS(CWS *, int *, int *);
+void OUT_CWS(CWS *, int *, int *, FILE *out = outFILE);
 
-void Print_VP(PolyPointList *, VertexNumList *, int, int, Pstat *);
+void Print_VP(PolyPointList *, VertexNumList *, int, int, Pstat *,
+              FILE *out = outFILE);
 
-void Print_Pstat(Pstat *, int, int, int);
+void Print_Pstat(Pstat *, int, int, int, FILE *out = outFILE);
 
 [[noreturn]] void Die(const char *);
 
@@ -306,7 +307,7 @@ int main(int narg, char *fn[]) {
       }
       if (!F.VP) {
         if constexpr (write_cws) {
-          OUT_CWS(&CW, D, &F.Msum);
+          OUT_CWS(&CW, D, &F.Msum, outFILE);
         }
         if (POLY_Dmax < (_P->n + codim - 1)) {
           printf("Please increase POLY_Dmax to at least %d = %d + %d - 1\n",
@@ -317,7 +318,7 @@ int main(int narg, char *fn[]) {
         Make_E_Poly(outFILE, &CW, _P, _V, _E, &codim, &F, &D[0]);
       } else {
         N++;
-        Print_VP(_P, _V, VPmax, VPmin, _PS);
+        Print_VP(_P, _V, VPmax, VPmin, _PS, outFILE);
       }
     } else {
       if ((F.Rv == 1) || ((F.V == 1) && (F.N == 1))) {
@@ -336,12 +337,12 @@ int main(int narg, char *fn[]) {
       fprintf(stderr, "Error: nef VPmax=%d less than VPmin=%d\n", VPmax, VPmin);
       exit(1);
     }
-    Print_Pstat(_PS, N, VPmax, VPmin);
+    Print_Pstat(_PS, N, VPmax, VPmin, outFILE);
   }
   return 0;
 }
 
-void Print_Pstat(Pstat *_PS, int N, int VPmax, int VPmin) {
+void Print_Pstat(Pstat *_PS, int N, int VPmax, int VPmin, FILE *out) {
   int i;
 
   fprintf(outFILE, "\n\n%d  of  %d\n\n", (int)_PS->n, (int)N);
@@ -351,7 +352,7 @@ void Print_Pstat(Pstat *_PS, int N, int VPmax, int VPmin) {
 }
 
 void Print_VP(PolyPointList *_P, VertexNumList *_V, int VPmax, int VPmin,
-              Pstat *_PS) {
+              Pstat *_PS, FILE *out) {
   int i, j;
 
   if ((_P->np <= VPmax) && (_P->np >= VPmin)) {
@@ -608,7 +609,7 @@ int IN_WEIGHT(Weight *_W, CWS *_CW, int *_D, PolyPointList *_P, Flags *_F,
   return ReadCwsPp(_CW, _P, codim, 1);
 }
 
-void OUT_CWS(CWS *_W, int *_D, int *_M_Flag) {
+void OUT_CWS(CWS *_W, int *_D, int *_M_Flag, FILE *out) {
   int i, j;
 
   for (i = 0; i < _W->nw; i++) {

@@ -84,7 +84,7 @@ int Inci64_LT(Inci64 A, Inci64 B) { return ((A & B) == A) ? (A != B) : 0; }
 // int Inci64_LmR(Inci64 *A,Inci64 *B){return (*A==*B) ? 0 : ((*A>*B) ? 1:-1);}
 // int Inci64_diff(const void *A,const void *B){return Inci64_LmR(A,B);}
 
-void PRNtriang(triang *SR, const char *c) {
+void PRNtriang(triang *SR, const char *c, FILE *out) {
   printf("%d %s\n", SR->n, c);
   for (int i = 0; i < SR->n; i++) {
     if (i)
@@ -277,20 +277,20 @@ void MoriGen(Matrix T, Long *V) {
   Free_Matrix(&G);
 }
 
-void Print_CMatrix(Matrix M, char *s) {
+void Print_CMatrix(Matrix M, char *s, FILE *out) {
   int i, j;
-  fprintf(outFILE, "%d %d CV %s\n", M.d, M.v, s);
+  fprintf(out, "%d %d CV %s\n", M.d, M.v, s);
   for (i = 0; i < M.d; i++) {
     for (j = 0; j < M.v; j++)
-      fprintf(outFILE, "%2d%s", (int)M.x[j][i], (j + 1 == M.v) ? "\n" : " ");
+      fprintf(out, "%2d%s", (int)M.x[j][i], (j + 1 == M.v) ? "\n" : " ");
   }
 }
 
-void Print_VNL(VertexNumList *V) {
+void Print_VNL(VertexNumList *V, FILE *out) {
   int i;
   for (i = 0; i < V->nv; i++)
-    fprintf(outFILE, "%d ", V->v[i]);
-  fprintf(outFILE, "#=%d\n", V->nv);
+    fprintf(out, "%d ", V->v[i]);
+  fprintf(out, "#=%d\n", V->nv);
 }
 
 int Vdiff_LmR(Long *L, Long *R, int d) {
@@ -308,10 +308,10 @@ void Inci64_2_VNL(Inci64 X, VertexNumList *V, int n) {
   for (i = 0; i < n; i++)
     if (getN(i, X))
       V->v[V->nv++] = i;
-  // Print_VNL(V);Sort_VL(V);Print_VNL(V);exit(0);
+  // Print_VNL(V, outFILE);Sort_VL(V);Print_VNL(V, outFILE);exit(0);
 }
 
-void Print_Inci64_list(int n, Inci64 *I, int p) {
+void Print_Inci64_list(int n, Inci64 *I, int p, FILE *out) {
   printf("To be done: Print_Inci64_list n=%d p=%d I=%lld\n", n, p, *I);
   exit(1);
 }
@@ -360,10 +360,10 @@ int Make_triCD2F(triang *T, Inci64 *cd2I) {
       break;
   if ((i < cd2n) || (cd2n * 2 != T->n * T->d)) {
     IDerr();
-    PRNtriang(T, "Triangulation ERROR");
+    PRNtriang(T, "Triangulation ERROR", outFILE);
     T->n = cd2n;
     T->I = cd2I;
-    PRNtriang(T, "Codim-2 faces:");
+    PRNtriang(T, "Codim-2 faces:", outFILE);
     exit(1);
   }
   return cd2n;
@@ -489,13 +489,13 @@ int Check_Mori(PolyPointList *P, int p, triang *T) { // strongly convex(?)
   Free_Matrix(&G);
 
   if (np != V.v[nv]) {
-    PRNtriang(T, "Non-coherent Triangulation");
+    PRNtriang(T, "Non-coherent Triangulation", outFILE);
     return 0;
   } else
     return 1;
 }
 
-void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I) {
+void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I, FILE *out) {
   int i, j, r = 0, d = P->n, ngen = 0, /* ng0,*/ e0 = 0, nm = 0, nv, np;
   int m[VERT_Nmax];
   Long Z[POLY_Dmax + 1];
@@ -581,12 +581,12 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I) {
   }
   // Print_LMatrix(R, "Matrix of all rays", outFILE);
   if (UT->np >= POINT_Nmax) {
-    fprintf(outFILE, "need POINT_Nmax>=%d\n", UT->np + 1);
+    fprintf(out, "need POINT_Nmax>=%d\n", UT->np + 1);
     exit(1);
   }
   UT->n = r;
   if (r > POLY_Dmax) {
-    fprintf(outFILE, "need POLY_Dmax>=%d\n", UT->n);
+    fprintf(out, "need POLY_Dmax>=%d\n", UT->n);
     exit(1);
   }
   for (i = 0; i < ngen; i++)
@@ -608,7 +608,7 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I) {
   if (np != V.v[nv]) {
     IDerr();
     puts("MORI CONE not strictly convex:");
-    Print_Inci64_list(nI, I, p);
+    Print_Inci64_list(nI, I, p, outFILE);
     puts("... non-convex triangulation?\n");
     exit(1);
   }
@@ -625,7 +625,7 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I) {
         IE[j] = (2 * IE[j] + !Eval_Eq_on_V(&E->e[i], UT->x[V.v[j]], r));
     } /* compute Eq(0)-INCIs for Vs */
   if (e0 > VERT_Nmax) {
-    fprintf(outFILE, "need VERT_Nmax >= %d\n", e0);
+    fprintf(out, "need VERT_Nmax >= %d\n", e0);
     exit(1);
   }
   // printf("p=%d nm=%d\n",p,nm);
@@ -644,24 +644,24 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I) {
           stderr);
     exit(1);
   }
-  //  fprintf(outFILE,
+  //  fprintf(out,
   //  "%d MORI GENERATORS / dim(cone)=%d   [#rays=%d<=%d #eq=%d<=%d
   //  #v=%d<=%d]\n",
   //    nm,r,ngen,ng0,e0,E->ne,nm,V.nv);
-  fprintf(outFILE, "%d MORI GENERATORS / dim(cone)=%d \n", nm, r);
+  fprintf(out, "%d MORI GENERATORS / dim(cone)=%d \n", nm, r);
   // printf("p=%d nm=%d\n",p,nm);fflush(0);
   for (i = 0; i < nm; i++) {
     int n = V.v[m[i]];
     Long s = 0;
     for (j = 0; j < p; j++)
       s += R.x[n][j];
-    // fprintf(outFILE,"%3ld ",-s);	/* sum of degrees ==
+    // fprintf(out,"%3ld ",-s);	/* sum of degrees ==
     // CY-divisor/linebundle */
     for (j = 0; j < p; j++)
-      fprintf(outFILE, " %2ld", R.x[n][j]);
-    fputs("   I:", outFILE);
+      fprintf(out, " %2ld", R.x[n][j]);
+    fputs("   I:", out);
     prnI(e0, IE[m[i]]);
-    fputs("\n", outFILE);
+    fputs("\n", out);
     fflush(0);
   }
   Free_Matrix(&VT);
@@ -867,9 +867,9 @@ void StanleyReisner(triang *SR,
     if (ok)
       free(A);
     else {
-      PRNtriang(T, "Triangulation");
-      PRNtriang(SR, "SR-ideal");
-      PRNtriang(&TeST, "Tri(SR) ... test failed !!!");
+      PRNtriang(T, "Triangulation", outFILE);
+      PRNtriang(SR, "SR-ideal", outFILE);
+      PRNtriang(&TeST, "Tri(SR) ... test failed !!!", outFILE);
       fputs("Error: Stanley-Reisner self-consistency check failed\n", stderr);
       exit(1);
     }
@@ -893,10 +893,10 @@ void InterSectionRing(Inci64 *Tri, int *t, PolyPointList *P, int p,
   SR.nmax = T.nmax = VERT_Nmax;
   if (Check_Mori(P, p, &T)) {
     if (_Flag->g)
-      PRNtriang(&T, "Triangulation");
+      PRNtriang(&T, "Triangulation", outFILE);
     StanleyReisner(&SR, &T);
     if (_Flag->g)
-      PRNtriang(&SR, "SR-ideal");
+      PRNtriang(&SR, "SR-ideal", outFILE);
     if (_Flag->i || _Flag->t || _Flag->c || _Flag->d || _Flag->a || _Flag->b ||
         _Flag->H) {
       if (P->n < (POLY_Dmax + 1)) {
@@ -908,7 +908,7 @@ void InterSectionRing(Inci64 *Tri, int *t, PolyPointList *P, int p,
       }
     }
     if (_Flag->m)
-      Print_Mori(P, p, *t, Tri);
+      Print_Mori(P, p, *t, Tri, outFILE);
   }
 }
 
@@ -1054,7 +1054,8 @@ Long SCALproduct(Long *X, Long *Y) {
 #define BZRx(a, b, c) (XYZproduct(BZR(a), BZR(b), BZR(c)))
 #define BZRE(i, j) (BZR(Eli[i][j]))
 
-void AuxPrintRays(int R[VERT_Nmax][POLY_Dmax], int nrp[VERT_Nmax], int nr) {
+void AuxPrintRays(int R[VERT_Nmax][POLY_Dmax], int nrp[VERT_Nmax], int nr,
+                  FILE *out) {
   int i, j;
   printf("Rays: ");
   for (i = 0; i < nr; i++) {
@@ -1127,7 +1128,8 @@ void IntersectEdges(Long *X, Long *Y, Long *U, Long *V, Long *Q) {
   }
 }
 
-void Print_MaxTrian(Inci64 C, Inci64 *CT[ANtri], int nmt, int *nt, int p) {
+void Print_MaxTrian(Inci64 C, Inci64 *CT[ANtri], int nmt, int *nt, int p,
+                    FILE *out) {
   int i, j;
   for (i = 0; i < nmt; i++) {
     Inci64 U = 0;
@@ -1186,7 +1188,7 @@ int Triang1dSFan(PolyPointList *P, int p, Inci64 I, Inci64 *X,
   }
   prnI(p, CI);
   printf("=C -> ");
-  Print_CMatrix(B, "Gale");
+  Print_CMatrix(B, "Gale", outFILE);
 #endif
   if (i > 1) {
     CT[*nmt] = X;
@@ -1381,7 +1383,7 @@ int Triang2dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
     exit(1);
   }
 #if (TRACE_TRIANGULATION)
-  Print_MaxTrian(U, CT, *nmt, nt, p);
+  Print_MaxTrian(U, CT, *nmt, nt, p, outFILE);
 #endif
   return tnt;
 } // nmt = # maximal triangulations
@@ -1464,12 +1466,12 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
 #if (TRACE_TRIANGULATION)
   prnI(p, C);
   printf("=C(Gale) ");
-  Print_CMatrix(B, "Gale");
+  Print_CMatrix(B, "Gale", outFILE);
   if (f != A.v) {
     fputs("Error: Triang3dSFan facet point count mismatch\n", stderr);
     exit(1);
   }
-  AuxPrintRays(R, nrp, r);
+  AuxPrintRays(R, nrp, r, outFILE);
   if (z < r) {
     fputs("Error: Triang3dSFan fewer non-zero Gale points than rays\n", stderr);
     exit(1);
