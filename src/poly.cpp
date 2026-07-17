@@ -20,7 +20,7 @@ namespace {
 constexpr int OSL = 42; /* opt_string's length */
 }
 
-FILE *inFILE, *outFILE;
+FILE *inFILE;
 PalpContext palpContext;
 
 void PrintUsage(char *c) {
@@ -226,7 +226,7 @@ int main(int narg, char *fn[]) {
   FILE *out;
   if (FilterFlag) {
     inFILE = NULL;
-    out = outFILE = stdout;
+    out = stdout;
   } else {
     if (narg > ++n)
       inFILE = fopen(fn[n], "r");
@@ -237,9 +237,9 @@ int main(int narg, char *fn[]) {
       exit(1);
     }
     if (narg > ++n)
-      out = outFILE = fopen(fn[n], "w");
+      out = fopen(fn[n], "w");
     else
-      out = outFILE = stdout;
+      out = stdout;
   }
   if (U) {
     dd = CD;

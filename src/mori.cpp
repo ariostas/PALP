@@ -20,7 +20,7 @@
 
 /* Global FILE pointers are referenced from the library code; kept global for
    now while the migration is in progress (see ISSUES.md #40). */
-FILE *inFILE, *outFILE;
+FILE *inFILE;
 PalpContext palpContext;
 
 void PrintUsage(char *c) {
@@ -178,7 +178,7 @@ int main(int narg, char *fn[]) {
   FILE *out;
   if (Flag.FilterFlag) {
     inFILE = NULL;
-    out = outFILE = stdout;
+    out = stdout;
   }
 
   else {
@@ -193,9 +193,9 @@ int main(int narg, char *fn[]) {
     }
 
     if (narg > ++n)
-      out = outFILE = fopen(fn[n], "w");
+      out = fopen(fn[n], "w");
     else
-      out = outFILE = stdout;
+      out = stdout;
   }
 
   while ((Flag.D ? Read_PP(_P) : Read_CWS(CW, _P, out))) {

@@ -62,7 +62,7 @@ void Print_Nefinfo(PartList *_PTL, /* Flags *_F,*/ time_t *_Tstart,
 
 /* Global FILE pointers are referenced from the library code; kept global for
    now while the migration is in progress (see ISSUES.md #40). */
-FILE *inFILE, *outFILE;
+FILE *inFILE;
 PalpContext palpContext;
 
 namespace {
@@ -267,7 +267,7 @@ int main(int narg, char *fn[]) {
   FILE *out;
   if (FilterFlag) {
     inFILE = NULL;
-    out = outFILE = stdout;
+    out = stdout;
   } else {
     if (narg > ++n)
       inFILE = fopen(fn[n], "r");
@@ -278,9 +278,9 @@ int main(int narg, char *fn[]) {
       exit(1);
     }
     if (narg > ++n)
-      out = outFILE = fopen(fn[n], "w");
+      out = fopen(fn[n], "w");
     else
-      out = outFILE = stdout;
+      out = stdout;
   }
   while (IN_WEIGHT(&W, &CW, D, _P, &F, codim, out)) {
     /* _P is the M-lattice polytope */

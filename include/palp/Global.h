@@ -126,13 +126,13 @@ struct PalpContext {
   FILE *out = stdout;
 };
 
-extern FILE *inFILE, *outFILE;
+extern FILE *inFILE;
 extern PalpContext palpContext; /* global context used by legacy code */
 /*
 Ascii-files for input and output. If not given in the parameter list they
 default to stdin and stdout, respectively.
-palpContext.in/out are the preferred explicit handles; inFILE/outFILE are
-kept as a compatibility layer during the migration to PalpContext.
+palpContext.in/out are the preferred explicit handles; inFILE is kept as a
+compatibility layer during the migration to PalpContext.
 */
 
 /*  ==========         Global typedefs           		==========  */
