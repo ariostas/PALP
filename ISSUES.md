@@ -1,4 +1,4 @@
-# PALP Potential Issues / Bugs
+#PALP Potential Issues / Bugs
 
 Found during code inspection for the C → C++17 migration. Each item has a file,
 line number, severity, and description. Fixes are applied in Phase 5 (after
@@ -75,31 +75,24 @@ and the detailed commit messages for the full context of each fix.
 
 ## Open / remaining
 
-### 41. Global `inFILE` / `outFILE`
+### 41. Global `inFILE` / `outFILE` — Fixed in Phase 5.11
 - **File**: all driver files (`poly.cpp`, `cws.cpp`, `class.cpp`, `nef.cpp`, `mori.cpp`)
 - **Severity**: High
-- **Status**: Open (Phase 5.11)
-- **Description**: `FILE *inFILE, *outFILE` globals create hidden dependencies,
-  prevent thread safety, and are mutated without restoring. Should be replaced
-  with a `PalpContext` struct passed explicitly to functions that need I/O.
-  This is also a prerequisite for `lgotwist.cpp` to fully share `Rat.cpp`.
+- **Status**: Closed
+- **Description**: `FILE *inFILE, *outFILE` globals created hidden dependencies
+  and prevented thread safety. They were replaced with explicit `FILE *in` and
+  `FILE *out` parameters threaded through all I/O helpers. Each driver `main()`
+  now owns a local input/output file handle. This unblocks `lgotwist.cpp`
+  sharing `Rat.cpp` in a follow-up step.
 
-  **Granularity plan** (see PLAN.md Phase 5.11 for details):
-  1. Introduce `PalpContext` and make globals point to a default instance (no
-     functional change).
-  2. Convert pure-output helpers (printing routines) to take `FILE *out`.
-  3. Convert input helpers (`Read_*` in `Coord.cpp`/`LG.cpp`/`MoriCone.cpp`) to
-     take `FILE *in`.
-  4. Convert driver `main()`s to own the context and pass it through.
-  5. Remove the global `inFILE`/`outFILE` entirely and update `Rat.cpp` so
-     `lgotwist.cpp` can reuse it.
-
-### 42. `inFILE`/`outFILE` mutated without restore
+### 42. `inFILE`/`outFILE` mutated without restore — Fixed in Phase 5.11
 - **File**: `cws.cpp`
 - **Severity**: High
-- **Status**: Open (part of Phase 5.11)
-- **Description**: `inFILE`/`outFILE` are set globally and never restored. The
-  filter mode (`inFILE = NULL` → `stdin`) vs file mode creates fragile state.
+- **Status**: Closed
+- **Description**: `inFILE`/`outFILE` were mutated globally inside `cws.cpp`
+  helpers and never restored. The migration replaced the global state with
+  explicit local `FILE *` parameters, eliminating the fragile filter-mode vs
+  file-mode global state.
 
 ### 15. Static mutable state in `Subdb.cpp`
 - **File**: `Subdb.cpp`
