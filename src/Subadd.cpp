@@ -51,6 +51,13 @@ static_assert(2 * IntSqrt(SAVE_INC) <= SAVE_INC,
               "increase SAVE_INC / ADD_LIST_LENGTH");
 
 constexpr int ADD_LIST_LENGTH = IntSqrt(SAVE_INC);
+
+int AddListLength = ADD_LIST_LENGTH;
+int VF2ucNF_pn = 0;
+int VF2ucNF_Err = 0;
+int AuxPut_hNF_pos = 0;
+int ANF2ucNF_pn = 0;
+int AddPolya_list = 0;
 } // namespace
 
 #undef More_File_IO_Data
@@ -912,14 +919,12 @@ int PPEntComp(int *FIpos, int *PEpos, int *nv, int *nuc, unsigned char *uc,
 #endif
   return RIGHTminusLEFT(uc, &(C[2]), nuc);
 }
+
 void InsertPNFintoPPEntList(int *spos, int *mpos, int *lpos, int *nv, int *nuc,
                             unsigned char *uc, NF_List *S) {
   int l = S->PPEN++;
   unsigned char *C = &(S->NewNF[S->NewNB]);
   PPEnt *ppe = &S->PPE[*spos];
-  static int AddListLength;
-  if (0 == AddListLength)
-    AddListLength = ADD_LIST_LENGTH;
 #ifdef USE_UNIT_ENCODE
   if ((*uc % 8) > 3)
     S->NC++;
@@ -1910,8 +1915,7 @@ void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
   {
     Long tNF[POLY_Dmax][VERT_Nmax];
     int tMS, i, j, *d = &P->n, err = 0;
-    static int pn, Err;
-    pn++;
+    VF2ucNF_pn++;
     UCnf2vNF(d, NV, nUC, UC, tNF, &tMS);
     if (MS < 2)
       for (i = 0; i < *d; i++)
@@ -1924,8 +1928,8 @@ void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
         for (j = i; j < *NV; j++)
           err += (tNF[i][j] != F_NF[i][j]);
     if (err)
-      Err = 1;
-    if (Err) {
+      VF2ucNF_Err = 1;
+    if (VF2ucNF_Err) {
       int base;
 #ifdef USE_UNIT_ENCODE
       if (MSone > 3)
@@ -1933,7 +1937,7 @@ void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
       else
 #endif
         NUCtoBase(&P->n, NV, nUC, &base);
-      printf("\n#%d  MS=%d  100*e(V)-e(F) = %d\n", pn, MS, err);
+      printf("\n#%d  MS=%d  100*e(V)-e(F) = %d\n", VF2ucNF_pn, MS, err);
       for (i = 0; i < *nUC; i++)
         printf("%d ", UC[i]);
       printf("= UC[%d]  base=%d  vo=%d  fo=%d\n", *nUC, base, vo, fo);
@@ -2010,7 +2014,6 @@ void AuxPut_hNF(FILE *F, int *v, int *nu, unsigned char *Huc, FInfoList *Io,
                 int *slNF, int *slSM, int *slNM, int *slNB, unsigned char *ucSL,
                 int *SLp) {
   int i, Hms = (*Huc % 4);
-  static int pos;
   unsigned char *Suc = NULL;
   for (i = 0; i < *nu; i++)
     fputc(Huc[i], F);
@@ -2019,35 +2022,35 @@ void AuxPut_hNF(FILE *F, int *v, int *nu, unsigned char *Huc, FInfoList *Io,
       Io->nNM++;
   } else
     Io->nSM++;
-  while (pos < *slNF) {
+  while (AuxPut_hNF_pos < *slNF) {
     int HmSL;
-    Suc = &ucSL[SLp[pos]];
+    Suc = &ucSL[SLp[AuxPut_hNF_pos]];
     HmSL = *v - *Suc;
     if (HmSL > 0) {
-      pos++;
+      AuxPut_hNF_pos++;
       continue;
     } else if (HmSL < 0)
       return;
     else
       HmSL = *nu - Suc[1];
     if (HmSL > 0) {
-      pos++;
+      AuxPut_hNF_pos++;
       continue;
     } else if (HmSL < 0)
       return;
     else
       HmSL = RIGHTminusLEFT(&Suc[2], Huc, nu);
     if (HmSL > 0) {
-      pos++;
+      AuxPut_hNF_pos++;
       continue;
     } else if (HmSL < 0)
       return;
     else
       break;
   }
-  if (pos < *slNF) {
+  if (AuxPut_hNF_pos < *slNF) {
     int Sms = Suc[2] % 4;
-    pos++;
+    AuxPut_hNF_pos++;
     switch (10 * Hms + Sms) {
     case 00:
     case 11:
@@ -2077,7 +2080,7 @@ void AuxPut_hNF(FILE *F, int *v, int *nu, unsigned char *Huc, FInfoList *Io,
         (*slNM)--;
     } else
       (*slSM)--; /* remove SL-entry */
-    for (i = pos--; i < *slNF; i++)
+    for (i = AuxPut_hNF_pos--; i < *slNF; i++)
       SLp[i - 1] = SLp[i];
     (*slNF)--;
     (*slNB) -= *nu + 2;
@@ -2394,7 +2397,7 @@ void Add_Polya_2_Polyi(char *polyi, char *polya, char *polyo, FILE *out) {
             exit(1);
           }
           /*
-          {static int list;printf("#%d v=%d nu=%d Inf=%d Anf=%d ",++list,v,nu,
+          {printf("#%d v=%d nu=%d Inf=%d Anf=%d ",++AddPolya_list,v,nu,
           I_NF,A_NF);printf("Onf=%d   pi=%d pa=%d  po=%d\n",O_NF,pi,pa,po);
            */
         }
@@ -2562,8 +2565,7 @@ void ANF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
   {
     Long tNF[POLY_Dmax][VERT_Nmax];
     int tMS, i, j, *d = &P->n, err = 0;
-    static int pn;
-    pn++;
+    ANF2ucNF_pn++;
     UCnf_2_ANF(d, NV, nUC, UC, tNF, &tMS);
     for (i = 0; i < *d; i++)
       for (j = 0; j < *NV; j++)
@@ -2578,7 +2580,7 @@ void ANF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
       else
 #endif
         NUCtoBase(&P->n, NV, nUC, &base);
-      printf("\n#%d  MS=%d  100*e(V)-e(F) = %d\n", pn, 1, err);
+      printf("\n#%d  MS=%d  100*e(V)-e(F) = %d\n", ANF2ucNF_pn, 1, err);
       for (i = 0; i < *nUC; i++)
         printf("%d ", UC[i]);
       printf("= UC[%d]  base=%d  vo=%d\n", *nUC, base, vo);

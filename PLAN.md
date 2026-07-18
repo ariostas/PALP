@@ -159,3 +159,12 @@ cmake --build build/ubsan && ctest --test-dir build/ubsan
   in `Add_Mono_2_Poly` are now translation-unit globals instead of
   function-local `static`s. This keeps the existing single-threaded semantics
   while making the shared state explicit.
+
+- [x] Replaced remaining function-local `static` mutable state in `Subadd.cpp`
+  with file-level anonymous-namespace variables:
+  - `AddListLength` in `InsertPNFintoPPEntList`.
+  - `VF2ucNF_pn` and `VF2ucNF_Err` in the `TEST_UCnf` block of `VF_2_ucNF`.
+  - `AuxPut_hNF_pos` in `AuxPut_hNF`.
+  - `AddPolya_list` in the commented-out debug print inside `Add_Polya_2_Polyi`.
+  - `ANF2ucNF_pn` in the `TEST_UCnf` block of `ANF_2_ucNF`.
+  No behavior changed; the persistent counters remain per-translation-unit.

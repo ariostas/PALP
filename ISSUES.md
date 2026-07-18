@@ -125,9 +125,10 @@ and the detailed commit messages for the full context of each fix.
 - **File**: `Subadd.cpp`
 - **Line**: 96 (original)
 - **Severity**: Low
-- **Status**: Open
-- **Description**: `NF_List *AuxNFLptr = NULL` — global mutable pointer used as
-  a "dirty trick" for statistics. Hidden coupling between functions.
+- **Status**: Closed
+- **Description**: `NF_List *AuxNFLptr = NULL` was referenced in the original
+  C source but was already removed during the migration. No further action was
+  required; closing as resolved.
 
 ### 40. German comments in `Polynf.cpp`
 - **File**: `Polynf.cpp`
