@@ -1637,7 +1637,7 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo,
         if (FIi.NFnum[v][nu]) {
           if (FIs.NFnum[v][nu]) /* check for add polys */
           {
-            volatile unsigned int *_nf = &FIo.NFnum[v][nu];
+            unsigned int *_nf = &FIo.NFnum[v][nu];
             /* (*_nf)=#NFnum(v,n) ?= 0 */
             unsigned int n, I_NF = FIi.NFnum[v][nu], S_NF = FIs.NFnum[v][nu];
             if (db)

@@ -146,9 +146,12 @@ and the detailed commit messages for the full context of each fix.
   dependent buffers.
 
 ### 47. `volatile` used to prevent optimization
-- **File**: `Polynf.cpp`
-- **Lines**: 348, 470 (original)
+- **File**: `Subdb.cpp`
+- **Lines**: 1640 (original)
 - **Severity**: Low
-- **Status**: Open
-- **Description**: `volatile` used to prevent compiler optimization. Should be
-  replaced with `std::atomic`, memory barriers, or the root cause addressed.
+- **Status**: Closed
+- **Description**: A single `volatile unsigned int *_nf` pointer was used in
+  `Subtract_Aux_from_DB` to force the compiler to re-read `FIo.NFnum[v][nu]`
+  through a pointer. With no concurrent access in this single-threaded code,
+  the `volatile` qualifier was unnecessary; removed and replaced with a plain
+  `unsigned int *`.
