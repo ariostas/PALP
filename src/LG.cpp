@@ -16,6 +16,9 @@ constexpr bool NO_COORD_IMPROVEMENT = true; /* switch off weight permutation */
 constexpr bool TEST_LG = false;             /* debug prints/tests in LG.cpp */
 constexpr bool TEST_PP = false; /* Poincare polynomial debug prints */
 constexpr bool TEST_PD = false; /* Poincare duality test */
+
+int LG_MaxPoNum = 0;
+int AddMono_M = 1;
 } // namespace
 
 #define NO_COORD_IMPROVEMENT
@@ -661,9 +664,8 @@ void TEST_LatticeBasis(AmbiLatticeBasis *_B) /* print AmbiLatticeBasis */
 
 void TEST_WeightMakePoints(AmbiPointList *_P) {
   int i, j;
-  static int MaxPoNum;
-  if (_P->np > MaxPoNum)
-    MaxPoNum = _P->np;
+  if (_P->np > LG_MaxPoNum)
+    LG_MaxPoNum = _P->np;
   if (_P->np > 20) {
     for (i = 0; i < _P->np; i++) {
       for (j = 0; j < _P->N; j++)
@@ -677,7 +679,7 @@ void TEST_WeightMakePoints(AmbiPointList *_P) {
       puts("");
     }
   }
-  printf("PointNum=%d [max=%d]\n", _P->np, MaxPoNum);
+  printf("PointNum=%d [max=%d]\n", _P->np, LG_MaxPoNum);
 }
 
 void Ambi_2_Lattice(Long *A, AmbiLatticeBasis *B, Long *P) {
@@ -1018,13 +1020,13 @@ void Add_Mono_2_Poly(int e, Pint c, PoCoLi *P) /* use bisection */
   P->e[m] = e;
   P->c[m] = c;
   if constexpr (TEST_LG) {
-    static int M = 1;
-    if (P->n / 1000000 > M) {
-      printf("#c=%dM ", ++M);
+    if (P->n / 1000000 > AddMono_M) {
+      printf("#c=%dM ", ++AddMono_M);
       fflush(0);
     }
   }
 }
+
 void Init1_xN(PoCoLi *P, int N) /* 1 - x^N */
 {
   UnitPoly(P);

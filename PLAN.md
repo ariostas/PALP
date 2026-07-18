@@ -153,3 +153,9 @@ cmake --build build/ubsan && ctest --test-dir build/ubsan
   `AMBI_Dmax`, `FIB_Nmax`, `CD2F_Nmax` (`Global.h`); `WZinput`, `W_Nmax`
   (`LG.h`/`Nef.h`); `USE_TMP_DIR` (`Subpoly.h`); local preprocessor conditional
   flags in `Coord.cpp`, `LG.cpp`, `Subadd.cpp`, and `lgotwist.cpp`.
+
+- [x] Replaced debug/static state in `LG.cpp` with file-level anonymous namespace
+  variables: `MaxPoNum` in `TEST_WeightMakePoints` and the progress counter `M`
+  in `Add_Mono_2_Poly` are now translation-unit globals instead of
+  function-local `static`s. This keeps the existing single-threaded semantics
+  while making the shared state explicit.

@@ -106,9 +106,12 @@ and the detailed commit messages for the full context of each fix.
 - **File**: `LG.cpp`
 - **Lines**: 280, 491 (original)
 - **Severity**: Low
-- **Status**: Open
-- **Description**: `static int MaxPoNum` and `static int M` — persistent state
-  across calls.
+- **Status**: Closed
+- **Description**: `static int MaxPoNum` in `TEST_WeightMakePoints` and the
+  `static int M` progress counter in `Add_Mono_2_Poly` were converted to
+  translation-unit anonymous-namespace variables. The persistent single-threaded
+  state is now explicit; full reentrance would require passing counters through
+  call sites, which is out of scope for this cleanup.
 
 ### 17. Static counters in `Polynf.cpp`
 - **File**: `Polynf.cpp`
