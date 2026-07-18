@@ -8,6 +8,10 @@
 -9 9 0 3
 */
 
+#include <palp/Global.h>
+#include <palp/Rat.h>
+
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -29,115 +33,46 @@ int mask[] = {1,   2,   4,    8,    16,   32,   64,   128,
               256, 512, 1024, 2048, 4096, 8192, 16384};
 int interb01(); /* ...  interface to "mhodge" conventions   */
 
-struct LgoTwistContext {
-  FILE *infi = stdin;
-  FILE *outfi = stdout;
+/* Global I/O context for lgotwist. */
+PalpContext palpContext;
+
+/* Non-I/O application state for lgotwist. */
+struct LgoTwistState {
   int stdi = 1;
   int bugcount = 0;
   int invertible = 0;
 };
 
-LgoTwistContext ctx;
+LgoTwistState ctx;
 
 /* ctx.stdi=1 if called without "infile"  (see: main, readline) */
 
 /*  ======================================================================  */
-/*  ==========             integer and rational stuff           ==========  */
-/*  ======================================================================  */
-/*  ==========     rat.h   (header -> #include "rat.h")         ==========  */
+/*  ==========             integer helpers                      ==========  */
 /*  ======================================================================  */
 namespace {
 long Mod(long a, long b) { return b ? a % b : a; }
-long Min(long a, long b) { return a < b ? a : b; }
-long Max(long a, long b) { return a > b ? a : b; }
-long Abs(long a) { return a < 0 ? -a : a; }
-long gcd(long a, long b) {
-  a = (a < 0) ? -a : a;
-  b = (b < 0) ? -b : b;
+long Lcm(long a, long b) {
+  long g = NNgcd(a, b);
+  return g ? (a / g) * b : 0;
+}
+long pgcd(long a, long b) {
+  long c;
+  a = std::llabs(a);
+  b = std::llabs(b);
   if (!a)
     return b;
   if (!b)
     return a;
-  long c;
-  while ((c = Mod(a, b))) {
+  while ((c = a % b)) {
     a = b;
     b = c;
   }
   return b;
 }
-long Lcm(long a, long b) {
-  long g = gcd(a, b);
-  return g ? (a / g) * b : 0;
-}
 } // namespace
 
-typedef struct {
-  long num;
-  long den;
-} rat;
-rat rI(long a) {
-  rat c;
-  c.num = a;
-  c.den = 1;
-  return c;
-} /*  a/1  */
-rat rR(long a, long b) /*  a/b  */
-{
-  long g = gcd(a, b);
-  rat c;
-  g = (b < 0) ? -g : g;
-  c.num = a / g;
-  c.den = b / g;
-  return c;
-}
-rat rS(rat a, rat b) /*  a + b  */
-{
-  rat c;
-  long g = gcd(a.den, b.den);
-  g = gcd(c.den = a.den * (b.den / g),
-          c.num = a.num * (b.den / g) + b.num * (a.den / g));
-  c.num /= g;
-  c.den /= g;
-  return c;
-}
-rat rD(rat a, rat b) /*  a - b  */
-{
-  rat c;
-  long g = gcd(a.den, b.den);
-  g = gcd(c.den = a.den * (b.den / g),
-          c.num = a.num * (b.den / g) - b.num * (a.den / g));
-  c.num /= g;
-  c.den /= g;
-  return c;
-}
-rat rP(rat a, rat b) /*  a * b  */
-{
-  long g = gcd(a.num, b.den);
-  long h = gcd(b.num, a.den);
-  rat c;
-  c.num = (a.num / g) * (b.num / h);
-  c.den = (a.den / h) * (b.den / g);
-  return c;
-}
-rat rQ(rat a, rat b) /*  a / b  */
-{
-  long g = gcd(a.num, b.num);
-  long h = gcd(b.den, a.den);
-  rat c;
-  c.num = (a.num / g) * (b.den / h);
-  c.den = (a.den / h) * (b.num / g);
-#ifdef TEST
-  if (!c.den)
-    fprintf(ctx.outfi, "warning: vanishing denominator in rQ in %s!\n", infun);
-#endif
-  if (c.den < 0) {
-    c.num = -c.num;
-    c.den = -c.den;
-  }
-  return c;
-}
-void fS(rat *a, rat *b) { *a = rS(*a, *b); }
-void iS(rat *a, int *b) { *a = rS(*a, rI(*b)); }
+using rat = Rat; /* alias to PALP's rational type */
 
 long argint(char *s) /* string to integer */
 {
@@ -147,9 +82,9 @@ long argint(char *s) /* string to integer */
     d = 10 * d + s[i++] - '0';
   return d;
 }
-void prat(rat a) { fprintf(ctx.outfi, "%ld/%ld ", a.num, a.den); }
+void prat(Rat a) { Rpr(palpContext.out, a); }
 /*  ======================================================================  */
-/*  ==========          end of integer and rational stuff       ==========  */
+/*  ==========          end of integer helpers                  ==========  */
 /*  ======================================================================  */
 
 /****************************************************************************/
@@ -214,7 +149,7 @@ int readline(skelet *s) /* reads: "string[#+1] exp_0 ... exp_# ... \n" */
   s->N = 0;
   if (ctx.stdi)
     printf("skeleton? ");
-  while (' ' != (i = fgetc(ctx.infi)))
+  while (' ' != (i = fgetc(palpContext.in)))
     if (i == EOF)
       return 0;
     else {
@@ -226,24 +161,15 @@ int readline(skelet *s) /* reads: "string[#+1] exp_0 ... exp_# ... \n" */
       s->p[s->N++] = i - '0';
     }
   for (i = 0; i < (s->N); i++)
-    if (fscanf(ctx.infi, "%d", &s->a[i]) != 1) {
+    if (fscanf(palpContext.in, "%d", &s->a[i]) != 1) {
       fputs("Error: ReadSkeleton expected integer coefficient\n", stderr);
       exit(1);
     }
   n = (*s).N;
-  while (fgetc(ctx.infi) - '\n')
-    if (feof(ctx.infi))
+  while (fgetc(palpContext.in) - '\n')
+    if (feof(palpContext.in))
       break;
   return 1;
-}
-
-long pgcd(long a, long b) {
-  long c;
-  while ((c = Mod(a, b))) {
-    a = b;
-    b = c;
-  }
-  return b;
 }
 
 int prime[] = {2,   3,   5,   7,   11,  13,  17,  19,  23,  29,  31,  37,  41,
@@ -262,19 +188,19 @@ int prime[] = {2,   3,   5,   7,   11,  13,  17,  19,  23,  29,  31,  37,  41,
 
 void printpri(prili li) {
   int i;
-  fprintf(ctx.outfi, "\nlist of primes:\n");
+  fprintf(palpContext.out, "\nlist of primes:\n");
   for (i = 1; i <= *li.p; i++) {
-    fprintf(ctx.outfi, "%d,", li.p[i]);
+    fprintf(palpContext.out, "%d,", li.p[i]);
     if (!Mod(i, 20))
-      fprintf(ctx.outfi, "\n");
+      fprintf(palpContext.out, "\n");
   }
-  fprintf(ctx.outfi, "\nmaximal multiplicities (in one generator):\n");
+  fprintf(palpContext.out, "\nmaximal multiplicities (in one generator):\n");
   for (i = 1; i <= *li.p; i++) {
-    fprintf(ctx.outfi, "(%d,%d) ", li.p[i], li.m[i]);
+    fprintf(palpContext.out, "(%d,%d) ", li.p[i], li.m[i]);
     if (!Mod(i, 10))
-      fprintf(ctx.outfi, "\n");
+      fprintf(palpContext.out, "\n");
   }
-  fprintf(ctx.outfi, "\n");
+  fprintf(palpContext.out, "\n");
 }
 
 prili prideco(long x) {
@@ -290,7 +216,7 @@ prili prideco(long x) {
     }
     if (l.m[*l.p]) {
       l.p[*l.p] = p;
-      *l.m = Max(*l.m, l.m[*l.p]);
+      *l.m = std::max(*l.m, l.m[*l.p]);
       l.m[++(*l.p)] = 0;
     }
   }
@@ -307,7 +233,7 @@ void maxpri(prili pn) /* pmax = prime decomposistion of Lcm of group orders */
 {
   int i = 1, j = 1, n = 1;
   prili po = pmax;
-  *pmax.m = Max(*po.m, *pn.m);
+  *pmax.m = std::max(*po.m, *pn.m);
   po.p[*po.p + 1] = pn.p[*pn.p + 1] = po.p[*po.p] + pn.p[*pn.p] + 1;
   if (*po.p) {
     while ((i <= *po.p) || (j <= *pn.p)) {
@@ -318,7 +244,7 @@ void maxpri(prili pn) /* pmax = prime decomposistion of Lcm of group orders */
         pmax.p[n] = pn.p[j];
         pmax.m[n] = pn.m[j++];
       } else {
-        pmax.m[n] = Max(po.m[i], pn.m[j]);
+        pmax.m[n] = std::max(po.m[i], pn.m[j]);
         pmax.p[n] = po.p[i++];
         j++;
       }
@@ -468,9 +394,9 @@ void analy(skelet s) {
           /* if(fac>NM) {printf("infinit loop(1): fac=%d ",fac);return;} ...
            * debug */}
           fac = b[fac];
-          while (pgcd(Abs(fac), *ph[ord[n]]) > 1) {
+          while (pgcd(std::llabs(fac), *ph[ord[n]]) > 1) {
             fac -= P;
-          /* if(Abs(fac/P)>NM) {printf("infinit loop(2): fac=%d
+          /* if(std::llabs(fac/P)>NM) {printf("infinit loop(2): fac=%d
            * ",fac);return;} debug*/}
           fac *= Lcm / (*ph[ord[n]]);
           for (j = 1; j <= *ord; j++)
@@ -488,7 +414,7 @@ void analy(skelet s) {
         num[i] = 1 - s.a[lo[2]];
         for (j = 2; j < *lo; num[i] = 1 - s.a[lo[++j]] * num[i])
           ;
-        d = pgcd(den[i], num[i] = Abs(num[i]));
+        d = pgcd(den[i], num[i] = std::llabs(num[i]));
         num[i] /= d;
         den[i] /= d;
       }
@@ -513,58 +439,59 @@ void analy(skelet s) {
   for (j = 0; j < s.N; j++)
     D += (num[j] = num[j] * (d / den[j])); /* n_j==num[j]  */
   if ((D *= 2) % d)
-    fprintf(ctx.outfi, "D not int!\n");
+    fprintf(palpContext.out, "D not int!\n");
   D = s.N - D / d; /* D=sum(1-2q_i)*/
   for (j = 0; j < s.N; j++)
     if ((num[j] * (s.a[j] - (s.p[j] == j))) != (d - num[s.p[j]])) {
       printf("Error in calculation of weights!\n"); /* check weights */
-      fprintf(ctx.outfi, "Error in calculation of weights!: ");
+      fprintf(palpContext.out, "Error in calculation of weights!: ");
       ctx.bugcount++;
     }
-  /*   throw away order 1; write result to ctx.outfi (generators, skeleton,
-   * #gen.)*/
+  /*   throw away order 1; write result to palpContext.out (generators,
+   * skeleton, #gen.)*/
   {
     int k, l;
     long G = 1;
     n = 0;
     if (LONGOUT) {
-      fprintf(ctx.outfi, "N=%d ", s.N);
-      fprintf(ctx.outfi, "d=%ld, n_i=", d);
+      fprintf(palpContext.out, "N=%d ", s.N);
+      fprintf(palpContext.out, "d=%ld, n_i=", d);
     }
-    /* else {fprintf(ctx.outfi,"%d ", s.N); fprintf(ctx.outfi,"%ld",d);} */
+    /* else {fprintf(palpContext.out,"%d ", s.N);
+     * fprintf(palpContext.out,"%ld",d);} */
     wei[s.N][0] = d;
     for (j = 0; j < s.N; j++) {
       if (LONGOUT)
-        fprintf(ctx.outfi, " %ld", num[j]);
+        fprintf(palpContext.out, " %ld", num[j]);
       wei[j][0] = num[j];
     }
     for (j = 0; j < s.N; j++)
       if ((*ph[j]) > 1) {
         n++;
         if (LONGOUT)
-          fprintf(ctx.outfi, "\n%d->Z[%ld]: ", j, *ph[j]);
+          fprintf(palpContext.out, "\n%d->Z[%ld]: ", j, *ph[j]);
         wei[s.N][n] = ph[j][0];
         for (k = 1; k <= s.N; k++) {
           wei[k - 1][n] = ph[j][k];
           if (LONGOUT)
-            fprintf(ctx.outfi, " %ld", ph[j][k]);
+            fprintf(palpContext.out, " %ld", ph[j][k]);
         }
         G *= *ph[j];
       }
     ns = n;
     if (LONGOUT) {
-      fprintf(ctx.outfi, "\nskeleton =");
-      fprintf(ctx.outfi, " ");
+      fprintf(palpContext.out, "\nskeleton =");
+      fprintf(palpContext.out, " ");
     }
     if (ctx.invertible || !ONLYINV) {
       for (l = 0; l < s.N; l++)
-        fprintf(ctx.outfi, "%d", s.p[l]);
+        fprintf(palpContext.out, "%d", s.p[l]);
       for (l = 0; l < s.N; l++)
-        fprintf(ctx.outfi, " %d", s.a[l]);
-      fprintf(ctx.outfi, " inv=%d ", ctx.invertible);
+        fprintf(palpContext.out, " %d", s.a[l]);
+      fprintf(palpContext.out, " inv=%d ", ctx.invertible);
     }
     if (LONGOUT)
-      fprintf(ctx.outfi, "  #generators=%d, Order=%ld\n", n, G);
+      fprintf(palpContext.out, "  #generators=%d, Order=%ld\n", n, G);
   }
 }
 
@@ -601,7 +528,7 @@ void primedecomp()
   }
   npr = j;
   if (lcmd != 1) {
-    fprintf(ctx.outfi, "caution: Big prime number!!!");
+    fprintf(palpContext.out, "caution: Big prime number!!!");
     ctx.bugcount++;
   }
 }
@@ -616,11 +543,11 @@ void gooddets()
   for (j = 0; j <= npr; j++) {
     maxdetden = 1;
     for (i = 1; i <= ns; i++)
-      maxdetden = Max(maxdetden, prdet[i][j].den);
+      maxdetden = std::max(maxdetden, static_cast<int>(prdet[i][j].D));
     while (maxdetden > 1 /* prd[0][j] for torsion  */) {
       imax = 0;
       for (i = 1; i <= ns; i++)
-        if (prdet[i][j].den == maxdetden) {
+        if (prdet[i][j].D == maxdetden) {
           if (!imax)
             imax = i;
           else {
@@ -632,7 +559,7 @@ void gooddets()
               is = i;
             };
             k = 0;
-            while (Mod(prdet[ig][j].num + k * prdet[is][j].num, maxdetden))
+            while (Mod(prdet[ig][j].N + k * prdet[is][j].N, maxdetden))
               k++;
             for (l = 0; l < n; l++) {
               auxlong = k;
@@ -667,12 +594,12 @@ void gooddets()
         w = prd[imax][j];
         prd[imax][j] = prd[i][j];
         prd[i][j] = w;
-        w = prdet[imax][j].den;
-        prdet[imax][j].den = prdet[i][j].den;
-        prdet[i][j].den = w;
-        w = prdet[imax][j].num;
-        prdet[imax][j].num = prdet[i][j].num;
-        prdet[i][j].num = w;
+        w = prdet[imax][j].D;
+        prdet[imax][j].D = prdet[i][j].D;
+        prdet[i][j].D = w;
+        w = prdet[imax][j].N;
+        prdet[imax][j].N = prdet[i][j].N;
+        prdet[i][j].N = w;
       }
     }
     /* calculation of number prns[j] of non-trivial generators         */
@@ -845,34 +772,34 @@ void proced() {
       for (j = 0; j < n; j++)
         if ((mask[j] & i) == mask[j])
           prod = rP(prod, rR(wei[j][0] - wei[n][0], wei[j][0]));
-      if (prod.den != 1) {
-        fprintf(ctx.outfi, "\ncaution: prod.den != 1\n");
+      if (prod.D != 1) {
+        fprintf(palpContext.out, "\ncaution: prod.D != 1\n");
         ctx.bugcount++;
       }
-      zsum1 += wo[i][0] * prod.num;
-      zsum2 += wo[i][2] * prod.num;
+      zsum1 += wo[i][0] * prod.N;
+      zsum2 += wo[i][2] * prod.N;
     }
   spec[2] = interb01(); /*  b01 change  */
   /*      over = wo[mask[n]-1][1];                                            */
   spec[2] /= over; /* bisher b01 nicht durch over dividiert; rueckrechnen:*/
                    /* n n 0 2 -> n+2 n+2 0 1 und n n 0 6 -> n+6 n+6 0 3.  */
   if ((spec[2] != 0) && (spec[2] != 1) && (spec[2] != 3) && (D == 3)) {
-    fprintf(ctx.outfi, "caution: b01=%d\n", spec[2]);
+    fprintf(palpContext.out, "caution: b01=%d\n", spec[2]);
     ctx.bugcount++;
   }
   ng = -(zsum1 / mo / over + 2) / 2;
   ngb = (zsum2 / mo / over - 2) / 2;
   if (zsum1 != -2 * (ng + 1) * mo * over) {
-    fprintf(ctx.outfi, "ng is not integer!\n");
+    fprintf(palpContext.out, "ng is not integer!\n");
     ctx.bugcount++;
   }
   if (zsum2 != 2 * (ngb + 1) * mo * over) {
-    fprintf(ctx.outfi, "ngb is not integer!\n");
+    fprintf(palpContext.out, "ngb is not integer!\n");
     ctx.bugcount++;
   }
   chi = 2 * (ngb - ng);
   if (LONGOUT)
-    fprintf(ctx.outfi, "ngb: %ld ng: %ld chi: %d\n", ngb, ng, chi);
+    fprintf(palpContext.out, "ngb: %ld ng: %ld chi: %d\n", ngb, ng, chi);
   spec[0] = ngb;
   spec[1] = chi;
   addhod(spec);
@@ -898,10 +825,10 @@ void processym() {
   int i, j;
   ns = auxns[npr - 1];
   if (LONGOUT) {
-    fprintf(ctx.outfi, "\nwei:\n");
+    fprintf(palpContext.out, "\nwei:\n");
     for (j = 0; j < n; j++)
-      fprintf(ctx.outfi, " %ld", (long)wei[j][0]);
-    fprintf(ctx.outfi, "  %ld\n", (long)d[0]);
+      fprintf(palpContext.out, " %ld", (long)wei[j][0]);
+    fprintf(palpContext.out, "  %ld\n", (long)d[0]);
   }
   for (i = 1; i <= ns; i++) {
     d[i] = auxd[i - 1][npr - 1];
@@ -910,17 +837,17 @@ void processym() {
     for (j = 0; j < n; j++) {
       wei[j][i] = auxwei[j][i - 1][npr - 1];
       if (LONGOUT)
-        fprintf(ctx.outfi, " %ld", (long)wei[j][i]);
+        fprintf(palpContext.out, " %ld", (long)wei[j][i]);
     }
     if (LONGOUT)
-      fprintf(ctx.outfi, "  %ld\n", (long)d[i]);
+      fprintf(palpContext.out, "  %ld\n", (long)d[i]);
   }
   if (checkweight()) {
     if (LONGOUT)
-      fprintf(ctx.outfi, "degenerate!!\n");
+      fprintf(palpContext.out, "degenerate!!\n");
   } else {
     if (LONGOUT)
-      fprintf(ctx.outfi, "Hodge numbers: ");
+      fprintf(palpContext.out, "Hodge numbers: ");
     proced();
     symnum++;
   };
@@ -939,7 +866,7 @@ int rectest(int j, int k, pointlist auxel)
         return 0;
     return 1;
   }
-  for (m = 0; m < prd[0][j]; m += Max(1, prd[0][j] / sprd[k][j])) {
+  for (m = 0; m < prd[0][j]; m += std::max(1, prd[0][j] / sprd[k][j])) {
     for (i = 0; i < n; i++) {
       auxlong = m;
       auxlong *= nprwei[i][k][j];
@@ -986,8 +913,8 @@ void fillup(int j, int sprns, int k, int l)
         imax = 0;
         auxns[0] = sprns;
       } else {
-        imax = Min(auxns[j - 1], sprns);
-        auxns[j] = Max(auxns[j - 1], sprns);
+        imax = std::min(auxns[j - 1], sprns);
+        auxns[j] = std::max(auxns[j - 1], sprns);
       }
       for (i = 0; i < imax; i++) {
         for (m = 0; m < n; m++)
@@ -1007,23 +934,23 @@ void fillup(int j, int sprns, int k, int l)
           auxd[i][j] = auxd[i][j - 1];
         /* if Torsion also auxdet   */ }
       if (LONGOUT) {
-        fprintf(ctx.outfi, "\nsprwei[%d]:\n", j);
+        fprintf(palpContext.out, "\nsprwei[%d]:\n", j);
         for (i = 0; i < sprns; i++) {
           for (m = 1; m <= prns[j]; m++)
-            fprintf(ctx.outfi, " %d", sprwei[m][i][j]);
-          fprintf(ctx.outfi, "  %d\n", sprd[i][j]);
+            fprintf(palpContext.out, " %d", sprwei[m][i][j]);
+          fprintf(palpContext.out, "  %d\n", sprd[i][j]);
         }
-        fprintf(ctx.outfi, "nprwei[%d]:\n", j);
+        fprintf(palpContext.out, "nprwei[%d]:\n", j);
         for (i = 0; i < sprns; i++) {
           for (m = 0; m < n; m++)
-            fprintf(ctx.outfi, " %d", nprwei[m][i][j]);
-          fprintf(ctx.outfi, "  %d\n", sprd[i][j]);
+            fprintf(palpContext.out, " %d", nprwei[m][i][j]);
+          fprintf(palpContext.out, "  %d\n", sprd[i][j]);
         }
-        fprintf(ctx.outfi, "auxwei[%d]:\n", j);
+        fprintf(palpContext.out, "auxwei[%d]:\n", j);
         for (i = 0; i < auxns[j]; i++) {
           for (m = 0; m < n; m++)
-            fprintf(ctx.outfi, " %d", auxwei[m][i][j]);
-          fprintf(ctx.outfi, "  %d\n", auxd[i][j]);
+            fprintf(palpContext.out, " %d", auxwei[m][i][j]);
+          fprintf(palpContext.out, "  %d\n", auxd[i][j]);
         }
       }
       reccon(j + 1, 0);
@@ -1051,12 +978,12 @@ void fillup(int j, int sprns, int k, int l)
       if (l < norm[k][j])
         while (sprwei[l][k][j] < prd[l][j]) {
           fillup(j, sprns, k, l + 1);
-          sprwei[l][k][j] += Max(1, pr[j] * prd[l][j] / sprd[k][j]);
+          sprwei[l][k][j] += std::max(1, pr[j] * prd[l][j] / sprd[k][j]);
         }
       if (l > norm[k][j])
         while (sprwei[l][k][j] < prd[l][j]) {
           fillup(j, sprns, k, l + 1);
-          sprwei[l][k][j] += Max(1, prd[l][j] / sprd[k][j]);
+          sprwei[l][k][j] += std::max(1, prd[l][j] / sprd[k][j]);
         }
     }
     m--;
@@ -1068,12 +995,12 @@ void fillup(int j, int sprns, int k, int l)
       if (l < norm[k][j])
         while (sprwei[l][k][j] < prd[l][j] / sprd[m][j]) {
           fillup(j, sprns, k, l + 1);
-          sprwei[l][k][j] += Max(1, pr[j] * prd[l][j] / sprd[k][j]);
+          sprwei[l][k][j] += std::max(1, pr[j] * prd[l][j] / sprd[k][j]);
         }
       if (l > norm[k][j])
         while (sprwei[l][k][j] < prd[l][j] / sprd[m][j]) {
           fillup(j, sprns, k, l + 1);
-          sprwei[l][k][j] += Max(1, prd[l][j] / sprd[k][j]);
+          sprwei[l][k][j] += std::max(1, prd[l][j] / sprd[k][j]);
         }
     }
   };
@@ -1096,9 +1023,9 @@ void reccon(int j, int sprns)
         if (sprns == 0)
           sprd[sprns][j] = prd[i][j];
         else if (i > norm[sprns - 1][j])
-          sprd[sprns][j] = Min(prd[i][j], sprd[sprns - 1][j]);
+          sprd[sprns][j] = std::min(prd[i][j], sprd[sprns - 1][j]);
         else
-          sprd[sprns][j] = Min(prd[i][j], sprd[sprns - 1][j] / pr[j]);
+          sprd[sprns][j] = std::min(prd[i][j], sprd[sprns - 1][j] / pr[j]);
         while (sprd[sprns][j] > 1) {
           reccon(j, sprns + 1);
           sprd[sprns][j] /= pr[j];
@@ -1163,38 +1090,40 @@ void datain() /*   asks for input, reads input, calculates det         */
 
 void longoutput0() {
   int j, k;
-  fprintf(ctx.outfi, "\nwei:\n");
+  fprintf(palpContext.out, "\nwei:\n");
   for (j = 0; j <= ns; j++) {
     for (k = 0; k < n; k++)
-      fprintf(ctx.outfi, " %ld", wei[k][j]);
-    fprintf(ctx.outfi, "  %ld\n", d[j]);
+      fprintf(palpContext.out, " %ld", wei[k][j]);
+    fprintf(palpContext.out, "  %ld\n", d[j]);
   }
 }
 
 void longoutput1() {
   int i, j, k;
-  fprintf(ctx.outfi, "\nDecomposition into prime numbers:\n");
+  fprintf(palpContext.out, "\nDecomposition into prime numbers:\n");
   for (i = 0; i < npr; i++) {
-    fprintf(ctx.outfi, "p=%d:\n", pr[i]);
+    fprintf(palpContext.out, "p=%d:\n", pr[i]);
     for (j = 0; j <= ns; j++) {
       for (k = 0; k < n; k++)
-        fprintf(ctx.outfi, " %d", prwei[k][j][i]);
-      fprintf(ctx.outfi, "  %d", prd[j][i]);
-      fprintf(ctx.outfi, "  det: %ld/%ld\n", prdet[j][i].num, prdet[j][i].den);
+        fprintf(palpContext.out, " %d", prwei[k][j][i]);
+      fprintf(palpContext.out, "  %d", prd[j][i]);
+      fprintf(palpContext.out, "  det: %ld/%ld\n", prdet[j][i].N,
+              prdet[j][i].D);
     }
   }
 }
 
 void longoutput2() {
   int i, j, k;
-  fprintf(ctx.outfi, "\nSubgroup with det=1, ordered:\n");
+  fprintf(palpContext.out, "\nSubgroup with det=1, ordered:\n");
   for (i = 0; i < npr; i++) {
-    fprintf(ctx.outfi, "p=%d:\n", pr[i]);
+    fprintf(palpContext.out, "p=%d:\n", pr[i]);
     for (j = 0; j <= prns[i]; j++) {
       for (k = 0; k < n; k++)
-        fprintf(ctx.outfi, " %d", prwei[k][j][i]);
-      fprintf(ctx.outfi, "  %d", prd[j][i]);
-      fprintf(ctx.outfi, "  det: %ld/%ld\n", prdet[j][i].num, prdet[j][i].den);
+        fprintf(palpContext.out, " %d", prwei[k][j][i]);
+      fprintf(palpContext.out, "  %d", prd[j][i]);
+      fprintf(palpContext.out, "  det: %ld/%ld\n", prdet[j][i].N,
+              prdet[j][i].D);
     };
   }
 }
@@ -1235,20 +1164,22 @@ void addhod(spectrum hodge) {
 void finishmodel() {
   int j;
   if (LONGOUT)
-    fprintf(ctx.outfi, "\nspecnum, symnum: ");
-  fprintf(ctx.outfi, "sp=%ld sy=%ld\n", specnum, symnum);
+    fprintf(palpContext.out, "\nspecnum, symnum: ");
+  fprintf(palpContext.out, "sp=%ld sy=%ld\n", specnum, symnum);
   for (j = 0; j < specnum; j++) {
     int B01 = hodlist[j][2], NGB = hodlist[j][0] - 2 * B01, CHI = hodlist[j][1];
     if (B01)
-      fprintf(ctx.outfi, "-%d %d %d %d\n", NGB - CHI / 2, NGB, CHI, B01);
+      fprintf(palpContext.out, "-%d %d %d %d\n", NGB - CHI / 2, NGB, CHI, B01);
     else
-      fprintf(ctx.outfi, "%d %d %d\n", NGB - CHI / 2, NGB, CHI);
+      fprintf(palpContext.out, "%d %d %d\n", NGB - CHI / 2, NGB, CHI);
   }
-  /*fprintf(ctx.outfi,"%d %d\n",hodlist[j][0],hodlist[j][1]);*/ /* b01 change */
+  /*fprintf(palpContext.out,"%d %d\n",hodlist[j][0],hodlist[j][1]);*/ /* b01
+                                                                         change
+                                                                       */
   totsymnum += symnum;
   totspecnum += specnum;
-  maxspecnum = Max(maxspecnum, specnum);
-  maxsymnum = Max(maxsymnum, symnum);
+  maxspecnum = std::max(maxspecnum, specnum);
+  maxsymnum = std::max(maxsymnum, symnum);
   modelnum++;
   if (!specnum)
     ctx.bugcount++;
@@ -1259,7 +1190,7 @@ void ErrEx(const char *c) {
 }
 void ReadEOL() {
   char c;
-  while ('\n' != (c = fgetc(ctx.infi)))
+  while ('\n' != (c = fgetc(palpContext.in)))
     if (c == EOF) {
       puts("End of File");
       exit(1);
@@ -1270,12 +1201,12 @@ void ReadSpec() {
   int g, a, c, b = 0; /* g=h[0]-(h[1]=chi)/2; a=h[0]; b=h[3]; */
   if (ctx.stdi)
     printf("Type 'g a c' or '-g a c h01' with g=h12 and a=h11: ");
-  if (fscanf(ctx.infi, "%d%d%d", &g, &a, &c) != 3) {
+  if (fscanf(palpContext.in, "%d%d%d", &g, &a, &c) != 3) {
     fputs("Error: ReadSpec expected g a c\n", stderr);
     exit(1);
   }
   if (g < 0) {
-    if (fscanf(ctx.infi, "%d", &b) != 1) {
+    if (fscanf(palpContext.in, "%d", &b) != 1) {
       fputs("Error: ReadSpec expected h01 after negative g\n", stderr);
       exit(1);
     }
@@ -1306,9 +1237,9 @@ void LgoTwistInit(int narg, char *fn[]) {
   int n = 1, t = 0, /* t-> # trivial pairs */
       g = 0, a = 0, b = 0;
   char *c;
-  ctx.infi = stdin;
+  palpContext.in = stdin;
   ctx.stdi = 1;
-  ctx.outfi = stdout;
+  palpContext.out = stdout;
   if (narg < 2)
     PrintUse("");
   while (n < narg)
@@ -1344,16 +1275,16 @@ void LgoTwistInit(int narg, char *fn[]) {
         break;
       case 'i':
         c = (fn[n][2]) ? &fn[n][2] : fn[++n];
-        ctx.infi = fopen(c, "r");
-        if (ctx.infi == NULL)
+        palpContext.in = fopen(c, "r");
+        if (palpContext.in == NULL)
           PrintUse("Open infile failed");
         n++;
         ctx.stdi = 0;
         break;
       case 'o':
         c = (fn[n][2]) ? &fn[n][2] : fn[++n];
-        ctx.outfi = fopen(c, "w");
-        if (ctx.outfi == NULL)
+        palpContext.out = fopen(c, "w");
+        if (palpContext.out == NULL)
           PrintUse("Open outfile failed");
         n++;
         break;
@@ -1379,14 +1310,15 @@ void LgoTwistInit(int narg, char *fn[]) {
 int main(int narg, char *fn[]) {
   skelet s;
   LgoTwistInit(narg, fn);
-  /*   if (narg>1) ctx.infi=fopen(fn[1],"r");		aao2.6	  002244 4 3 4 3
-     4 3 else { ctx.infi=stdin; ctx.stdi=1; printf("usage: arg1=input file
-     [stdin]; arg2=output file [stdout];\n"); printf("       arg3=#pairs of
-     trivial fields to be added;\n"); printf("skeleton = string[#] exp_1 ...
-     exp_#\n");} if (narg>2) ctx.outfi=fopen(fn[2],"w"); else ctx.outfi=stdout;
-       if (narg>3) addsyms= *fn[3]-'0'; else addsyms=0;
-       if (narg>4) search[1]=atoi(fn[4]); if (narg>5) search[0]=atoi(fn[5]);
-       if (narg>6) search[2]=atoi(fn[6]); search[1]=2*(search[0]-search[1]);
+  /*   if (narg>1) palpContext.in=fopen(fn[1],"r");		aao2.6	  002244
+     4 3 4 3 4 3 else { palpContext.in=stdin; ctx.stdi=1; printf("usage:
+     arg1=input file [stdin]; arg2=output file [stdout];\n"); printf("
+     arg3=#pairs of trivial fields to be added;\n"); printf("skeleton =
+     string[#] exp_1 ... exp_#\n");} if (narg>2)
+     palpContext.out=fopen(fn[2],"w"); else palpContext.out=stdout; if (narg>3)
+     addsyms= *fn[3]-'0'; else addsyms=0; if (narg>4) search[1]=atoi(fn[4]); if
+     (narg>5) search[0]=atoi(fn[5]); if (narg>6) search[2]=atoi(fn[6]);
+     search[1]=2*(search[0]-search[1]);
    */
   while (readline(&s) && !ctx.bugcount) { /* search={a,c=2(a-g),b} */
     analy(s);
@@ -1404,10 +1336,11 @@ int main(int narg, char *fn[]) {
       finishmodel();
     }
   }
-  /*  fprintf(ctx.outfi,"modelnum, totsymnum, maxsymnum, totspecnum, maxspecnum:
-     "); fprintf(ctx.outfi,"%ld %ld %ld %ld %ld", modelnum, totsymnum,
+  /*  fprintf(palpContext.out,"modelnum, totsymnum, maxsymnum, totspecnum,
+     maxspecnum:
+     "); fprintf(palpContext.out,"%ld %ld %ld %ld %ld", modelnum, totsymnum,
      maxsymnum, totspecnum, maxspecnum); */
-  fprintf(ctx.outfi,
+  fprintf(palpContext.out,
           "#skel=%ld, #sym=%ld, sym/skel<=%ld, #spectra=%ld, spec/skel<=%ld",
           modelnum, totsymnum, maxsymnum, totspecnum, maxspecnum);
   printpri(pmax);
@@ -1446,11 +1379,11 @@ int b01(int N, int NG, int zd[NM + 1], long gen[NS][NM + 1]) {
           th = rS(th, rR(pow[k] * gen[k][i], *gen[k]));
           mod1(&th);
         }
-        if (th.num) {
-          if (th.num < 0)
-            th.num += th.den;
+        if (th.N) {
+          if (th.N < 0)
+            th.N += th.D;
           th = rP(th, rR(*zd, zd[i]));
-          if (th.num - th.den)
+          if (th.N - th.D)
             can = 0;
           else {
             eq[i] = 1;
@@ -1489,7 +1422,7 @@ int b01(int N, int NG, int zd[NM + 1], long gen[NS][NM + 1]) {
       pow[NS + 1]; /* eq=th_i==q_i; pow(er) of generator */
   long G = **gen;
   for (j = 1; j < NG; j++)
-    G *= (*gen[j] / gcd(G, *gen[j])); /* Lcm(O_j) */
+    G *= (*gen[j] / pgcd(G, *gen[j])); /* Lcm(O_j) */
   {
     long inv;
     for (j = 0; j < NG; j++) {
@@ -1565,7 +1498,7 @@ int interb01() /* aao.c:  *e.np -> ns;  *e.n -> n;  *e.w -> wei;  PM->NS */
 
 /*  ========================    search for g,a,b  ========================= */
 template <typename T> void fpri(const char *fmt, T num) {
-  fprintf(ctx.outfi, fmt, static_cast<long>(num));
+  fprintf(palpContext.out, fmt, static_cast<long>(num));
 }
 void searchspec(spectrum h) /* g=h[0]-(h[1]=chi)/2; a=h[0]; b=h[3]; */
 { /* printf("h=%d %d %d  search=%d %d %d\n",h[0],h[1],h[2],
@@ -1579,7 +1512,7 @@ void searchspec(spectrum h) /* g=h[0]-(h[1]=chi)/2; a=h[0]; b=h[3]; */
 #ifdef OLD_FORMAT
   {
     int i, j;
-    fprintf(ctx.outfi, "\n");
+    fprintf(palpContext.out, "\n");
     fpri("C_{(%ld", wei[0][0]);
     for (i = 1; i < n; i++)
       fpri(",%ld", wei[i][0]);
@@ -1594,7 +1527,7 @@ void searchspec(spectrum h) /* g=h[0]-(h[1]=chi)/2; a=h[0]; b=h[3]; */
 #else
   {
     int i, j;
-    fprintf(ctx.outfi, "\n");
+    fprintf(palpContext.out, "\n");
     fpri("%ld", wei[n][0]);
     for (i = 0; i < n; i++)
       fpri(" %ld", wei[i][0]);

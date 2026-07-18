@@ -90,6 +90,12 @@ if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
     target_link_libraries(mori.x PRIVATE objects mori_objects)
     target_compile_definitions(mori.x PRIVATE POLY_Dmax=${POLY_Dmax})
 
+    # Standalone lgotwist utility; shares Rat.cpp rational helpers.
+    palp_sources(LGOTWIST_SRC lgotwist Rat)
+    add_executable(lgotwist.x ${LGOTWIST_SRC})
+    target_compile_definitions(lgotwist.x PRIVATE POLY_Dmax=${POLY_Dmax})
+    target_include_directories(lgotwist.x PRIVATE ${PALP_INCLUDE_DIRS})
+
     if (BUILD_TESTING)
         function(add_palp_dimension_targets dim)
             palp_sources(DIM_SOURCES Coord Rat Vertex Polynf)

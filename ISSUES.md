@@ -57,8 +57,8 @@ and the detailed commit messages for the full context of each fix.
   - `#34` Debug print in `Polynf.cpp` removed.
   - `#35` Debug `printf` in `MoriCone.cpp` removed with `TRACE_TRIANGULATION` cleanup.
   - `#36` Dead `#ifdef OLD_code` blocks in `MoriCone.cpp` removed.
-  - `#37` Duplicated rational arithmetic in `lgotwist.cpp` partially deduplicated
-    (duplicate `gcd` removed; full `Rat.cpp` sharing deferred until Phase 5.11).
+  - `#37` Duplicated rational arithmetic in `lgotwist.cpp` removed; the file now
+    uses `Rat`/`Rpr` from `Rat.cpp` and the global `PalpContext` for I/O.
   - `#38` `#define TEST` toggling in `Polynf.cpp` converted to `constexpr` flags.
   - `#39` Interactive `scanf` debug pause in `Nefpart.cpp` removed.
   - `#40` German comments in `Polynf.cpp` — still present, low priority.

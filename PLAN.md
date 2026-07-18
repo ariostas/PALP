@@ -133,6 +133,11 @@ cmake --build build/ubsan && ctest --test-dir build/ubsan
 
 ### Phase 4 — Final cleanup (remaining)
 
+- [x] **lgotwist.cpp**: share `Rat.cpp` rational helpers and use `PalpContext`.
+  Removed local `rat` struct, `rI`/`rR`/`rS`/`rD`/`rP`/`rQ`, `gcd`/`Lcm`/`Mod`/
+  `Min`/`Max`/`Abs` helpers. Replaced with `Rat`/`Rpr` from `Rat.cpp`, standard
+  library helpers, and the global `PalpContext`. Added `lgotwist.x` build target.
+
 - [ ] Convert any remaining header-level `#define` constants that are safe to
   `constexpr`/`using` without breaking `#if` array-size logic. Currently kept as
   macros: `POLY_Dmax`, `POINT_Nmax`, `VERT_Nmax`, `FACE_Nmax`, `SYM_Nmax`,
