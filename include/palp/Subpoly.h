@@ -163,9 +163,11 @@ void Max_check(CWS *_W, PolyPointList *_P, FILE *out = stdout);
 void Overall_check(CWS *_W, PolyPointList *_P, FILE *out = stdout);
 void Do_the_Classification(CWS *W, PolyPointList *P, /* char *fn, */
                            int oFlag, int rFlag, int kFlag, char *polyi,
-                           char *polyo, char *dbin, FILE *out = stdout);
+                           char *polyo, char *dbin, FILE *in = stdin,
+                           FILE *out = stdout);
 void Find_Sublat_Polys(char mFlag, char *dbi, char *polyi, char *slout,
-                       PolyPointList *_P, FILE *out = stdout);
+                       PolyPointList *_P, FILE *in = stdin, FILE *out = stdout);
+
 void Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
                      char *polyo, FILE *out = stdout);
 int Start_Find_Ref_Subpoly(PolyPointList *_P,
@@ -204,7 +206,8 @@ void Open_DB(char *dbin, DataBase **DB, int info);
 int Read_H_poly_from_DB(DataBase *DB, PolyPointList *_P);
 void Close_DB(DataBase *DB);
 void VPHM_Sublat_Polys(char sFlag, char mr, char *dbin, char *polyi,
-                       char *polyo, PolyPointList *P, FILE *out = stdout);
+                       char *polyo, PolyPointList *P, FILE *in = stdin,
+                       FILE *out = stdout);
 
 /*  ==========        Functions from Subadd.c                    ========== */
 void Add_Polya_2_Polyi(char *polyi, char *polya, char *polyo,

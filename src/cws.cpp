@@ -18,9 +18,6 @@ constexpr int TWDIM = 16384; /* weight-buffer dimension */
 constexpr Long mod(Long a, Long b) { return a % b; }
 } // namespace
 
-/* Global FILE pointers are referenced from the library code; kept global for
-   now while the migration is in progress (see ISSUES.md #40). */
-FILE *inFILE;
 PalpContext palpContext;
 
 typedef struct {
@@ -80,29 +77,20 @@ void PrintCWSUsage(char *c) {
   exit(1);
 }
 
-int Read_Weight(Weight *);
-
-int READ_Weight(Weight *_W, FILE *INFILE) {
-  inFILE = INFILE;
-  return Read_Weight(_W);
-}
-
-int READ_CWS_PP(CWS *_CW, PolyPointList *_P, FILE *INFILE) {
-  inFILE = INFILE;
-  return Read_CWS_PP(_CW, _P);
-}
-
 void Print_CWS(CWS *_W, FILE *out = stdout);
-void Conv(int narg, char *fn[], FILE *out = stdout);
-void SimplexPointCount(int narg, char *fn[], FILE *out = stdout);
-void Init_IP_Weights(int narg, char *fn[], FILE *out = stdout);
-void Init_moon_Weights(int narg, char *fn[], FILE *out = stdout);
-void Init_IP_CWS(int narg, char *fn[], FILE *out = stdout);
-void IP_Poly_Data(int narg, char *fn[], FILE *out = stdout);
+void Conv(int narg, char *fn[], FILE *in = stdin, FILE *out = stdout);
+void SimplexPointCount(int narg, char *fn[], FILE *in = stdin,
+                       FILE *out = stdout);
+void Init_IP_Weights(int narg, char *fn[], FILE *in = stdin,
+                     FILE *out = stdout);
+void Init_moon_Weights(int narg, char *fn[], FILE *in = stdin,
+                       FILE *out = stdout);
+void Init_IP_CWS(int narg, char *fn[], FILE *in = stdin, FILE *out = stdout);
+void IP_Poly_Data(int narg, char *fn[], FILE *in = stdin, FILE *out = stdout);
 void Make_CWS_Points(CWS *, PolyPointList *, FILE *out);
-void Npoly2cws(int narg, char *fn[], FILE *out = stdout);
-void RgcWeights(int narg, char *fn[], FILE *out = stdout);
-void AddHalf(FILE *out = stdout);
+void Npoly2cws(int narg, char *fn[], FILE *in = stdin, FILE *out = stdout);
+void RgcWeights(int narg, char *fn[], FILE *in = stdin, FILE *out = stdout);
+void AddHalf(FILE *in = stdin, FILE *out = stdout);
 void PrintCWSextUsage(char *c) {
   printf("This is `%s': -x gives undocumented extensions:\n", c);
   puts("              -ip    printf PolyPointList");
@@ -114,8 +102,9 @@ void PrintCWSextUsage(char *c) {
 }
 
 int main(int narg, char *fn[]) {
+  FILE *in;
   FILE *out;
-  inFILE = stdin;
+  in = stdin;
   out = stdout;
   if (narg == 1) {
     printf("\nFor help type `%s -h'\n\n", fn[0]);
@@ -124,27 +113,27 @@ int main(int narg, char *fn[]) {
   if ((fn[1][0] != '-') || (fn[1][1] == 'h'))
     PrintCWSUsage(fn[0]);
   else if (fn[1][1] == 'w')
-    Init_IP_Weights(narg, fn, out);
+    Init_IP_Weights(narg, fn, in, out);
   else if (fn[1][1] == 'm')
-    Init_moon_Weights(narg, fn, out);
+    Init_moon_Weights(narg, fn, in, out);
   else if (fn[1][1] == 'c')
-    Init_IP_CWS(narg, fn, out);
+    Init_IP_CWS(narg, fn, in, out);
   else if (fn[1][1] == 'i')
-    IP_Poly_Data(narg, fn, out);
+    IP_Poly_Data(narg, fn, in, out);
   else if (fn[1][1] == 'N')
-    Npoly2cws(narg, fn, out);
+    Npoly2cws(narg, fn, in, out);
   else if (fn[1][1] == 'p')
-    Conv(narg, fn, out);
+    Conv(narg, fn, in, out);
   else if (fn[1][1] == 'x')
     PrintCWSextUsage(fn[0]);
   else if (fn[1][1] == 'S')
-    SimplexPointCount(narg, fn, out);
+    SimplexPointCount(narg, fn, in, out);
   else if (fn[1][1] == 'L')
-    SimplexPointCount(narg, fn, out);
+    SimplexPointCount(narg, fn, in, out);
   else if (fn[1][1] == 'd')
-    RgcWeights(narg, fn, out);
+    RgcWeights(narg, fn, in, out);
   else if (fn[1][1] == '2')
-    AddHalf(out);
+    AddHalf(in, out);
   else
     printf("Unknown option '-%c'; use -h for help\n", fn[1][1]);
   return 0;
@@ -556,8 +545,9 @@ int WsIpCheck(Equation *q, int d) {
   return P.np - 1;
 }
 
-void RgcWeights(int narg, char *fn[], FILE *out) {
+void RgcWeights(int narg, char *fn[], FILE *in, FILE *out) {
   int i, j, d, n = 1, r2 = 2;
+  (void)in;
   char *c = &fn[1][2];
   auto X = std::make_unique<RgcClassData>();
   if (narg > 2)
@@ -599,22 +589,19 @@ void RgcWeights(int narg, char *fn[], FILE *out) {
   printf("#ip=%ld, #cand=%ld(%ld)\n", X->winum, X->wnum, X->candnum);
 }
 
-int IsNextDigit(void);
-
-void AddHalf(FILE *out) {
+void AddHalf(FILE *in, FILE *out) {
   std::array<int, AMBI_Dmax *(AMBI_Dmax + 1)> IN;
   int i, j, n = 0;
 
-  inFILE = stdin;
   n = 0;
   while (1) {
     for (i = 0; i < AMBI_Dmax * (AMBI_Dmax + 1); i++) {
       char c;
-      while (' ' == (c = fgetc(inFILE)))
+      while (' ' == (c = fgetc(in)))
         ;
-      ungetc(c, inFILE); /* read blanks */
-      if (IsNextDigit()) {
-        if (fscanf(inFILE, "%d", &IN[i]) != 1) {
+      ungetc(c, in); /* read blanks */
+      if (IsNextDigit(in)) {
+        if (fscanf(in, "%d", &IN[i]) != 1) {
           fprintf(stderr, "Error: AddHalf expected integer at position %d\n",
                   i);
           exit(1);
@@ -625,21 +612,22 @@ void AddHalf(FILE *out) {
     if (i == 0)
       break;
     n++;
-    while ('\n' != fgetc(inFILE))
+    while ('\n' != fgetc(in))
       ; /* read to end of line */
     for (j = 0; j < i; j++)
-      printf("%d ", IN[j]);
-    printf("%d\n", IN[0] / 2);
+      fprintf(out, "%d ", IN[j]);
+    fprintf(out, "%d\n", IN[0] / 2);
   }
-  printf("#ws=%d\n", n);
+  fprintf(out, "#ws=%d\n", n);
 }
 
 void Make_IP_Weights(int d, int Dmin, int Dmax, int rFlag, int tFlag,
                      FILE *out = stdout);
 void MakeMoonWeights(int d, int Dmin, int Dmax, FILE *out = stdout);
 void Make_34_Weights(int d, int tFlag, FILE *out = stdout);
-void Init_IP_Weights(int narg, char *fn[], FILE *out) {
+void Init_IP_Weights(int narg, char *fn[], FILE *in, FILE *out) {
   int n = 1, d, L = 0, H = 0, rf = 0, tf = 0;
+  (void)in;
   char *c = &fn[1][2];
   if (narg > 2)
     if (c[0] == 0)
@@ -702,8 +690,9 @@ void Init_IP_Weights(int narg, char *fn[], FILE *out) {
   }
 }
 
-void Init_moon_Weights(int narg, char *fn[], FILE *out) {
+void Init_moon_Weights(int narg, char *fn[], FILE *in, FILE *out) {
   int n = 1, d, L = 0, H = 0;
+  (void)in;
   char *c = &fn[1][2];
   if (narg > 2)
     if (c[0] == 0)
@@ -760,30 +749,28 @@ void Init_moon_Weights(int narg, char *fn[], FILE *out) {
 }
 
 int VP_2_CWS(Long *V[], int d, int v, CWS *W);
-void Npoly2cws(int narg, char *fn[], FILE *out) {
-  int n = 2;
+void Npoly2cws(int narg, char *fn[], FILE *in, FILE *out) {
+  int n = 0;
   CWS W;
-  EqList E;
-  VertexNumList V;
-  Long *X[VERT_Nmax];
   auto P = std::make_unique<PolyPointList>();
+  VertexNumList V;
+  EqList E;
+  Long *X[VERT_Nmax];
   if (strcmp(fn[1], "-N") != 0) {
     fprintf(stderr, "Error: Npoly2cws first argument must be -N, got %s\n",
             fn[1]);
     exit(1);
   }
-  inFILE = stdin;
-  out = stdout;
   if (narg > 2) {
     if (fn[2][0] == '-') {
       if (fn[2][1] != 'f') {
         fprintf(stderr, "Error: Npoly2cws unknown option %s\n", fn[2]);
         exit(1);
       }
-      inFILE = NULL;
+      in = NULL;
     } else {
-      inFILE = fopen(fn[2], "r");
-      if (inFILE == NULL) {
+      in = fopen(fn[2], "r");
+      if (in == NULL) {
         fprintf(stderr, "Error: Npoly2cws cannot open input file %s\n", fn[2]);
         exit(1);
       }
@@ -797,7 +784,7 @@ void Npoly2cws(int narg, char *fn[], FILE *out) {
       }
     }
   }
-  while (Read_CWS_PP(&W, P.get(), out)) {
+  while (Read_CWS_PP(&W, P.get(), in, out)) {
     if (W.N)
       Die("Only PPL-input in Npoly2cws!");
     if (!IP_Check(P.get(), &V, &E))
@@ -816,8 +803,9 @@ void Npoly2cws(int narg, char *fn[], FILE *out) {
 
 void Make_IP_CWS(int narg, char *fn[], FILE *out);
 void Make_34_CWS(int d, FILE *out = stdout);
-void Init_IP_CWS(int narg, char *fn[], FILE *out) {
+void Init_IP_CWS(int narg, char *fn[], FILE *in, FILE *out) {
   int d, n = 1, nop = 0;
+  (void)in;
   char *c = &fn[1][2];
   if (narg > 2)
     if (c[0] == 0)
@@ -1089,8 +1077,8 @@ void WRITE_Weight(Weight *_W, FILE *out);
 void Make_34_Weights(int d, int tFlag, FILE *out) {
   int i, Info = 0;
   auto X = std::make_unique<WSaux>();
-  auto P = std::make_unique<PolyPointList>();
-  PolyPointList *P_ptr = P.get();
+  auto P_ptr_up = std::make_unique<PolyPointList>();
+  PolyPointList *P_ptr = P_ptr_up.get();
   X->wnum = 1;
   X->N = d + 1;
   if (d > 4) {
@@ -1257,7 +1245,8 @@ void MakeIpWeights(int N, int from_d, int to_d, int *rFlag, int *tFlag,
                    FILE *out) {
   int npp = 0, nrp = 0;
   Weight W;
-  auto P = std::make_unique<PolyPointList>();
+  auto P_ptr_up = std::make_unique<PolyPointList>();
+  PolyPointList *P_ptr = P_ptr_up.get();
   if ((N > W_Nmax) || (N >= POLY_Dmax + 2)) {
     fprintf(stderr,
             "Error: MakeIpWeights N=%d out of range (W_Nmax=%d, "
@@ -1269,7 +1258,7 @@ void MakeIpWeights(int N, int from_d, int to_d, int *rFlag, int *tFlag,
   W.M = 0;
   for (W.d = from_d; W.d <= to_d; W.d++)
     for (W.w[N - 1] = W.d / 2; W.d <= N * W.w[N - 1]; W.w[N - 1]--)
-      Rec_IpWeights(&W, P.get(), Fgcd(W.d, W.w[W.N - 1]), W.d - W.w[W.N - 1],
+      Rec_IpWeights(&W, P_ptr, Fgcd(W.d, W.w[W.N - 1]), W.d - W.w[W.N - 1],
                     &npp, &nrp, N - 2, rFlag, tFlag, out);
   if (*rFlag)
     fprintf(out, "#primepartitions=%d #refpolys=%d\n", npp, nrp);
@@ -1984,7 +1973,7 @@ void scan_dim(int nF, char *infile[], int D[]) {
       exit(1);
     }
     j = 0;
-    while (READ_Weight(&W, INfile[i]))
+    while (Read_Weight(&W, INfile[i]))
       if (j++)
         break;
     D[i] = W.N - 1;
@@ -2028,12 +2017,12 @@ void Make_nno_CWS(FILE *AUXFILE[], int u, int ef, FILE *out) {
   CWS CW;
 
   l[0] = 0;
-  while (READ_Weight(&W[0], AUXFILE[0])) {
+  while (Read_Weight(&W[0], AUXFILE[0])) {
     l[1] = 0;
     l[0]++;
-    while (READ_Weight(&W[1], AUXFILE[1])) {
+    while (Read_Weight(&W[1], AUXFILE[1])) {
       l[1]++;
-      while (READ_Weight(&W[2], AUXFILE[2])) {
+      while (Read_Weight(&W[2], AUXFILE[2])) {
         if ((l[0] <= l[1]) || !ef) {
           CW.nw = 0;
           RW_TO_CWS(&CW, &W[0], n, (W[1].N + W[2].N - u), n, n);
@@ -2064,13 +2053,13 @@ void Make_111_CWS(FILE *AUXFILE[], int ef[], FILE *out) {
   CWS CW;
 
   l[0] = 0;
-  while (READ_Weight(&W[0], AUXFILE[0])) {
+  while (Read_Weight(&W[0], AUXFILE[0])) {
     l[1] = 0;
     l[0]++;
-    while (READ_Weight(&W[1], AUXFILE[1])) {
+    while (Read_Weight(&W[1], AUXFILE[1])) {
       l[2] = 0;
       l[1]++;
-      while (READ_Weight(&W[2], AUXFILE[2])) {
+      while (Read_Weight(&W[2], AUXFILE[2])) {
         l[2]++;
         if (((l[0] <= l[1]) || !ef[0]) && ((l[1] <= l[2]) || !ef[1])) {
           CW.nw = 0;
@@ -2093,13 +2082,13 @@ void Make_222_CWS(FILE *AUXFILE[], int ef[], FILE *out) {
   CWS CW;
 
   l[0] = 0;
-  while (READ_Weight(&W[0], AUXFILE[0])) {
+  while (Read_Weight(&W[0], AUXFILE[0])) {
     l[1] = 0;
     l[0]++;
-    while (READ_Weight(&W[1], AUXFILE[1])) {
+    while (Read_Weight(&W[1], AUXFILE[1])) {
       l[2] = 0;
       l[1]++;
-      while (READ_Weight(&W[2], AUXFILE[2])) {
+      while (Read_Weight(&W[2], AUXFILE[2])) {
         l[2]++;
         if (((l[0] <= l[1]) || !ef[0]) && ((l[1] <= l[2]) || !ef[1])) {
           CW.nw = 0;
@@ -2149,12 +2138,12 @@ void Make_221_CWS(FILE *AUXFILE[], int ef, FILE *out) {
   CWS CW;
 
   l[0] = 0;
-  while (READ_Weight(&W[0], AUXFILE[0])) {
+  while (Read_Weight(&W[0], AUXFILE[0])) {
     l[1] = 0;
     l[0]++;
-    while (READ_Weight(&W[1], AUXFILE[1])) {
+    while (Read_Weight(&W[1], AUXFILE[1])) {
       l[1]++;
-      while (READ_Weight(&W[2], AUXFILE[2])) {
+      while (Read_Weight(&W[2], AUXFILE[2])) {
         if ((l[0] <= l[1]) || !ef) {
           i = 0;
           CW.nw = 0;
@@ -2201,12 +2190,12 @@ void Make_211_CWS(FILE *AUXFILE[], int ef, FILE *out) {
   Weight W[3];
   CWS CW;
 
-  while (READ_Weight(&W[0], AUXFILE[0])) {
+  while (Read_Weight(&W[0], AUXFILE[0])) {
     l[1] = 0;
-    while (READ_Weight(&W[1], AUXFILE[1])) {
+    while (Read_Weight(&W[1], AUXFILE[1])) {
       l[2] = 0;
       l[1]++;
-      while (READ_Weight(&W[2], AUXFILE[2])) {
+      while (Read_Weight(&W[2], AUXFILE[2])) {
         l[2]++;
         if (((l[1] <= l[2]) || !ef)) {
           CW.nw = 0;
@@ -2240,10 +2229,10 @@ void Make2CWS(FILE *AUXFILE1, FILE *AUXFILE2, int u, int ef, FILE *out) {
   if (u > 2)
     Die("for u > 2 no support !");
   l[0] = 0;
-  while (READ_Weight(&W1, AUXFILE1)) {
+  while (Read_Weight(&W1, AUXFILE1)) {
     l[1] = 0;
     l[0]++;
-    while (READ_Weight(&W2, AUXFILE2)) {
+    while (Read_Weight(&W2, AUXFILE2)) {
       l[1]++;
       if ((l[1] >= l[0]) || !ef) {
         CW.nw = 0;
@@ -2268,7 +2257,7 @@ void Make2CWS(FILE *AUXFILE1, FILE *AUXFILE2, int u, int ef, FILE *out) {
 void MakeSelections(FILE *INFILE, FILE *AUXFILE, int u) {
   Weight W;
 
-  while (READ_Weight(&W, INFILE))
+  while (Read_Weight(&W, INFILE))
     Select_n_of_W(&W, u, AUXFILE);
   rewind(AUXFILE);
   rewind(INFILE);
@@ -2468,7 +2457,7 @@ void Make_IP_CWS(int narg, char *fn[], FILE *out) {
 //   }
 // }
 
-void IP_Poly_Data(int narg, char *fn[], FILE *out) {
+void IP_Poly_Data(int narg, char *fn[], FILE *in, FILE *out) {
   int r = 1, i, n = 0, p = 0, d = 0;
   CWS CW;
   auto _P = std::make_unique<PolyPointList>();
@@ -2478,9 +2467,6 @@ void IP_Poly_Data(int narg, char *fn[], FILE *out) {
   VertexNumList *_V = &_V_obj;
   EqList *_E = &_E_obj;
 
-  inFILE = stdin;
-  out = stdout; /*puts("IP_Poly_Data: to be done");*/
-
   while ((narg > ++n) && (fn[n][0] == '-')) {
     if (fn[n][1] == 'i') {
       if (fn[n][2] == 'p')
@@ -2489,11 +2475,11 @@ void IP_Poly_Data(int narg, char *fn[], FILE *out) {
         d = 1;
     }
     if ((fn[n][1] == 'f') || (fn[n][1] == 0))
-      inFILE = NULL;
+      in = NULL;
   }
   n--;
   if (narg > ++n) {
-    if ((inFILE = fopen(fn[n], "r")) == NULL) {
+    if ((in = fopen(fn[n], "r")) == NULL) {
       printf("\nUnable to open file %s for read\n", fn[n]);
       exit(1);
     }
@@ -2504,7 +2490,7 @@ void IP_Poly_Data(int narg, char *fn[], FILE *out) {
       exit(1);
     }
   }
-  while (Read_CWS_PP(&CW, _P.get()))
+  while (Read_CWS_PP(&CW, _P.get(), in))
     if (IP_Check(_P.get(), _V, _E)) {
       r = 1;
       i = -1;
@@ -2576,7 +2562,8 @@ int ConvHull(PolyPointList *P1, PolyPointList *P2, PolyPointList *P,
   Sort_VL(V1);
   return i;
 }
-void Conv(int narg, char *fn[], FILE *out) {
+void Conv(int narg, char *fn[], FILE *in, FILE *out) {
+  (void)in;
   FILE *INFILE[2];
   int n = 0, x = 0, nF = 2, i;
   char *infile[2] = {NULL}, *outfile = NULL, *a;
@@ -2614,8 +2601,8 @@ void Conv(int narg, char *fn[], FILE *out) {
     printf("\nUnable to open file %s for write\n", outfile);
     exit(1);
   }
-  while (READ_CWS_PP(&CW[0], &P[0], INFILE[0])) {
-    while (READ_CWS_PP(&CW[1], &P[1], INFILE[1]))
+  while (Read_CWS_PP(&CW[0], &P[0], INFILE[0], out)) {
+    while (Read_CWS_PP(&CW[1], &P[1], INFILE[1], out))
       if (ConvHull(&P[0], &P[1], &PP, &V, (P[0].n - x)))
         Print_VL(&PP, &V, "Vertices of P", out);
     rewind(INFILE[1]);
@@ -2695,7 +2682,7 @@ Long W_Point_Count(Weight *W, PolyPointList *P, VertexNumList *V, EqList *E) {
   /*	char c[50]="#points="; sprintf(&c[8],"%d",P->np);
         if(P->np<20) Print_PPL(P,c); else printf("%s\n",c); */
 }
-void SimplexPointCount(int narg, char *fn[], FILE *out) {
+void SimplexPointCount(int narg, char *fn[], FILE *in, FILE *out) {
   Weight W;
   VertexNumList V;
   EqList E;
@@ -2706,10 +2693,10 @@ void SimplexPointCount(int narg, char *fn[], FILE *out) {
     exit(1);
   }
   if (fn[1][2] == 'f')
-    inFILE = NULL;
+    in = NULL;
   W.M = 0;
   L = (fn[1][1] == 'L');
-  while (Read_Weight(&W)) {
+  while (Read_Weight(&W, in)) {
     int n;
     Long np =
         L ? L_Point_Count(&W, &P, &V, &E, out) : W_Point_Count(&W, &P, &V, &E);

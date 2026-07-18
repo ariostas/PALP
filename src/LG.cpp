@@ -55,34 +55,34 @@ int auxString2SInt(char *c, int *n) {
       j++;
   return j;
 }
-int Read_WZ_PP(Weight *WZ,
+int Read_WZ_PP(Weight *WZ, FILE *in,
                FILE *out) /* read "d w_i" [ or "w_i d" if last=max ] */
 {
   int i, j, k, a, n, d, shift = 1, I[W_Nmax + 2], *nz = &WZ->M;
-  int FilterFlag = (inFILE == NULL);
+  int FilterFlag = (in == NULL);
   char C, b = ' ';
   std::array<char, 1000> c;
   Long BM[W_Nmax][W_Nmax], *B[W_Nmax], Wa[POLY_Dmax], Za[POLY_Dmax], F[W_Nmax],
       G[POLY_Dmax][POLY_Dmax], GI[POLY_Dmax][POLY_Dmax], X;
   if (FilterFlag)
-    inFILE = stdin;
-  else if (inFILE == stdin)
+    in = stdin;
+  else if (in == stdin)
     printf("type degree and weights  [d  w1 w2 ...]: ");
-  C = fgetc(inFILE);
+  C = fgetc(in);
   if (!IsDigit(C))
     return 0;
-  ungetc(C, inFILE);
+  ungetc(C, in);
   *nz = 0;
-  if (fscanf(inFILE, "%d", I) != 1) {
+  if (fscanf(in, "%d", I) != 1) {
     fputs("Error: Read_WZeight expected leading weight\n", stderr);
     exit(1);
   }
   for (i = 1; i < W_Nmax + 2; i++) {
-    while (' ' == (C = fgetc(inFILE)))
+    while (' ' == (C = fgetc(in)))
       ;
-    ungetc(C, inFILE);
+    ungetc(C, in);
     if (IsDigit(C)) {
-      if (fscanf(inFILE, "%d", &I[i]) != 1) {
+      if (fscanf(in, "%d", &I[i]) != 1) {
         fprintf(stderr, "Error: Read_WZeight expected weight component %d\n",
                 i);
         exit(1);
@@ -123,10 +123,8 @@ int Read_WZ_PP(Weight *WZ,
     WZ->r /= WZ->d;
   for (n = 0; n < 999; n++) /* read /Z*: * * * */
   {
-    c[n] = fgetc(inFILE);
-    if (feof(inFILE)) {
-      if (FilterFlag)
-        inFILE = NULL;
+    c[n] = fgetc(in);
+    if (feof(in)) {
       return 0;
     }
     if (c[n] == '\n')
@@ -440,15 +438,11 @@ int Read_WZ_PP(Weight *WZ,
     }
   } /* TEST: A*z[]%m[]==0 */
 
-  if (FilterFlag)
-    inFILE = NULL;
   return 1;
 }
 
 // constexpr flags for this translation unit are at the top of the file:
 //   TEST_PP, TEST_PD
-
-extern FILE *inFILE;
 
 /* nef.c also uses AmbiLatticeBasis via LG.h. */
 
@@ -476,36 +470,37 @@ void Write_Weight(Weight *W, FILE *out) {
 #endif
   fprintf(out, "\n"); /* puts("  = d  w_1 ... w_N"); */
 }
-int Read_Weight(Weight *_W) /* read "d w_i" [ or "w_i d" if last=max ] */
+int Read_Weight(Weight *_W,
+                FILE *in) /* read "d w_i" [ or "w_i d" if last=max ] */
 {
   char c;
-  int i, shift = 1, I[W_Nmax + 2], FilterFlag = (inFILE == NULL);
+  int i, shift = 1, I[W_Nmax + 2], FilterFlag = (in == NULL);
   if (FilterFlag)
-    inFILE = stdin;
-  else if (inFILE == stdin)
+    in = stdin;
+  else if (in == stdin)
     printf("type degree and weights  [d  w1 w2 ...]: ");
-  c = fgetc(inFILE);
+  c = fgetc(in);
   if (!IsDigit(c))
     return 0;
-  ungetc(c, inFILE);
-  if (fscanf(inFILE, "%d", I) != 1) {
+  ungetc(c, in);
+  if (fscanf(in, "%d", I) != 1) {
     fputs("Error: Read_Weight expected leading weight\n", stderr);
     exit(1);
   }
   for (i = 1; i < W_Nmax + 2; i++) {
-    while (' ' == (c = fgetc(inFILE)))
+    while (' ' == (c = fgetc(in)))
       ;
-    ungetc(c, inFILE);
+    ungetc(c, in);
     if (IsDigit(c)) {
-      if (fscanf(inFILE, "%d", &I[i]) != 1) {
+      if (fscanf(in, "%d", &I[i]) != 1) {
         fprintf(stderr, "Error: Read_Weight expected weight component %d\n", i);
         exit(1);
       }
     } else
       break;
   }
-  while (fgetc(inFILE) - '\n')
-    if (feof(inFILE))
+  while (fgetc(in) - '\n')
+    if (feof(in))
       return 0; /* read to EOL */
   _W->N = i - 1;
   if (_W->N > W_Nmax) {
@@ -531,8 +526,6 @@ int Read_Weight(Weight *_W) /* read "d w_i" [ or "w_i d" if last=max ] */
       exit(1);
     }
   }
-  if (FilterFlag)
-    inFILE = NULL;
   return 1;
 }
 namespace {
@@ -763,13 +756,13 @@ void Make_Poly_Points(Weight *_W_in, PolyPointList *_PP, FILE *out) {
 #endif
 }
 #if (WZinput)
-int Read_W_PP(Weight *W, PolyPointList *P, FILE *out) {
+int Read_W_PP(Weight *W, PolyPointList *P, FILE *in, FILE *out) {
   W->P = P;
-  return Read_WZ_PP(W, out);
+  return Read_WZ_PP(W, in, out);
 }
 #else
-int Read_W_PP(Weight *_W, PolyPointList *_PP, FILE *out) {
-  if (!Read_Weight(_W))
+int Read_W_PP(Weight *_W, PolyPointList *_PP, FILE *in, FILE *out) {
+  if (!Read_Weight(_W, in))
     return 0;
   Make_Poly_Points(_W, _PP, out);
   return 1;

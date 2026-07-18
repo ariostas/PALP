@@ -17,10 +17,10 @@ void CWS_to_PermCWS(CWS *Cin, CWS *C, int *pi);
 
 /*  ==========  	  I/O functions:                	==========  */
 
-int IsNextDigit(void) {
+int IsNextDigit(FILE *in) {
   char c;
-  c = fgetc(inFILE);
-  ungetc(c, inFILE);
+  c = fgetc(in);
+  ungetc(c, in);
   if (c == '0')
     return -1;
   if ((c < '0') || ('9' < c))
@@ -114,7 +114,7 @@ void Print_CWS_Zinfo(CWS *CW, FILE *out) {
         fprintf(out, "%d ", CW->z[i][j]);
     }
 }
-int Read_CWS_Zinfo(FILE *inFILE, CWS *CW) /* return !EOF */
+int Read_CWS_Zinfo(FILE *in, CWS *CW) /* return !EOF */
 {
   int *nz = &CW->nz;
   int i = 0, n;
@@ -122,8 +122,8 @@ int Read_CWS_Zinfo(FILE *inFILE, CWS *CW) /* return !EOF */
   char b = ' ';
   *nz = 0;
   for (n = 0; n < 999; n++) {
-    c[n] = fgetc(inFILE);
-    if (feof(inFILE))
+    c[n] = fgetc(in);
+    if (feof(in))
       return 0;
     if (c[n] == '\n')
       break;
@@ -195,32 +195,33 @@ void checkDimension(int polyDim, int codim, int index) {
   }
 }
 
-int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index, FILE *out)
+int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index, FILE *in,
+              FILE *out)
 /*   _P is always an M-lattice polytope
      codim = 1, index = 1: CY hypersurface
      codim > 1, index = 1: _P reflexive, CICY with codimension codim
      codim = 1, index > 1: _P a Gorenstein polytope with index index,
                            determines a reflexive Gorenstein cone       */
 {
-  int i, j, FilterFlag = (inFILE == NULL);
+  int i, j, FilterFlag = (in == NULL);
   std::array<int, AMBI_Dmax *(AMBI_Dmax + 1)> IN;
   int S;
   static int InputOK;
   _CW->nw = _CW->N = _CW->nz = 0;
   _CW->index = index;
   if (FilterFlag)
-    inFILE = stdin;
-  else if (inFILE == stdin) {
+    in = stdin;
+  else if (in == stdin) {
     puts("Degrees and weights  `d1 w11 w12 ... d2 w21 w22 ...'");
     puts("  or `#lines #columns' (= `PolyDim #Points' or `#Points PolyDim'):");
   }
   for (i = 0; i < AMBI_Dmax * (AMBI_Dmax + 1); i++) {
     char c;
-    while (' ' == (c = fgetc(inFILE)))
+    while (' ' == (c = fgetc(in)))
       ;
-    ungetc(c, inFILE); /* read blanks */
-    if (IsNextDigit()) {
-      if (fscanf(inFILE, "%d", &IN[i]) != 1) {
+    ungetc(c, in); /* read blanks */
+    if (IsNextDigit(in)) {
+      if (fscanf(in, "%d", &IN[i]) != 1) {
         puts("Error: failed to read input number");
         exit(1);
       }
@@ -242,7 +243,7 @@ int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index, FILE *out)
   if (i == 2) /* READ PolyPointList */
   {
     int tr = 0;
-    while ('\n' != fgetc(inFILE))
+    while ('\n' != fgetc(in))
       ; /* read to end of line */
     if (IN[0] == IN[1]) {
       puts("The number of points must be larger than the dimension!");
@@ -259,7 +260,7 @@ int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index, FILE *out)
       puts("Please increase POINT_Nmax");
       exit(1);
     }
-    if ((inFILE == stdin) && !FilterFlag)
+    if ((in == stdin) && !FilterFlag)
       printf("Type the %d coordinates as %s=%d lines with %s=%d columns:\n",
              IN[0] * IN[1], tr ? "dim" : "#pts", tr ? IN[0] : IN[1],
              tr ? "#pts" : "dim", tr ? IN[1] : IN[0]);
@@ -271,7 +272,7 @@ int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index, FILE *out)
       for (i = 0; i < IN[0]; i++)
         for (j = 0; j < IN[1]; j++) {
           int X;
-          if (fscanf(inFILE, "%d", &X) != 1) {
+          if (fscanf(in, "%d", &X) != 1) {
             puts("Error: failed to read polytope matrix entry");
             exit(1);
           }
@@ -281,18 +282,16 @@ int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index, FILE *out)
       for (i = 0; i < IN[1]; i++)
         for (j = 0; j < IN[0]; j++) {
           int X;
-          if (fscanf(inFILE, "%d", &X) != 1) {
+          if (fscanf(in, "%d", &X) != 1) {
             puts("Error: failed to read polytope matrix entry");
             exit(1);
           }
           _P->x[i][j] = X;
         }
     /* Finish_Poly_Points(_P); */
-    while (fgetc(inFILE) - '\n')
-      if (feof(inFILE))
+    while (fgetc(in) - '\n')
+      if (feof(in))
         return 0; /* read to EOL */
-    if (FilterFlag)
-      inFILE = NULL;
     return 1;
   } /* End of reading PolyPointList */
   if (i == 3) {
@@ -378,40 +377,38 @@ MAP:
     }
   }
   _CW->nz = 0;
-  if (!Read_CWS_Zinfo(inFILE, _CW)) /* read Z to EOL */
+  if (!Read_CWS_Zinfo(in, _CW)) /* read Z to EOL */
   {
     if (!InputOK)
       puts("-h gives you help\n");
     return 0;
   }
   Make_CWS_Points(_CW, _P, out);
-  if (FilterFlag)
-    inFILE = NULL;
   return 1;
 }
 
-int Read_CWS_PP(CWS *_CW, PolyPointList *_P, FILE *out) {
-  return ReadCwsPp(_CW, _P, 1, 1, out);
+int Read_CWS_PP(CWS *_CW, PolyPointList *_P, FILE *in, FILE *out) {
+  return ReadCwsPp(_CW, _P, 1, 1, in, out);
 }
 
-int Read_PP(PolyPointList *_P) {
-  int i, j, FilterFlag = (inFILE == NULL);
+int Read_PP(PolyPointList *_P, FILE *in) {
+  int i, j, FilterFlag = (in == NULL);
   std::array<int, AMBI_Dmax *(AMBI_Dmax + 1)> IN;
   static int InputOK;
   /* _CW->nw=_CW->N=_CW->nz=0; */
 
   if (FilterFlag)
-    inFILE = stdin;
-  else if (inFILE == stdin) {
+    in = stdin;
+  else if (in == stdin) {
     printf("`#lines #columns' (= `PolyDim #Points' or `#Points PolyDim'):\n");
   };
   for (i = 0; i < AMBI_Dmax * (AMBI_Dmax + 1); i++) {
     char c;
-    while (' ' == (c = fgetc(inFILE)))
+    while (' ' == (c = fgetc(in)))
       ;
-    ungetc(c, inFILE); /* read blanks */
-    if (IsNextDigit()) {
-      if (fscanf(inFILE, "%d", &IN[i]) != 1) {
+    ungetc(c, in); /* read blanks */
+    if (IsNextDigit(in)) {
+      if (fscanf(in, "%d", &IN[i]) != 1) {
         puts("Error: failed to read input number");
         exit(1);
       }
@@ -433,7 +430,7 @@ int Read_PP(PolyPointList *_P) {
   if (i == 2) /* READ PolyPointList */
   {
     int tr = 0;
-    while ('\n' != fgetc(inFILE))
+    while ('\n' != fgetc(in))
       ; /* read to end of line */
     if (IN[0] == IN[1]) {
       puts("The number of points must be larger than the dimension!");
@@ -453,7 +450,7 @@ int Read_PP(PolyPointList *_P) {
       puts("increase POINT_Nmax!");
       exit(1);
     }
-    if ((inFILE == stdin) && !FilterFlag)
+    if ((in == stdin) && !FilterFlag)
       printf("Type the %d coordinates as %s=%d lines with %s=%d columns:\n",
              IN[0] * IN[1], tr ? "dim" : "#pts", tr ? IN[0] : IN[1],
              tr ? "#pts" : "dim", tr ? IN[1] : IN[0]);
@@ -465,7 +462,7 @@ int Read_PP(PolyPointList *_P) {
       for (i = 0; i < IN[0]; i++)
         for (j = 0; j < IN[1]; j++) {
           int X;
-          if (fscanf(inFILE, "%d", &X) != 1) {
+          if (fscanf(in, "%d", &X) != 1) {
             puts("Error: failed to read polytope matrix entry");
             exit(1);
           }
@@ -475,31 +472,27 @@ int Read_PP(PolyPointList *_P) {
       for (i = 0; i < IN[1]; i++)
         for (j = 0; j < IN[0]; j++) {
           int X;
-          if (fscanf(inFILE, "%d", &X) != 1) {
+          if (fscanf(in, "%d", &X) != 1) {
             puts("Error: failed to read polytope matrix entry");
             exit(1);
           }
           _P->x[i][j] = X;
         }
     /* Finish_Poly_Points(_P); */
-    while (fgetc(inFILE) - '\n')
-      if (feof(inFILE))
+    while (fgetc(in) - '\n')
+      if (feof(in))
         return 0; /* read to EOL */
-    if (FilterFlag)
-      inFILE = NULL;
     return 1;
   }
   if (i > 2) {
     puts("Error: expected input format is matrix of polytope points!");
     exit(1);
   }
-  if (FilterFlag)
-    inFILE = NULL;
   return 1;
 }
 
-int Read_CWS(CWS *_CW, PolyPointList *_P, FILE *out) {
-  int i, j, FilterFlag = (inFILE == NULL);
+int Read_CWS(CWS *_CW, PolyPointList *_P, FILE *in, FILE *out) {
+  int i, j, FilterFlag = (in == NULL);
   std::array<int, AMBI_Dmax *(AMBI_Dmax + 1)> IN;
   int S;
   static int InputOK;
@@ -507,17 +500,17 @@ int Read_CWS(CWS *_CW, PolyPointList *_P, FILE *out) {
   _CW->index = 1;
 
   if (FilterFlag)
-    inFILE = stdin;
-  else if (inFILE == stdin) {
+    in = stdin;
+  else if (in == stdin) {
     printf("Degrees and weights  `d1 w11 w12 ... d2 w21 w22 ...':\n");
   };
   for (i = 0; i < AMBI_Dmax * (AMBI_Dmax + 1); i++) {
     char c;
-    while (' ' == (c = fgetc(inFILE)))
+    while (' ' == (c = fgetc(in)))
       ;
-    ungetc(c, inFILE); /* read blanks */
-    if (IsNextDigit()) {
-      if (fscanf(inFILE, "%d", &IN[i]) != 1) {
+    ungetc(c, in); /* read blanks */
+    if (IsNextDigit(in)) {
+      if (fscanf(in, "%d", &IN[i]) != 1) {
         puts("Error: failed to read input number");
         exit(1);
       }
@@ -627,15 +620,13 @@ MAP:
     }
   }
   _CW->nz = 0;
-  if (!Read_CWS_Zinfo(inFILE, _CW)) /* read Z to EOL */
+  if (!Read_CWS_Zinfo(in, _CW)) /* read Z to EOL */
   {
     if (!InputOK)
       puts("-h gives you help\n");
     return 0;
   }
   Make_CWS_Points(_CW, _P, out); /* now make POLY */
-  if (FilterFlag)
-    inFILE = NULL;
   return 1;
 }
 

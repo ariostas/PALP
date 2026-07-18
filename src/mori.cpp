@@ -18,9 +18,6 @@
 
 /*==========================================================*/
 
-/* Global FILE pointers are referenced from the library code; kept global for
-   now while the migration is in progress (see ISSUES.md #40). */
-FILE *inFILE;
 PalpContext palpContext;
 
 void PrintUsage(char *c) {
@@ -175,19 +172,19 @@ int main(int narg, char *fn[]) {
     // Flag.g=1;
   }
 
-  FILE *out;
+  FILE *in, *out;
   if (Flag.FilterFlag) {
-    inFILE = NULL;
+    in = NULL;
     out = stdout;
   }
 
   else {
     if (narg > ++n)
-      inFILE = fopen(fn[n], "r");
+      in = fopen(fn[n], "r");
     else
-      inFILE = stdin;
+      in = stdin;
 
-    if (inFILE == NULL) {
+    if (in == NULL) {
       printf("Input file %s not found!\n", fn[n]);
       exit(1);
     }
@@ -198,7 +195,7 @@ int main(int narg, char *fn[]) {
       out = stdout;
   }
 
-  while ((Flag.D ? Read_PP(_P) : Read_CWS(CW, _P, out))) {
+  while ((Flag.D ? Read_PP(_P, in) : Read_CWS(CW, _P, in, out))) {
     if (!Ref_Check(_P, &V, E)) {
       fprintf(out, "Input not reflexive!\n");
       continue;

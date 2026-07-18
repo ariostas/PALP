@@ -24,9 +24,6 @@
 #error decrease POLY_Dmax or/and POINT_Nmax for compiling class
 #endif
 
-/* Global FILE pointers are referenced from the library code; kept global for
-   now while the migration is in progress (see ISSUES.md #40). */
-FILE *inFILE;
 PalpContext palpContext;
 
 void PrintExtOptions(void) {
@@ -423,16 +420,16 @@ int main(int narg, char *fn[]) {
       }
   n--;
 
-  FILE *out;
+  FILE *in, *out;
   if (FilterFlag) {
-    inFILE = NULL;
+    in = NULL;
     out = stdout;
   } else {
     if (narg > ++n)
-      inFILE = fopen(fn[n], "r");
+      in = fopen(fn[n], "r");
     else
-      inFILE = stdin;
-    if (inFILE == NULL) {
+      in = stdin;
+    if (in == NULL) {
       printf("Input file %s not found!\n", fn[n]);
       exit(1);
     }
@@ -443,7 +440,7 @@ int main(int narg, char *fn[]) {
   }
 
   if (sFlag)
-    VPHM_Sublat_Polys(sFlag, mFlag, dbin, polyi, polyo, _P, out);
+    VPHM_Sublat_Polys(sFlag, mFlag, dbin, polyi, polyo, _P, in, out);
   else if (abFlag == 1)
     Ascii_to_Binary(&W, _P, dbin, polyi, polyo, out);
   else if (abFlag == -1)
@@ -455,16 +452,16 @@ int main(int narg, char *fn[]) {
   else if (cFlag)
     Check_NF_Order(polyi, dbin, cFlag, _P);
   else if (mFlag == 'a')
-    while (Read_CWS_PP(&W, _P))
+    while (Read_CWS_PP(&W, _P, in, out))
       Overall_check(&W, _P, out);
   else if (mFlag == 'r')
-    while (Read_CWS_PP(&W, _P))
+    while (Read_CWS_PP(&W, _P, in, out))
       Max_check(&W, _P, out);
   else if (mFlag == 'v')
-    while (Read_CWS_PP(&W, _P))
+    while (Read_CWS_PP(&W, _P, in, out))
       DPvircheck(&W, _P, out);
   else if (mFlag == 'l')
-    while (Read_CWS_PP(&W, _P))
+    while (Read_CWS_PP(&W, _P, in, out))
       DPircheck(&W, _P, out);
 #if (POLY_Dmax < 6)
   else if (HFlag == 'c')
@@ -488,6 +485,6 @@ int main(int narg, char *fn[]) {
     Reduce_Aux_File(polyi, polys, dbsub, polyo, out);
   else
     Do_the_Classification(&W, _P, /* fn[0], */ oFlag, rFlag, kFlag, polyi,
-                          polyo, dbin, out);
+                          polyo, dbin, in, out);
   return 0;
 }

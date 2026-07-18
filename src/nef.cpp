@@ -44,7 +44,8 @@ void Sort_PPL(PolyPointList *_P, VertexNumList *_V);
 void NormTriangularBasis(AmbiLatticeBasis *_B);
 
 void MakeRefWeights(int N, int from_d, int to_d);
-int IN_WEIGHT(Weight *, CWS *, int *, PolyPointList *, Flags *, int, FILE *out);
+int IN_WEIGHT(Weight *, CWS *, int *, PolyPointList *, Flags *, int,
+              FILE *in = stdin, FILE *out = stdout);
 
 void OUT_CWS(CWS *, int *, int *, FILE *out = stdout);
 
@@ -60,9 +61,6 @@ void Print_Nefinfo(PartList *_PTL, /* Flags *_F,*/ time_t *_Tstart,
                    clock_t *_Cstart);
 //=== NOW FINE ===//
 
-/* Global FILE pointers are referenced from the library code; kept global for
-   now while the migration is in progress (see ISSUES.md #40). */
-FILE *inFILE;
 PalpContext palpContext;
 
 namespace {
@@ -264,16 +262,16 @@ int main(int narg, char *fn[]) {
       }
     }
   n--;
-  FILE *out;
+  FILE *in, *out;
   if (FilterFlag) {
-    inFILE = NULL;
+    in = NULL;
     out = stdout;
   } else {
     if (narg > ++n)
-      inFILE = fopen(fn[n], "r");
+      in = fopen(fn[n], "r");
     else
-      inFILE = stdin;
-    if (inFILE == NULL) {
+      in = stdin;
+    if (in == NULL) {
       printf("Input file %s not found!\n", fn[n]);
       exit(1);
     }
@@ -282,7 +280,7 @@ int main(int narg, char *fn[]) {
     else
       out = stdout;
   }
-  while (IN_WEIGHT(&W, &CW, D, _P, &F, codim, out)) {
+  while (IN_WEIGHT(&W, &CW, D, _P, &F, codim, in, out)) {
     /* _P is the M-lattice polytope */
     if (F.G)
       AnalyseGorensteinCone(&CW, _P, _V, _E, &codim, &F, out);
@@ -524,21 +522,21 @@ void Make_CW_WPCICY(Weight *_W, CWS *_CW) {
   _CW->nz = 0;
 }
 
-int Read_WPCICY(Weight *_W, int *_D)
+int Read_WPCICY(Weight *_W, int *_D, FILE *in)
 /* read "d" and "w_i" till sum=d or non-digit */
 {
   char c;
   long int nl, sum;
-  int FilterFlag = (inFILE == NULL);
-  if (inFILE == stdin)
+  int FilterFlag = (in == NULL);
+  if (in == stdin)
     printf("type degrees and weights [d  w1 w2 ... wk d=d_1 d_2]: ");
   else if (FilterFlag)
-    inFILE = stdin;
-  c = fgetc(inFILE);
+    in = stdin;
+  c = fgetc(in);
   if (!IsDigit(c))
     return 0;
-  ungetc(c, inFILE);
-  fscanf(inFILE, "%ld", &nl);
+  ungetc(c, in);
+  fscanf(in, "%ld", &nl);
   _W->d = nl;
   sum = nl;
 
@@ -547,26 +545,26 @@ int Read_WPCICY(Weight *_W, int *_D)
       fputs("Error: Read_WPCICY weight count exceeds W_Nmax\n", stderr);
       exit(1);
     }
-    while (' ' == (c = fgetc(inFILE)))
+    while (' ' == (c = fgetc(in)))
       ;
-    ungetc(c, inFILE);
+    ungetc(c, in);
     if (IsDigit(c)) {
-      fscanf(inFILE, "%ld", &nl);
+      fscanf(in, "%ld", &nl);
       _W->w[(_W->N)++] = nl;
     } else
       break;
   }
-  while (!IsDigit(c = fgetc(inFILE)))
+  while (!IsDigit(c = fgetc(in)))
     ;
-  ungetc(c, inFILE);
-  fscanf(inFILE, "%d", &_D[1]);
-  while (' ' == (c = fgetc(inFILE)))
+  ungetc(c, in);
+  fscanf(in, "%d", &_D[1]);
+  while (' ' == (c = fgetc(in)))
     ;
-  ungetc(c, inFILE);
-  fscanf(inFILE, "%d", &_D[0]);
+  ungetc(c, in);
+  fscanf(in, "%d", &_D[0]);
 
-  while (fgetc(inFILE) - '\n')
-    if (feof(inFILE))
+  while (fgetc(in) - '\n')
+    if (feof(in))
       return 0; /* read to EOL */
 
   if (_W->N > POLY_Dmax) {
@@ -586,13 +584,11 @@ int Read_WPCICY(Weight *_W, int *_D)
     puts("I need at least 2 weights!");
     exit(1);
   }
-  if (FilterFlag)
-    inFILE = NULL;
   return 1;
 }
 
-int Make_WPCICY(Weight *_W, CWS *_CW, int *_D, PolyPointList *_P) {
-  int r = Read_WPCICY(_W, _D);
+int Make_WPCICY(Weight *_W, CWS *_CW, int *_D, PolyPointList *_P, FILE *in) {
+  int r = Read_WPCICY(_W, _D, in);
 
   Make_Poly_WPCICY(_W, _D, _P);
   Make_CW_WPCICY(_W, _CW);
@@ -602,12 +598,12 @@ int Make_WPCICY(Weight *_W, CWS *_CW, int *_D, PolyPointList *_P) {
 void Make_RGC_Points(CWS *Cin, PolyPointList *_P);
 
 int IN_WEIGHT(Weight *_W, CWS *_CW, int *_D, PolyPointList *_P, Flags *_F,
-              int codim, FILE *out) {
+              int codim, FILE *in, FILE *out) {
   if (_F->Msum)
-    return Make_WPCICY(_W, _CW, _D, _P);
+    return Make_WPCICY(_W, _CW, _D, _P, in);
   if (_F->G)
-    return ReadCwsPp(_CW, _P, 1, codim, out);
-  return ReadCwsPp(_CW, _P, codim, 1, out);
+    return ReadCwsPp(_CW, _P, 1, codim, in, out);
+  return ReadCwsPp(_CW, _P, codim, 1, in, out);
 }
 
 void OUT_CWS(CWS *_W, int *_D, int *_M_Flag, FILE *out) {

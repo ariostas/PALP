@@ -20,7 +20,6 @@ namespace {
 constexpr int OSL = 42; /* opt_string's length */
 }
 
-FILE *inFILE;
 PalpContext palpContext;
 
 void PrintUsage(char *c) {
@@ -223,16 +222,16 @@ int main(int narg, char *fn[]) {
     puts("\n-T: Please specify desired output, e.g. via -v or -p \n");
     exit(1);
   }
-  FILE *out;
+  FILE *in, *out;
   if (FilterFlag) {
-    inFILE = NULL;
+    in = NULL;
     out = stdout;
   } else {
     if (narg > ++n)
-      inFILE = fopen(fn[n], "r");
+      in = fopen(fn[n], "r");
     else
-      inFILE = stdin;
-    if (inFILE == NULL) {
+      in = stdin;
+    if (in == NULL) {
       printf("Input file %s not found!\n", fn[n]);
       exit(1);
     }
@@ -255,7 +254,7 @@ int main(int narg, char *fn[]) {
     Initialize_C5S(&C5S, POLY_Dmax); // Initialize statistics
   if (Einstein)
     Einstein_Metric(CW, _P, &V, E, out);
-  while (lg ? Read_W_PP(&W, _P, out) : Read_CWS_PP(CW, _P)) {
+  while (lg ? Read_W_PP(&W, _P, in, out) : Read_CWS_PP(CW, _P, in, out)) {
     if (q || Q) {
       FaceInfo FI;
       if (!QuickAnalysis(_P, &BH, &FI)) {
@@ -312,7 +311,7 @@ int main(int narg, char *fn[]) {
     }
     if (U == 1) {
       if (dd == 5) {
-        if (!Fano5d(_P, &V, E))
+        if (!Fano5d(_P, &V, E, in, out))
           continue;
       } else if (!SimpUnimod(_P, &V, E, dd))
         continue;

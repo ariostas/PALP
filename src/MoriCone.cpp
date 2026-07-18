@@ -2450,7 +2450,7 @@ void HyperSurfDivisorsQ(PolyPointList *_P, VertexNumList *V, EqList *E,
   //    while(Multiloop(N,L,&j,&J)); assert(c==0);}
 
   if (_Flag->M)
-    TriList_to_MoriList(_P, F.get(), _Flag);
+    TriList_to_MoriList(_P, F.get(), _Flag, out);
   else if (_Flag->g || _Flag->m || _Flag->b || _Flag->i || _Flag->c ||
            _Flag->t || _Flag->d || _Flag->H)
     Subdivide(_P, V->nv, I, cp, T, &t, _Flag, F.get(), out);
@@ -2491,36 +2491,36 @@ void FE(char *c) {
 }
 
 /*needed from Read_Tri*/
-void Read_EOL(void) {
+void Read_EOL(FILE *in) {
   char c;
-  while ('\n' != (c = fgetc(inFILE)))
-    if (feof(inFILE))
+  while ('\n' != (c = fgetc(in)))
+    if (feof(in))
       FE("EOF");
 }
 
-int ReadInt(void) {
+int ReadInt(FILE *in) {
   int n;
-  char c = fgetc(inFILE);
+  char c = fgetc(in);
   if (!IsDigit(c) && (c != '-'))
     FE("ReadInt");
-  ungetc(c, inFILE);
-  if (fscanf(inFILE, "%d", &n) != 1)
+  ungetc(c, in);
+  if (fscanf(in, "%d", &n) != 1)
     FE("ReadInt");
-  while (' ' == (c = fgetc(inFILE)))
+  while (' ' == (c = fgetc(in)))
     ;
-  ungetc(c, inFILE);
+  ungetc(c, in);
   return n;
 }
 
 /*needed from Read_Tri*/
-Inci64 Read_INCI(int p, FILE *out) {
+Inci64 Read_INCI(int p, FILE *in, FILE *out) {
   Inci64 X =
       Inci64_1(); /* dirty: starts with the 1 required by the old format */
   char c;
-  while (' ' == (c = fgetc(inFILE)))
+  while (' ' == (c = fgetc(in)))
     ;
-  ungetc(c, inFILE);
-  while (IsDigit(c = fgetc(inFILE))) {
+  ungetc(c, in);
+  while (IsDigit(c = fgetc(in))) {
     if (c >= '2') {
       fputs("Error: Read_INCI expects binary digits only\n", stderr);
       exit(1);
@@ -2535,7 +2535,7 @@ Inci64 Read_INCI(int p, FILE *out) {
     fprintf(out, "Type -h for help.\n");
     exit(1);
   }
-  ungetc(c, inFILE);
+  ungetc(c, in);
   return X;
 }
 
@@ -2599,14 +2599,14 @@ void Test_INCI(int *nI, Inci64 *ILi, int p) {
   }
 }
 
-void Read_Tri(int p, int *nI, int *nIA, Inci64 **_I, FILE *out) {
+void Read_Tri(int p, int *nI, int *nIA, Inci64 **_I, FILE *in, FILE *out) {
   int i;
   Inci64 *I = *_I;
   if (0 > *nIA) {
     fputs("Error: Read_Tri invalid allocated size\n", stderr);
     exit(1);
   }
-  if (*nIA < (*nI = ReadInt())) {
+  if (*nIA < (*nI = ReadInt(in))) {
     if (0 < *nIA)
       free(I);
     *nIA = *nI; /* realloc I */
@@ -2619,8 +2619,8 @@ void Read_Tri(int p, int *nI, int *nIA, Inci64 **_I, FILE *out) {
   }
   /* TODO: this is caller-owned realloc logic; defer unique_ptr conversion. */
   for (i = 0; i < *nI; i++)
-    I[i] = Read_INCI(p - 1, out);
-  Read_EOL();
+    I[i] = Read_INCI(p - 1, in, out);
+  Read_EOL(in);
   Test_INCI(nI, I, p);
 }
 
@@ -2957,7 +2957,7 @@ void ComputeStanleyReisner(PolyPointList *P, int nI, Inci64 *I, int *NrInz,
 }
 
 void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag,
-                         FILE *out) {
+                         FILE *in, FILE *out) {
   int i, j, n, nI, NrInz, nIA = 0, Ntri = 0;
   static Inci64 *I = NULL;
   triang T, SR;
@@ -2970,7 +2970,7 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag,
   //\n", &I, I, nI, nIA); // diagnostics
 
   if (_Flag->FilterFlag)
-    inFILE = stdin;
+    in = stdin;
 
   _POF->n = _P->n;
   _POF->np = _P->np;
@@ -2982,8 +2982,8 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag,
 
   if (!_Flag->FilterFlag)
     printf("`#triangulations': \n");
-  Ntri = ReadInt();
-  Read_EOL();
+  Ntri = ReadInt(in);
+  Read_EOL(in);
   // Print_PPL(_POF, "_POF:");
   if (!_Flag->FilterFlag)
     fprintf(out, "%d triangulations:\n", Ntri);
@@ -2991,8 +2991,8 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag,
 
   for (n = 0; n < Ntri; n++) {
     Inci64 *IOF; /* Same as I but keeps old format till the end   */
-    Read_Tri(_P->np, &nI, &nIA, &I, out); /* gives everything in the old format
-                                        from input without leading 1   */
+    Read_Tri(_P->np, &nI, &nIA, &I, in, out); /* gives everything in the old
+                                        format from input without leading 1   */
     auto IOF_owner = std::make_unique<Inci64[]>(nI);
     IOF = IOF_owner.get();
     for (i = 0; i < nI; i++)
@@ -3097,6 +3097,4 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag,
   }
   free(I);
   free(SRG);
-  if (_Flag->FilterFlag)
-    inFILE = NULL;
 }

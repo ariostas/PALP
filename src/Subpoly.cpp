@@ -641,7 +641,8 @@ void Drop_and_Keep(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   _KL->nk++;
 }
 
-void Start_Make_All_Subpolys(PolyPointList *_P, NF_List *_NFL, FILE *out) {
+void Start_Make_All_Subpolys(PolyPointList *_P, NF_List *_NFL, FILE *in,
+                             FILE *out) {
   int i, j;
   VertexNumList V, new_V;
   EqList E, new_E;
@@ -685,7 +686,7 @@ void Start_Make_All_Subpolys(PolyPointList *_P, NF_List *_NFL, FILE *out) {
       fprintf(out, "\n");
     }
     fprintf(out, "How many of them do you want to keep?\n");
-    if (fscanf(inFILE, "%d", &(KL.nk)) != 1) {
+    if (fscanf(in, "%d", &(KL.nk)) != 1) {
       fputs("Error: Keep_list expected number of vertices to keep\n", stderr);
       exit(1);
     }
@@ -695,7 +696,7 @@ void Start_Make_All_Subpolys(PolyPointList *_P, NF_List *_NFL, FILE *out) {
     }
     fprintf(out, "Which %d of them do you want to keep?\n", KL.nk);
     for (i = 0; i < KL.nk; i++) {
-      if (fscanf(inFILE, "%d", &j) != 1) {
+      if (fscanf(in, "%d", &j) != 1) {
         fprintf(stderr, "Error: Keep_list expected vertex index %d\n", i);
         exit(1);
       }
@@ -1088,7 +1089,7 @@ void Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
 
 void Do_the_Classification(CWS *W, PolyPointList *P, /* char *fn, */
                            int oFlag, int rFlag, int kFlag, char *polyi,
-                           char *polyo, char *dbin, FILE *out) {
+                           char *polyo, char *dbin, FILE *in, FILE *out) {
 
   /* static int nw; */
   NF_List _NFL_obj;
@@ -1108,7 +1109,7 @@ void Do_the_Classification(CWS *W, PolyPointList *P, /* char *fn, */
   Init_NF_List(_NFL);
   rFlag = 0; /* now used as "read flag" */
 
-  while (Read_CWS_PP(W, P)) { /* make subpolys */
+  while (Read_CWS_PP(W, P, in)) { /* make subpolys */
     if (W->nw > 0)
       _NFL->Nmin = P->np;
     else
@@ -1126,7 +1127,7 @@ void Do_the_Classification(CWS *W, PolyPointList *P, /* char *fn, */
       Read_File_2_List(polyo, _NFL);
       rFlag = 0;
     }
-    Start_Make_All_Subpolys(P, _NFL, out);
+    Start_Make_All_Subpolys(P, _NFL, in, out);
     Print_Weight_Info(W, _NFL, out);
     if ((WRITE_DIM <= P->n) && (MIN_NEW <= _NFL->NP))
       if ((int)difftime(time(NULL), W_SAVE_TIME) > MIN_W_SAVE_TIME) {
@@ -1489,7 +1490,7 @@ void uc_nf_to_P(PolyPointList *_P, int *MS, int *d, int *v, int *nuc,
 }
 
 void Find_Sublat_Polys(char mFlag, char *dbin, char *polyi, char *polyo,
-                       PolyPointList *_P, FILE *out) {
+                       PolyPointList *_P, FILE *in, FILE *out) {
   NF_List _NFL_obj;
   NF_List *_NFL = &_NFL_obj;
   VertexNumList Vnl;
@@ -1592,7 +1593,7 @@ void Find_Sublat_Polys(char mFlag, char *dbin, char *polyi, char *polyo,
 
   else {
     CWS W;
-    while (Read_CWS_PP(&W, _P)) {
+    while (Read_CWS_PP(&W, _P, in)) {
       if (!IP_Check(_P, &Vnl, &Fel)) {
         fputs("Error: Find_Sublat_Polys input polytope not reflexive\n",
               stderr);

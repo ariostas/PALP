@@ -126,13 +126,11 @@ struct PalpContext {
   FILE *out = stdout;
 };
 
-extern FILE *inFILE;
 extern PalpContext palpContext; /* global context used by legacy code */
 /*
 Ascii-files for input and output. If not given in the parameter list they
-default to stdin and stdout, respectively.
-palpContext.in/out are the preferred explicit handles; inFILE is kept as a
-compatibility layer during the migration to PalpContext.
+default to stdin and stdout, respectively. palpContext.in/out are the
+preferred explicit handles used by the driver programs.
 */
 
 /*  ==========         Global typedefs           		==========  */
@@ -238,7 +236,7 @@ statistics on large lists of weight systems, cf. classification of 4fold weights
 
 /*  ==========         I/O functions (from Coord.c)		==========  */
 
-int Read_CWS_PP(CWS *C, PolyPointList *P, FILE *out = stdout);
+int Read_CWS_PP(CWS *C, PolyPointList *P, FILE *in = stdin, FILE *out = stdout);
 /*
 Reads either a CWS or a PolyPointList.
 If *C is read, the PolyPointList *P determined by *C is calculated, otherwise
@@ -252,15 +250,15 @@ either P->n = #columns and P->np = #lines or vice versa (the result is
 unique because of P->np > P->n).
 */
 
-int Read_CWS(CWS *_CW, PolyPointList *_P, FILE *out = stdout);
+int Read_CWS(CWS *_CW, PolyPointList *_P, FILE *in = stdin, FILE *out = stdout);
 /*
  Reads CWS input *C, the PolyPointList *P determined by *C is calculated.
 */
 
-int Read_PP(PolyPointList *_P);
+int Read_PP(PolyPointList *_P, FILE *in = stdin);
 int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index,
-              FILE *out = stdout);
-int IsNextDigit(void);
+              FILE *in = stdin, FILE *out = stdout);
+int IsNextDigit(FILE *in = stdin);
 void Make_CWS_Points(CWS *_C, PolyPointList *_P, FILE *out = stdout);
 void Print_CWS_Zinfo(CWS *CW, FILE *out = stdout);
 void Sort_PPL(PolyPointList *_P, VertexNumList *_V);
@@ -409,7 +407,8 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
 Realizes the -C1 or -C2 options of poly for CYorFANO being 1 or 2, respectively.
 */
 
-int Fano5d(PolyPointList *, VertexNumList *, EqList *, FILE *out = stdout);
+int Fano5d(PolyPointList *, VertexNumList *, EqList *, FILE *in = stdin,
+           FILE *out = stdout);
 /*
 Realizes the -U5 option of poly.
 */

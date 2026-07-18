@@ -50,7 +50,7 @@ I: INCIDENCE, (Inci64: unsigned long long)
 
 /*** from MoriCone.c ***/
 void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag,
-                         FILE *out = stdout);
+                         FILE *in = stdin, FILE *out = stdout);
 /*
 Having read the Polytope matrix, asks for the triangulation and computes
 SR-Ideal and Mori cone of the ambient space. The user has to specify the

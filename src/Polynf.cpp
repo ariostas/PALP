@@ -5241,9 +5241,9 @@ using INCIbits = unsigned long long;
 int getNI(int N, INCIbits I) { return (I >> N) % 2; } /* read INCIDENCE */
 
 int Make_Fano5d(PolyPointList *, int *, EqList *, int symDP, int nc,
-                int CC[FPcirNmax][FanoProjNPmax]);
+                int CC[FPcirNmax][FanoProjNPmax], FILE *in);
 
-int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E, FILE *out) {
+int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E, FILE *in, FILE *out) {
   int e, d = P->n, np = P->np - 1, z, n = V->nv, nc = 0, D[VERT_Nmax],
          p[POLY_Dmax], symDP = 1;
   char s[99] = "FanoProjection candidate #nnn";
@@ -5460,8 +5460,8 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E, FILE *out) {
           }
           l++;
         }
-        if (inFILE != stdin)
-          Make_Fano5d(Q, DP, F, symDP, nc, CC);
+        if (in != stdin)
+          Make_Fano5d(Q, DP, F, symDP, nc, CC, in);
       }
     } /* ENDof base change */
     else {
@@ -5531,8 +5531,8 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E, FILE *out) {
                 }
                 l++;
               }
-              if (inFILE != stdin)
-                Make_Fano5d(Q, DP, F, symDP, nc, CC);
+              if (in != stdin)
+                Make_Fano5d(Q, DP, F, symDP, nc, CC, in);
             }
           }
         } /* ENDof base change */
@@ -5861,8 +5861,8 @@ int CalculateFano(PolyPointList *P, EqList *E, int d, int np, int na, int aDP,
    d+2 Ecken (Fanosimplex) und 3*(d+1) Ecken (nur in gerader Dimension d+1) */
 
 int Make_Fano5d(PolyPointList *P, int *Dpt, EqList *E, /* nc=#Circuits */
-                int symDP, int nc,
-                int CC[FPcirNmax][FanoProjNPmax]) { /* CC=CircCoeffs */
+                int symDP, int nc, int CC[FPcirNmax][FanoProjNPmax],
+                FILE *in) { /* CC=CircCoeffs */
   int nf = 0;
   int d = P->n - 1, np = P->np; /*Achtung, anders als oben wirklich ALLE
                                                      Gitterpunkte von P*/

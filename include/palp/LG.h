@@ -56,8 +56,8 @@ typedef struct AmbiLatticeBasis_ {
   int N, n;
 } AmbiLatticeBasis;
 
-int Read_W_PP(Weight *, PolyPointList *, FILE *out = stdout);
-int Read_Weight(Weight *_W);
+int Read_W_PP(Weight *, PolyPointList *, FILE *in = stdin, FILE *out = stdout);
+int Read_Weight(Weight *_W, FILE *in = stdin);
 void WeightLatticeBasis(Weight *_w, AmbiLatticeBasis *_B);
 void WeightMakePoints(Weight *_W, AmbiPointList *_P);
 int ChangeToTrianBasis(AmbiPointList *_AP, AmbiLatticeBasis *_B,
