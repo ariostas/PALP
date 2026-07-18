@@ -138,10 +138,18 @@ cmake --build build/ubsan && ctest --test-dir build/ubsan
   `Min`/`Max`/`Abs` helpers. Replaced with `Rat`/`Rpr` from `Rat.cpp`, standard
   library helpers, and the global `PalpContext`. Added `lgotwist.x` build target.
 
-- [ ] Convert any remaining header-level `#define` constants that are safe to
-  `constexpr`/`using` without breaking `#if` array-size logic. Currently kept as
-  macros: `POLY_Dmax`, `POINT_Nmax`, `VERT_Nmax`, `FACE_Nmax`, `SYM_Nmax`,
-  `EQUA_Nmax`, `AMBI_Dmax`, `FIB_Nmax`, `CD2F_Nmax`, `MULTIPLYING` (`Global.h`);
-  `WZinput`, `W_Nmax` (`LG.h`/`Nef.h`); `USE_TMP_DIR` (`Subpoly.h`); local
-  conditional flags in `Coord.cpp`, `LG.cpp`, `MoriCone.cpp`, `Subadd.cpp`, and
-  `lgotwist.cpp`.
+- [x] Converted safe local `#define` constants to `constexpr` / inline helpers
+  without breaking preprocessor logic:
+  - `Polynf.cpp`: `KP_VALUE` and `KP_EXIT` became `constexpr int` functions;
+    dimension-dependent `NFX_Limit`, `X_Limit`, and `VPM_Limit` became
+    `constexpr int` values (still guarded by `#if (POLY_Dmax < 5)`).
+  - `Subadd.cpp`: `IntSqrt` and `ADD_LIST_LENGTH` became a `constexpr` helper
+    and a `static_assert`-checked `constexpr int`.
+  - `MoriCone.cpp`: local function-like macros `SameRayBZ`, `BZR`, `BZRx`, and
+    `BZRE` were replaced with type-deduced inline helpers/templates.
+
+  Header-level macros that drive `#if` / array-size logic remain macros:
+  `POLY_Dmax`, `POINT_Nmax`, `VERT_Nmax`, `FACE_Nmax`, `SYM_Nmax`, `EQUA_Nmax`,
+  `AMBI_Dmax`, `FIB_Nmax`, `CD2F_Nmax` (`Global.h`); `WZinput`, `W_Nmax`
+  (`LG.h`/`Nef.h`); `USE_TMP_DIR` (`Subpoly.h`); local preprocessor conditional
+  flags in `Coord.cpp`, `LG.cpp`, `Subadd.cpp`, and `lgotwist.cpp`.

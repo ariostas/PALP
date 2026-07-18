@@ -25,36 +25,33 @@
 #error increase SAVE_INC / WATCHREF
 #endif
 
-#ifdef ADD_LIST_LENGTH /*  ... square root of SAVE_INC    */
-#if (2 * ADD_LIST_LENGTH > SAVE_INC)
-#error increase SAVE_INC / ADD_LIST_LENGTH
-#endif
-#else
-int IntSqrt(int q) /* sqrt(q) => r=1; r'=(q+r*r)/(2r); */
+namespace {
+constexpr int IntSqrt(int q) /* sqrt(q) => r=1; r'=(q+r*r)/(2r); */
 {
   if (q <= 0) {
-    fprintf(stderr, "Error: IntSqrt non-positive argument %d\n", q);
-    exit(1);
+    return 1;
   }
   if (q < 4)
     return 1;
-  else { /* troubles: e.g. 9408 */
-    long long r = (q + 1) / 2, n;
-    while (r > (n = (q + r * r) / (2 * r)))
-      r = n;
-    if (q < r * r)
-      r--;
-    if ((r * r <= q) && (q < (r + 1) * (r + 1)))
-      return (int)r;
-    else {
-      printf("Error in sqrt(%d)=%d\n", q, (int)n);
-      exit(1);
-    }
+  long long r = (q + 1) / 2;
+  while (true) {
+    long long n = (q + r * r) / (2 * r);
+    if (r <= n)
+      break;
+    r = n;
   }
+  if (q < r * r)
+    r--;
+  if ((r * r <= q) && (q < (r + 1) * (r + 1)))
+    return (int)r;
   return 0;
 }
-#define ADD_LIST_LENGTH (IntSqrt(SAVE_INC))
-#endif
+
+static_assert(2 * IntSqrt(SAVE_INC) <= SAVE_INC,
+              "increase SAVE_INC / ADD_LIST_LENGTH");
+
+constexpr int ADD_LIST_LENGTH = IntSqrt(SAVE_INC);
+} // namespace
 
 #undef More_File_IO_Data
 

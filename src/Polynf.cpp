@@ -19,8 +19,7 @@ constexpr int FIB_PERM = 27; /* print permutation for p<=# */
 constexpr int SSR_PRINT = 0; /* SemiSimpleRoots, 2: also noFIPs */
 // constexpr bool BARY_PRINT = true;    /* print if BARY_ZERO */
 // constexpr int ZEROSUM_PRINT = 1;     /* 1::Psum  2::kPsum  */
-// KP_VALUE, KP_EXIT depend on P; keep as macros below
-// constexpr int KP_PRINT = 3;
+// KP_VALUE and KP_EXIT are now constexpr functions below
 
 constexpr bool ALL_FANOS_BUT_INEFFICIENT = false;
 
@@ -35,20 +34,23 @@ constexpr int ZEROSUM_PRINT = 1;  /* 1::Psum  2::kPsum  */
 constexpr int KP_PRINT = 3;       /* print if sum kP !=0 at this k */
 } // namespace
 
-#define KP_VALUE ((P->n + 1) / 2) /* (P->n+1)/2 is sufficient */
-#define KP_EXIT ((P->n + 1) / 2)  /* exit if !=0 above this k */
+constexpr int KP_VALUE(const PolyPointList *P) { return (P->n + 1) / 2; }
+constexpr int KP_EXIT(const PolyPointList *P) { return (P->n + 1) / 2; }
 
 #if (POLY_Dmax < 5)
 
-#define NFX_Limit 903 /* 138b->255  153e->279  165c->327 */
-#define X_Limit 9999  /* 178c->375  218->399,462,483 */
-#define VPM_Limit 9999
+constexpr int NFX_Limit = 903; /* 138b->255  153e->279  165c->327 */
+constexpr int X_Limit = 9999;  /* 178c->375  218->399,462,483 */
+constexpr int VPM_Limit = 9999;
 
 #else
 
-#define NFX_Limit 1631721 /* 1631721 1 903 37947 233103 543907 815860    */
-#define X_Limit 3263441   /* 3263442 1 1806 75894 466206 1087814 1631721 */
-#define VPM_Limit 3263442 /* 1631721 1 903 37947 233103 543907 815860    */
+constexpr int NFX_Limit =
+    1631721; /* 1631721 1 903 37947 233103 543907 815860    */
+constexpr int X_Limit =
+    3263441; /* 3263442 1 1806 75894 466206 1087814 1631721 */
+constexpr int VPM_Limit =
+    3263442; /* 1631721 1 903 37947 233103 543907 815860    */
 
 #endif
 
@@ -2508,7 +2510,7 @@ void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E,
   while (Read_CWS_PP(CW, P)) /* nis=noinvss s=sum ks=ksum bcz=bary0 ssr(oot) */
   {
     Long C[POLY_Dmax], N;
-    int nis, r = 0, s, ks, bcz, ssr, R = KP_VALUE;
+    int nis, r = 0, s, ks, bcz, ssr, R = KP_VALUE(P);
     char c[90];
     Long kPM[VERT_Nmax][VERT_Nmax];
     if constexpr (NON_REF) {
@@ -2627,7 +2629,7 @@ void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E,
         fflush(0);
       }
     if (S != 0)
-      if (r > KP_EXIT) {
+      if (r > KP_EXIT(P)) {
         fprintf(stderr, "%d %d  Counterexample at r=%d P\n", P->n, V->nv, r);
         for (i = 0; i < P->n; i++) {
           for (j = 0; j < V->nv; j++)

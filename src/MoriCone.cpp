@@ -1007,7 +1007,6 @@ Inci64 FindPolyCircuits(PolyPointList *P, int p, Inci64 F, int f) {
 
 /*	aux functions for TRI-CIRCUIT 3d-GKZ:	Triang3dSFan()
  */
-#define SameRayBZ(a, b) (SameRay(B.x[Z[a]], B.x[Z[b]], B.d))
 
 int SameRay(Long *X, Long *Y, int d) {
   int x = 0, y = 000;
@@ -1051,9 +1050,22 @@ Long SCALproduct(Long *X, Long *Y) {
 // #define BZRx(a,b,c)
 // (XYZproduct(B.x[Z[*R[a]]],B.x[Z[*R[b]]],B.x[Z[*R[c]]]))
 
-#define BZR(eqr) (B.x[Z[*R[eqr]]])
-#define BZRx(a, b, c) (XYZproduct(BZR(a), BZR(b), BZR(c)))
-#define BZRE(i, j) (BZR(Eli[i][j]))
+auto SameRayBZ(Matrix &B, const int *Z, int a, int b) {
+  return SameRay(B.x[Z[a]], B.x[Z[b]], B.d);
+}
+template <typename RArr>
+auto BZR(Matrix &B, const int *Z, const RArr &R, int eqr) {
+  return B.x[Z[R[eqr][0]]];
+}
+template <typename RArr>
+auto BZRx(Matrix &B, const int *Z, const RArr &R, int a, int b, int c) {
+  return XYZproduct(BZR(B, Z, R, a), BZR(B, Z, R, b), BZR(B, Z, R, c));
+}
+template <typename RArr, typename EArr>
+auto BZRE(Matrix &B, const int *Z, const RArr &R, const EArr &Eli, int i,
+          int j) {
+  return BZR(B, Z, R, Eli[i][j]);
+}
 
 void AuxPrintRays(int R[VERT_Nmax][POLY_Dmax], int nrp[VERT_Nmax], int nr,
                   FILE *out) {
@@ -1453,7 +1465,7 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
 
   for (i = 0; i < z; i++) {
     for (j = 0; j < r; j++)
-      if (SameRayBZ(i, R[j][0])) // Make RAYS
+      if (SameRayBZ(B, Z, i, R[j][0])) // Make RAYS
       {
         R[j][(nrp[j])++] = i;
         break;
@@ -1491,7 +1503,7 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
   for (c = 2; c < r; c++)
     for (b = 1; b < c; b++)
       for (a = 0; a < b; a++)
-        if ((k = BZRx(a, b, c))) { // tn TRI
+        if ((k = BZRx(B, Z, R, a, b, c))) { // tn TRI
           int ea = 1, eb = 1, ec = 1;
           Tli[tn][2] = c;
           if (k > 0) {
@@ -1530,7 +1542,8 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
   for (a = 0; a < en; a++) {
     for (b = 0; b < r; b++)
       if (!Inci64_LE(makeN(b), Einc[a])) // remove
-        if (XYZcone(BZR(Eli[a][0]), BZR(b), BZR(Eli[a][1])) > 0)
+        if (XYZcone(BZR(B, Z, R, Eli[a][0]), BZR(B, Z, R, b),
+                    BZR(B, Z, R, Eli[a][1])) > 0)
           break;
     if (b < r) {          // SPLIT
 #if (TRACE_TRIANGULATION) // EDGES
@@ -1546,7 +1559,8 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
     ien[l] = 0;
   for (l = 1; l < en; l++) // INTERSECTing EDGES
     for (k = 0; k < l; k++)
-      if (0 < InterSectE(BZRE(k, 0), BZRE(k, 1), BZRE(l, 0), BZRE(l, 1))) {
+      if (0 < InterSectE(BZRE(B, Z, R, Eli, k, 0), BZRE(B, Z, R, Eli, k, 1),
+                         BZRE(B, Z, R, Eli, l, 0), BZRE(B, Z, R, Eli, l, 1))) {
         IEli[k][ien[k]++] = l;
         IEli[l][ien[l]++] = k;
       }
@@ -1607,7 +1621,7 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
     for (i = 0; i < en; i++)
       nse += 1 + ien[i]; // printf("SubdivEdge=%d\n",nse);
     for (y = 0; y < r; y++)
-      Y[y] = BZR(y);
+      Y[y] = BZR(B, Z, R, y);
     Y[y] = YY[0];
     if (nse > VERT_Nmax) {
       fputs("Error: Triang3dSFan too many subdivided edges\n", stderr);
@@ -1620,7 +1634,8 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
         OE[noe++][1] = Eli[i][1]; // intersecting edges
         for (f = 0; f < ien[i]; f++)
           if ((j = IEli[i][f]) > i) { // intersection points
-            IntersectEdges(BZRE(i, 0), BZRE(i, 1), BZRE(j, 0), BZRE(j, 1),
+            IntersectEdges(BZRE(B, Z, R, Eli, i, 0), BZRE(B, Z, R, Eli, i, 1),
+                           BZRE(B, Z, R, Eli, j, 0), BZRE(B, Z, R, Eli, j, 1),
                            Y[y]);
             for (k = r; k < y; k++)
               if (SameRay(Y[k], Y[y], 3) > 0)
@@ -1744,10 +1759,12 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
             fputs("Error: Triang3dSFan edge incidence mismatch\n", stderr);
             exit(1);
           }
-          IntersectEdges(BZRE(i, 0), BZRE(i, 1), BZRE(j, 0), BZRE(j, 1), Q);
+          IntersectEdges(BZRE(B, Z, R, Eli, i, 0), BZRE(B, Z, R, Eli, i, 1),
+                         BZRE(B, Z, R, Eli, j, 0), BZRE(B, Z, R, Eli, j, 1), Q);
           for (a = 0; a < 2; a++)
             for (b = 0; b < 2; b++) {
-              Long *rA = BZRE(i, a), *rB = BZRE(j, b);
+              Long *rA = BZRE(B, Z, R, Eli, i, a),
+                   *rB = BZRE(B, Z, R, Eli, j, b);
               for (c = 0; c < 3; c++)
                 CR[ncr][c] = Q[c] + rA[c] + rB[c];
               ncr++;
@@ -1766,8 +1783,9 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
         if (k != a)
           if (k != b)
             if (k != c) // if (k not in (abc))
-              if ((0 <= BZRx(a, b, k)) && (0 <= BZRx(b, c, k)) &&
-                  (0 <= BZRx(c, a, k)))
+              if ((0 <= BZRx(B, Z, R, a, b, k)) &&
+                  (0 <= BZRx(B, Z, R, b, c, k)) &&
+                  (0 <= BZRx(B, Z, R, c, a, k)))
                 break;
       if (k == r) {
         Inci64 Iabc = makeN(a) + makeN(b) + makeN(c); // & (diag not in (abc))
@@ -1776,7 +1794,8 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
             break; // then add CR
         if (j == nie) {
           for (k = 0; k < 3; k++)
-            CR[ncr][k] = BZR(a)[k] + BZR(b)[k] + BZR(c)[k];
+            CR[ncr][k] =
+                BZR(B, Z, R, a)[k] + BZR(B, Z, R, b)[k] + BZR(B, Z, R, c)[k];
           ncr++;
           chi++;
 #if (TRACE_TRIANGULATION)
@@ -1806,9 +1825,12 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
     for (j = 0; j < tn; j++) {
       Long a, b, c;
       int ChamberTriangle = 0;
-      if (0 <= (a = XYZproduct(BZR(Tli[j][0]), BZR(Tli[j][1]), Q)))
-        if (0 <= (b = XYZproduct(BZR(Tli[j][1]), BZR(Tli[j][2]), Q)))
-          if (0 <= (c = XYZproduct(BZR(Tli[j][2]), BZR(Tli[j][0]), Q))) {
+      if (0 <=
+          (a = XYZproduct(BZR(B, Z, R, Tli[j][0]), BZR(B, Z, R, Tli[j][1]), Q)))
+        if (0 <= (b = XYZproduct(BZR(B, Z, R, Tli[j][1]),
+                                 BZR(B, Z, R, Tli[j][2]), Q)))
+          if (0 <= (c = XYZproduct(BZR(B, Z, R, Tli[j][2]),
+                                   BZR(B, Z, R, Tli[j][0]), Q))) {
             if (a * b * c <= 0) {
               fputs("Error: Triang3dSFan chamber triangle has non-positive "
                     "orientation\n",
