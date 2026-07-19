@@ -983,7 +983,10 @@ void PrintPoCoLi(PoCoLi *P, FILE *out) {
       printf("x^%d ", (int)P->e[i]);
     }
   }
-  puts(i ? "" : " 0");
+  if (P->n)
+    puts("");
+  else
+    puts(" 0");
 }
 void UnitPoly(PoCoLi *P) {
   P->n = 1;
