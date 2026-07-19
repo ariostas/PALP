@@ -974,13 +974,13 @@ int Compute_X0(int N, CWS *_C, Long *X0) {
   if (!N) {
     for (j = 0; j < _C->nw; j++)
       if (_C->W[j][0]) {
-        if (_C->d[j] % _C->W[j][N])
+        if (_C->d[j] % _C->W[j][0])
           return 0;
         if (Xmax) {
-          if (Xmax != _C->d[j] / _C->W[j][N])
+          if (Xmax != _C->d[j] / _C->W[j][0])
             return 0;
         } else
-          Xmax = _C->d[j] / _C->W[j][N];
+          Xmax = _C->d[j] / _C->W[j][0];
       } else if (_C->d[j])
         return 0;
     X0[0] = Xmax;
