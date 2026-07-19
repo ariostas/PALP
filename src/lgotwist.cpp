@@ -209,7 +209,7 @@ prili prideco(long x) {
   prili l;
   *l.p = *l.m = 1;
   l.m[1] = 0;
-  while (x >= ((p = prime[n++]) ^ 2)) {
+  while (x >= ((p = prime[n++]) * p)) {
     while (!(x - p * (q = x / p))) {
       x = q;
       l.m[*l.p]++;
