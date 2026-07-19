@@ -292,7 +292,7 @@ int main(int narg, char *fn[]) {
   char *dbin = empty, *dbsub = empty, *dbout = dbin, *x_string = empty,
        *polyi = dbin, *polya = dbin, *polys = dbin, *polyo = dbin, mFlag = 0,
        HFlag = 0, sFlag = 0;
-  static CWS W;
+  CWS W;
   std::unique_ptr<PolyPointList> _P_up;
   PolyPointList *_P;
   if (narg == 1) {
