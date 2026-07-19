@@ -1,6 +1,6 @@
 #pragma once
 
-#include <limits.h>
+#include <climits>
 #include <memory>
 
 #ifdef __DECC           /* use local "/tmp" on clusters: */

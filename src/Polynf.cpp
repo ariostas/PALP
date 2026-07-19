@@ -1710,7 +1710,7 @@ typedef struct {
 void Init_Matrix(Matrix *M, int v, int d) { /* v=#vec, d=dim */
   int i;
   M->x = (Long **)malloc(v * (sizeof(Long *) + d * sizeof(Long)));
-  if (M->x == NULL) {
+  if (M->x == nullptr) {
     fputs("Error: failed to allocate Matrix in Init_Matrix\n", stderr);
     exit(1);
   }
@@ -2277,7 +2277,7 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
    * 	Fano(trian+coni::N & M::\D=2\D'): need	Vol(\D')=2#(\D')-8 <=64
    *						doublepoints = l/2(edges(\D))
    */
-  if (_FI == NULL) {
+  if (_FI == nullptr) {
     printf("ConifoldSing: Unable to allocate _FI\n");
     exit(1);
   }
@@ -2450,7 +2450,7 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
                             c2h = 12 * (P->np - 1) - 2 * vol;
     /*  VertexNumList dV; EqList *auxE=(EqList *) malloc(sizeof(EqList));
         int volN;
-        if (auxE == NULL) { ... } Find_Equations(dP,&dV,auxE);free(auxE);
+        if (auxE == nullptr) { ... } Find_Equations(dP,&dV,auxE);free(auxE);
         if (dV.nv != E->ne) { ... } volN=LatVol_Barycent(dP,&dV,xB,&xN);
      */
     BH.mp = P->np;
@@ -2497,13 +2497,13 @@ void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E,
   int i, j, tot = 0, reg = 0, sym = 0, ksum = 0, sum = 0, bary = 0, ssroot = 0,
             nofip = 0, NR = NON_REF;
   PolyPointList *A = (PolyPointList *)malloc(sizeof(PolyPointList));
-  Long S, **root = (Long **)malloc(POINT_Nmax * sizeof(Long **)), *d = NULL,
+  Long S, **root = (Long **)malloc(POINT_Nmax * sizeof(Long **)), *d = nullptr,
           PM[VERT_Nmax][VERT_Nmax];
-  if (A == NULL) {
+  if (A == nullptr) {
     fputs("Error: Einstein_Metric failed to allocate PolyPointList\n", stderr);
     exit(1);
   }
-  if (root == NULL) {
+  if (root == nullptr) {
     fputs("Error: Einstein_Metric failed to allocate root array\n", stderr);
     exit(1);
   }
@@ -2899,7 +2899,7 @@ void Test_EK3_Fibration(PolyPointList *P, int edim,
   int s[VERT_Nmax], t[VERT_Nmax], d = P->n, p = P->np - 1;
   PolyPointList *A;
   A = (PolyPointList *)malloc(sizeof(PolyPointList));
-  if (A == NULL) {
+  if (A == nullptr) {
     fputs("Error: Test_EK3_Fibration failed to allocate PolyPointList\n",
           stderr);
     exit(1);
@@ -2970,10 +2970,10 @@ void Print_Elliptic_K3_Fibrations(PolyPointList *P, int edim,
                                   GL_Long G[VERT_Nmax][POLY_Dmax][POLY_Dmax],
                                   int nk, FILE *out) {
   int x, s[VERT_Nmax], t[VERT_Nmax], d = P->n, p = P->np - 1;
-  PolyPointList *A = NULL;
+  PolyPointList *A = nullptr;
   if (nk) {
     A = (PolyPointList *)malloc(sizeof(PolyPointList));
-    if (A == NULL) {
+    if (A == nullptr) {
       fputs("Error: Print_Elliptic_K3_Fibrations failed to allocate "
             "PolyPointList\n",
             stderr);
@@ -3049,7 +3049,7 @@ void All_CDn_Fibrations(PolyPointList *P, int nv, int cd, FILE *out) {
   int x, fdim = P->n - cd;
   ek3fli *F = (ek3fli *)malloc(sizeof(ek3fli));
   PolyPointList *A = &F->F;
-  if (F == NULL) {
+  if (F == nullptr) {
     fputs("Error: All_CDn_Fibrations failed to allocate ek3fli\n", stderr);
     exit(1);
   }
@@ -3116,7 +3116,7 @@ void Elliptic_K3_Fibration(PolyPointList *P, int nv, int edim, FILE *out) {
   int c, e, *d = &P->n, /*p=P->np-1,*/ cd = P->n - edim, nb = 0, nk = 0;
   GL_Long GE[POLY_Dmax][POLY_Dmax], *ge[POLY_Dmax];
   ek3fli *F = (ek3fli *)malloc(sizeof(ek3fli));
-  if (F == NULL) {
+  if (F == nullptr) {
     fputs("Error: Elliptic_K3_Fibration failed to allocate ek3fli\n", stderr);
     exit(1);
   }
@@ -3262,7 +3262,7 @@ void IP_Simplex_Decomp(Long PM[][POLY_Dmax], int p, int d, /* need PM[i]!=0 */
                        int CD) /* nw=#IP_Simp <= Wmax */
 {
   int n, i, j, s[POLY_Dmax + 1];
-  FibW *FW = NULL;
+  FibW *FW = nullptr;
   GL_Long T[POLY_Dmax + 1][POLY_Dmax],
       *X = T[0], **G[POLY_Dmax], *GN[POLY_Dmax], *GI[POLY_Dmax][POLY_Dmax],
       GX[(POLY_Dmax * (POLY_Dmax + 3)) / 2][POLY_Dmax];
@@ -3394,7 +3394,7 @@ void Print_Fiber_PolyData(PolyPointList *P, VertexNumList *V, Long *W, int w,
     EqList e;
     VertexNumList v;
     PolyPointList *F = (PolyPointList *)malloc(sizeof(PolyPointList));
-    if (F == NULL) {
+    if (F == nullptr) {
       fputs("Error: Print_Fiber_PolyData failed to allocate PolyPointList\n",
             stderr);
       exit(1);
@@ -3638,7 +3638,7 @@ void IP_Simplices(PolyPointList *_P, int nv, int PS, int VS, int CDin,
   int i, j, CD = 0, np = _P->np - 1;
   FibW *F = (FibW *)malloc(sizeof(FibW));
   VertexNumList V;
-  if (F == NULL) {
+  if (F == nullptr) {
     fputs("Error: IP_Simplices failed to allocate FibW\n", stderr);
     exit(1);
   }
@@ -3726,7 +3726,7 @@ void IP_Simplices(PolyPointList *_P, int nv, int PS, int VS, int CDin,
   }
   if (CD) {
     F->P = (PolyPointList *)malloc(sizeof(PolyPointList));
-    if (F->P == NULL) {
+    if (F->P == nullptr) {
       fputs("Error: IP_Simplices failed to allocate fiber PolyPointList\n",
             stderr);
       exit(1);
@@ -3802,7 +3802,7 @@ void IP_Fiber_Data(PolyPointList *PD, PolyPointList *AuxP,
                    int *nf, int CD, FILE *out) {
   int i, j, k;
   FibW *F = (FibW *)malloc(sizeof(FibW));
-  if (F == NULL) {
+  if (F == nullptr) {
     fputs("Error: IP_Fiber_Data failed to allocate FibW\n", stderr);
     exit(1);
   }
@@ -4202,7 +4202,7 @@ int PM_2_QuotientZ(Long PM[VERT_Nmax][POLY_Dmax], int *d, int *p,
 }
 void Aux_Mat_2_QuotientZ(GL_Long T[][POLY_Dmax], int *D, int *np, int *d,
                          int *s, FibW *F) {
-  int i, j, rk, p = *d + 1, *z[POLY_Dmax], *m = NULL;
+  int i, j, rk, p = *d + 1, *z[POLY_Dmax], *m = nullptr;
   Long PM[VERT_Nmax][POLY_Dmax], M[POLY_Dmax], Z[POLY_Dmax][VERT_Nmax];
   for (i = 0; i < *D; i++)
     for (j = 0; j < p; j++)
@@ -4237,7 +4237,7 @@ void Aux_Mat_2_QuotientZ(GL_Long T[][POLY_Dmax], int *D, int *np, int *d,
 int TriMat_to_WeightZ(GL_Long T[][POLY_Dmax], int *d, int *p, int r, int *s,
                       int *nw, Long W[][VERT_Nmax], int *Wmax, FibW *F) {
   if (TriMat_to_Weight(T, p, r, s, nw, W, Wmax)) {
-    if (F != NULL)
+    if (F != nullptr)
       if (F->ZS)
         Aux_Mat_2_QuotientZ(T, d, p, &r, s, F);
     return 1;
@@ -4860,7 +4860,7 @@ void LatVol_IPs_degD(PolyPointList *P, VertexNumList *V, EqList *E, int g) {
       puts("-B#: IPs at degree D is only implemented for Gorenstein cones!");
       exit(1);
     } /* parallel-epiped ... to be done */
-    if (gP == NULL) {
+    if (gP == nullptr) {
       fputs("Error: LatVol_IPs_degD failed to allocate gP\n", stderr);
       exit(1);
     }
@@ -4905,7 +4905,7 @@ void IPs_degD(PolyPointList *P, VertexNumList *V, EqList *E, int g) {
     puts("-B#: IPs at degree D is only implemented for Gorenstein cones!");
     exit(1);
   } /* parallel-epiped ... to be done */
-  if (gP == NULL) {
+  if (gP == nullptr) {
     fputs("Error: IPs_degD failed to allocate gP\n", stderr);
     exit(1);
   }

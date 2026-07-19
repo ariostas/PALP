@@ -62,7 +62,7 @@ int Read_WZ_PP(Weight *WZ, FILE *in,
                FILE *out) /* read "d w_i" [ or "w_i d" if last=max ] */
 {
   int i, j, k, a, n, d, shift = 1, I[W_Nmax + 2], *nz = &WZ->M;
-  int FilterFlag = (in == NULL);
+  int FilterFlag = (in == nullptr);
   char C, b = ' ';
   std::array<char, 1000> c;
   Long BM[W_Nmax][W_Nmax], *B[W_Nmax], Wa[POLY_Dmax], Za[POLY_Dmax], F[W_Nmax],
@@ -477,7 +477,7 @@ int Read_Weight(Weight *_W,
                 FILE *in) /* read "d w_i" [ or "w_i d" if last=max ] */
 {
   char c;
-  int i, shift = 1, I[W_Nmax + 2], FilterFlag = (in == NULL);
+  int i, shift = 1, I[W_Nmax + 2], FilterFlag = (in == nullptr);
   if (FilterFlag)
     in = stdin;
   else if (in == stdin)

@@ -1,11 +1,11 @@
 #pragma once
 
 #include <algorithm>
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 
 namespace palp {
 template <typename T, typename U>
@@ -26,12 +26,7 @@ These are include files that should exist in your C library.
 
 /*  ============	basic choice of PARAMETERS	      ============  */
 
-#ifdef __cplusplus
 #include "palp/palp_types.h"
-#else
-#define Long long
-#define LLong long long
-#endif
 /*
 For reflexive polytopes in 4 or less dimensions, everything should work with
 Long set to 32-bit-integer and LLong set to 64 bits.

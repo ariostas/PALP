@@ -102,7 +102,7 @@ void Init_FInfoList(FInfoList *FI) {
   FI->nVmax = FI->NUCmax = FI->nV = 0;
   for (i = 0; i <= VERT_Nmax; i++)
     FI->nNUC[i] = 0;
-  FI->NFli = NULL;
+  FI->NFli = nullptr;
   for (i = 0; i <= VERT_Nmax; i++)
     for (j = 0; j < NUC_Nmax; j++)
       FI->NFnum[i][j] = 0;
@@ -118,18 +118,18 @@ void Init_New_List(NF_List *S) {
   S->SLp = (int *)malloc(SL_Nmax * sizeof(int));
   S->NewNF = (unsigned char *)malloc(S->ANB * sizeof(char));
   S->NC = 0;
-  if ((S->PE == NULL) || (S->PPE == NULL) || (S->SLp == NULL) ||
-      (S->NewNF == NULL)) {
+  if ((S->PE == nullptr) || (S->PPE == nullptr) || (S->SLp == nullptr) ||
+      (S->NewNF == nullptr)) {
     fputs("Error: Init_New_List allocation failed\n", stderr);
     exit(1);
   }
 #ifdef __DECC
-  /* printf("NULL=%p S->PE=%p S->NewNF=%p\n",NULL,S->PE,S->NewNF); */
+  /* printf("nullptr=%p S->PE=%p S->NewNF=%p\n",nullptr,S->PE,S->NewNF); */
 #endif
 }
 
 void Init_NF_List(NF_List *L) {
-  L->TIME = L->SAVE = time(NULL);
+  L->TIME = L->SAVE = time(nullptr);
   fputs(ctime(&L->TIME), stdout);
   L->CLOCK = clock();
   L->IP_Time = L->NF_Time = 0;
@@ -345,11 +345,11 @@ void Read_Honest_Poly(FILE *F, FInfoList *FI, NF_List *L) {
          FI->nNF - FI->nSM - FI->nNM, FI->nSM, FI->NB + L->NewNB);
   if (L->rd)
     printf(" rd=%d", L->rd);
-  if (FI->NFli != NULL)
-    printf("WARNing: NFli != NULL");
+  if (FI->NFli != nullptr)
+    printf("WARNing: NFli != nullptr");
   fflush(stdout);
   FI->NFli = (unsigned char *)malloc(FI->NB * sizeof(char));
-  if (FI->NFli == NULL) {
+  if (FI->NFli == nullptr) {
     puts("Aux.NFli allocation failed");
     exit(1);
   }
@@ -395,11 +395,11 @@ void Read_SubLat_Poly(FILE *F, NF_List *L) {
   }
 }
 void Read_In_File(NF_List *S) {
-  time_t Tstart = time(NULL);
+  time_t Tstart = time(nullptr);
   FILE *F = fopen(S->iname, "rb"); /* F=fopen */
   printf("Reading In-File %s: ", S->iname);
   fflush(stdout);
-  if (F == NULL) {
+  if (F == nullptr) {
     puts("Cannot open (read)!");
     exit(1);
   }
@@ -411,26 +411,26 @@ void Read_In_File(NF_List *S) {
     exit(1);
   }
   fclose(F);
-  printf("  done (%ds)\n", (int)difftime(time(NULL), Tstart));
+  printf("  done (%ds)\n", (int)difftime(time(nullptr), Tstart));
   fflush(stdout);
 }
 void Read_File_2_List(char *fn, NF_List *L) /* ... like Read_Aux_File */
 {
-  time_t Tstart = time(NULL);
+  time_t Tstart = time(nullptr);
   FILE *F = fopen(fn, "rb");
   printf("Reading %s: ", fn);
-  if (F == NULL) {
+  if (F == nullptr) {
     puts("Cannot open (read)!");
     exit(1);
   }
   Read_Honest_Poly(F, &L->Aux, L);
   Read_SubLat_Poly(F, L);
-  printf("  done (%ds)\n", (int)difftime(time(NULL), Tstart));
+  printf("  done (%ds)\n", (int)difftime(time(nullptr), Tstart));
   fclose(F);
   fflush(stdout);
 }
 void Read_Aux_File(NF_List *L) {
-  time_t Tstart = time(NULL);
+  time_t Tstart = time(nullptr);
   FILE *F; /* F=fopen */
   int NCalloc =
       strlen(L->oname) + strlen(SAVE_FILE_EXT) + (USE_TMP_DIR ? 6 : 1);
@@ -444,12 +444,12 @@ void Read_Aux_File(NF_List *L) {
   F = fopen(auxfn, "rb");
   printf("Reading %s: ", auxfn);
   fflush(stdout);
-  if (F == NULL)
+  if (F == nullptr)
     puts("No aux-file found!");
   else {
     Read_Honest_Poly(F, &L->Aux, L);
     Read_SubLat_Poly(F, L);
-    printf("  done (%ds)\n", (int)difftime(time(NULL), Tstart));
+    printf("  done (%ds)\n", (int)difftime(time(nullptr), Tstart));
     fclose(F);
     fflush(stdout);
 #ifdef MOVE_SAVE_FILE /* inconsistent with USE_TMP_DIR !! */
@@ -742,14 +742,14 @@ void Write_Bin_File(FILE *F, NF_List *L, FILE *out) {
   printf("\n    nv<=%d  nuc<=%d  files=%d  lists=%d  nNF=%d  NB=%lld ..", nVmax,
          NUCmax, fi, li, AI.nNF, AI.NB);
 #endif
-  if (NULL != L->Aux.NFli) {
+  if (nullptr != L->Aux.NFli) {
     free(L->Aux.NFli);
-    L->Aux.NFli = NULL;
+    L->Aux.NFli = nullptr;
   }
 }
 
 void Write_Aux_File(NF_List *S, FILE *out) {
-  time_t Tstart = time(NULL);
+  time_t Tstart = time(nullptr);
   FILE *F;
   int NCalloc =
       strlen(S->oname) + strlen(SAVE_FILE_EXT) + (USE_TMP_DIR ? 6 : 1);
@@ -770,7 +770,7 @@ void Write_Aux_File(NF_List *S, FILE *out) {
   F = fopen(tmpfn, "wb");
   printf("Writing %s: ", auxfn);
   fflush(stdout);
-  if (F == NULL) {
+  if (F == nullptr) {
     puts("Cannot open!");
     exit(1);
   }
@@ -780,7 +780,7 @@ void Write_Aux_File(NF_List *S, FILE *out) {
     exit(1);
   }
   fclose(F);
-  printf(" done: %ds\n", (int)difftime(time(NULL), Tstart));
+  printf(" done: %ds\n", (int)difftime(time(nullptr), Tstart));
   fflush(stdout);
   free(auxfn);
 #ifdef TEMP_FILE_EXT
@@ -790,11 +790,11 @@ void Write_Aux_File(NF_List *S, FILE *out) {
 }
 
 void Write_List_2_File(char *fn, NF_List *S, FILE *out) {
-  time_t Tstart = time(NULL);
+  time_t Tstart = time(nullptr);
   FILE *F = fopen(fn, "wb");
   printf("Writing %s: ", fn);
   fflush(stdout);
-  if (F == NULL) {
+  if (F == nullptr) {
     puts("Cannot open!");
     exit(1);
   }
@@ -804,17 +804,17 @@ void Write_List_2_File(char *fn, NF_List *S, FILE *out) {
     exit(1);
   }
   fclose(F);
-  printf(" done: %ds\n", (int)difftime(time(NULL), Tstart));
-  S->SAVE = time(NULL);
+  printf(" done: %ds\n", (int)difftime(time(nullptr), Tstart));
+  S->SAVE = time(nullptr);
   fflush(stdout);
 }
 void ReAlloc_SortList(NF_List *L, FILE *out) {
   Write_Aux_File(L, out);
   Read_Aux_File(L); /* Test_SLnbMS(L); TestMSbits(L); */
-  L->SAVE = time(NULL);
+  L->SAVE = time(nullptr);
 }
 void CheckLastSaveTime(NF_List *L, int maxsec, FILE *out) {
-  if ((int)difftime(time(NULL), L->SAVE) > maxsec) {
+  if ((int)difftime(time(nullptr), L->SAVE) > maxsec) {
     Print_Statistics(L, out);
     ReAlloc_SortList(L, out);
   }
@@ -1247,7 +1247,7 @@ Ret0:
 /*      ==============================================================      */
 void Print_Statistics(NF_List *_L, FILE *out) {
   clock_t CLOCK = clock();
-  time_t DATE = time(NULL);
+  time_t DATE = time(nullptr);
   int CPUsec = (CLOCK - _L->CLOCK) / CLOCKS_PER_SEC;  /* CLOCKS_PER_SEC::10^6 */
   int REALsec = (int)difftime(DATE, _L->TIME), NFsec; /* int IPperNF; */
   char bni[2];
@@ -1561,14 +1561,14 @@ void AuxNextGoodBase(int *v, int *nx, Base_List *BL) /* nx= v*d -d*(d-1)/2 */
 }
 void Init_BaseList(Base_List **bl, int *d) /* once: alloc and init BaseList */
 {
-  static Base_List *BL = NULL;
+  static Base_List *BL = nullptr;
   int i; /* always: set *bl=BL=&BaseList */
-  if (BL != NULL) {
+  if (BL != nullptr) {
     *bl = BL;
     return;
   }
   *bl = BL = (Base_List *)malloc(sizeof(Base_List));
-  if (BL == NULL) {
+  if (BL == nullptr) {
     fputs("Error: Init_BaseList allocation failed\n", stderr);
     exit(1);
   }
@@ -1626,14 +1626,14 @@ void NUCtoBase(int *d, int *v, int *nuc, int *Base) {
 #ifdef USE_UNIT_ENCODE
 void UNIT_Init_BaseList(Base_List **bl, int *d) /* once: ainit BaseList */
 {
-  static Base_List *BL = NULL;
+  static Base_List *BL = nullptr;
   int i; /* always: set *bl=BL=&BaseList */
-  if (BL != NULL) {
+  if (BL != nullptr) {
     *bl = BL;
     return;
   }
   *bl = BL = (Base_List *)malloc(sizeof(Base_List));
-  if (BL == NULL) {
+  if (BL == nullptr) {
     fputs("Error: UNIT_Init_BaseList allocation failed\n", stderr);
     exit(1);
   }
@@ -1858,9 +1858,9 @@ void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
   *NV = (MS == 2) ? E->ne : V->nv;
   MSone = MS;
 
-  if (StatsL != NULL) /* base:byte statistics */
-  {                   /* if(StatsL->Xmin>-vo) StatsL->Xmin=-vo;
-                          if(StatsL->Xmax<vbmin-vo-1) StatsL->Xmax=vbmin-vo-1; */
+  if (StatsL != nullptr) /* base:byte statistics */
+  {                      /* if(StatsL->Xmin>-vo) StatsL->Xmin=-vo;
+                             if(StatsL->Xmax<vbmin-vo-1) StatsL->Xmax=vbmin-vo-1; */
     if (MS == 2) {
       if (StatsL->Xdif < fbmin)
         StatsL->Xdif = fbmin;
@@ -2014,7 +2014,7 @@ void AuxPut_hNF(FILE *F, int *v, int *nu, unsigned char *Huc, FInfoList *Io,
                 int *slNF, int *slSM, int *slNM, int *slNB, unsigned char *ucSL,
                 int *SLp) {
   int i, Hms = (*Huc % 4);
-  unsigned char *Suc = NULL;
+  unsigned char *Suc = nullptr;
   for (i = 0; i < *nu; i++)
     fputc(Huc[i], F);
   if (Hms) {
@@ -2108,20 +2108,20 @@ void Add_Polya_2_Polyi(char *polyi, char *polya, char *polyo, FILE *out) {
     puts("With -pa you require -pi and -po or -di and -do");
     exit(1);
   }
-  if (NULL == FI) {
+  if (nullptr == FI) {
     printf("Cannot open %s\n", polyi);
     exit(1);
   }
-  if (NULL == FA) {
+  if (nullptr == FA) {
     printf("Cannot open %s\n", polya);
     exit(1);
   }
-  if (NULL == (FO = fopen(polyo, "wb"))) {
+  if (nullptr == (FO = fopen(polyo, "wb"))) {
     printf("Cannot open %s", polyo);
     exit(1);
   }
   ucSL = (unsigned char *)malloc(SL_Nmax * CperR_MAX * sizeof(char));
-  if (ucSL == NULL) {
+  if (ucSL == nullptr) {
     fputs("Error: Add_Polya_2_Polyi sublattice buffer allocation failed\n",
           stderr);
     exit(1);
@@ -2542,7 +2542,7 @@ void ANF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
   *NV = V->nv;
   MSone = 1;
 
-  if (StatsL != NULL) /* base:byte statistics */
+  if (StatsL != nullptr) /* base:byte statistics */
   {
     if (StatsL->Xdif < vbmin)
       StatsL->Xdif = vbmin;
@@ -2643,7 +2643,7 @@ void Gen_Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
   NF_List *_NFL = (NF_List *)malloc(sizeof(NF_List));
   VertexNumList V;
   EqList F;
-  if (_NFL == NULL) {
+  if (_NFL == nullptr) {
     fputs("Error: Gen_Ascii_to_Binary NF_List allocation failed\n", stderr);
     exit(1);
   }

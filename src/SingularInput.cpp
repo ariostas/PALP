@@ -11,16 +11,13 @@
 /* ======================================================== */
 /* =========            H E A D E R s             ========= */
 
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h> /* close, dup2, fork, execvp */
-
 #include <palp/Global.h>
 #include <palp/Mori.h>
+#include <palp/PosixProcess.h>
 
 #include <array>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <string>
 #include <vector>
@@ -46,10 +43,10 @@ int Read_HyperSurf(int *he, int divclassnr, int maxline,
   int i;
   std::vector<char> string(maxline);
   const char delims[] = " ";
-  char *result = NULL;
+  char *result = nullptr;
 
   if (_Flag->Read_HyperSurfCounter == 0) {
-    if ((stream = fopen(filename.c_str(), "w")) == NULL) {
+    if ((stream = fopen(filename.c_str(), "w")) == nullptr) {
       printf("Error: cannot open file!\n");
       exit(1);
     }
@@ -59,7 +56,7 @@ int Read_HyperSurf(int *he, int divclassnr, int maxline,
   }
 
   if (_Flag->Read_HyperSurfCounter != 0) {
-    if ((stream = fopen(filename.c_str(), "r")) == NULL) {
+    if ((stream = fopen(filename.c_str(), "r")) == nullptr) {
       printf("Error: cannot read file!\n");
       exit(1);
     }
@@ -68,12 +65,12 @@ int Read_HyperSurf(int *he, int divclassnr, int maxline,
 
   i = 0;
   result = strtok(string.data(), delims);
-  while (result != NULL) {
-    he[i] = atoi(result);
+  while (result != nullptr) {
+    he[i] = std::atoi(result);
     i++;
     if (i == divclassnr)
       break;
-    result = strtok(NULL, delims);
+    result = strtok(nullptr, delims);
   }
   fclose(stream);
 
@@ -90,19 +87,21 @@ void HyperSurfSingular(PolyPointList *P, triang *T, triang *SR,
   const char *D = T_DIV, *B = DIVclassBase;
 
   /* Put temporary files in $TMPDIR if it is set */
-  const char *tmpdir = getenv("TMPDIR");
-  if (tmpdir == NULL) {
+  const char *tmpdir = std::getenv("TMPDIR");
+  if (tmpdir == nullptr) {
     tmpdir = "/tmp";
   }
 
   /* Add one to ensure room for the null byte at the end */
   std::string SFname = std::string(tmpdir) + "/SFnameXXXXXX";
 
-  int SF = mkstemp(SFname.data());
-  if (SF == -1) {
+  int sfFd = mkstemp(SFname.data());
+  if (sfFd == -1) {
     fprintf(stderr, "Failed to create temporary file in %s\n", tmpdir);
     exit(1);
   }
+  palp::PosixFd sf(sfFd);
+#define SF sf.get()
 
   /* Construct the singular command using argv (avoids shell injection). */
   std::vector<const char *> singularArgv;
@@ -610,35 +609,12 @@ void HyperSurfSingular(PolyPointList *P, triang *T, triang *SR,
   }
 
   dprintf(SF, "quit;\n");
-  close(SF);
+#undef SF
 
-  pid_t pid = fork();
-  if (pid == -1) {
-    perror("fork");
-    close(SF);
-    remove(SFname.c_str());
-    exit(1);
-  }
-  if (pid == 0) {
-    /* Child: redirect stdin from the temporary script and exec Singular. */
-    int fd = open(SFname.c_str(), O_RDONLY);
-    if (fd == -1 || dup2(fd, STDIN_FILENO) == -1 || close(fd) == -1) {
-      perror("SingularInput child");
-      _exit(1);
-    }
-    execvp(singularArgv[0], const_cast<char *const *>(singularArgv.data()));
-    perror("execvp Singular");
-    _exit(1);
-  }
-  /* Parent: wait for child and check exit status. */
-  int status;
-  if (waitpid(pid, &status, 0) == -1 || !WIFEXITED(status) ||
-      WEXITSTATUS(status) != 0) {
+  if (!palp::spawnSingular(SFname.c_str(), singularArgv.data())) {
     puts("Check Singular installation");
-    close(SF);
     remove(SFname.c_str());
     exit(1);
   }
-  close(SF);
   remove(SFname.c_str());
 }

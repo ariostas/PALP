@@ -767,16 +767,16 @@ void Npoly2cws(int narg, char *fn[], FILE *in, FILE *out) {
         fprintf(stderr, "Error: Npoly2cws unknown option %s\n", fn[2]);
         exit(1);
       }
-      in = NULL;
+      in = nullptr;
     } else {
       in = fopen(fn[2], "r");
-      if (in == NULL) {
+      if (in == nullptr) {
         fprintf(stderr, "Error: Npoly2cws cannot open input file %s\n", fn[2]);
         exit(1);
       }
       if (narg > 3) {
         out = fopen(fn[3], "w");
-        if (out == NULL) {
+        if (out == nullptr) {
           fprintf(stderr, "Error: Npoly2cws cannot open output file %s\n",
                   fn[3]);
           exit(1);
@@ -1628,16 +1628,16 @@ void mkold2(char *outfile, FILE *INFILE1, FILE *INFILE2, int u, int ef) {
 
   FILE *AUXFILE1, *AUXFILE2, *out;
 
-  if ((AUXFILE1 = tmpfile()) == NULL)
+  if ((AUXFILE1 = tmpfile()) == nullptr)
     Die("Unable to open tmpfile for read/write");
-  if ((AUXFILE2 = tmpfile()) == NULL)
+  if ((AUXFILE2 = tmpfile()) == nullptr)
     Die("Unable to open tmpfile for read/write");
 
   MakeSelections(INFILE1, AUXFILE1, u);
   MakeSelections(INFILE2, AUXFILE2, u);
 
   if (strcmp(outfile, "")) {
-    if ((out = fopen(outfile, "w")) == NULL) {
+    if ((out = fopen(outfile, "w")) == nullptr) {
       printf("\nUnable to open file %s for write\n", outfile);
       exit(1);
     }
@@ -1670,7 +1670,7 @@ void mk2xxx(char *outfile, int n) {
     d = d + 2;
   }
   if (strcmp(outfile, "")) {
-    if ((out = fopen(outfile, "w")) == NULL) {
+    if ((out = fopen(outfile, "w")) == nullptr) {
       printf("\nUnable to open file %s for write\n", outfile);
       exit(1);
     }
@@ -1683,16 +1683,16 @@ void mk2xxx(char *outfile, int n) {
 
 void mk3u3u3(char *outfile, FILE *INFILE) {
 
-  FILE *AUXFILE[3] = {NULL}, *out;
+  FILE *AUXFILE[3] = {nullptr}, *out;
   int i, u = 1, eq[2];
 
   for (i = 0; i < 3; i++) {
-    if ((AUXFILE[i] = tmpfile()) == NULL)
+    if ((AUXFILE[i] = tmpfile()) == nullptr)
       Die("Unable to open tmpfile for read/write");
     MakeSelections(INFILE, AUXFILE[i], u);
   }
   if (strcmp(outfile, "")) {
-    if ((out = fopen(outfile, "w")) == NULL) {
+    if ((out = fopen(outfile, "w")) == nullptr) {
       printf("\nUnable to open file %s for write\n", outfile);
       exit(1);
     }
@@ -1711,9 +1711,9 @@ void mkold_nno(char *outfile, FILE *INFILE1, FILE *INFILE2, FILE *INFILE3,
                int u, int eq) {
   FILE *AUXFILE[3], *out;
 
-  if ((AUXFILE[0] = tmpfile()) == NULL)
+  if ((AUXFILE[0] = tmpfile()) == nullptr)
     Die("Unable to open tmpfile for read/write");
-  if ((AUXFILE[1] = tmpfile()) == NULL)
+  if ((AUXFILE[1] = tmpfile()) == nullptr)
     Die("Unable to open tmpfile for read/write");
 
   MakeSelections(INFILE1, AUXFILE[0], u);
@@ -1721,7 +1721,7 @@ void mkold_nno(char *outfile, FILE *INFILE1, FILE *INFILE2, FILE *INFILE3,
 
   AUXFILE[2] = INFILE3;
   if (strcmp(outfile, "")) {
-    if ((out = fopen(outfile, "w")) == NULL) {
+    if ((out = fopen(outfile, "w")) == nullptr) {
       printf("\nUnable to open file %s for write\n", outfile);
       exit(1);
     }
@@ -1745,11 +1745,11 @@ void Make_34_CWS(int d, FILE *out) {
     exit(1);
   }
   /*puts("Implement Make_34_CWS");*/
-  if ((w2FILE = tmpfile()) == NULL)
+  if ((w2FILE = tmpfile()) == nullptr)
     Die("Unable to open tmpfile for read/write");
-  if ((w3FILE = tmpfile()) == NULL)
+  if ((w3FILE = tmpfile()) == nullptr)
     Die("Unable to open tmpfile for read/write");
-  if ((w4FILE = tmpfile()) == NULL)
+  if ((w4FILE = tmpfile()) == nullptr)
     Die("Unable to open tmpfile for read/write");
 
   STtmp(w2FILE, w3FILE, w4FILE);
@@ -1968,7 +1968,7 @@ void scan_dim(int nF, char *infile[], int D[]) {
   Weight W;
 
   for (i = 0; i < nF; i++) {
-    if ((INfile[i] = fopen(infile[i], "r")) == NULL) {
+    if ((INfile[i] = fopen(infile[i], "r")) == nullptr) {
       printf("\nUnable to open file %s for read\n", infile[i]);
       exit(1);
     }
@@ -2280,8 +2280,8 @@ void PrintCWSTypes(void) {
 }
 
 void Make_IP_CWS(int narg, char *fn[], FILE *out) {
-  FILE *INFILE[NFmax] = {NULL}, *AUXFILE[NFmax] = {NULL};
-  char *infile[NFmax] = {NULL}, *outfile = NULL, *a;
+  FILE *INFILE[NFmax] = {nullptr}, *AUXFILE[NFmax] = {nullptr};
+  char *infile[NFmax] = {nullptr}, *outfile = nullptr, *a;
   int n = 0, d = 0, u = -1, nF = 0, i, D[NFmax];
   CWS_type t;
 
@@ -2366,17 +2366,17 @@ void Make_IP_CWS(int narg, char *fn[], FILE *out) {
     Die("No dimensoin specified!");
   if (t.nu && (t.nu != nF))
     Die("if input is -nN -t k_1,...,k_n then N must be equal to n!");
-  if (outfile == NULL)
+  if (outfile == nullptr)
     out = stdout;
-  else if ((out = fopen(outfile, "w")) == NULL) {
+  else if ((out = fopen(outfile, "w")) == nullptr) {
     printf("\nUnable to open file %s for write\n", outfile);
     exit(1);
   }
   scan_dim(nF, infile, D);
   for (i = 0; i < nF; i++) {
-    if ((AUXFILE[i] = tmpfile()) == NULL)
+    if ((AUXFILE[i] = tmpfile()) == nullptr)
       Die("Unable to open tmpfile to read/write");
-    if ((INFILE[i] = fopen(infile[i], "r")) == NULL)
+    if ((INFILE[i] = fopen(infile[i], "r")) == nullptr)
       Die("Unable to open infile to read");
   }
   if (nF == 2) {
@@ -2451,7 +2451,7 @@ void Make_IP_CWS(int narg, char *fn[], FILE *out) {
 /*  ==========  	      POLY DATA:                	==========  */
 
 // void FileRW(char *file, char *m, FILE *rwFILE){
-//   if((rwFILE = fopen(file, m)) == NULL){
+//   if((rwFILE = fopen(file, m)) == nullptr){
 //     printf("\n\nUnable to open file %s for %s!\n\n",file,m);
 //     exit(0);
 //   }
@@ -2475,17 +2475,17 @@ void IP_Poly_Data(int narg, char *fn[], FILE *in, FILE *out) {
         d = 1;
     }
     if ((fn[n][1] == 'f') || (fn[n][1] == 0))
-      in = NULL;
+      in = nullptr;
   }
   n--;
   if (narg > ++n) {
-    if ((in = fopen(fn[n], "r")) == NULL) {
+    if ((in = fopen(fn[n], "r")) == nullptr) {
       printf("\nUnable to open file %s for read\n", fn[n]);
       exit(1);
     }
   }
   if (narg > ++n) {
-    if ((out = fopen(fn[n], "w")) == NULL) {
+    if ((out = fopen(fn[n], "w")) == nullptr) {
       printf("\nUnable to open file %s for write\n", fn[n]);
       exit(1);
     }
@@ -2566,7 +2566,7 @@ void Conv(int narg, char *fn[], FILE *in, FILE *out) {
   (void)in;
   FILE *INFILE[2];
   int n = 0, x = 0, nF = 2, i;
-  char *infile[2] = {NULL}, *outfile = NULL, *a;
+  char *infile[2] = {nullptr}, *outfile = nullptr, *a;
   PolyPointList P[2];
   PolyPointList PP;
   CWS CW[2];
@@ -2593,11 +2593,11 @@ void Conv(int narg, char *fn[], FILE *in, FILE *out) {
   if (narg > n)
     outfile = fn[n];
   for (i = 0; i < nF; i++)
-    if ((INFILE[i] = fopen(infile[i], "r")) == NULL)
+    if ((INFILE[i] = fopen(infile[i], "r")) == nullptr)
       Die("Unable to open infile to read");
-  if (outfile == NULL)
+  if (outfile == nullptr)
     out = stdout;
-  else if ((out = fopen(outfile, "w")) == NULL) {
+  else if ((out = fopen(outfile, "w")) == nullptr) {
     printf("\nUnable to open file %s for write\n", outfile);
     exit(1);
   }
@@ -2632,7 +2632,7 @@ Long NP_use_lat(EqList *_E, PolyPointList *_P, FILE *out) {
     fputs("Error: NP_use_lat lattice count command failed\n", stderr);
     exit(1);
   }
-  if ((latFILE = fopen("zzL.tmp1", "r")) == NULL) {
+  if ((latFILE = fopen("zzL.tmp1", "r")) == nullptr) {
     fputs("Error: NP_use_lat could not open lattice count file\n", stderr);
     exit(1);
   }
@@ -2693,7 +2693,7 @@ void SimplexPointCount(int narg, char *fn[], FILE *in, FILE *out) {
     exit(1);
   }
   if (fn[1][2] == 'f')
-    in = NULL;
+    in = nullptr;
   W.M = 0;
   L = (fn[1][1] == 'L');
   while (Read_Weight(&W, in)) {

@@ -264,14 +264,14 @@ int main(int narg, char *fn[]) {
   n--;
   FILE *in, *out;
   if (FilterFlag) {
-    in = NULL;
+    in = nullptr;
     out = stdout;
   } else {
     if (narg > ++n)
       in = fopen(fn[n], "r");
     else
       in = stdin;
-    if (in == NULL) {
+    if (in == nullptr) {
       printf("Input file %s not found!\n", fn[n]);
       exit(1);
     }
@@ -527,7 +527,7 @@ int Read_WPCICY(Weight *_W, int *_D, FILE *in)
 {
   char c;
   long int nl, sum;
-  int FilterFlag = (in == NULL);
+  int FilterFlag = (in == nullptr);
   if (in == stdin)
     printf("type degrees and weights [d  w1 w2 ... wk d=d_1 d_2]: ");
   else if (FilterFlag)

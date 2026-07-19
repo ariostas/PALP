@@ -1094,7 +1094,7 @@ void Do_the_Classification(CWS *W, PolyPointList *P, /* char *fn, */
   /* static int nw; */
   NF_List _NFL_obj;
   NF_List *_NFL = &_NFL_obj;
-  time_t W_SAVE_TIME = time(NULL);
+  time_t W_SAVE_TIME = time(nullptr);
   if (!(*polyo)) {
     puts("You have to specify an output file via -po!\n");
     printf("For more help use option '-h'\n");
@@ -1130,16 +1130,16 @@ void Do_the_Classification(CWS *W, PolyPointList *P, /* char *fn, */
     Start_Make_All_Subpolys(P, _NFL, in, out);
     Print_Weight_Info(W, _NFL, out);
     if ((WRITE_DIM <= P->n) && (MIN_NEW <= _NFL->NP))
-      if ((int)difftime(time(NULL), W_SAVE_TIME) > MIN_W_SAVE_TIME) {
+      if ((int)difftime(time(nullptr), W_SAVE_TIME) > MIN_W_SAVE_TIME) {
         Write_List_2_File(polyo, _NFL, out);
         rFlag = 1;
-        _NFL->SAVE = W_SAVE_TIME = time(NULL);
+        _NFL->SAVE = W_SAVE_TIME = time(nullptr);
       }
   }
 
   if (rFlag == 0)
     Write_List_2_File(polyo, _NFL, out);
-  _NFL->TIME = time(NULL);
+  _NFL->TIME = time(nullptr);
   fputs(ctime(&_NFL->TIME), stdout);
 }
 
@@ -1533,10 +1533,10 @@ void Find_Sublat_Polys(char mFlag, char *dbin, char *polyi, char *polyo,
         char ext[4] = {'v', 0, 0, 0};
         ext[1] = '0' + v / 10;
         ext[2] = '0' + v % 10;
-        Tstart = time(NULL);
+        Tstart = time(nullptr);
         strcpy(fx, ext);
         dbfile = fopen(dbname.c_str(), "rb");
-        if (dbfile == NULL) {
+        if (dbfile == nullptr) {
           fprintf(stderr, "Error: Make_DB_PolyList cannot open DB file %s\n",
                   dbname.c_str());
           exit(1);
@@ -1586,7 +1586,7 @@ void Find_Sublat_Polys(char mFlag, char *dbin, char *polyi, char *polyo,
         }
         fclose(dbfile);
         printf(" %dp (%ds)\n", (int)_NFL->NP,
-               (int)difftime(time(NULL), Tstart));
+               (int)difftime(time(nullptr), Tstart));
         fflush(0);
       }
   }
@@ -1611,7 +1611,7 @@ void Find_Sublat_Polys(char mFlag, char *dbin, char *polyi, char *polyo,
 
   printf("max_order=%d\n", max_order);
   Write_List_2_File(polyo, _NFL);
-  _NFL->TIME = time(NULL);
+  _NFL->TIME = time(nullptr);
   fputs(ctime(&_NFL->TIME), stdout);
 }
 

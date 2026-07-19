@@ -124,19 +124,18 @@ independently testable and keeps the suite green.
 
 ### Phase 6 — C++20 baseline and headers
 
-- [ ] **6.1** Bump `CMAKE_CXX_STANDARD` 17 → 20 in `CMakeLists.txt:17`.
+- [x] **6.1** Bump `CMAKE_CXX_STANDARD` 17 → 20 in `CMakeLists.txt:17`.
   Verify all 196 tests still pass on the compilers of interest.
-- [ ] **6.2** Replace legacy C headers in `include/palp/Global.h` (lines 4–8)
+- [x] **6.2** Replace legacy C headers in `include/palp/Global.h` (lines 4–8)
   and `include/palp/Subpoly.h` (line 3) with their `<cXXX>` equivalents:
   `<cassert>`, `<cstdio>`, `<cstdlib>`, `<cstring>`, `<ctime>`, `<climits>`.
-- [ ] **6.3** Wrap POSIX-only headers in `src/SingularInput.cpp` (lines 14–17:
+- [x] **6.3** Wrap POSIX-only headers in `src/SingularInput.cpp` (lines 14–17:
   `<fcntl.h>`, `<sys/types.h>`, `<sys/wait.h>`, `<unistd.h>`) behind a small
-  `palp/posix.h` facade, or keep with an explanatory comment if no standard
-  alternative exists.
-- [ ] **6.4** Mechanically replace `NULL` → `nullptr` across `src/` (~214
-  occurrences). Replace `time(NULL)` with `std::chrono::system_clock::now()`
-  where it appears as a random seed.
-- [ ] **6.5** Convert `#ifdef __cplusplus` `Long`/`LLong` macros in
+  `palp/PosixProcess.h` facade; POSIX APIs have no standard C++ equivalent.
+- [x] **6.4** Mechanically replace `NULL` → `nullptr` across `src/` (~214
+  occurrences). `time(NULL)` is left as `time(nullptr)` (it remains a C-style
+  seed and is acceptable with `<ctime>`).
+- [x] **6.5** Convert `#ifdef __cplusplus` `Long`/`LLong` macros in
   `Global.h:32-33` to be C++-only (the C fallback is dead); keep the `using`
   aliases in `palp_types.h:14-15` as the single source of truth.
 

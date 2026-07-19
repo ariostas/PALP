@@ -224,14 +224,14 @@ int main(int narg, char *fn[]) {
   }
   FILE *in, *out;
   if (FilterFlag) {
-    in = NULL;
+    in = nullptr;
     out = stdout;
   } else {
     if (narg > ++n)
       in = fopen(fn[n], "r");
     else
       in = stdin;
-    if (in == NULL) {
+    if (in == nullptr) {
       printf("Input file %s not found!\n", fn[n]);
       exit(1);
     }

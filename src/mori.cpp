@@ -174,7 +174,7 @@ int main(int narg, char *fn[]) {
 
   FILE *in, *out;
   if (Flag.FilterFlag) {
-    in = NULL;
+    in = nullptr;
     out = stdout;
   }
 
@@ -184,7 +184,7 @@ int main(int narg, char *fn[]) {
     else
       in = stdin;
 
-    if (in == NULL) {
+    if (in == nullptr) {
       printf("Input file %s not found!\n", fn[n]);
       exit(1);
     }

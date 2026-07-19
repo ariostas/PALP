@@ -1276,7 +1276,7 @@ void LgoTwistInit(int narg, char *fn[]) {
       case 'i':
         c = (fn[n][2]) ? &fn[n][2] : fn[++n];
         palpContext.in = fopen(c, "r");
-        if (palpContext.in == NULL)
+        if (palpContext.in == nullptr)
           PrintUse("Open infile failed");
         n++;
         ctx.stdi = 0;
@@ -1284,7 +1284,7 @@ void LgoTwistInit(int narg, char *fn[]) {
       case 'o':
         c = (fn[n][2]) ? &fn[n][2] : fn[++n];
         palpContext.out = fopen(c, "w");
-        if (palpContext.out == NULL)
+        if (palpContext.out == nullptr)
           PrintUse("Open outfile failed");
         n++;
         break;

@@ -697,7 +697,7 @@ void Triang_from_SR(triang *TR, triang *SR) { /* consistency check ... */
   if (binco++ > 2999)
     binco = 2999;
   A = (Inci64 *)malloc(2 * binco * sizeof(Inci64));
-  if (A == NULL) {
+  if (A == nullptr) {
     fputs("Error: failed to allocate incidence buffer in Triang_from_SR\n",
           stderr);
     exit(1);
@@ -769,7 +769,7 @@ void StanleyReisner(triang *SR, triang *T,
     binco = 2999;
 
   A = (Inci64 *)malloc(2 * binco * sizeof(Inci64));
-  if (A == NULL) {
+  if (A == nullptr) {
     fputs("Error: failed to allocate incidence buffer in StanleyReisner\n",
           stderr);
     exit(1);
@@ -2633,7 +2633,7 @@ void Read_Tri(int p, int *nI, int *nIA, Inci64 **_I, FILE *in, FILE *out) {
       free(I);
     *nIA = *nI; /* realloc I */
     I = (Inci64 *)malloc(*nIA * sizeof(Inci64));
-    if (I == NULL) {
+    if (I == nullptr) {
       fputs("Error: failed to allocate incidence list in Read_Tri\n", stderr);
       exit(1);
     }
@@ -2909,7 +2909,7 @@ void ComputeStanleyReisner(PolyPointList *P, int nI, Inci64 *I, int *NrInz,
   A = (Inci64 *)malloc(Abi);
   B = (Inci64 *)malloc(Abi);
   IV = (Inci64 *)malloc(v * sizeof(Inci64));
-  if (SRG == NULL || IV == NULL || A == NULL || B == NULL) {
+  if (SRG == nullptr || IV == nullptr || A == nullptr || B == nullptr) {
     fputs("Error: failed to allocate Stanley-Reisner buffers\n", stderr);
     exit(1);
   }
@@ -2981,7 +2981,7 @@ void ComputeStanleyReisner(PolyPointList *P, int nI, Inci64 *I, int *NrInz,
 void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag,
                          FILE *in, FILE *out) {
   int i, j, n, nI, NrInz, nIA = 0, Ntri = 0;
-  static Inci64 *I = NULL;
+  static Inci64 *I = nullptr;
   triang T, SR;
   long long Abi = Compute_Abi(_P);
   Inci64 *SRG = (Inci64 *)malloc(Abi);
@@ -3112,7 +3112,7 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag,
     if (_Flag->m)
       Print_Mori_Old(_POF, nI, IOF, out);
   }
-  if (I == NULL) {
+  if (I == nullptr) {
     fputs("Error: TriList_to_MoriList incidence list was never allocated\n",
           stderr);
     exit(1);

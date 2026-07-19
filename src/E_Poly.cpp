@@ -419,7 +419,7 @@ void Time_Info(time_t *_Tstart, clock_t *_Cstart, const char *comment,
   fprintf(out, "%s     %dsec  %dcpu\n", comment,
           (int)
           /* CLOCKS_PER_SEC::10^6 */
-          difftime(time(NULL), *_Tstart),
+          difftime(time(nullptr), *_Tstart),
           (int)((((long long)clock() - *_Cstart) / (long long)CLOCKS_PER_SEC)));
   fflush(0);
 }
@@ -438,7 +438,7 @@ void Print_Nefinfo(PartList *_PTL, /* Flags *_F,*/ time_t *_Tstart,
       p++;
   }
   fprintf(out, "np=%d d:%d p:%d %4dsec  %4dcpu\n", _PTL->n - d - p, d, p,
-          /* CLOCKS_PER_SEC::10^6 */ (int)difftime(time(NULL), *_Tstart),
+          /* CLOCKS_PER_SEC::10^6 */ (int)difftime(time(nullptr), *_Tstart),
           (int)((((long long)clock() - *_Cstart) / (long long)CLOCKS_PER_SEC)));
   fflush(0);
 }
@@ -1278,8 +1278,8 @@ void Compute_E_Poly(EPoly *_EP, PolyPointList *_P_D, VertexNumList *_V_D,
      _E_D with _V_N and of _V_D with _E_N                                 */
 
   Interval_List IL;
-  SPoly *_S_D = NULL, *_S_N = NULL;
-  BPoly *_BL = NULL;
+  SPoly *_S_D = nullptr, *_S_N = nullptr;
+  BPoly *_BL = nullptr;
   Poset_Element_List PEL_D, PEL_N;
   FaceInfo _I_D_obj;
   Cone _C_D_obj, _C_N_obj;
@@ -1293,10 +1293,10 @@ void Compute_E_Poly(EPoly *_EP, PolyPointList *_P_D, VertexNumList *_V_D,
   PEL_N.n = Num_Pos(_C_N);
 
   PEL_D.L = (Poset_Element *)calloc(PEL_D.n, sizeof(Poset_Element));
-  if (PEL_D.L == NULL)
+  if (PEL_D.L == nullptr)
     Die("Unable to alloc space for PEL_D.L");
   PEL_N.L = (Poset_Element *)calloc(PEL_D.n, sizeof(Poset_Element));
-  if (PEL_N.L == NULL)
+  if (PEL_N.L == nullptr)
     Die("Unable to alloc space for PEL_N.L");
 
   Make_PosetList(_C_D, &PEL_D);
@@ -1305,10 +1305,10 @@ void Compute_E_Poly(EPoly *_EP, PolyPointList *_P_D, VertexNumList *_V_D,
     Time_Info(_Tstart, _Cstart, "   BEGIN S-Poly", stderr);
 
   _S_D = (SPoly *)calloc(PEL_D.n, sizeof(SPoly));
-  if (_S_D == NULL)
+  if (_S_D == nullptr)
     Die("Unable to alloc space for SPoly _S_D");
   _S_N = (SPoly *)calloc(PEL_D.n, sizeof(SPoly));
-  if (_S_N == NULL)
+  if (_S_N == nullptr)
     Die("Unable to alloc space for SPoly _S_N");
 
   Make_S_Poly(_C_N, _V_D, _E_D, _P_D, &PEL_D, _S_D, _F->S, _F->T);
@@ -1319,13 +1319,13 @@ void Compute_E_Poly(EPoly *_EP, PolyPointList *_P_D, VertexNumList *_V_D,
 
   IL.L =
       (Interval *)calloc(((1 + PEL_D.n) / 2 + 1) * PEL_D.n, sizeof(Interval));
-  if (IL.L == NULL)
+  if (IL.L == nullptr)
     Die("Unable to alloc space for IL.L");
 
   Make_Intervallist(&IL, &PEL_D, _C_D);
 
   _BL = (BPoly *)calloc(IL.n, sizeof(BPoly));
-  if (_BL == NULL)
+  if (_BL == nullptr)
     Die("Unable to alloc space for _BL");
 
   Make_B_Poly(_C_D, &PEL_D, &IL, _BL);
@@ -1348,8 +1348,8 @@ void Make_E_Poly(FILE *out, CWS *_W, PolyPointList *_CP, VertexNumList *_CV,
   clock_t Cstart;
   int n;
   /* Interval_List IL;
-  SPoly *_S_D = NULL, *_S_N = NULL;
-  BPoly *_BL = NULL; */
+  SPoly *_S_D = nullptr, *_S_N = nullptr;
+  BPoly *_BL = nullptr; */
   EPoly EP;
   /* Poset_Element_List PEL_D, PEL_N;*/
   auto _PTL_up = std::make_unique<PartList>();
@@ -1367,14 +1367,15 @@ void Make_E_Poly(FILE *out, CWS *_W, PolyPointList *_CP, VertexNumList *_CV,
   auto _DE_up = std::make_unique<EqList>();
   auto _E_up = std::make_unique<EqList>();
   PartList *_PTL = _PTL_up.get();
-  PolyPointList *_P = NULL, *_DP = NULL, *_P_D = _P_D_up.get(),
+  PolyPointList *_P = nullptr, *_DP = nullptr, *_P_D = _P_D_up.get(),
                 *_P_N = _P_N_up.get();
-  VertexNumList *_V = NULL, *_DV = NULL, *_V_D = _V_D_up.get(),
+  VertexNumList *_V = nullptr, *_DV = nullptr, *_V_D = _V_D_up.get(),
                 *_V_N = _V_N_up.get();
-  EqList *_E = NULL, *_DE = NULL, *_E_D = _E_D_up.get(), *_E_N = _E_N_up.get();
+  EqList *_E = nullptr, *_DE = nullptr, *_E_D = _E_D_up.get(),
+         *_E_N = _E_N_up.get();
   /*FaceInfo *_I_D;
     Cone *_C_D, *_C_N;*/
-  LInfo *_L = NULL;
+  LInfo *_L = nullptr;
 
   /*   ===============	Begin of Static Allocation	===================  */
 
@@ -1406,7 +1407,7 @@ void Make_E_Poly(FILE *out, CWS *_W, PolyPointList *_CP, VertexNumList *_CV,
     Find_Equations(_P, _V, _E);
     Sort_PPL(_P, _V);
   }
-  Tstart = time(NULL);
+  Tstart = time(nullptr);
   Cstart = clock();
   _F->Test = 0;
   fflush(0);
@@ -1448,7 +1449,7 @@ void Make_E_Poly(FILE *out, CWS *_W, PolyPointList *_CP, VertexNumList *_CV,
     if (_F->Dir == 2)
       if (!_PTL->DirProduct[n])
         continue;
-    Tstart = time(NULL);
+    Tstart = time(nullptr);
     Cstart = clock();
     Make_Gore_Poly(_P, _DP, _P_D, _P_N, _V, _PTL, _codim, &n);
     _PTL->Proj[n] = Remove_Proj(_P_D, /*&n,*/ _codim);
@@ -1571,7 +1572,7 @@ void AnalyseGorensteinCone(CWS *_CW, PolyPointList *_P, VertexNumList *_V,
     r = 0;
   }
 
-  Tstart = time(NULL);
+  Tstart = time(nullptr);
   Cstart = clock();
   _F->Test = 0;
   for (i = 0; i < _CW->nw; i++) {
