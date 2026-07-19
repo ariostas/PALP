@@ -191,7 +191,7 @@ void HyperSurfSingular(PolyPointList *P, triang *T, triang *SR,
     dprintf(SF, "); \n");
 
     int dim = F->nw;
-    int DegreeVec[dim];
+    std::vector<int> DegreeVec(dim);
     for (i = 0; i < F->nw; i++) {
       DegreeVec[i] = 0;
     }
