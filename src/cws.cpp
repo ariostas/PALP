@@ -13,7 +13,10 @@ constexpr int NFmax = 10; /* maximal number of WS-files */
 constexpr int SIMPLEX_POINT_Nmax = 50;
 constexpr int OSL = 24; /* opt_string's length */
 constexpr int WDIM = 800000;
-inline Long lcm(Long a, Long b) { return (a * b) / NNgcd(a, b); }
+inline Long lcm(Long a, Long b) {
+  Long g = NNgcd(a, b);
+  return g ? (a / g) * b : 0;
+}
 constexpr int TWDIM = 16384; /* weight-buffer dimension */
 constexpr Long mod(Long a, Long b) { return a % b; }
 } // namespace
@@ -374,7 +377,10 @@ void ComputeQ(int n, RgcClassData *X) {
           }
 }
 
-Long Flcm(Long a, Long b) { return (a * b) / Fgcd(a, b); }
+Long Flcm(Long a, Long b) {
+  Long g = Fgcd(a, b);
+  return g ? (a / g) * b : 0;
+}
 
 void Cancel(Equation *q, int d) {
   Long gcd = -q->c;
