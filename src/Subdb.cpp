@@ -979,8 +979,7 @@ void Check_NF_Order(char *polyi, char *dbi, int cF, PolyPointList *_P,
   int d, nu, v, si;
   int sl_nNF, sl_SM, sl_NM, sl_NB;
   Along tNF = 0, tNB = 0, tNM = 0, SLpos, Hpos = 0;
-  char *Ifx = nullptr;
-  std::vector<char> Ifn(1 + strlen(dbi) + File_Ext_NCmax);
+  std::string Ifn;
   if ((*polyi) && (*dbi))
     puts("only give one of -pi FILE or -di FILE");
   if ((*polyi == 0) && (*dbi == 0))
@@ -1061,10 +1060,9 @@ void Check_NF_Order(char *polyi, char *dbi, int cF, PolyPointList *_P,
   }
   if (*dbi) {
     printf("Checking consistency of DataBase %s:\n", dbi);
-    strcpy(Ifn.data(), dbi);
-    Ifx = &Ifn[strlen(dbi)];
-    strcpy(Ifx, ".info");
-    F = fopen(Ifn.data(), "r");
+    Ifn = dbi;
+    Ifn += ".info";
+    F = fopen(Ifn.c_str(), "r");
     if (F == nullptr) {
       puts("Info File not found");
       exit(1);
@@ -1157,10 +1155,10 @@ void Check_NF_Order(char *polyi, char *dbi, int cF, PolyPointList *_P,
     if (SLpos - Hpos == L.NB)
       printf("NB o.k. ");
   } else if (sl_NB) {
-    strcpy(Ifx, ".sl");
+    Ifn.replace(Ifn.size() - 4, 4, ".sl");
     fclose(F);
-    if (nullptr == (F = fopen(Ifn.data(), "rb"))) {
-      printf("Open %s failed", Ifn.data());
+    if (nullptr == (F = fopen(Ifn.c_str(), "rb"))) {
+      printf("Open %s failed", Ifn.c_str());
       exit(1);
     }
   } else
@@ -1231,15 +1229,14 @@ void Check_NF_Order(char *polyi, char *dbi, int cF, PolyPointList *_P,
         fflush(stdout);
       }
       if (*dbi) {
-        char vxt[5];
-        strcpy(vxt, ".v");
-        vxt[2] = v / 10 + '0';
-        vxt[3] = v % 10 + '0';
-        vxt[4] = 0;
-        strcpy(Ifx, vxt);
+        std::string Ifn_v = Ifn;
+        std::string vxt = ".v";
+        vxt += static_cast<char>(v / 10 + '0');
+        vxt += static_cast<char>(v % 10 + '0');
+        Ifn_v.replace(Ifn_v.size() - 4, 4, vxt);
         fclose(F);
-        if (nullptr == (F = fopen(Ifn.data(), "rb"))) {
-          printf("Ifn %s failed", Ifn.data());
+        if (nullptr == (F = fopen(Ifn_v.c_str(), "rb"))) {
+          printf("Ifn %s failed", Ifn_v.c_str());
           exit(1);
         }
       }
@@ -1294,15 +1291,14 @@ void Check_NF_Order(char *polyi, char *dbi, int cF, PolyPointList *_P,
       printf(" %d", v);
       fflush(stdout);
       if (*dbi) {
-        char vxt[5];
-        strcpy(vxt, ".v");
-        vxt[2] = v / 10 + '0';
-        vxt[3] = v % 10 + '0';
-        vxt[4] = 0;
-        strcpy(Ifx, vxt);
+        std::string Ifn_v = Ifn;
+        std::string vxt = ".v";
+        vxt += static_cast<char>(v / 10 + '0');
+        vxt += static_cast<char>(v % 10 + '0');
+        Ifn_v.replace(Ifn_v.size() - 4, 4, vxt);
         fclose(F);
-        if (nullptr == (F = fopen(Ifn.data(), "rb"))) {
-          printf("Ifn %s failed", Ifn.data());
+        if (nullptr == (F = fopen(Ifn_v.c_str(), "rb"))) {
+          printf("Ifn %s failed", Ifn_v.c_str());
           exit(1);
         }
       }
