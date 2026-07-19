@@ -3052,7 +3052,7 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag,
 
       for (i = 0; i < T.n; i++) {
         if ((T.I[i] >> (T.v - 1)) ^ 0) {
-          T.I[i] &= ~(1 << (T.v - 1));
+          T.I[i] &= ~(Inci64(1) << (T.v - 1));
         }
       }
 
