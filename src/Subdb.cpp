@@ -1169,12 +1169,22 @@ void Check_NF_Order(char *polyi, char *dbi, int cF, PolyPointList *_P,
     puts("no .sl file");
   for (si = 0; si < sl_nNF; si++) {
     unsigned char uc[NUC_Nmax];
-    v = fgetc(F);
+    int ch = fgetc(F);
+    if (ch == EOF) {
+      fprintf(stderr, "Error: DB_Check unexpected EOF reading vertex count\n");
+      exit(1);
+    }
+    v = ch;
     if (v > VERT_Nmax) {
       fprintf(stderr, "Error: DB_Check vertex count %d out of range\n", v);
       exit(1);
     }
-    nu = fgetc(F); /* assert(nu<=L.NUCmax); */
+    ch = fgetc(F);
+    if (ch == EOF) {
+      fprintf(stderr, "Error: DB_Check unexpected EOF reading nuc count\n");
+      exit(1);
+    }
+    nu = ch; /* assert(nu<=L.NUCmax); */
     AuxGet_uc(F, &nu, uc);
     if (ferror(F)) {
       fprintf(stderr, "Error: DB_Check sublattice read error\n");
@@ -2225,12 +2235,22 @@ void Bin2aDBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P,
   for (i = 0; i < sl_nNF; i++) {
     int I, J;
     unsigned char uc[NUC_Nmax];
-    v = fgetc(F);
+    int ch = fgetc(F);
+    if (ch == EOF) {
+      fprintf(stderr, "Error: Bin2aDBsl unexpected EOF reading vertex count\n");
+      exit(1);
+    }
+    v = ch;
     if (v > VERT_Nmax) {
       fprintf(stderr, "Error: Bin2aDBsl vertex count %d out of range\n", v);
       exit(1);
     }
-    nu = fgetc(F);
+    ch = fgetc(F);
+    if (ch == EOF) {
+      fprintf(stderr, "Error: Bin2aDBsl unexpected EOF reading nuc count\n");
+      exit(1);
+    }
+    nu = ch;
     AuxGet_uc(F, &nu, uc);
     if (ferror(F)) {
       fprintf(stderr, "Error: Bin2aDBsl sublattice read error\n");
@@ -3917,13 +3937,25 @@ void Bin_2_ANF_DBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P,
   for (i = 0; i < sl_nNF; i++) {
     int I, J;
     unsigned char uc[NUC_Nmax];
-    v = fgetc(F);
+    int ch = fgetc(F);
+    if (ch == EOF) {
+      fprintf(stderr,
+              "Error: Bin_2_ANF_DBsl unexpected EOF reading vertex count\n");
+      exit(1);
+    }
+    v = ch;
     if (v > VERT_Nmax) {
       fprintf(stderr, "Error: Bin_2_ANF_DBsl vertex count %d out of range\n",
               v);
       exit(1);
     }
-    nu = fgetc(F);
+    ch = fgetc(F);
+    if (ch == EOF) {
+      fprintf(stderr,
+              "Error: Bin_2_ANF_DBsl unexpected EOF reading nuc count\n");
+      exit(1);
+    }
+    nu = ch;
     AuxGet_uc(F, &nu, uc);
     if (ferror(F)) {
       fprintf(stderr, "Error: Bin_2_ANF_DBsl sublattice read error\n");
