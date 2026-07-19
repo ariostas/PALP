@@ -130,51 +130,51 @@ preferred explicit handles used by the driver programs.
 
 /*  ==========         Global typedefs           		==========  */
 
-typedef struct {
+struct PolyPointList {
   int n, np;
   Long x[POINT_Nmax][POLY_Dmax];
-} PolyPointList;
+};
 /*
 A list (not necessarily complete) of lattice points of a polytope.
 P.x[i][j] is the j'th coordinate of the i'th lattice point.
 P.n is the dimension of the polytope and P.np the number of points in the list.
 */
 
-typedef struct {
+struct VertexNumList {
   int v[VERT_Nmax];
   int nv;
-} VertexNumList;
+};
 /*
 The list of vertices of a polytope, referring to some PolyPointList P.
 The j'th coordinate of the i'th vertex is then given by P.x[V.v[i]][j].
 V.nv is the number of vertices of P.
 */
 
-typedef struct {
+struct Equation {
   Long a[POLY_Dmax], c;
-} Equation;
+};
 /*
 This structure determines an equation of the type ax+c=0, explicitly:
 sum_{i=1}^n E.a[i] x_i + E.c = 0.
 */
 
-typedef struct {
+struct EqList {
   int ne;
   Equation e[EQUA_Nmax];
-} EqList;
-typedef struct {
+};
+struct CEqList {
   int ne;
   Equation e[EQUA_Nmax];
-} CEqList;
+};
 /*
 A list of equations; EL.ne is the number of equations in the list.
 */
 
-typedef struct {
+struct CWS {
   EqList B;
   Long W[AMBI_Dmax][AMBI_Dmax], d[AMBI_Dmax];
   int nw, N, z[POLY_Dmax][AMBI_Dmax], m[POLY_Dmax], nz, index;
-} CWS;
+};
 /*
 Combined weight system: W[i][j] and d[i] are the j'th weight and the "degree"
 of the i'th weight system, respectively; nw is the number of weight systems,
@@ -184,15 +184,15 @@ B describes the ambient space coordinate hyperplanes in terms of the new
 (non-redundant) coordinates.
 */
 
-typedef Long PairMat[EQUA_Nmax][VERT_Nmax];
+using PairMat = Long[EQUA_Nmax][VERT_Nmax];
 /*
 The matrix whose entries are the pairings av+c between the vertices v and
 the equations (a,c).
 */
 
-typedef struct {
+struct BaHo {
   int mp, mv, np, nv, n, pic, cor, h22, h1[POLY_Dmax - 1];
-} BaHo;
+};
 /*
 This structure is related to Batyrev's formulas for Hodge numbers.
 n     ... dimension of the polytope
@@ -204,19 +204,19 @@ mp, mv, np, nv denote the numbers of points/vertices in the M and N lattices,
 repectively.
 */
 
-typedef struct {
+struct FibW {
   Long W[FIB_Nmax][VERT_Nmax];
   int nw, PS, ZS, nv, f[VERT_Nmax], r[VERT_Nmax], nf, nz[FIB_Nmax],
       n0[FIB_Nmax], Z[FIB_Nmax][VERT_Nmax], M[FIB_Nmax];
   GL_Long G[VERT_Nmax][POLY_Dmax][POLY_Dmax];
   PolyPointList *P;
-} FibW;
+};
 /*
 This list is an extension of the PolyPointList with the combined weight system.
 W[i][j] is the j'th weight; nw is the number of weight systems.
 */
 
-typedef struct {
+struct C5stats {
   long n_nonIP, n_IP_nonRef, n_ref, // numbers of WS of certain types
       max_w, nr_max_w, // maximum weight in the reflexive/non-reflexive cases
       nr_n_w[MAXLD], n_w[MAXLD]; // numbers of weights of given [ld]
@@ -224,7 +224,7 @@ typedef struct {
       max_h1[POLY_Dmax - 1], // max values of certain entries of BH
       min_chi, max_chi,
       max_nf[POLY_Dmax + 1]; // range for chi, max facet numbers
-} C5stats;
+};
 /*
 statistics on large lists of weight systems, cf. classification of 4fold weights
 */
@@ -571,14 +571,14 @@ considerably slowed down.
 */
 
 #if (VERT_Nmax <= INT_Nbits)
-typedef unsigned int INCI;
+using INCI = unsigned int;
 #elif (VERT_Nmax <= LONG_LONG_Nbits)
-typedef unsigned long long INCI;
+using INCI = unsigned long long;
 #else
 constexpr int I_NUI = ((VERT_Nmax - 1) / INT_Nbits + 1);
-typedef struct {
+struct INCI {
   unsigned int ui[I_NUI];
-} INCI;
+};
 #endif
 /*
 An INCI encodes the incidence relations between a face and a list of
@@ -590,13 +590,13 @@ array of unsigned integers is used to simulate an integer type of the required
 size.
 */
 
-typedef struct {
+struct FaceInfo {
   int nf[POLY_Dmax + 1];              /* #(faces)[dim]  */
   INCI v[POLY_Dmax + 1][FACE_Nmax];   /*  vertex info   */
   INCI f[POLY_Dmax + 1][FACE_Nmax];   /* V-on-dual info */
   Long nip[POLY_Dmax + 1][FACE_Nmax]; /* #IPs on face  */
   Long dip[POLY_Dmax + 1][FACE_Nmax];
-} FaceInfo; /* #IPs on dual  */
+}; /* #IPs on dual  */
 /*
 nf[i] denotes the number of faces of dimension i
    (the number of faces of dimension n-i-1 of the dual polytope).
