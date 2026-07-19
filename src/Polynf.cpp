@@ -2237,6 +2237,11 @@ int Obstructed_Conifold_Deformations(int S[SQnum_Max][4], int M[SQnum_Max],
 
 namespace {
 constexpr bool FANO_CONIFOLD = false; /* default: 0=CY-conifold, 1=FANO */
+
+struct ConifoldStats {
+  int npol = 0, nosq = 0, five = 0, nonbasic = 0, ncon = 0, fano = 0;
+};
+ConifoldStats conifoldStats;
 } // namespace
 int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
                  PolyPointList *dP, EqList *dE, int divby, FILE *out) {
@@ -2244,7 +2249,6 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
             CF, /* #cd2face #squares #double-pts.*/
       C[SQnum_Max];
   Long rel[SQnum_Max][VERT_Nmax]; /* rank squar-relations */
-  static int npol, nosq, five, nonbasic, ncon, fano;
   INCI *FInc;
   int PIC, S[SQnum_Max][4], M[SQnum_Max];
   FaceInfo *_FI = (FaceInfo *)malloc(sizeof(FaceInfo));
@@ -2282,7 +2286,7 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
     exit(1);
   }
   Make_Incidence(P, V, E, _FI);
-  npol++;
+  conifoldStats.npol++;
   nf = _FI->nf[1];
   FInc = _FI->f[1]; /* cd2-faces of dP :: edge of P :: */
   Make_FaceIPs(P, V, E, dP, _FI);
@@ -2303,7 +2307,7 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
       exit(1);
     }
     if (f > 4) {
-      five++; /* more than 4 vertices */
+      conifoldStats.five++; /* more than 4 vertices */
       free(_FI);
       return 0;
     }
@@ -2341,13 +2345,13 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
           sq = 3;
       }
       if (sq == 0) {
-        nosq++;
+        conifoldStats.nosq++;
         free(_FI);
         return 0;
       } /* 4 vertices: no square */
     }
     if (1 < LinRelSimplexVolume(X, 3, P->n)) {
-      nonbasic++;
+      conifoldStats.nonbasic++;
       free(_FI);
       return 0;
     }
@@ -2411,7 +2415,7 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
     }
   }
   if (nsq)
-    ncon++; /* doublePts=sum_sq(l(sq^*))   [over 2 for fano] */
+    conifoldStats.ncon++; /* doublePts=sum_sq(l(sq^*))   [over 2 for fano] */
 
   if (CF == 2) {
     Long xB[POLY_Dmax], xN; /* Fano case */
@@ -2430,7 +2434,7 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
     {
       printf("pic=%d  deg=%2d  h12=%2d  rk=%d #sq=%d ", pic, vol, h12, rk, nsq);
       printf("#dp=%d py=%d  F=%d %d %d %d #Fano=%d\n", ndpt, py, _FI->nf[0],
-             _FI->nf[1], _FI->nf[2], _FI->nf[3], ++fano);
+             _FI->nf[1], _FI->nf[2], _FI->nf[3], ++conifoldStats.fano);
       PrettyPrintDualVert(P, V->nv, E, dP->np, out);
       PrintFanoVert(P, V, out);
     }
@@ -2484,7 +2488,8 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
         printf("H^3=%ld c2H=%ld ", vol / I3, c2h);
       printf(" sing=%d rk=%d #sq=%d #dp=%d  ", sing, rk, nsq, ndpt);
       printf("toric=%d,%d  F=%d %d %d %d #CY=%d\n", BH.h1[1], BH.h1[2],
-             _FI->nf[0], _FI->nf[1], _FI->nf[2], _FI->nf[3], ncon);
+             _FI->nf[0], _FI->nf[1], _FI->nf[2], _FI->nf[3],
+             conifoldStats.ncon);
       PrettyPrintDualVert(P, V->nv, E, dP->np, out);
     }
     free(_FI);
