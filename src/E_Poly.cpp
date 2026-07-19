@@ -1278,8 +1278,6 @@ void Compute_E_Poly(EPoly *_EP, PolyPointList *_P_D, VertexNumList *_V_D,
      _E_D with _V_N and of _V_D with _E_N                                 */
 
   Interval_List IL;
-  SPoly *_S_D = nullptr, *_S_N = nullptr;
-  BPoly *_BL = nullptr;
   Poset_Element_List PEL_D, PEL_N;
   FaceInfo _I_D_obj;
   Cone _C_D_obj, _C_N_obj;
@@ -1292,24 +1290,20 @@ void Compute_E_Poly(EPoly *_EP, PolyPointList *_P_D, VertexNumList *_V_D,
   PEL_D.n = Num_Pos(_C_D);
   PEL_N.n = Num_Pos(_C_N);
 
-  PEL_D.L = (Poset_Element *)calloc(PEL_D.n, sizeof(Poset_Element));
-  if (PEL_D.L == nullptr)
-    Die("Unable to alloc space for PEL_D.L");
-  PEL_N.L = (Poset_Element *)calloc(PEL_D.n, sizeof(Poset_Element));
-  if (PEL_N.L == nullptr)
-    Die("Unable to alloc space for PEL_N.L");
+  auto PEL_D_owner = std::make_unique<Poset_Element[]>(PEL_D.n);
+  PEL_D.L = PEL_D_owner.get();
+  auto PEL_N_owner = std::make_unique<Poset_Element[]>(PEL_D.n);
+  PEL_N.L = PEL_N_owner.get();
 
   Make_PosetList(_C_D, &PEL_D);
   Make_PosetList(_C_N, &PEL_N);
   if (_F->t)
     Time_Info(_Tstart, _Cstart, "   BEGIN S-Poly", stderr);
 
-  _S_D = (SPoly *)calloc(PEL_D.n, sizeof(SPoly));
-  if (_S_D == nullptr)
-    Die("Unable to alloc space for SPoly _S_D");
-  _S_N = (SPoly *)calloc(PEL_D.n, sizeof(SPoly));
-  if (_S_N == nullptr)
-    Die("Unable to alloc space for SPoly _S_N");
+  auto S_D_owner = std::make_unique<SPoly[]>(PEL_D.n);
+  SPoly *_S_D = S_D_owner.get();
+  auto S_N_owner = std::make_unique<SPoly[]>(PEL_D.n);
+  SPoly *_S_N = S_N_owner.get();
 
   Make_S_Poly(_C_N, _V_D, _E_D, _P_D, &PEL_D, _S_D, _F->S, _F->T);
   Make_S_Poly(_C_D, _V_N, _E_N, _P_N, &PEL_N, _S_N, _F->S, _F->T);
@@ -1317,29 +1311,20 @@ void Compute_E_Poly(EPoly *_EP, PolyPointList *_P_D, VertexNumList *_V_D,
   if (_F->t)
     Time_Info(_Tstart, _Cstart, "   BEGIN B-Poly", stderr);
 
-  IL.L =
-      (Interval *)calloc(((1 + PEL_D.n) / 2 + 1) * PEL_D.n, sizeof(Interval));
-  if (IL.L == nullptr)
-    Die("Unable to alloc space for IL.L");
+  IL.L_owner = std::make_unique<Interval[]>(((1 + PEL_D.n) / 2 + 1) * PEL_D.n);
+  IL.n = 0;
+  IL.L = IL.L_owner.get();
 
   Make_Intervallist(&IL, &PEL_D, _C_D);
 
-  _BL = (BPoly *)calloc(IL.n, sizeof(BPoly));
-  if (_BL == nullptr)
-    Die("Unable to alloc space for _BL");
+  auto BL_owner = std::make_unique<BPoly[]>(IL.n);
+  BPoly *_BL = BL_owner.get();
 
   Make_B_Poly(_C_D, &PEL_D, &IL, _BL);
 
   if (_F->t)
     Time_Info(_Tstart, _Cstart, "   BEGIN E-Poly", stderr);
   SB_To_E(_EP, _C_D, &PEL_D, _BL, &IL, _S_D, _S_N, _codim);
-
-  free(PEL_D.L);
-  free(PEL_N.L);
-  free(_S_D);
-  free(_S_N);
-  free(IL.L);
-  free(_BL);
 }
 
 void Make_E_Poly(FILE *out, CWS *_W, PolyPointList *_CP, VertexNumList *_CV,

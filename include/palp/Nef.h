@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 
 constexpr int Nef_Max = 500000;
@@ -31,6 +32,7 @@ typedef struct Interval Interval;
 
 typedef struct {
   struct Interval *L;
+  std::unique_ptr<Interval[]> L_owner;
   int n;
 } Interval_List;
 
