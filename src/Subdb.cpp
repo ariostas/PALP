@@ -1371,11 +1371,7 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo,
   Along Snp;
   int slNF = 0, slSM = 0, slNM = 0, slNB = 0, slNP = 0, SmI = 00, nu, ms, v;
   UPint Oli = 0;
-  char *Sfx = nullptr;
-  std::vector<char> Sfn_buffer;
-  if (*polys == 0)
-    Sfn_buffer.resize(1 + strlen(dbsub) + File_Ext_NCmax);
-  char *Sfn = (*polys) ? (char *)nullptr : Sfn_buffer.data();
+  std::string Sfn;
   Along HIPli[VERT_Nmax][NUC_Nmax], HSPli[VERT_Nmax][NUC_Nmax];
 
   if ((*polys == 0) != (*dbsub == 0))
@@ -1404,10 +1400,9 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo,
   if (db) {
     unsigned tln = 0;
     Along tNF = 0;
-    strcpy(Sfn, dbsub);
-    Sfx = &Sfn[strlen(dbsub)];
-    strcpy(Sfx, ".info");
-    FS = fopen(Sfn, "r");
+    Sfn = dbsub;
+    Sfn += ".info";
+    FS = fopen(Sfn.c_str(), "r");
     if (FS == nullptr) {
       puts("Info File not found");
       exit(1);
@@ -1538,10 +1533,10 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo,
   FSEEK(FI, -IslNB, SEEK_CUR);
 
   if (db && SslNF) {
-    strcpy(Sfx, ".sl");
+    Sfn.replace(Sfn.size() - 4, 4, ".sl");
     fclose(FS);
-    if (nullptr == (FS = fopen(Sfn, "rb"))) {
-      printf("Open %s failed", Sfn);
+    if (nullptr == (FS = fopen(Sfn.c_str(), "rb"))) {
+      printf("Open %s failed", Sfn.c_str());
       exit(1);
     }
   }
@@ -1646,12 +1641,11 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo,
             unsigned int n, I_NF = FIi.NFnum[v][nu], S_NF = FIs.NFnum[v][nu];
             if (db)
               if (v > dv) {
-                char vxt[5];
-                strcpy(vxt, ".v");
-                vxt[2] = v / 10 + '0';
-                vxt[3] = v % 10 + '0';
-                vxt[4] = 0;
-                strcpy(Sfx, vxt);
+                std::string vxt = ".v";
+                vxt += static_cast<char>(v / 10 + '0');
+                vxt += static_cast<char>(v % 10 + '0');
+                std::string Sfn_v = Sfn;
+                Sfn_v.replace(Sfn_v.size() - 4, 4, vxt);
                 if (ferror(FS)) {
                   fprintf(stderr,
                           "Error: Subtract_Aux_from_DB source file read "
@@ -1660,8 +1654,8 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo,
                   exit(1);
                 }
                 fclose(FS);
-                if (nullptr == (FS = fopen(Sfn, "rb"))) {
-                  printf("%s open failed", Sfn);
+                if (nullptr == (FS = fopen(Sfn_v.c_str(), "rb"))) {
+                  printf("%s open failed", Sfn_v.c_str());
                   exit(1);
                 }
                 dv = v;
@@ -1732,12 +1726,11 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo,
             fflush(stdout);
             if (FIs.nNUC[v])
               if (db) {
-                char vxt[5];
-                strcpy(vxt, ".v");
-                vxt[2] = v / 10 + '0';
-                vxt[3] = v % 10 + '0';
-                vxt[4] = 0;
-                strcpy(Sfx, vxt);
+                std::string vxt = ".v";
+                vxt += static_cast<char>(v / 10 + '0');
+                vxt += static_cast<char>(v % 10 + '0');
+                std::string Sfn_v = Sfn;
+                Sfn_v.replace(Sfn_v.size() - 4, 4, vxt);
                 if (ferror(FS)) {
                   fprintf(stderr,
                           "Error: Subtract_Aux_from_DB source file read "
@@ -1746,8 +1739,8 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo,
                   exit(1);
                 }
                 fclose(FS);
-                if (nullptr == (FS = fopen(Sfn, "rb"))) {
-                  printf("%s open failed", Sfn);
+                if (nullptr == (FS = fopen(Sfn_v.c_str(), "rb"))) {
+                  printf("%s open failed", Sfn_v.c_str());
                   exit(1);
                 }
               }
@@ -1857,12 +1850,11 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo,
             break;
           if (db)
             if (v > dv) {
-              char vxt[5];
-              strcpy(vxt, ".v");
-              vxt[2] = v / 10 + '0';
-              vxt[3] = v % 10 + '0';
-              vxt[4] = 0;
-              strcpy(Sfx, vxt);
+              std::string vxt = ".v";
+              vxt += static_cast<char>(v / 10 + '0');
+              vxt += static_cast<char>(v % 10 + '0');
+              std::string Sfn_v = Sfn;
+              Sfn_v.replace(Sfn_v.size() - 4, 4, vxt);
               if (ferror(FS)) {
                 fprintf(stderr,
                         "Error: Subtract_Aux_from_DB source file read "
@@ -1871,8 +1863,8 @@ void Reduce_Aux_File(char *polyi, char *polys, char *dbsub, char *polyo,
                 exit(1);
               }
               fclose(FS);
-              if (nullptr == (FS = fopen(Sfn, "rb"))) {
-                printf("%s open failed", Sfn);
+              if (nullptr == (FS = fopen(Sfn_v.c_str(), "rb"))) {
+                printf("%s open failed", Sfn_v.c_str());
                 exit(1);
               }
               dv = v;
