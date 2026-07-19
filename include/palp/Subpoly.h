@@ -104,7 +104,9 @@ typedef struct {
   unsigned char nV, nNUC[VERT_Nmax + 1], nVmax, NUCmax;
   unsigned int NFnum[VERT_Nmax + 1][NUC_Nmax];
   long long NB;
-  unsigned char *NF[VERT_Nmax + 1][NUC_Nmax], *NFli;
+  unsigned char *NF[VERT_Nmax + 1][NUC_Nmax];
+  std::unique_ptr<unsigned char[]> NFli_owner;
+  unsigned char *NFli;
 } FInfoList;
 
 typedef struct {
@@ -133,11 +135,15 @@ typedef struct {
   /* Lists */
   DataBase DB;
   FInfoList Aux, In;
+  std::unique_ptr<PEnt[]> PE_owner;
   PEnt *PE;
+  std::unique_ptr<PPEnt[]> PPE_owner;
   PPEnt *PPE;
+  std::unique_ptr<unsigned char[]> NewNF_owner;
   unsigned char *NewNF;
   Along NewNB, ANB; /* allocate*/
   int RemNB;        /* SL-remove */
+  std::unique_ptr<int[]> SLp_owner;
   int *SLp, SLN, PEN, PPEN, peNM, peSM, slNM, slSM;
   /* no/self mirror's on NewNF */
 } NF_List;

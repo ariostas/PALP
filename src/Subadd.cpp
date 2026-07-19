@@ -1,6 +1,8 @@
 #include <palp/Global.h>
 #include <palp/Subpoly.h>
 
+#include <cstring>
+#include <string>
 #include <vector>
 
 /*   VF_2_ucNF / UCnf2vNF compression/decompression assumes that vNF[0][0]==1
@@ -113,16 +115,15 @@ void Init_New_List(NF_List *S) {
   S->NewNB = S->NP = S->nSLP = 0;
   S->RemNB = S->PEN = S->PPEN = S->SLN = 0;
   S->peNM = S->peSM = S->slNM = S->slSM = 0;
-  S->PE = (PEnt *)malloc((SAVE_INC + SL_Nmax) * sizeof(PEnt));
-  S->PPE = (PPEnt *)malloc(ADD_LIST_LENGTH * sizeof(PPEnt));
-  S->SLp = (int *)malloc(SL_Nmax * sizeof(int));
-  S->NewNF = (unsigned char *)malloc(S->ANB * sizeof(char));
+  S->PE_owner = std::make_unique<PEnt[]>(SAVE_INC + SL_Nmax);
+  S->PE = S->PE_owner.get();
+  S->PPE_owner = std::make_unique<PPEnt[]>(ADD_LIST_LENGTH);
+  S->PPE = S->PPE_owner.get();
+  S->SLp_owner = std::make_unique<int[]>(SL_Nmax);
+  S->SLp = S->SLp_owner.get();
+  S->NewNF_owner = std::make_unique<unsigned char[]>(S->ANB);
+  S->NewNF = S->NewNF_owner.get();
   S->NC = 0;
-  if ((S->PE == nullptr) || (S->PPE == nullptr) || (S->SLp == nullptr) ||
-      (S->NewNF == nullptr)) {
-    fputs("Error: Init_New_List allocation failed\n", stderr);
-    exit(1);
-  }
 #ifdef __DECC
   /* printf("nullptr=%p S->PE=%p S->NewNF=%p\n",nullptr,S->PE,S->NewNF); */
 #endif
@@ -348,11 +349,8 @@ void Read_Honest_Poly(FILE *F, FInfoList *FI, NF_List *L) {
   if (FI->NFli != nullptr)
     printf("WARNing: NFli != nullptr");
   fflush(stdout);
-  FI->NFli = (unsigned char *)malloc(FI->NB * sizeof(char));
-  if (FI->NFli == nullptr) {
-    puts("Aux.NFli allocation failed");
-    exit(1);
-  }
+  FI->NFli_owner = std::make_unique<unsigned char[]>(FI->NB);
+  FI->NFli = FI->NFli_owner.get();
   for (v = L->d + 1; v <= FI->nVmax; v++)
     if (FI->nNUC[v])
       for (nu = 1; nu <= FI->NUCmax; nu++)
@@ -432,17 +430,15 @@ void Read_File_2_List(char *fn, NF_List *L) /* ... like Read_Aux_File */
 void Read_Aux_File(NF_List *L) {
   time_t Tstart = time(nullptr);
   FILE *F; /* F=fopen */
-  int NCalloc =
-      strlen(L->oname) + strlen(SAVE_FILE_EXT) + (USE_TMP_DIR ? 6 : 1);
-  char *auxfn = (char *)malloc(NCalloc);
+  std::string auxfn;
   if (USE_TMP_DIR) {
-    strcpy(auxfn, "/tmp/");
-    strcat(auxfn, L->oname);
+    auxfn = "/tmp/";
+    auxfn += L->oname;
   } else
-    strcpy(auxfn, L->oname);
-  strcat(auxfn, SAVE_FILE_EXT);
-  F = fopen(auxfn, "rb");
-  printf("Reading %s: ", auxfn);
+    auxfn = L->oname;
+  auxfn += SAVE_FILE_EXT;
+  F = fopen(auxfn.c_str(), "rb");
+  printf("Reading %s: ", auxfn.c_str());
   fflush(stdout);
   if (F == nullptr)
     puts("No aux-file found!");
@@ -454,20 +450,17 @@ void Read_Aux_File(NF_List *L) {
     fflush(stdout);
 #ifdef MOVE_SAVE_FILE /* inconsistent with USE_TMP_DIR !! */
     {
-      char *Mfn = (char *)malloc(1 + strlen(L->oname) + strlen(MOVE_SAVE_FILE));
-      strcpy(Mfn, L->oname);
-      strcat(Mfn, MOVE_SAVE_FILE);
-      if (rename(auxfn, Mfn) != 0) {
-        fprintf(stderr, "Error: Read_Aux_File rename %s -> %s failed\n", auxfn,
-                Mfn);
+      std::string Mfn = L->oname;
+      Mfn += MOVE_SAVE_FILE;
+      if (rename(auxfn.c_str(), Mfn.c_str()) != 0) {
+        fprintf(stderr, "Error: Read_Aux_File rename %s -> %s failed\n",
+                auxfn.c_str(), Mfn.c_str());
         exit(1);
       }
-      free(Mfn);
     }
 #endif
   }
   fflush(stdout);
-  free(auxfn);
 }
 void fputUI(unsigned int l, FILE *F) /* write unsigned int to bin file */
 {
@@ -743,7 +736,7 @@ void Write_Bin_File(FILE *F, NF_List *L, FILE *out) {
          NUCmax, fi, li, AI.nNF, AI.NB);
 #endif
   if (nullptr != L->Aux.NFli) {
-    free(L->Aux.NFli);
+    L->Aux.NFli_owner.reset();
     L->Aux.NFli = nullptr;
   }
 }
@@ -753,22 +746,22 @@ void Write_Aux_File(NF_List *S, FILE *out) {
   FILE *F;
   int NCalloc =
       strlen(S->oname) + strlen(SAVE_FILE_EXT) + (USE_TMP_DIR ? 6 : 1);
-  char *auxfn = (char *)malloc(NCalloc);
+  std::string auxfn;
+  auxfn.resize(NCalloc);
 #ifdef TEMP_FILE_EXT
-  char *tmpfn = (char *)malloc(1 + strlen(S->oname) + 4);
-  strcpy(tmpfn, S->oname);
-  strcat(tmpfn, ".tmp");
+  std::string tmpfn = S->oname;
+  tmpfn += TEMP_FILE_EXT;
 #else
-  char *tmpfn = auxfn;
+  std::string &tmpfn = auxfn;
 #endif
   if (USE_TMP_DIR) {
-    strcpy(auxfn, "/tmp/");
-    strcat(auxfn, S->oname);
+    auxfn = "/tmp/";
+    auxfn += S->oname;
   } else
-    strcpy(auxfn, S->oname);
-  strcat(auxfn, SAVE_FILE_EXT);
-  F = fopen(tmpfn, "wb");
-  printf("Writing %s: ", auxfn);
+    auxfn = S->oname;
+  auxfn += SAVE_FILE_EXT;
+  F = fopen(tmpfn.c_str(), "wb");
+  printf("Writing %s: ", auxfn.c_str());
   fflush(stdout);
   if (F == nullptr) {
     puts("Cannot open!");
@@ -782,10 +775,8 @@ void Write_Aux_File(NF_List *S, FILE *out) {
   fclose(F);
   printf(" done: %ds\n", (int)difftime(time(nullptr), Tstart));
   fflush(stdout);
-  free(auxfn);
 #ifdef TEMP_FILE_EXT
-  rename(tmpfn, auxfn);
-  free(tmpfn);
+  rename(tmpfn.c_str(), auxfn.c_str());
 #endif
 }
 
@@ -2648,13 +2639,12 @@ int Add_ANF_to_List(PolyPointList *_P, VertexNumList *_V, EqList *_E,
 
 void Gen_Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
                          char *polyo, FILE *out) {
-  NF_List *_NFL = (NF_List *)malloc(sizeof(NF_List));
+  auto NFLOwner = std::make_unique<NF_List>();
+  NF_List *_NFL = NFLOwner.get();
   VertexNumList V;
   EqList F;
-  if (_NFL == nullptr) {
-    fputs("Error: Gen_Ascii_to_Binary NF_List allocation failed\n", stderr);
-    exit(1);
-  }
+  (void)sizeof(V);
+  (void)sizeof(F);
   if (!(*polyo)) {
     puts("You have to specify an output file via -po in -a-mode!\n");
     printf("For more help use option '-h'\n");
@@ -2697,5 +2687,4 @@ void Gen_Ascii_to_Binary(CWS *W, PolyPointList *P, char *dbin, char *polyi,
       }
   }
   Write_List_2_File(polyo, _NFL, out);
-  free(_NFL);
 }
