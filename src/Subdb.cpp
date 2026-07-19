@@ -3129,7 +3129,6 @@ void Test_Hodge_file(char *filename, PolyPointList *_P) {
 /*  =====================================================================  */
 void Open_DB(char *dbin, std::unique_ptr<DataBase> *_DB, int info) {
   int i, j, v, nu;
-  char ext[4];
   std::string dbname;
   if (*dbin == 0) {
     *_DB = nullptr;
@@ -3139,18 +3138,14 @@ void Open_DB(char *dbin, std::unique_ptr<DataBase> *_DB, int info) {
   DataBase *DB = DBOwner.get();
   DB->readHucNF_TotNF = 0;
   dbname = dbin;
-  dbname.resize(dbname.size() + File_Ext_NCmax + 1, '\0');
-  dbname[strlen(dbin)] = '.';
-  char *fx = dbname.data() + strlen(dbin) + 1;
-  fx[0] = '\0';
-  dbname += "info";
+  dbname += ".info";
   if (info) {
-    printf("Reading %s: ", dbname.data());
+    printf("Reading %s: ", dbname.c_str());
     fflush(0);
   }
-  DB->Finfo = fopen(dbname.data(), "r");
+  DB->Finfo = fopen(dbname.c_str(), "r");
   if (DB->Finfo == nullptr) {
-    fprintf(stderr, "Error: Open_DB cannot open %s\n", dbname.data());
+    fprintf(stderr, "Error: Open_DB cannot open %s\n", dbname.c_str());
     exit(1);
   }
   if (fscanf(DB->Finfo, "%d  %d %d %d  %d  %lld %d %lld %lld  %d %d %d %d",
@@ -3193,21 +3188,20 @@ void Open_DB(char *dbin, std::unique_ptr<DataBase> *_DB, int info) {
     }
   }
   if (ferror(DB->Finfo)) {
-    printf("File error in %s\n", dbname.data());
+    printf("File error in %s\n", dbname.c_str());
     exit(1);
   }
   fclose(DB->Finfo);
-  ext[0] = 'v';
-  ext[3] = 0;
   DB->v = DB->p = DB->nu = 0;
   for (v = DB->d + 1; v <= DB->nVmax; v++)
     if (DB->nNUC[v]) {
-      ext[1] = '0' + v / 10;
-      ext[2] = '0' + v % 10;
-      strcpy(fx, ext);
-      DB->Fv[v] = fopen(dbname.data(), "rb");
+      std::string dbfile = dbin;
+      dbfile += ".v";
+      dbfile += static_cast<char>('0' + v / 10);
+      dbfile += static_cast<char>('0' + v % 10);
+      DB->Fv[v] = fopen(dbfile.c_str(), "rb");
       if (DB->Fv[v] == nullptr) {
-        fprintf(stderr, "Error: Open_DB cannot open %s\n", dbname.data());
+        fprintf(stderr, "Error: Open_DB cannot open %s\n", dbfile.c_str());
         exit(1);
       }
       if (0 == DB->v) {
