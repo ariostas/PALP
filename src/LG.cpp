@@ -247,8 +247,8 @@ int Read_WZ_PP(Weight *WZ, FILE *in,
     if (g == WZ->m[i])
       continue;
     if (g > 1)
-      for (k = 0; k < a; k++)
-        Za[j] /= g;
+      for (k = 0; k < d; k++)
+        Za[k] /= g;
     V_to_G_GI(Za, d, G, GI);
     for (k = 0; k < a; k++) {
       int l;
