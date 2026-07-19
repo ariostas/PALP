@@ -142,10 +142,14 @@ INCI List_Complete(int n, int n_polys, int n_facets, INCI *polys,
   return X;
 }
 
+namespace {
+PolyPointList feCloseTheHoleP;
+} // namespace
+
 void FE_Close_the_Hole(PolyPointList *_P, VertexNumList *_V, EqList *_E,
                        CEqList *_CEq, int n_old_v, INCI *CEq_INCI,
                        INCI Hole_Vert_INCI, FILE *out) {
-  static PolyPointList P;
+  PolyPointList &P = feCloseTheHoleP;
   VertexNumList Hole_Verts;
   EqList BVE;
   int i, j, n_new_Eq = 0;
