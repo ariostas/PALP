@@ -3379,10 +3379,13 @@ void Aux_IPS_Print_WP(Long *W, int w, int cd, FILE *out) {
   }
   fprintf(out, " %3d=d  codim=%d", d, cd);
 }
+namespace {
+int printFiberPolyDataCounter = 0;
+} // namespace
+
 void Print_Fiber_PolyData(PolyPointList *P, VertexNumList *V, Long *W, int w,
                           int n, int nw, int VS, int CD, FILE *out) {
   int cd = 0, j, Mmp, Mmv, Mnp, Mnv, Nmp, Nmv, Nnp, Nnv;
-  static int f;
   for (j = 0; j < w; j++)
     if (!W[j])
       cd++;
@@ -3390,7 +3393,7 @@ void Print_Fiber_PolyData(PolyPointList *P, VertexNumList *V, Long *W, int w,
   if (CD == 0)
     Aux_IPS_Print_W(W, w, cd, out);
   else if (n == 0)
-    f = 0;
+    printFiberPolyDataCounter = 0;
 
   if (CD || ((cd > 0) && (cd < 3) && ((P->n) - cd > 1))) {
     int i, s = 0, p, D = P->n, d = P->n - cd, fib, ref;
@@ -3444,8 +3447,8 @@ void Print_Fiber_PolyData(PolyPointList *P, VertexNumList *V, Long *W, int w,
       Mnp = 0;
 
     if (fib && CD) {
-      if (f == 0) {
-        f = 1;
+      if (printFiberPolyDataCounter == 0) {
+        printFiberPolyDataCounter = 1;
         Aux_IPS_Print_Poly(P, V, w, nw, VS, CD, out);
       }
       Aux_IPS_Print_W(W, w, cd, out);
