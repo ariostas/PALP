@@ -202,7 +202,7 @@ conversion is one commit.
   `std::vector` / `std::unique_ptr` / `std::string`.
 - [x] **8.5** `src/Subdb.cpp` — `new DataBase` / `delete DB` (lines 3163,
   3253) → `std::unique_ptr<DataBase>` or stack ownership.
-- [ ] **8.6** Remaining filename `char *` buffers across `Subdb.cpp` (already
+- [x] **8.6** Remaining filename `char *` buffers across `Subdb.cpp` (already
   half-migrated to `std::vector<char>`) → `std::string` + `+=` / `+` /
   `std::format`.
 
