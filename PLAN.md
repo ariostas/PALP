@@ -144,25 +144,25 @@ independently testable and keeps the suite green.
 These are confirmed logic bugs that produce wrong results. Fix one per commit,
 each verified by the full test suite.
 
-- [ ] **7.1** `src/Vertex.cpp:1591` — `EyD[j] = _E->e[i].c * Den;` uses wrong
+- [x] **7.1** `src/Vertex.cpp:1591` — `EyD[j] = _E->e[i].c * Den;` uses wrong
   index `i` (should be `j`). (ISSUES.md #49)
-- [ ] **7.2** `src/LG.cpp:2427` — `swap(&w[j], &w[j]);` swaps element with
+- [x] **7.2** `src/LG.cpp:2427` — `swap(&w[j], &w[j]);` swaps element with
   itself; sort is a no-op. Should be `swap(&w[i], &w[j])`. (ISSUES.md #50)
-- [ ] **7.3** `src/LG.cpp:250-251` — `Za[j] /= g;` uses `j` instead of `k` in
+- [x] **7.3** `src/LG.cpp:250-251` — `Za[j] /= g;` uses `j` instead of `k` in
   the loop. (ISSUES.md #51)
-- [ ] **7.4** `src/Coord.cpp:977` — checks `W[j][0]` but divides by
+- [x] **7.4** `src/Coord.cpp:977` — checks `W[j][0]` but divides by
   `W[j][N]`; potential division by zero. (ISSUES.md #52)
-- [ ] **7.5** `src/lgotwist.cpp:212` — `(p = prime[n++]) ^ 2` uses XOR instead
+- [x] **7.5** `src/lgotwist.cpp:212` — `(p = prime[n++]) ^ 2` uses XOR instead
   of `p*p`; prime decomposition broken. (ISSUES.md #53)
-- [ ] **7.6** `src/cws.cpp:2206` — `W[1].w[0] != W[2].w[0]` compares wrong
+- [x] **7.6** `src/cws.cpp:2206` — `W[1].w[0] != W[2].w[0]` compares wrong
   indices; should be `W[1].w[0] != W[1].w[1]`. (ISSUES.md #54)
-- [ ] **7.7** `src/Rat.cpp:105,355` — `Fgcd`/`LFgcd` divide `a %= b` without
+- [x] **7.7** `src/Rat.cpp:105,355` — `Fgcd`/`LFgcd` divide `a %= b` without
   checking `b == 0`; UB. (ISSUES.md #55)
-- [ ] **7.8** `src/cws.cpp:16,377` — `lcm`/`Flcm` compute `a*b` before gcd;
+- [x] **7.8** `src/cws.cpp:16,377` — `lcm`/`Flcm` compute `a*b` before gcd;
   overflow risk. Use `(a/g)*b`. (ISSUES.md #56)
-- [ ] **7.9** `src/MoriCone.cpp:3055` — `1 << (T.v - 1)` uses `int` literal;
+- [x] **7.9** `src/MoriCone.cpp:3055` — `1 << (T.v - 1)` uses `int` literal;
   UB shift when `T.v > 32`. Use `Inci64(1) << ...`. (ISSUES.md #57)
-- [ ] **7.10** `src/LG.cpp:986` — `puts(i ? "" : " 0");` uses out-of-scope
+- [x] **7.10** `src/LG.cpp:986` — `puts(i ? "" : " 0");` uses out-of-scope
   loop variable `i`. (ISSUES.md #58)
 - [ ] **7.11** `src/lgotwist.cpp:1192-1197` — `if (c == EOF)` where `c` is
   `char`; EOF never detected if `char` is unsigned. (ISSUES.md #59)
