@@ -2683,8 +2683,8 @@ void Sort_Hodge(char *dbaux, char *dbout) {
 void Test_Hodge_db(char *dbname) {
 
   time_t Tstart;
-  char *fhx;
-  std::vector<char> filename(6 + strlen(dbname) + File_Ext_NCmax);
+  std::string filename = dbname;
+  filename += ".hinfo";
   int i, j, dh, h12, nh, nnf_sum, nnf_d[Hod_Dif_max + 1],
       nnf_dh[Hod_Dif_max + 1][Hod_Min_max + 1];
   FILE *Fh;
@@ -2696,17 +2696,13 @@ void Test_Hodge_db(char *dbname) {
       nnf_dh[i][j] = 0;
   }
 
-  strcpy(filename.data(), dbname);
-  strcat(filename.data(), ".hinfo");
-  fhx = &filename[strlen(dbname) + 1];
-
-  printf("Reading %s\n", filename.data());
+  printf("Reading %s\n", filename.c_str());
   fflush(0);
 
   /* read the info-file: */
-  Fhinfo = fopen(filename.data(), "r");
+  Fhinfo = fopen(filename.c_str(), "r");
   if (Fhinfo == nullptr) {
-    fprintf(stderr, "Error: Test_Hodge_db cannot open %s\n", filename.data());
+    fprintf(stderr, "Error: Test_Hodge_db cannot open %s\n", filename.c_str());
     exit(1);
   }
   while (fscanf(Fhinfo, "%d", &dh) == 1) {
@@ -2739,7 +2735,7 @@ void Test_Hodge_db(char *dbname) {
     }
   }
   if (ferror(Fhinfo)) {
-    printf("File error in %s\n", filename.data());
+    printf("File error in %s\n", filename.c_str());
     exit(1);
   }
   fclose(Fhinfo);
@@ -2751,13 +2747,13 @@ void Test_Hodge_db(char *dbname) {
   /* Analyse Hodge&Poly-Data */
   for (dh = 0; dh <= Hod_Dif_max; dh++)
     if (nnf_d[dh]) {
-      char hext[9];
-      hext[0] = 'd';
-      hext[1] = '0' + dh / 100;
-      hext[2] = '0' + (dh / 10) % 10;
-      hext[3] = '0' + dh % 10;
-      hext[4] = 'h';
-      hext[5] = hext[6] = hext[7] = hext[8] = 0;
+      std::string hext = "d000h";
+      auto setDigits = [](std::string &s, size_t off, int val) {
+        s[off] = '0' + val / 100;
+        s[off + 1] = '0' + (val / 10) % 10;
+        s[off + 2] = '0' + val % 10;
+      };
+      setDigits(hext, 1, dh);
 
       printf("dh=%d: %dNF...", dh, nnf_d[dh]);
       fflush(0);
@@ -2767,14 +2763,15 @@ void Test_Hodge_db(char *dbname) {
         if (nnf_dh[dh][h12]) {
           /* unsigned char uc_poly[NUC_Nmax]; */
           int c1, /* c2, */ nuc;
-          hext[5] = '0' + h12 / 100;
-          hext[6] = '0' + (h12 / 10) % 10;
-          hext[7] = '0' + h12 % 10;
-          strcpy(fhx, hext);
-          Fh = fopen(filename.data(), "rb");
+          std::string hfile = dbname;
+          hfile += hext;
+          hfile += static_cast<char>('0' + h12 / 100);
+          hfile += static_cast<char>('0' + (h12 / 10) % 10);
+          hfile += static_cast<char>('0' + h12 % 10);
+          Fh = fopen(hfile.c_str(), "rb");
           if (Fh == nullptr) {
             fprintf(stderr, "Error: Test_Hodge_db cannot open %s\n",
-                    filename.data());
+                    hfile.c_str());
             exit(1);
           }
           while ((c1 = fgetc(Fh)) != EOF) {
