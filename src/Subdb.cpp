@@ -811,7 +811,8 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo, FILE *out) {
     Ofn_sl.replace(Ofn_sl.size() - 4, 4, ".sl");
     FO = fopen(Ofn_sl.c_str(), "wb");
     if (FO == nullptr) {
-      fprintf(stderr, "Error: Add_Aux_to_DB cannot create %s.sl\n", Ofn_sl.c_str());
+      fprintf(stderr, "Error: Add_Aux_to_DB cannot create %s.sl\n",
+              Ofn_sl.c_str());
       exit(1);
     }
     for (i = 0; i < slNF; i++) /* write SL */
@@ -853,7 +854,8 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo, FILE *out) {
   Ofn_info.replace(Ofn_info.size() - 4, 4, ".info");
   FO = fopen(Ofn_info.c_str(), "w");
   if (FO == nullptr) {
-    fprintf(stderr, "Error: Add_Aux_to_DB cannot create %s.info\n", Ofn_info.c_str());
+    fprintf(stderr, "Error: Add_Aux_to_DB cannot create %s.info\n",
+            Ofn_info.c_str());
     exit(1);
   }
   fprintf(FO, /* write FO.info */
@@ -2521,7 +2523,8 @@ void Sort_Hodge(char *dbaux, char *dbout) {
   /* read the info-file: */
   Fvinfo = fopen(dbaname.c_str(), "r");
   if (Fvinfo == nullptr) {
-    fprintf(stderr, "Error: Sort_Hodge_files cannot open %s\n", dbaname.c_str());
+    fprintf(stderr, "Error: Sort_Hodge_files cannot open %s\n",
+            dbaname.c_str());
     exit(1);
   }
   while (fscanf(Fvinfo, "%d", &v) == 1) {
