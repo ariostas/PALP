@@ -102,6 +102,8 @@ void Rpr(FILE *out, Rat c) /* write "c.N/c.D" -> out */
  */
 Long Fgcd(Long a, Long b) /* Fast greatest common div */
 {
+  if (!b)
+    return a;
   while (a %= b)
     if (!(b %= a))
       return a;
@@ -352,6 +354,8 @@ void LRpr(FILE *out, LRat c) /* write "c.N/c.D" -> out */
  */
 LLong LFgcd(LLong a, LLong b) /* Fast greatest common div */
 {
+  if (!b)
+    return a;
   while (a %= b)
     if (!(b %= a))
       return a;
