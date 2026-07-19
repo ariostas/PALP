@@ -2443,9 +2443,9 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
     return 0;
   } else {
     BaHo BH; /* Calabi-Yau case */
-    int pic, cs,
-        Ind = Divisibility_Index(P, V), I3 = Ind * Ind * Ind,
-        sing = Obstructed_Conifold_Deformations(S, M, nsq, rk, E->ne, rel, C);
+    int pic, cs, Ind = Divisibility_Index(P, V);
+    Long I3 = static_cast<Long>(Ind) * Ind * Ind,
+         sing = Obstructed_Conifold_Deformations(S, M, nsq, rk, E->ne, rel, C);
     Long xB[POLY_Dmax], xN, vol = LatVol_Barycent(P, V, xB, &xN, out),
                             c2h = 12 * (P->np - 1) - 2 * vol;
     /*  VertexNumList dV; EqList *auxE=(EqList *) malloc(sizeof(EqList));
