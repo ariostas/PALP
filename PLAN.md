@@ -226,7 +226,7 @@ conversion is one commit.
 
 ### Phase 10 — `typedef` → `using` / `struct Name {}`
 
-- [ ] **10.1** Convert all 91 `typedef struct { ... } Name;` to
+- [x] **10.1** Convert all 91 `typedef struct { ... } Name;` to
   `struct Name { ... };` and `typedef T Name[N];` to
   `using Name = std::array<T, N>;` (or `using Name = T[N];` where the
   typedef is used as a function-parameter decay helper). File-by-file.
