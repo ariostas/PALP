@@ -815,11 +815,16 @@ int GLZ_Start_Simplex(PolyPointList *_P, VertexNumList *_V, CEqList *_C) {
 /*  ==========							==========  */
 /*  ======================================================================  */
 
+namespace {
+CEqList makeNewCEqsBadC;
+INCI makeNewCEqsBadCI[CEQ_Nmax];
+} // namespace
+
 void Make_New_CEqs(PolyPointList *_P, VertexNumList *_V, CEqList *_C,
                    EqList *_F, INCI *CEq_I, INCI *F_I) {
   int i, j, Old_C_ne = _C->ne;
-  static CEqList Bad_C;
-  static INCI Bad_C_I[CEQ_Nmax];
+  CEqList &Bad_C = makeNewCEqsBadC;
+  INCI *Bad_C_I = makeNewCEqsBadCI;
 
   Bad_C.ne = _C->ne = 0;
   for (i = 0; i < Old_C_ne; i++) {
