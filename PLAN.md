@@ -164,21 +164,21 @@ each verified by the full test suite.
   UB shift when `T.v > 32`. Use `Inci64(1) << ...`. (ISSUES.md #57)
 - [x] **7.10** `src/LG.cpp:986` — `puts(i ? "" : " 0");` uses out-of-scope
   loop variable `i`. (ISSUES.md #58)
-- [ ] **7.11** `src/lgotwist.cpp:1192-1197` — `if (c == EOF)` where `c` is
+- [x] **7.11** `src/lgotwist.cpp:1192-1197` — `if (c == EOF)` where `c` is
   `char`; EOF never detected if `char` is unsigned. (ISSUES.md #59)
-- [ ] **7.12** `src/Subdb.cpp:3257` — `static Along totNF;` in
+- [x] **7.12** `src/Subdb.cpp:3257` — `static Along totNF;` in
   `Read_H_ucNF_from_DB` leaks state across different `DB` arguments.
   (ISSUES.md #60)
-- [ ] **7.13** `src/Polynf.cpp:2447` — `Ind * Ind * Ind` overflows `int`;
+- [x] **7.13** `src/Polynf.cpp:2447` — `Ind * Ind * Ind` overflows `int`;
   use `Long`. (ISSUES.md #61)
-- [ ] **7.14** `src/Subdb.cpp:1172,1177,2228,2233,3920,3926` — `fgetc` return
+- [x] **7.14** `src/Subdb.cpp:1172,1177,2228,2233,3920,3926` — `fgetc` return
   used as array index without EOF check. (ISSUES.md #62)
-- [ ] **7.15** `src/MoriCone.cpp:849` — `sumS + > T->I[i];` syntax error in
+- [x] **7.15** `src/MoriCone.cpp:849` — `sumS + > T->I[i];` syntax error in
   dead `#ifdef TRIANG_CHECKSUM` block; remove the block. (ISSUES.md #63)
-- [ ] **7.16** `src/Polynf.cpp:3865` — `static int x;` incremented but never
+- [x] **7.16** `src/Polynf.cpp:3865` — `static int x;` incremented but never
   read; dead code. (ISSUES.md #64)
-- [ ] **7.17** `src/cws.cpp:2206` duplicate check; see 7.6.
-- [ ] **7.18** Remaining `static` mutable state in `Subdb.cpp` (#15),
+- [x] **7.17** `src/cws.cpp:2206` duplicate check; see 7.6.
+- [x] **7.18** Remaining `static` mutable state in `Subdb.cpp` (#15),
   `Polynf.cpp` (#17), `Coord.cpp` (#44), `Vertex.cpp` (#65),
   `Subpoly.cpp` (#66), `MoriCone.cpp` (#67) → anonymous namespace or
   thread-through.
