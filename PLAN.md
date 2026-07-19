@@ -218,10 +218,10 @@ conversion is one commit.
   (`Long M[][VERT_Nmax]`, `Long *V`, `int *d`) to `std::span<T>` (C++20) or
   reference-to-`std::array` where the size is known. Replace `int *d`/`int *v`
   output parameters with `int& d`/`int& v`.
-- [ ] **9.3** Convert VLAs (non-standard C++) to `std::vector`:
+- [x] **9.3** Convert VLAs (non-standard C++) to `std::vector`:
   `src/MoriCone.cpp:2004` `Inci64 T[naT]`, `:2006` `int nt[ANfan][ANtri]`,
   `src/SingularInput.cpp:195` `int DegreeVec[dim]`.
-- [ ] **9.4** Convert `qsort` + comparator in `src/Vertex.cpp:289` to
+- [x] **9.4** Convert `qsort` + comparator in `src/Vertex.cpp:289` to
   `std::sort` with a lambda.
 
 ### Phase 10 — `typedef` → `using` / `struct Name {}`
