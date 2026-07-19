@@ -19,10 +19,10 @@ using Inci64 = unsigned long long;
 /* =========         P R O T O T Y P E s        ========= */
 
 /*** from mori.c ***/
-typedef struct {
+struct MORI_Flags {
   int FilterFlag, g, m, P, K, i, t, c, d, a, b, D, H, I, M,
       Read_HyperSurfCounter;
-} MORI_Flags;
+};
 /*
 List of flags that correspond to the options of mori.x -h for
 more info plus Read_HyperSurfCounter. The latter controls if an
@@ -32,10 +32,10 @@ HyperSurfSingular() is called for each triangulation of the polytope.
 */
 
 /*** from Moricone.c ***/
-typedef struct {
+struct triang {
   int d, v, n, nmax;
   Inci64 *I;
-} triang;
+};
 /*
 INCIDENCE structure needed for Triangulation and SR-ideal data
 d: dimension of the lattice polytope
@@ -154,10 +154,10 @@ int IsDigit(char c);
 Long SimplexVolume(Long *V[POLY_Dmax + 1], int d);
 
 /* Matrix / circuit helpers defined in Polynf.cpp and used by MoriCone.c */
-typedef struct {
+struct Matrix {
   int v, d;
   Long **x;
-} Matrix;
+};
 void Init_Matrix(Matrix *M, int v, int d);
 void Free_Matrix(Matrix *M);
 void Print_LMatrix(Matrix M, char *s, FILE *out);

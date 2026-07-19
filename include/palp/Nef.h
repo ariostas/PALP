@@ -11,14 +11,14 @@ constexpr int MAXSTRING = 100;
 constexpr int Pos_Max = POLY_Dmax + 2;
 constexpr int FIB_POINT_Nmax = VERT_Nmax;
 
-typedef struct {
+struct LInfo {
   Long W[FIB_Nmax][FIB_POINT_Nmax];
   Long VM[FIB_POINT_Nmax][POLY_Dmax];
   int nw;
   int nv;
   int d;
   int Wmax;
-} LInfo;
+};
 
 struct Poset_Element {
   int num, dim;
@@ -28,49 +28,45 @@ struct Interval {
   int min, max;
 };
 
-typedef struct Interval Interval;
-
-typedef struct {
-  struct Interval *L;
+struct Interval_List {
+  Interval *L;
   std::unique_ptr<Interval[]> L_owner;
   int n;
-} Interval_List;
+};
 
-typedef struct Poset_Element Poset_Element;
+struct Poset {
+  Poset_Element x, y;
+};
 
-typedef struct {
-  struct Poset_Element x, y;
-} Poset;
-
-typedef struct {
-  struct Poset_Element *L;
+struct Poset_Element_List {
+  Poset_Element *L;
   int n;
-} Poset_Element_List;
+};
 
-typedef struct {
+struct Cone {
   int nface[Pos_Max];
   int dim;
   INCI edge[Pos_Max][FACE_Nmax];
-} Cone;
+};
 
-typedef struct {
+struct SPoly {
   Long S[2 * Pos_Max];
-} SPoly;
+};
 
-typedef struct {
+struct BPoly {
   Long B[Pos_Max][Pos_Max];
-} BPoly;
+};
 
-typedef struct {
+struct EPoly {
   int E[4 * (Pos_Max)][4 * (Pos_Max)];
-} EPoly;
+};
 
-typedef struct AmbiPointList_ {
+struct AmbiPointList {
   Long x[POINT_Nmax][W_Nmax];
   int N, np;
-} AmbiPointList;
+};
 
-typedef struct {
+struct PartList {
   int n;
   int nv;
   int codim;
@@ -78,34 +74,32 @@ typedef struct {
   int DirProduct[Nef_Max];
   int Proj[Nef_Max];
   int DProj[Nef_Max];
-} PartList;
+};
 
-typedef struct {
+struct Part {
   int n;
   int nv;
   int S[Nef_Max][VERT_Nmax];
-} Part;
+};
 
-typedef struct {
+struct Flags {
   int n, y, w, p, t, S, Lv, Lp, N, u, d, g, VP, B, T, H, dd, gd, noconvex, Msum,
       Sym, V, Rv, Test, Sort, Dir, Proj, f, G;
-} Flags;
+};
 
-typedef struct {
+struct NEF_Flags {
   int noconvex, Sym, Test, Sort;
-} NEF_Flags;
+};
 
 struct Vector {
   Long x[POLY_Dmax];
 };
 
-typedef struct Vector Vector;
-
-typedef struct {
+struct DYN_PPL {
   std::vector<Vector> L;
   int n;
   Long np;
-} DYN_PPL;
+};
 
 void part_nef(PolyPointList *, VertexNumList *, EqList *, PartList *, int *,
               NEF_Flags *, FILE *out = stdout);

@@ -78,7 +78,7 @@ constexpr int File_Ext_NCmax = 5; /* space for following FILE_EXTs */
 constexpr const char *SAVE_FILE_EXT =
     ".aux"; /* aux. O/I file for big allocation */
 
-typedef struct {
+struct DataBase {
   Along nNF, nNM;
   int nSM, /* #ref=2*nNF-nSelfMir.-nNoMir. */
       d, v, nu, p, sl_nNF, sl_SM, sl_NM, sl_NB, list_num, nV, nNUC[VERT_Nmax],
@@ -96,9 +96,9 @@ typedef struct {
   Along readHucNF_TotNF;
   /* Owned auxiliary PolyPointList used by IP_Simplices when CD != 0 */
   std::unique_ptr<PolyPointList> auxP;
-} DataBase;
+};
 
-typedef struct {
+struct FInfoList {
   Along nNF, nNM;
   int nSM; /* #ref=2*nNF-nSelfMir.-nNoMir. */
   unsigned char nV, nNUC[VERT_Nmax + 1], nVmax, NUCmax;
@@ -107,17 +107,17 @@ typedef struct {
   unsigned char *NF[VERT_Nmax + 1][NUC_Nmax];
   std::unique_ptr<unsigned char[]> NFli_owner;
   unsigned char *NFli;
-} FInfoList;
+};
 
-typedef struct {
+struct PEnt {
   unsigned int n, c;
-} /* below n in NFptr, @NewNF[c] */ PEnt;
-typedef struct {
+} /* below n in NFptr, @NewNF[c] */;
+struct PPEnt {
   int n;
   PEnt pe;
-} /* below #n in PEnt[], PEnt    */ PPEnt;
+} /* below #n in PEnt[], PEnt    */;
 
-typedef struct {
+struct NF_List {
   /* flags and file names: */
   int SL, of, rf, kf, rd, b[POINT_Nmax]; /* orig/omit-flag, recov-flag,
                                             keep-flag, rec.depth, branch */
@@ -146,7 +146,7 @@ typedef struct {
   std::unique_ptr<int[]> SLp_owner;
   int *SLp, SLN, PEN, PPEN, peNM, peSM, slNM, slSM;
   /* no/self mirror's on NewNF */
-} NF_List;
+};
 
 /* 	NP (HP)=#(honest) refpolys         NNF=#nf's, NSM=#self mirror,  */
 /*		NP==HRP+SLRP	HRP==2*HNF-HSM-HnoMirror
@@ -215,6 +215,7 @@ void Extract_from_Hodge_db(char *dname, char *x_string, PolyPointList *P,
 void Open_DB(char *dbin, std::unique_ptr<DataBase> *DB, int info);
 int Read_H_poly_from_DB(DataBase *DB, PolyPointList *_P);
 void Close_DB(DataBase *DB);
+
 void VPHM_Sublat_Polys(char sFlag, char mr, char *dbin, char *polyi,
                        char *polyo, PolyPointList *P, FILE *in = stdin,
                        FILE *out = stdout);

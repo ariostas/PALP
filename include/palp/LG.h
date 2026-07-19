@@ -1,5 +1,7 @@
 #pragma once
 
+#include <palp/Global.h>
+
 #include <vector>
 
 #define WZinput (1) /* WZ-input (in progress)  */
@@ -12,12 +14,12 @@ using Pint = int;
 using Pint = long;
 #endif /* type of coefficients in PolyCoeffList */
 
-typedef struct {
+struct PoCoLi { /* e=exp */
   int n;
   std::vector<int> e;
   std::vector<Pint> c;
   int A;
-} PoCoLi; /* e=exp */
+};
 
 void AllocPoCoLi(PoCoLi *P);                    /* allocate e[P.A] and c[P.A] */
 void Free_PoCoLi(PoCoLi *P);                    /* free P.e and P.c */
@@ -34,27 +36,27 @@ void PoincarePoly(int N, int *w, int d, PoCoLi *PP, PoCoLi *Naux, PoCoLi *Raux,
 
 int IsDigit(char c);
 
-typedef struct {
+struct Weight { /* Eq: Ei.c=Ai Ei.a[]=Bi[]} */
   int d, N, z[POLY_Dmax][W_Nmax], m[POLY_Dmax], M, r, R; /* Ref */
   Long w[W_Nmax], B[W_Nmax][POLY_Dmax], A[W_Nmax], rI[POLY_Dmax];
   PolyPointList *P;
-} /* Eq: Ei.c=Ai Ei.a[]=Bi[]} */
-/* 0<=A+B*x  r=sum(w)/d  rI=IP(r*P)  n=(r,rI) */ Weight;
+};
 
-typedef struct {
+struct VaHo {
   int D, E, sts;
   Pint h[POLY_Dmax][POLY_Dmax];
-} VaHo;
+};
 
-/* AmbiPointList is defined identically in Nef.h and LG.cpp.  Use Nef.h's tag.
- */
-typedef struct AmbiPointList_ AmbiPointList;
+
 
 /* AmbiLatticeBasis is used by nef.c; the full definition must match LG.cpp. */
-typedef struct AmbiLatticeBasis_ {
+struct AmbiLatticeBasis {
   Long x[POLY_Dmax][W_Nmax];
   int N, n;
-} AmbiLatticeBasis;
+};
+
+/* Forward declaration: AmbiPointList is fully defined in Nef.h. */
+struct AmbiPointList;
 
 int Read_W_PP(Weight *, PolyPointList *, FILE *in = stdin, FILE *out = stdout);
 int Read_Weight(Weight *_W, FILE *in = stdin);
