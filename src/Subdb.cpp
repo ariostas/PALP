@@ -905,39 +905,38 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo, FILE *out) {
   }
   fclose(FO);
 }
-int Check_sl_order(int *v, int *nu, unsigned char *uc) {
-  static int n, V, NU;
-  static unsigned char UC[NUC_Nmax];
-  if (n) {
-    if (V > (*v))
+namespace {
+struct OrderState {
+  int initialized = 0;
+  int V = 0, NU = 0;
+  unsigned char UC[NUC_Nmax] = {};
+};
+OrderState slOrderState, hnfOrderState;
+
+int checkOrder(OrderState &state, int *v, int *nu, unsigned char *uc) {
+  if (state.initialized) {
+    if (state.V > (*v))
       return 0;
-    if ((V == (*v)) && (NU > (*nu)))
+    if ((state.V == (*v)) && (state.NU > (*nu)))
       return 0;
-    if ((V == (*v)) && (NU == (*nu)) && (RIGHTminusLEFT(UC, uc, &NU) <= 0))
+    if ((state.V == (*v)) && (state.NU == (*nu)) &&
+        (RIGHTminusLEFT(state.UC, uc, &state.NU) <= 0))
       return 0;
   }
-  V = *v;
-  NU = *nu;
-  for (n = 0; n < NU; n++)
-    UC[n] = uc[n];
+  state.V = *v;
+  state.NU = *nu;
+  for (int n = 0; n < state.NU; n++)
+    state.UC[n] = uc[n];
+  state.initialized = 1;
   return 1;
 }
+} // namespace
+
+int Check_sl_order(int *v, int *nu, unsigned char *uc) {
+  return checkOrder(slOrderState, v, nu, uc);
+}
 int Check_hnf_order(int *v, int *nu, unsigned char *uc) {
-  static int n, V, NU;
-  static unsigned char UC[NUC_Nmax];
-  if (n) {
-    if (V > (*v))
-      return 0;
-    if ((V == (*v)) && (NU > (*nu)))
-      return 0;
-    if ((V == (*v)) && (NU == (*nu)) && (RIGHTminusLEFT(UC, uc, &NU) <= 0))
-      return 0;
-  }
-  V = *v;
-  NU = *nu;
-  for (n = 0; n < NU; n++)
-    UC[n] = uc[n];
-  return 1;
+  return checkOrder(hnfOrderState, v, nu, uc);
 }
 void Print_NF(FILE *F, int *d, int *v, Long NF[POLY_Dmax][VERT_Nmax]) {
   int i, j;
