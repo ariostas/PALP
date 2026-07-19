@@ -5245,6 +5245,7 @@ constexpr int FPcirNmax = 15;
 constexpr bool PrintFanoProjCand = true;
 
 using INCIbits = unsigned long long;
+int fano5dCandidateCounter = 0;
 } // namespace
 int getNI(int N, INCIbits I) { return (I >> N) % 2; } /* read INCIDENCE */
 
@@ -5256,7 +5257,6 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E, FILE *in, FILE *out) {
          p[POLY_Dmax], symDP = 1;
   char s[99] = "FanoProjection candidate #nnn";
   int CC[FPcirNmax][FanoProjNPmax];
-  static int FPc;
   INCIbits FI[VERT_Nmax], CI[FPcirNmax];
   Matrix G, M; /* assert(d==4); */
   if (FanoProjNPmax <= np)
@@ -5369,7 +5369,7 @@ int Fano5d(PolyPointList *P, VertexNumList *V, EqList *E, FILE *in, FILE *out) {
     int c;
     FILE *OF = out;
     out = stdout;
-    n = ++FPc;
+    n = ++fano5dCandidateCounter;
     e = 99;
     while (n) {
       s[--e] = '0' + (n % 10);
