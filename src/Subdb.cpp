@@ -2805,9 +2805,10 @@ void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P,
                            FILE *out) {
 
   time_t Tstart;
-  char c = *x_string, hext[9], com[64];
-  std::vector<char> filename(6 + strlen(dbname) + File_Ext_NCmax);
-  char *fhx;
+  char c = *x_string, com[64];
+  std::string filename = dbname;
+  filename += ".hinfo";
+  std::string hext;
   unsigned char uc_poly[NUC_Nmax];
   int E = 998, H1 = 0, H2 = 0, M = 0, V = 0, N = 0, F = 0, L = 1000, i = 0, j,
       dh, h12, nh, nnf_sum, nnf_d[Hod_Dif_max + 1],
@@ -2817,10 +2818,6 @@ void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P,
       max_mv = 34;
   FILE *Fh;
   FILE *Fhinfo;
-
-  hext[0] = 'd';
-  hext[4] = 'h';
-  hext[8] = 0;
 
   while (c) {
     if (c == 'E') {
@@ -2930,17 +2927,11 @@ void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P,
       nnf_dh[i][j] = 0;
   }
 
-  strcpy(filename.data(), dbname);
-  strcat(filename.data(), ".hinfo");
-  fhx = &filename[strlen(dbname) + 1];
-
-  /* printf("Reading %s\n",filename.data()); fflush(0); */
-
   /* read the info-file: */
-  Fhinfo = fopen(filename.data(), "r");
+  Fhinfo = fopen(filename.c_str(), "r");
   if (Fhinfo == nullptr) {
     fprintf(stderr, "Error: Extract_from_Hodge_db cannot open %s\n",
-            filename.data());
+            filename.c_str());
     exit(1);
   }
   while (fscanf(Fhinfo, "%d", &dh) == 1) {
@@ -2977,7 +2968,7 @@ void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P,
   }
 
   if (ferror(Fhinfo)) {
-    printf("File error in %s\n", filename.data());
+    printf("File error in %s\n", filename.c_str());
     exit(1);
   }
   fclose(Fhinfo);
@@ -3012,17 +3003,22 @@ void Extract_from_Hodge_db(char *dbname, char *x_string, PolyPointList *_P,
     for (dh = HD_from; dh <= HD_to; dh++)
       if (nnf_dh[dh][h12]) {
 
-        hext[1] = '0' + dh / 100;
-        hext[2] = '0' + (dh / 10) % 10;
-        hext[3] = '0' + dh % 10;
-        hext[5] = '0' + h12 / 100;
-        hext[6] = '0' + (h12 / 10) % 10;
-        hext[7] = '0' + h12 % 10;
-        strcpy(fhx, hext);
-        Fh = fopen(filename.data(), "rb");
+        hext = "d000h";
+        auto setDigits = [](std::string &s, size_t off, int val) {
+          s[off] = '0' + val / 100;
+          s[off + 1] = '0' + (val / 10) % 10;
+          s[off + 2] = '0' + val % 10;
+        };
+        setDigits(hext, 1, dh);
+        std::string hfile = dbname;
+        hfile += hext;
+        hfile += static_cast<char>('0' + h12 / 100);
+        hfile += static_cast<char>('0' + (h12 / 10) % 10);
+        hfile += static_cast<char>('0' + h12 % 10);
+        Fh = fopen(hfile.c_str(), "rb");
         if (Fh == nullptr) {
           fprintf(stderr, "Error: Extract_from_Hodge_db cannot open %s\n",
-                  filename.data());
+                  hfile.c_str());
           exit(1);
         }
         while ((c1 = fgetc(Fh)) != EOF) {
