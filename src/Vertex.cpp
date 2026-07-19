@@ -1588,7 +1588,7 @@ void QComplete_Poly(PairMat VPM, EqList *_E, int nv, int n, int *np,
     yDen[i] -= _E->e[BasFac[n - 1]].c * InvMat[i][n - 1];
   }
   for (j = 0; j < _E->ne; j++) {
-    EyD[j] = _E->e[i].c * Den;
+    EyD[j] = _E->e[j].c * Den;
     for (i = 0; i < n; i++)
       EyD[j] += yDen[i] * _E->e[j].a[i];
   }
