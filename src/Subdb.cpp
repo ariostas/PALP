@@ -2176,15 +2176,12 @@ void Bin2aDBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P,
   FInfoList L;
   int d, v, nu, i, j, list_num, mc = 0, MS, sl_nNF, sl_SM, sl_NM, sl_NB,
                                 tSM = 0, tNM = 0;
-  std::vector<char> Ifn(1 + strlen(dbi) + File_Ext_NCmax);
-  char *Ifx;
+  std::string Ifn = dbi;
   Long NF[POLY_Dmax][VERT_Nmax];
   VertexNumList V;
   EqList E;
-  strcpy(Ifn.data(), dbi);
-  Ifx = &Ifn[strlen(dbi)];
-  strcpy(Ifx, ".info");
-  F = fopen(Ifn.data(), "r");
+  Ifn += ".info";
+  F = fopen(Ifn.c_str(), "r");
   if (F == nullptr) {
     puts("Info File not found");
     exit(1);
@@ -2201,10 +2198,10 @@ void Bin2aDBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P,
   L.nVmax = j;
   L.NUCmax = nu;
   if (sl_NB && (vf == 2) && (vt == VERT_Nmax - 1)) {
-    strcpy(Ifx, ".sl");
+    Ifn.replace(Ifn.size() - 4, 4, ".sl");
     fclose(F);
-    if (nullptr == (F = fopen(Ifn.data(), "rb"))) {
-      printf("Open %s failed", Ifn.data());
+    if (nullptr == (F = fopen(Ifn.c_str(), "rb"))) {
+      printf("Open %s failed", Ifn.c_str());
       exit(1);
     }
   } else /* puts("no .sl file"); */
@@ -2318,9 +2315,9 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto, PolyPointList *_P,
   EqList E;
   time_t Tstart;
   char *fx;
-  std::vector<char> dbname(1 + strlen(dbin) + File_Ext_NCmax);
-  char *fhx;
-  std::vector<char> dbhname(6 + strlen(dbout) + File_Ext_NCmax);
+  std::string dbname = dbin;
+  std::string dbhname = dbout;
+  std::string dbext;
   unsigned char uc_poly[NUC_Nmax];
   int d, v, nu, i, j, list_num, sl_nNF, sl_SM, sl_NM, sl_NB, dh,
       nnf_vd[VERT_Nmax][Hod_Dif_max + 1], nnf_v[VERT_Nmax];
@@ -2337,21 +2334,17 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto, PolyPointList *_P,
   for (i = 0; i <= Hod_Dif_max; i++)
     for (j = 0; j < VERT_Nmax; j++)
       nnf_vd[j][i] = 0;
-  strcpy(dbname.data(), dbin);
-  strcpy(dbhname.data(), dbout);
-  strcat(dbname.data(), ".info");
-  strcat(dbhname.data(), ".vinfo");
-  fx = &dbname[strlen(dbin) + 1];
-  fhx = &dbhname[strlen(dbout) + 1];
-  Fvinfo = fopen(dbhname.data(), "a");
+  dbname += ".info";
+  dbhname += ".vinfo";
+  Fvinfo = fopen(dbhname.c_str(), "a");
 
-  printf("Reading %s: ", dbname.data());
+  printf("Reading %s: ", dbname.c_str());
   fflush(0);
 
   /* read the info-file: */
-  DB.Finfo = fopen(dbname.data(), "r");
+  DB.Finfo = fopen(dbname.c_str(), "r");
   if (DB.Finfo == nullptr) {
-    fprintf(stderr, "Error: CY_hodge_split cannot open %s\n", dbname.data());
+    fprintf(stderr, "Error: CY_hodge_split cannot open %s\n", dbname.c_str());
     exit(1);
   }
   if (fscanf(DB.Finfo, "%d  %d %d %d  %d  %lld %d %lld %lld  %d %d %d %d", &d,
@@ -2407,24 +2400,21 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto, PolyPointList *_P,
   for (v = vfrom; v <= vto; v++)
     if (DB.nNUC[v]) {
       int nd = 0;
-      char ext[4], aext[8];
-      ext[0] = 'v';
-      ext[1] = '0' + v / 10;
-      ext[2] = '0' + v % 10;
-      ext[3] = 0;
-      aext[0] = 'v';
-      aext[1] = '0' + v / 10;
-      aext[2] = '0' + v % 10;
-      aext[3] = 'd';
-      aext[4] = aext[5] = aext[6] = aext[7] = 0;
+      std::string dbfile = dbin;
+      dbfile += ".v";
+      dbfile += static_cast<char>('0' + v / 10);
+      dbfile += static_cast<char>('0' + v % 10);
+      dbext = dbhname;
+      dbext.replace(dbext.size() - 5, 1, std::to_string(0));
+      dbext.replace(dbext.size() - 4, 1, std::to_string(0));
+      dbext.replace(dbext.size() - 3, 1, std::to_string(0));
       Tstart = time(nullptr);
       printf("v=%d: ", v);
       fflush(0);
-      strcpy(fx, ext);
-      DB.Fv[v] = fopen(dbname.data(), "rb");
+      DB.Fv[v] = fopen(dbfile.c_str(), "rb");
       if (DB.Fv[v] == nullptr) {
         fprintf(stderr, "Error: CY_hodge_split cannot open %s\n",
-                dbname.data());
+                dbfile.c_str());
         exit(1);
       }
       for (nu = 0; nu <= DB.NUCmax; nu++)
@@ -2460,11 +2450,11 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto, PolyPointList *_P,
           else
             dh = BH.h1[1] - BH.h1[2];
           if (!nnf_vd[v][dh] || (dh > 250)) {
-            aext[4] = '0' + dh / 100;
-            aext[5] = '0' + (dh / 10) % 10;
-            aext[6] = '0' + dh % 10;
-            strcpy(fhx, aext);
-            Faux[dh] = fopen(dbhname.data(), "ab");
+            dbext = dbhname;
+            dbext.replace(dbext.size() - 5, 1, std::to_string(dh / 100));
+            dbext.replace(dbext.size() - 4, 1, std::to_string((dh / 10) % 10));
+            dbext.replace(dbext.size() - 3, 1, std::to_string(dh % 10));
+            Faux[dh] = fopen(dbext.c_str(), "ab");
           }
           if (!nnf_vd[v][dh])
             nd++;
@@ -2489,7 +2479,7 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto, PolyPointList *_P,
         }
 
       if (ferror(DB.Fv[v])) {
-        printf("File error in %s\n", dbname.data());
+        printf("File error in %s\n", dbname.c_str());
         exit(1);
       }
       fclose(DB.Fv[v]);
