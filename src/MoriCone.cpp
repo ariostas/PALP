@@ -682,7 +682,7 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I, FILE *out) {
 void Triang_from_SR(triang *TR, triang *SR) { /* consistency check ... */
   int i = 1, p = TR->v = SR->v, j = p / 2, d = TR->d = SR->d, s = SR->n, m = 0,
       k, l, r;
-  Inci64 *S = SR->I, *T = TR->I, *A, *M, *N;
+  Inci64 *S = SR->I, *T = TR->I, *M, *N;
   long long binco = TR->v; /* Bino.Coeff */
   if (p > 64) {
     fputs("Too many vertices for Inci64 triangulation (max 64)\n", stderr);
@@ -696,13 +696,8 @@ void Triang_from_SR(triang *TR, triang *SR) { /* consistency check ... */
   }
   if (binco++ > 2999)
     binco = 2999;
-  A = (Inci64 *)malloc(2 * binco * sizeof(Inci64));
-  if (A == nullptr) {
-    fputs("Error: failed to allocate incidence buffer in Triang_from_SR\n",
-          stderr);
-    exit(1);
-  }
-  /* TODO: convert to std::unique_ptr<Inci64[]> once ownership is simple. */
+  auto AOwner = std::make_unique<Inci64[]>(2 * binco);
+  Inci64 *A = AOwner.get();
   M = A;
   N = &A[binco];
   for (i = 1; i < p; i++)
@@ -747,7 +742,6 @@ void Triang_from_SR(triang *TR, triang *SR) { /* consistency check ... */
   }
   for (k = 0; k < m; k++)
     T[k] = M[k];
-  free(A);
 }
 
 void StanleyReisner(triang *SR, triang *T,
@@ -768,13 +762,8 @@ void StanleyReisner(triang *SR, triang *T,
   if (binco++ > 2999)
     binco = 2999;
 
-  A = (Inci64 *)malloc(2 * binco * sizeof(Inci64));
-  if (A == nullptr) {
-    fputs("Error: failed to allocate incidence buffer in StanleyReisner\n",
-          stderr);
-    exit(1);
-  }
-  /* TODO: convert to std::unique_ptr<Inci64[]> once ownership is simple. */
+  auto AOwner = std::make_unique<Inci64[]>(2 * binco);
+  A = AOwner.get();
   M = A;
   N = &A[binco];
   for (i = 1; i < p; i++)
@@ -852,9 +841,7 @@ void StanleyReisner(triang *SR, triang *T,
       if (i < T->n)
         ok = 0;
     }
-    if (ok)
-      free(A);
-    else {
+    if (!ok) {
       PRNtriang(T, "Triangulation", out);
       PRNtriang(SR, "SR-ideal", out);
       PRNtriang(&TeST, "Tri(SR) ... test failed !!!", out);
@@ -1988,8 +1975,9 @@ int Compatible_Tri(Inci64 CA, Inci64 CB, int a, Inci64 *A, int b, Inci64 *B,
 void GKZsubdivide(Inci64 *F, int f, PolyPointList *P, int p, int *Tp, int *ntp,
                   int nPS, MORI_Flags *_Flag, FibW *_F, FILE *out) {
   int c, d = P->n, d2, i, j, t = 00; // d2=dim(2ndaryFan)
-  Inci64 T[naT], *X = &T[nPS], C[ANfan],
-                 *CT[ANfan][ANtri]; // C=circuit, CT=triang
+  std::vector<Inci64> T(naT);
+  Inci64 *X = &T[nPS];
+  Inci64 C[ANfan], *CT[ANfan][ANtri]; // C=circuit, CT=triang
   int nmt[ANfan], nt[ANfan][ANtri],
       nmf = 0; // NumMaxTri, NumTriang, NumMax2Fan
   Inci64 MT[VERT_Nmax * POLY_Dmax], *_CT[ANfan];
@@ -2616,17 +2604,15 @@ void Read_Tri(int p, int *nI, int *nIA, Inci64 **_I, FILE *in, FILE *out) {
     exit(1);
   }
   if (*nIA < (*nI = ReadInt(in))) {
-    if (0 < *nIA)
-      free(I);
-    *nIA = *nI; /* realloc I */
-    I = (Inci64 *)malloc(*nIA * sizeof(Inci64));
-    if (I == nullptr) {
-      fputs("Error: failed to allocate incidence list in Read_Tri\n", stderr);
-      exit(1);
+    if (0 < *nIA) {
+      auto *oldOwner = reinterpret_cast<std::unique_ptr<Inci64[]> *>(_I);
+      oldOwner->reset();
     }
-    *_I = I;
+    *nIA = *nI; /* realloc I */
+    auto newOwner = std::make_unique<Inci64[]>(*nIA);
+    I = newOwner.get();
+    *reinterpret_cast<std::unique_ptr<Inci64[]> *>(_I) = std::move(newOwner);
   }
-  /* TODO: this is caller-owned realloc logic; defer unique_ptr conversion. */
   for (i = 0; i < *nI; i++)
     I[i] = Read_INCI(p - 1, in, out);
   Read_EOL(in);
