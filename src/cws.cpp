@@ -2203,7 +2203,7 @@ void Make_211_CWS(FILE *AUXFILE[], int ef, FILE *out) {
           W_TO_CWS(&CW, &W[1], (W[0].N - u), (W[2].N - u), n, n);
           W_TO_CWS(&CW, &W[2], (W[0].N - 2 * u), n, W[1].N, u);
           PRINT_CWS(&CW, out);
-          if ((W[0].w[0] != W[0].w[1]) && (W[1].w[0] != W[2].w[0])) {
+          if ((W[0].w[0] != W[0].w[1]) && (W[1].w[0] != W[1].w[1])) {
             SWAP(&W[0].w[0], &W[0].w[1]);
             CW.nw = 0;
             RW_TO_CWS(&CW, &W[0], n, (W[1].N + W[2].N - 2 * u), n, n);
