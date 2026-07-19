@@ -2424,7 +2424,7 @@ void Calc_VaHo(Weight *W, VaHo *V, FILE *out) {
       for (i = 0; i < n; i++)
         for (j = i + 1; j < n; j++)
           if (w[j] < w[i])
-            swap(&w[j], &w[j]);
+            swap(&w[i], &w[j]);
       PoincarePoly(n, w, d, P, Z, R);
       if (Deff != P->e[P->n - 1]) {
         fprintf(stderr,
