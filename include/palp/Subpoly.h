@@ -212,7 +212,7 @@ void Extract_from_Hodge_db(char *dname, char *x_string, PolyPointList *P,
                            FILE *out = stdout);
 #endif
 
-void Open_DB(char *dbin, DataBase **DB, int info);
+void Open_DB(char *dbin, std::unique_ptr<DataBase> *DB, int info);
 int Read_H_poly_from_DB(DataBase *DB, PolyPointList *_P);
 void Close_DB(DataBase *DB);
 void VPHM_Sublat_Polys(char sFlag, char mr, char *dbin, char *polyi,
