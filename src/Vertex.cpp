@@ -288,7 +288,9 @@ void swap(int *i, int *j) {
 
 int diff(const void *a, const void *b) { return *((int *)a) - *((int *)b); }
 
-void Sort_VL(VertexNumList *_V) { qsort(_V->v, _V->nv, sizeof(int), &diff); }
+void Sort_VL(VertexNumList *_V) {
+  std::sort(_V->v, _V->v + _V->nv);
+}
 
 void Make_VEPM(PolyPointList *_P, VertexNumList *_V, EqList *_E, PairMat PM) {
   int i, j;
