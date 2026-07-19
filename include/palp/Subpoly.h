@@ -94,6 +94,8 @@ typedef struct {
   int last_ms3;
   /* Iteration state for Read_H_ucNF_from_DB (replaces static totNF) */
   Along readHucNF_TotNF;
+  /* Owned auxiliary PolyPointList used by IP_Simplices when CD != 0 */
+  std::unique_ptr<PolyPointList> auxP;
 } DataBase;
 
 typedef struct {

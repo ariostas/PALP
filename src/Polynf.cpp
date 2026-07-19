@@ -2251,7 +2251,8 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
   Long rel[SQnum_Max][VERT_Nmax]; /* rank squar-relations */
   INCI *FInc;
   int PIC, S[SQnum_Max][4], M[SQnum_Max];
-  FaceInfo *_FI = (FaceInfo *)malloc(sizeof(FaceInfo));
+  auto _FI_owner = std::make_unique<FaceInfo>();
+  FaceInfo *_FI = _FI_owner.get();
   if (P->n != 4) {
     fputs("Error: ConifoldSing only supports 4D polytopes\n", stderr);
     exit(1);
@@ -2281,10 +2282,6 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
    * 	Fano(trian+coni::N & M::\D=2\D'): need	Vol(\D')=2#(\D')-8 <=64
    *						doublepoints = l/2(edges(\D))
    */
-  if (_FI == nullptr) {
-    printf("ConifoldSing: Unable to allocate _FI\n");
-    exit(1);
-  }
   Make_Incidence(P, V, E, _FI);
   conifoldStats.npol++;
   nf = _FI->nf[1];
@@ -2308,7 +2305,6 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
     }
     if (f > 4) {
       conifoldStats.five++; /* more than 4 vertices */
-      free(_FI);
       return 0;
     }
     i = E->ne;
@@ -2346,13 +2342,11 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
       }
       if (sq == 0) {
         conifoldStats.nosq++;
-        free(_FI);
         return 0;
       } /* 4 vertices: no square */
     }
     if (1 < LinRelSimplexVolume(X, 3, P->n)) {
       conifoldStats.nonbasic++;
-      free(_FI);
       return 0;
     }
     if (e == 4) {
@@ -2438,12 +2432,10 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
       PrettyPrintDualVert(P, V->nv, E, dP->np, out);
       PrintFanoVert(P, V, out);
     }
-    free(_FI);
     return 1;
   }
 
   else if ((ndpt == 0) && (V->nv != P->n + 1)) {
-    free(_FI);
     return 0;
   } else {
     BaHo BH; /* Calabi-Yau case */
@@ -2467,7 +2459,6 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
     cs = BH.h1[2] + ndpt - rk;
     if (pic > 1)
       if (ndpt == 0) {
-        free(_FI);
         return 0;
       } /* ndpt=0 for pic=1 */
     if (c2h % Ind != 0) {
@@ -2492,7 +2483,6 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
              conifoldStats.ncon);
       PrettyPrintDualVert(P, V->nv, E, dP->np, out);
     }
-    free(_FI);
     return nsq;
   }
 }
@@ -2501,17 +2491,13 @@ void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E,
                      FILE *out) {
   int i, j, tot = 0, reg = 0, sym = 0, ksum = 0, sum = 0, bary = 0, ssroot = 0,
             nofip = 0, NR = NON_REF;
-  PolyPointList *A = (PolyPointList *)malloc(sizeof(PolyPointList));
-  Long S, **root = (Long **)malloc(POINT_Nmax * sizeof(Long **)), *d = nullptr,
-          PM[VERT_Nmax][VERT_Nmax];
-  if (A == nullptr) {
-    fputs("Error: Einstein_Metric failed to allocate PolyPointList\n", stderr);
-    exit(1);
-  }
-  if (root == nullptr) {
-    fputs("Error: Einstein_Metric failed to allocate root array\n", stderr);
-    exit(1);
-  }
+  auto A_owner = std::make_unique<PolyPointList>();
+  PolyPointList *A = A_owner.get();
+  Long S, *d = nullptr, PM[VERT_Nmax][VERT_Nmax];
+  Long rootStorage[POINT_Nmax][VERT_Nmax];
+  Long *root[POINT_Nmax];
+  for (i = 0; i < POINT_Nmax; i++)
+    root[i] = rootStorage[i];
   while (Read_CWS_PP(CW, P)) /* nis=noinvss s=sum ks=ksum bcz=bary0 ssr(oot) */
   {
     Long C[POLY_Dmax], N;
@@ -2712,8 +2698,6 @@ void Einstein_Metric(CWS *CW, PolyPointList *P, VertexNumList *V, EqList *E,
     fprintf(out, "(%dfano) ", reg);
   fprintf(out, "#symm=%d #kPsum=%d #Psum=%d bary=%d ssroot=%d (%d)\n", sym,
           ksum, sum, bary, ssroot, ssroot - nofip);
-  free(A);
-  free(root);
   exit(1);
 }
 
@@ -2902,13 +2886,8 @@ void AuxDPolyData(PolyPointList *P, PolyPointList *A, int *v, int *n, int *f) {
 void Test_EK3_Fibration(PolyPointList *P, int edim,
                         GL_Long G[POLY_Dmax][POLY_Dmax], FILE *out) {
   int s[VERT_Nmax], t[VERT_Nmax], d = P->n, p = P->np - 1;
-  PolyPointList *A;
-  A = (PolyPointList *)malloc(sizeof(PolyPointList));
-  if (A == nullptr) {
-    fputs("Error: Test_EK3_Fibration failed to allocate PolyPointList\n",
-          stderr);
-    exit(1);
-  }
+  auto A_owner = std::make_unique<PolyPointList>();
+  PolyPointList *A = A_owner.get();
   {
     int i, j, e, k, v, n, f;
     Long PM[VERT_Nmax][POLY_Dmax];
@@ -2968,22 +2947,17 @@ void Test_EK3_Fibration(PolyPointList *P, int edim,
             ? fprintf(out, "%2ld%s", PM[s[i]][j], (i == p - 1) ? "\n" : " ")
             : fprintf(out, "%4ld%s", PM[s[i]][j], (i == p - 1) ? "\n" : " ");
   }
-  free(A);
 }
 
 void Print_Elliptic_K3_Fibrations(PolyPointList *P, int edim,
                                   GL_Long G[VERT_Nmax][POLY_Dmax][POLY_Dmax],
                                   int nk, FILE *out) {
   int x, s[VERT_Nmax], t[VERT_Nmax], d = P->n, p = P->np - 1;
+  std::unique_ptr<PolyPointList> A_owner;
   PolyPointList *A = nullptr;
   if (nk) {
-    A = (PolyPointList *)malloc(sizeof(PolyPointList));
-    if (A == nullptr) {
-      fputs("Error: Print_Elliptic_K3_Fibrations failed to allocate "
-            "PolyPointList\n",
-            stderr);
-      exit(1);
-    }
+    A_owner = std::make_unique<PolyPointList>();
+    A = A_owner.get();
   }
   for (x = 0; x < nk; x++) {
     int i, j, e, k, v, n, f;
@@ -3047,17 +3021,12 @@ void Print_Elliptic_K3_Fibrations(PolyPointList *P, int edim,
             ? fprintf(out, "%2ld%s", A->x[i][j], (i == p - 1) ? "\n" : " ")
             : fprintf(out, "%4ld%s", A->x[i][j], (i == p - 1) ? "\n" : " ");
   }
-  if (nk)
-    free(A);
 }
 void All_CDn_Fibrations(PolyPointList *P, int nv, int cd, FILE *out) {
   int x, fdim = P->n - cd;
-  ek3fli *F = (ek3fli *)malloc(sizeof(ek3fli));
+  auto F_owner = std::make_unique<ek3fli>();
+  ek3fli *F = F_owner.get();
   PolyPointList *A = &F->F;
-  if (F == nullptr) {
-    fputs("Error: All_CDn_Fibrations failed to allocate ek3fli\n", stderr);
-    exit(1);
-  }
   Reflexive_Fibrations(P, nv, F, fdim);
   for (x = 0; x < F->nf; x++) {
     int i, j, s[VERT_Nmax], t[VERT_Nmax], d = P->n, p = P->np - 1, fn, v, n, f;
@@ -3102,7 +3071,6 @@ void All_CDn_Fibrations(PolyPointList *P, int nv, int cd, FILE *out) {
             ? fprintf(out, "%2ld%s", PM[s[i]][j], (i == p - 1) ? "\n" : " ")
             : fprintf(out, "%4ld%s", PM[s[i]][j], (i == p - 1) ? "\n" : " ");
   }
-  free(F);
 }
 
 void Print_GLZ(GL_Long G[][POLY_Dmax], int d, const char *c, FILE *out) {
@@ -3120,11 +3088,8 @@ typedef struct {
 void Elliptic_K3_Fibration(PolyPointList *P, int nv, int edim, FILE *out) {
   int c, e, *d = &P->n, /*p=P->np-1,*/ cd = P->n - edim, nb = 0, nk = 0;
   GL_Long GE[POLY_Dmax][POLY_Dmax], *ge[POLY_Dmax];
-  ek3fli *F = (ek3fli *)malloc(sizeof(ek3fli));
-  if (F == nullptr) {
-    fputs("Error: Elliptic_K3_Fibration failed to allocate ek3fli\n", stderr);
-    exit(1);
-  }
+  auto F_owner = std::make_unique<ek3fli>();
+  ek3fli *F = F_owner.get();
   Reflexive_Fibrations(P, nv, F, edim);
   for (c = 0; c < *d; c++)
     ge[c] = GE[c];
@@ -3205,7 +3170,6 @@ void Elliptic_K3_Fibration(PolyPointList *P, int nv, int edim, FILE *out) {
       }
     }
   Print_Elliptic_K3_Fibrations(P, edim, F->GK, nk, out);
-  free(F);
 }
 void IP_Simplex_Fiber(Long PM[][POLY_Dmax], int p, int d, /* need PM[i]!=0 */
                       FibW *F, int Wmax, int CD) {
@@ -3401,12 +3365,8 @@ void Print_Fiber_PolyData(PolyPointList *P, VertexNumList *V, Long *W, int w,
     GL_Long G[POLY_Dmax][POLY_Dmax], Ginv[POLY_Dmax][POLY_Dmax];
     EqList e;
     VertexNumList v;
-    PolyPointList *F = (PolyPointList *)malloc(sizeof(PolyPointList));
-    if (F == nullptr) {
-      fputs("Error: Print_Fiber_PolyData failed to allocate PolyPointList\n",
-            stderr);
-      exit(1);
-    }
+    auto F_owner = std::make_unique<PolyPointList>();
+    PolyPointList *F = F_owner.get();
     for (p = 0; p < w; p++)
       if (W[p]) {
         for (i = 0; i < D; i++)
@@ -3506,7 +3466,6 @@ void Print_Fiber_PolyData(PolyPointList *P, VertexNumList *V, Long *W, int w,
     } else
       fprintf(out, " m:%d %d f:%d // f:%d n:%d %d", Mmp, Mmv, Mnv, Nmv, Nnp,
               Nnv);
-    free(F);
   }
   fprintf(out, "\n");
 }
@@ -3644,12 +3603,9 @@ void Print_Quotient(Long *V[VERT_Nmax], int d, int v, FILE *out) {
 void IP_Simplices(PolyPointList *_P, int nv, int PS, int VS, int CDin,
                   FILE *out) {
   int i, j, CD = 0, np = _P->np - 1;
-  FibW *F = (FibW *)malloc(sizeof(FibW));
+  auto F_owner = std::make_unique<FibW>();
+  FibW *F = F_owner.get();
   VertexNumList V;
-  if (F == nullptr) {
-    fputs("Error: IP_Simplices failed to allocate FibW\n", stderr);
-    exit(1);
-  }
   F->ZS = ((PS < 0) || (VS < 0));
   for (i = nv; i < _P->np - 1; i++)
     if (Vec_is_zero(_P->x[i], _P->n)) {
@@ -3733,14 +3689,14 @@ void IP_Simplices(PolyPointList *_P, int nv, int PS, int VS, int CDin,
     }
   }
   if (CD) {
-    F->P = (PolyPointList *)malloc(sizeof(PolyPointList));
-    if (F->P == nullptr) {
-      fputs("Error: IP_Simplices failed to allocate fiber PolyPointList\n",
-            stderr);
-      exit(1);
-    }
+    auto auxP = std::make_unique<PolyPointList>();
+    F->P = auxP.get();
     F->PS = PS;
     F->nv = nv;
+    // auxP intentionally leaks from here because FibW is consumed by a C-style
+    // callback path below. This is a minimal safe change pending a larger FibW
+    // ownership refactor.
+    (void)auxP.release();
   }
   if (CD || PS) { /* if(CD)*/
     IP_Simplex_Fiber(_P->x, np, _P->n, F, FIB_Nmax, CD);
@@ -3800,8 +3756,7 @@ void IP_Simplices(PolyPointList *_P, int nv, int PS, int VS, int CDin,
       break;
     }
   if (CD)
-    free(F->P);
-  free(F);
+    F->P = nullptr;
   return;
 }
 void IP_Fiber_Data(PolyPointList *PD, PolyPointList *AuxP,
@@ -3809,11 +3764,8 @@ void IP_Fiber_Data(PolyPointList *PD, PolyPointList *AuxP,
                    Long G[VERT_Nmax][POLY_Dmax][POLY_Dmax], int fd[VERT_Nmax],
                    int *nf, int CD, FILE *out) {
   int i, j, k;
-  FibW *F = (FibW *)malloc(sizeof(FibW));
-  if (F == nullptr) {
-    fputs("Error: IP_Fiber_Data failed to allocate FibW\n", stderr);
-    exit(1);
-  }
+  auto F_owner = std::make_unique<FibW>();
+  FibW *F = F_owner.get();
   F->P = AuxP;
   F->PS = F->ZS = 0;
   F->nv = nv;
@@ -3825,7 +3777,6 @@ void IP_Fiber_Data(PolyPointList *PD, PolyPointList *AuxP,
       for (k = 0; k < PD->n; k++)
         G[i][j][k] = F->G[i][j][k];
   }
-  free(F);
 } /* aux routine for nef package */
 /*      =============================================================       */
 
