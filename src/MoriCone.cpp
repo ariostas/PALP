@@ -1978,7 +1978,7 @@ void GKZsubdivide(Inci64 *F, int f, PolyPointList *P, int p, int *Tp, int *ntp,
   std::vector<Inci64> T(naT);
   Inci64 *X = &T[nPS];
   Inci64 C[ANfan], *CT[ANfan][ANtri]; // C=circuit, CT=triang
-  int nmt[ANfan], nt[ANfan][ANtri],
+  int nmt[ANfan], nt[ANfan * ANtri],
       nmf = 0; // NumMaxTri, NumTriang, NumMax2Fan
   Inci64 MT[VERT_Nmax * POLY_Dmax], *_CT[ANfan];
   int TpMax = 0, nMax = 00, _nt[ANfan], I[ANfan], comptri = 0;
@@ -2002,13 +2002,16 @@ void GKZsubdivide(Inci64 *F, int f, PolyPointList *P, int p, int *Tp, int *ntp,
         if (j == nmf)
           switch (d2) { // TRIANGULATE POLY_CIRCUITS:
           case 1:
-            t = Triang1dSFan(P, p, F[c], X, CT[nmf], &nmt[nmf], nt[nmf], out);
+            t = Triang1dSFan(P, p, F[c], X, CT[nmf], &nmt[nmf],
+                             &nt[nmf * ANtri], out);
             break;
           case 2:
-            t = Triang2dSFan(P, p, F[c], X, CT[nmf], &nmt[nmf], nt[nmf], out);
+            t = Triang2dSFan(P, p, F[c], X, CT[nmf], &nmt[nmf],
+                             &nt[nmf * ANtri], out);
             break;
           case 3:
-            t = Triang3dSFan(P, p, F[c], X, CT[nmf], &nmt[nmf], nt[nmf], out);
+            t = Triang3dSFan(P, p, F[c], X, CT[nmf], &nmt[nmf],
+                             &nt[nmf * ANtri], out);
             break;
           default:
             printf("dim(2ndaryFan)=%d: to be done!\n", d2);
@@ -2063,7 +2066,7 @@ void GKZsubdivide(Inci64 *F, int f, PolyPointList *P, int p, int *Tp, int *ntp,
 
     for (k = 0; k < nmf; k++) {
       _CT[k] = CT[k][I[k]];
-      _nt[k] = nt[k][I[k]];
+      _nt[k] = nt[k * ANtri + I[k]];
     } // combine
     if (comptri) {
       for (k = 1; k < nmf; k++)
