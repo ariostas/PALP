@@ -2303,7 +2303,6 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto, PolyPointList *_P,
   Long VPM[EQUA_Nmax][VERT_Nmax];
   EqList E;
   time_t Tstart;
-  char *fx;
   std::string dbname = dbin;
   std::string dbhname = dbout;
   std::string dbext;
@@ -2377,7 +2376,7 @@ void DB_to_Hodge(char *dbin, char *dbout, int vfrom, int vto, PolyPointList *_P,
   }
 
   if (ferror(DB.Finfo)) {
-    printf("File error in %s\n", dbname.data());
+    printf("File error in %s\n", dbname.c_str());
     exit(1);
   }
   fclose(DB.Finfo);
@@ -3836,15 +3835,12 @@ void Bin_2_ANF_DBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P,
   FInfoList L;
   int d, v, nu, i, j, list_num, mc = 0, MS, sl_nNF, sl_SM, sl_NM, sl_NB,
                                 tSM = 0, tNM = 0;
-  std::vector<char> Ifn(1 + strlen(dbi) + File_Ext_NCmax);
-  char *Ifx;
+  std::string Ifn = dbi;
   Long NF[POLY_Dmax][VERT_Nmax];
   VertexNumList V;
   EqList E;
-  strcpy(Ifn.data(), dbi);
-  Ifx = &Ifn[strlen(dbi)];
-  strcpy(Ifx, ".info");
-  F = fopen(Ifn.data(), "r");
+  Ifn += ".info";
+  F = fopen(Ifn.c_str(), "r");
   if (F == nullptr) {
     puts("Info File not found");
     exit(1);
@@ -3861,10 +3857,10 @@ void Bin_2_ANF_DBsl(char *dbi, int max, int vf, int vt, PolyPointList *_P,
   L.nVmax = j;
   L.NUCmax = nu;
   if (sl_NB && (vf == 2) && (vt == VERT_Nmax - 1)) {
-    strcpy(Ifx, ".sl");
+    Ifn.replace(Ifn.size() - 4, 4, ".sl");
     fclose(F);
-    if (nullptr == (F = fopen(Ifn.data(), "rb"))) {
-      printf("Open %s failed", Ifn.data());
+    if (nullptr == (F = fopen(Ifn.c_str(), "rb"))) {
+      printf("Open %s failed", Ifn.c_str());
       exit(1);
     }
   } else /* puts("no .sl file"); */
