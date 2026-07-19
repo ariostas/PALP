@@ -206,7 +206,7 @@ int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index, FILE *in,
   int i, j, FilterFlag = (in == nullptr);
   std::array<int, AMBI_Dmax *(AMBI_Dmax + 1)> IN;
   int S;
-  static int InputOK;
+  static int inputOkCwsPp;
   _CW->nw = _CW->N = _CW->nz = 0;
   _CW->index = index;
   if (FilterFlag)
@@ -229,13 +229,13 @@ int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index, FILE *in,
       break;
   }
   if (i == 0) {
-    if (!InputOK) {
+    if (!inputOkCwsPp) {
       puts("-h gives you help\n");
       exit(1);
     } else
       return 0;
   }
-  InputOK++;
+  inputOkCwsPp++;
   if (i == 1) {
     puts("Error in INPUT: need at least 2 numbers!");
     exit(1);
@@ -379,7 +379,7 @@ MAP:
   _CW->nz = 0;
   if (!Read_CWS_Zinfo(in, _CW)) /* read Z to EOL */
   {
-    if (!InputOK)
+    if (!inputOkCwsPp)
       puts("-h gives you help\n");
     return 0;
   }
@@ -394,7 +394,7 @@ int Read_CWS_PP(CWS *_CW, PolyPointList *_P, FILE *in, FILE *out) {
 int Read_PP(PolyPointList *_P, FILE *in) {
   int i, j, FilterFlag = (in == nullptr);
   std::array<int, AMBI_Dmax *(AMBI_Dmax + 1)> IN;
-  static int InputOK;
+  static int inputOkReadPp;
   /* _CW->nw=_CW->N=_CW->nz=0; */
 
   if (FilterFlag)
@@ -416,13 +416,13 @@ int Read_PP(PolyPointList *_P, FILE *in) {
       break;
   }
   if (i == 0) {
-    if (!InputOK) {
+    if (!inputOkReadPp) {
       puts("-h gives you help\n");
       exit(1);
     } else
       return 0;
   }
-  InputOK++;
+  inputOkReadPp++;
   if (i == 1) {
     puts("Error in INPUT: need at least 2 numbers!");
     exit(1);
@@ -495,7 +495,7 @@ int Read_CWS(CWS *_CW, PolyPointList *_P, FILE *in, FILE *out) {
   int i, j, FilterFlag = (in == nullptr);
   std::array<int, AMBI_Dmax *(AMBI_Dmax + 1)> IN;
   int S;
-  static int InputOK;
+  static int inputOkReadCws;
   _CW->nw = _CW->N = _CW->nz = 0;
   _CW->index = 1;
 
@@ -518,13 +518,13 @@ int Read_CWS(CWS *_CW, PolyPointList *_P, FILE *in, FILE *out) {
       break;
   }
   if (i == 0) {
-    if (!InputOK) {
+    if (!inputOkReadCws) {
       puts("-h gives you help\n");
       exit(1);
     } else
       return 0;
   }
-  InputOK++;
+  inputOkReadCws++;
   if (i == 1) {
     puts("Error in INPUT: need at least 2 numbers!");
     exit(1);
@@ -622,7 +622,7 @@ MAP:
   _CW->nz = 0;
   if (!Read_CWS_Zinfo(in, _CW)) /* read Z to EOL */
   {
-    if (!InputOK)
+    if (!inputOkReadCws)
       puts("-h gives you help\n");
     return 0;
   }
