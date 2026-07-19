@@ -207,18 +207,12 @@ void Init_DB(NF_List *_NFL) {
 
   time_t Tstart = time(nullptr);
   std::string dbname(_NFL->dbname);
-  char *fx;
   DataBase *DB = &_NFL->DB;
   int d, v, nu, i, j, list_num, sl_nNF, sl_SM, sl_NM, sl_NB, RAM_pos = 0;
   Along RAM_size = 0;
 
   printf("Reading data-base %s: ", dbname.c_str());
-  dbname.resize(dbname.size() + File_Ext_NCmax + 1, '\0');
-  dbname[strlen(_NFL->dbname)] = '\0';
-  fx = dbname.data() + strlen(_NFL->dbname) + 1;
-  dbname[strlen(_NFL->dbname)] = '.';
-  fx[0] = '\0';
-  dbname += "info";
+  dbname += ".info";
 
   /* read the info-file: */
   DB->Finfo = fopen(dbname.c_str(), "r");
@@ -289,13 +283,13 @@ void Init_DB(NF_List *_NFL) {
   /* read the DB-files and create RAM_NF: */
   for (v = 2; v <= DB->nVmax; v++)
     if (DB->nNUC[v]) {
-      char ext[4] = {'v', 0, 0, 0};
-      ext[1] = '0' + v / 10;
-      ext[2] = '0' + v % 10;
-      strcpy(fx, ext);
-      DB->Fv[v] = fopen(dbname.c_str(), "rb");
+      std::string dbfile = _NFL->dbname;
+      dbfile += ".v";
+      dbfile += static_cast<char>('0' + v / 10);
+      dbfile += static_cast<char>('0' + v % 10);
+      DB->Fv[v] = fopen(dbfile.c_str(), "rb");
       if (DB->Fv[v] == nullptr) {
-        fprintf(stderr, "Error: Open_DB cannot open %s\n", dbname.c_str());
+        fprintf(stderr, "Error: Open_DB cannot open %s\n", dbfile.c_str());
         exit(1);
       }
       FSEEK(DB->Fv[v], 0, SEEK_END);
