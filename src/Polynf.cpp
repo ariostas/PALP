@@ -3862,8 +3862,6 @@ int GL_Lattice_Basis(int d, int p, Long *P[POLY_Dmax], /* return index */
   int L, C;
   Long g, a, index = 1;
   GL_Long V[POLY_Dmax], *G[POLY_Dmax], *B[POLY_Dmax];
-  static int x;
-  x++;
   for (L = 0; L < d; L++) {
     V[L] = P[0][L];
     G[L] = GM[L];
