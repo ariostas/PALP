@@ -840,19 +840,7 @@ void StanleyReisner(triang *SR, triang *T,
     Triang_from_SR(&TeST, SR);
     if (TeST.n != T->n)
       ok = 0;
-    else
-#ifdef TRIANG_CHECKSUM
-    {
-      Inci64 sumT = 0, sumC = 0;
-      for (i = 0; i < T->n; i++) {
-        sumT += TeST.I[i];
-        sumS + > T->I[i];
-      }
-      if (sumT != sumC)
-        ok = 0;
-    }
-#else
-    {
+    else {
       for (i = 0; i < T->n; i++) {
         int sum = 0;
         for (j = 0; j < T->n; j++)
@@ -864,7 +852,6 @@ void StanleyReisner(triang *SR, triang *T,
       if (i < T->n)
         ok = 0;
     }
-#endif
     if (ok)
       free(A);
     else {
