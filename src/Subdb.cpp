@@ -2507,11 +2507,9 @@ void Sort_Hodge(char *dbaux, char *dbout) {
   /* Sort from v-chi-format to chi-h12-format */
 
   time_t Tstart;
-  char *fax;
-  std::vector<char> dbaname(6 + strlen(dbaux) + File_Ext_NCmax);
-  char *fhx;
-  std::vector<char> dbhname(6 + strlen(*dbout ? dbout : dbaux) +
-                            File_Ext_NCmax);
+  std::string dbaname = dbaux;
+  std::string dbhname = *dbout ? dbout : dbaux;
+  std::string dbaext, dbhext;
   int v, i, j, dh, nd, nnf_d[Hod_Dif_max + 1],
       nnf_vd[VERT_Nmax][Hod_Dif_max + 1], nnf_h[Hod_Min_max + 1],
       nnf_v[VERT_Nmax];
@@ -2526,20 +2524,16 @@ void Sort_Hodge(char *dbaux, char *dbout) {
 
   if (!*dbout)
     dbout = dbaux;
-  strcpy(dbaname.data(), dbaux);
-  strcat(dbaname.data(), ".vinfo");
-  strcpy(dbhname.data(), dbout);
-  strcat(dbhname.data(), ".hinfo");
-  fhx = &dbhname[strlen(dbout) + 1];
-  fax = &dbaname[strlen(dbaux) + 1];
+  dbaname += ".vinfo";
+  dbhname += ".hinfo";
 
-  printf("Reading %s\n", dbaname.data());
+  printf("Reading %s\n", dbaname.c_str());
   fflush(0);
 
   /* read the info-file: */
-  Fvinfo = fopen(dbaname.data(), "r");
+  Fvinfo = fopen(dbaname.c_str(), "r");
   if (Fvinfo == nullptr) {
-    fprintf(stderr, "Error: Sort_Hodge_files cannot open %s\n", dbaname.data());
+    fprintf(stderr, "Error: Sort_Hodge_files cannot open %s\n", dbaname.c_str());
     exit(1);
   }
   while (fscanf(Fvinfo, "%d", &v) == 1) {
@@ -2569,7 +2563,7 @@ void Sort_Hodge(char *dbaux, char *dbout) {
     }
   }
   if (ferror(Fvinfo)) {
-    printf("File error in %s\n", dbaname.data());
+    printf("File error in %s\n", dbaname.c_str());
     exit(1);
   }
   fclose(Fvinfo);
@@ -2578,31 +2572,28 @@ void Sort_Hodge(char *dbaux, char *dbout) {
   fflush(0);
   Tstart = time(nullptr);
 
-  Fhinfo = fopen(dbhname.data(), "w");
+  Fhinfo = fopen(dbhname.c_str(), "w");
   if (Fhinfo == nullptr) {
     fprintf(stderr, "Error: Sort_Hodge_files cannot create %s\n",
-            dbhname.data());
+            dbhname.c_str());
     exit(1);
   }
 
   /* Sort the Hodge&Poly-Data */
   for (dh = 0; dh <= Hod_Dif_max; dh++)
     if (nnf_d[dh]) {
-      char aext[8], hext[9];
       int h12, nh = 0;
       unsigned char c, nuc;
-      aext[0] = 'v';
-      aext[3] = 'd';
-      aext[4] = '0' + dh / 100;
-      aext[5] = '0' + (dh / 10) % 10;
-      aext[6] = '0' + dh % 10;
-      aext[7] = 0;
-      hext[0] = 'd';
-      hext[1] = '0' + dh / 100;
-      hext[2] = '0' + (dh / 10) % 10;
-      hext[3] = '0' + dh % 10;
-      hext[4] = 'h';
-      hext[5] = hext[6] = hext[7] = hext[8] = 0;
+
+      dbaext = ".vXXd";
+      dbhext = "dXXXh";
+      auto setDhDigits = [](std::string &s, size_t off, int val) {
+        s[off] = '0' + val / 100;
+        s[off + 1] = '0' + (val / 10) % 10;
+        s[off + 2] = '0' + val % 10;
+      };
+      setDhDigits(dbaext, 2, dh);
+      setDhDigits(dbhext, 1, dh);
 
       printf("dh=%d: %dNF...", dh, nnf_d[dh]);
       fflush(0);
@@ -2611,18 +2602,24 @@ void Sort_Hodge(char *dbaux, char *dbout) {
 
       for (v = 2; v < VERT_Nmax; v++)
         if (nnf_vd[v][dh]) {
-          aext[1] = '0' + v / 10;
-          aext[2] = '0' + v % 10;
-          strcpy(fax, aext);
-          Fchia = fopen(dbaname.data(), "rb");
+          std::string dbafile = dbaux;
+          dbafile += ".v";
+          dbafile += static_cast<char>('0' + v / 10);
+          dbafile += static_cast<char>('0' + v % 10);
+          dbafile += "d";
+          dbafile += dbaext.substr(2, 3);
+          Fchia = fopen(dbafile.c_str(), "rb");
           for (i = 0; i < nnf_vd[v][dh]; i++) {
             h12 = fgetc(Fchia);
             if (!nnf_h[h12]) {
-              hext[5] = '0' + h12 / 100;
-              hext[6] = '0' + (h12 / 10) % 10;
-              hext[7] = '0' + h12 % 10;
-              strcpy(fhx, hext);
-              Fh[h12] = fopen(dbhname.data(), "wb");
+              std::string dbhfile = dbout;
+              dbhfile += "d";
+              dbhfile += dbhext.substr(1, 3);
+              dbhfile += "h";
+              dbhfile += static_cast<char>('0' + h12 / 100);
+              dbhfile += static_cast<char>('0' + (h12 / 10) % 10);
+              dbhfile += static_cast<char>('0' + h12 % 10);
+              Fh[h12] = fopen(dbhfile.c_str(), "wb");
               nh++;
             }
             nnf_h[h12]++;
