@@ -1189,7 +1189,7 @@ void ErrEx(const char *c) {
   exit(1);
 }
 void ReadEOL() {
-  char c;
+  int c;
   while ('\n' != (c = fgetc(palpContext.in)))
     if (c == EOF) {
       puts("End of File");
