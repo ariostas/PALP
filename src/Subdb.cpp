@@ -434,14 +434,11 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo, FILE *out) {
   int v, vA, nuA, AslNF, AslSM, AslNM, i;
   unsigned Ali, a;
   Along AslNB;
-  int s, slNF = 0, slSM = 0, slNM = 0, slNB = 0, slNP = 0;
+  int s, slNF = 0, slSM = 0, slNM = 0, slNB = 0, slNP = 0, j;
   UPint Anp;
-  int AmI = 00, ms, newout = strcmp(dbi, dbo) && (*dbo),
-      j = 1 + strlen(SAVE_FILE_EXT);
-  std::vector<char> Ifn(j + strlen(dbi) + File_Ext_NCmax);
-  char *Ifx;
-  std::vector<char> Ofn(j + strlen(newout ? dbo : dbi) + File_Ext_NCmax);
-  char *Ofx;
+  int AmI = 00, ms, newout = strcmp(dbi, dbo) && (*dbo);
+  std::string Ifn = dbi;
+  std::string Ofn = newout ? dbo : dbi;
   FILE *FI, *FA, *FO;
   if (*polya == 0) {
     puts("-pa file required");
@@ -449,16 +446,12 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo, FILE *out) {
   }
   Init_FInfoList(&FIi);
   Init_FInfoList(&FIa);
-  strcpy(Ifn.data(), dbi);
-  Ifx = &Ifn[strlen(dbi)];
-  strcpy(Ifx, ".info");
+  Ifn += ".info";
   if (*dbo == 0)
     dbo = dbi;
-  strcpy(Ofn.data(), dbo);
-  Ofx = &Ofn[strlen(dbo)];
 
-  if (nullptr == (FI = fopen(Ifn.data(), "r"))) {
-    printf("Cannot open %s", Ifn.data());
+  if (nullptr == (FI = fopen(Ifn.c_str(), "r"))) {
+    printf("Cannot open %s", Ifn.c_str());
     exit(1);
   }
   if (nullptr == (FA = fopen(polya, "rb"))) {
@@ -523,11 +516,11 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo, FILE *out) {
     fprintf(stderr, "Error: Add_Aux_to_DB dimension mismatch %d != %d\n", d, j);
     exit(1);
   }
-  strcpy(Ifx, ".sl");
   if (IslNF) {
-    FI = fopen(Ifn.data(), "rb");
+    Ifn.replace(Ifn.size() - 4, 4, ".sl");
+    FI = fopen(Ifn.c_str(), "rb");
     if (FI == nullptr) {
-      fprintf(stderr, "Error: Add_Aux_to_DB cannot open %s.sl\n", Ifn.data());
+      fprintf(stderr, "Error: Add_Aux_to_DB cannot open %s.sl\n", Ifn.c_str());
       exit(1);
     }
   }
@@ -641,7 +634,7 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo, FILE *out) {
     }
     fclose(FI);
     if (!newout)
-      remove(Ifn.data());
+      remove(Ifn.c_str());
   } /* SL file done */
 
   FSEEK(FA, HApos, SEEK_SET);
@@ -661,29 +654,30 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo, FILE *out) {
 
   for (v = d + 1; v <= FIo.nVmax; v++)
     if (FIo.nNUC[v]) {
-      char vxt[5];
-      strcpy(vxt, ".v");
-      vxt[2] = v / 10 + '0';
-      vxt[3] = v % 10 + '0';
-      vxt[4] = 0;
-      strcpy(Ofx, vxt);
-      strcpy(Ifx, vxt);
+      std::string vxt = ".v";
+      vxt += static_cast<char>(v / 10 + '0');
+      vxt += static_cast<char>(v % 10 + '0');
+      std::string Ifn_v = Ifn;
+      std::string Ofn_v = Ofn;
+      Ifn_v.replace(Ifn_v.size() - 4, 4, vxt);
+      Ofn_v.replace(Ofn_v.size() - 4, 4, vxt);
       if (FIi.nNUC[v]) {
         if (!newout) {
-          strcat(Ifx, SAVE_FILE_EXT);
-          if (rename(Ofn.data(), Ifn.data()) != 0) {
+          std::string backup = Ifn_v;
+          backup += SAVE_FILE_EXT;
+          if (rename(Ofn_v.c_str(), backup.c_str()) != 0) {
             fprintf(stderr, "Error: Add_Aux_to_DB rename %s -> %s failed\n",
-                    Ofn.data(), Ifn.data());
+                    Ofn_v.c_str(), backup.c_str());
             exit(1);
           }
         }
-        if (nullptr == (FI = fopen(Ifn.data(), "rb"))) {
-          printf("Ifn %s failed", Ifn.data());
+        if (nullptr == (FI = fopen(Ifn_v.c_str(), "rb"))) {
+          printf("Ifn %s failed", Ifn_v.c_str());
           exit(1);
         }
       }
-      if (nullptr == (FO = fopen(Ofn.data(), "wb"))) {
-        printf("Ofn %s failed", Ofn.data());
+      if (nullptr == (FO = fopen(Ofn_v.c_str(), "wb"))) {
+        printf("Ofn %s failed", Ofn_v.c_str());
         exit(1);
       }
 
@@ -813,7 +807,7 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo, FILE *out) {
         }
         fclose(FI);
         if (!newout)
-          remove(Ifn.data());
+          remove(Ifn_v.c_str());
       }
       if (ferror(FO)) {
         fprintf(stderr, "Error: Add_Aux_to_DB output file write error\n");
@@ -824,10 +818,11 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo, FILE *out) {
   tnb = 0;
 
   if (slNF) {
-    strcpy(Ofx, ".sl");
-    FO = fopen(Ofn.data(), "wb");
+    std::string Ofn_sl = Ofn;
+    Ofn_sl.replace(Ofn_sl.size() - 4, 4, ".sl");
+    FO = fopen(Ofn_sl.c_str(), "wb");
     if (FO == nullptr) {
-      fprintf(stderr, "Error: Add_Aux_to_DB cannot create %s.sl\n", Ofn.data());
+      fprintf(stderr, "Error: Add_Aux_to_DB cannot create %s.sl\n", Ofn_sl.c_str());
       exit(1);
     }
     for (i = 0; i < slNF; i++) /* write SL */
@@ -865,10 +860,11 @@ void Add_Polya_2_DBi(char *dbi, char *polya, char *dbo, FILE *out) {
          FIo.nV, FIo.nVmax, FIo.NUCmax, Oli, FIo.nNF, FIo.nSM, FIo.nNM, FIo.NB,
          slNF, slSM, slNM, slNB);
 
-  strcpy(Ofx, ".info");
-  FO = fopen(Ofn.data(), "w");
+  std::string Ofn_info = Ofn;
+  Ofn_info.replace(Ofn_info.size() - 4, 4, ".info");
+  FO = fopen(Ofn_info.c_str(), "w");
   if (FO == nullptr) {
-    fprintf(stderr, "Error: Add_Aux_to_DB cannot create %s.info\n", Ofn.data());
+    fprintf(stderr, "Error: Add_Aux_to_DB cannot create %s.info\n", Ofn_info.c_str());
     exit(1);
   }
   fprintf(FO, /* write FO.info */
