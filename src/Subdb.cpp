@@ -48,7 +48,6 @@ void Small_Make_Dual(PolyPointList *_P, VertexNumList *_V, EqList *_E) {
 
 void Polyi_2_DBo(char *polyi, char *dbo) {
   std::string dbnames(dbo);
-  char *fx;
   FILE *F = fopen(polyi, "rb"), *Finfo, *Fv, *Fsl;
   time_t Tstart = time(nullptr);
   FInfoList L;
@@ -65,11 +64,7 @@ void Polyi_2_DBo(char *polyi, char *dbo) {
     printf("Input file %s not found\n", polyi);
     exit(1);
   }
-  dbnames.resize(dbnames.size() + File_Ext_NCmax + 1, '\0');
-  dbnames[strlen(dbo)] = '.';
-  fx = dbnames.data() + strlen(dbo) + 1;
-  fx[0] = '\0';
-  dbnames += "info";
+  dbnames += ".info";
   Finfo = fopen(dbnames.c_str(), "w");
   if (Finfo == nullptr) {
     fprintf(stderr, "Error: Polyi_2_DBo cannot create %s.info\n", dbo);
@@ -151,14 +146,14 @@ void Polyi_2_DBo(char *polyi, char *dbo) {
   for (v = d + 1; v <= L.nVmax; v++)
     if (L.nNUC[v]) /* write  honest polys */
     {
-      char ext[4] = {'v', 0, 0, 0};
-      ext[1] = '0' + v / 10;
-      ext[2] = '0' + v % 10;
-      strcpy(fx, ext);
-      Fv = fopen(dbnames.c_str(), "wb");
+      std::string dbfile = dbo;
+      dbfile += ".v";
+      dbfile += static_cast<char>('0' + v / 10);
+      dbfile += static_cast<char>('0' + v % 10);
+      Fv = fopen(dbfile.c_str(), "wb");
       if (Fv == nullptr) {
         fprintf(stderr, "Error: Polyi_2_DBo cannot create %s\n",
-                dbnames.c_str());
+                dbfile.c_str());
         exit(1);
       }
 
@@ -169,7 +164,7 @@ void Polyi_2_DBo(char *polyi, char *dbo) {
             fputc(fgetc(F), Fv);
         }
       if (ferror(Fv)) {
-        printf("File error in %s\n", dbnames.c_str());
+        printf("File error in %s\n", dbfile.c_str());
         exit(1);
       }
       fclose(Fv);
@@ -177,8 +172,9 @@ void Polyi_2_DBo(char *polyi, char *dbo) {
 
   if (sl_nNF) /* write  sublattice polys */
   {
-    strcpy(fx, "sl");
-    Fsl = fopen(dbnames.c_str(), "wb");
+    std::string dbfile = dbo;
+    dbfile += ".sl";
+    Fsl = fopen(dbfile.c_str(), "wb");
     if (Fsl == nullptr) {
       fprintf(stderr, "Error: Polyi_2_DBo cannot create %s.sl\n", dbo);
       exit(1);
@@ -186,7 +182,7 @@ void Polyi_2_DBo(char *polyi, char *dbo) {
     for (i = 0; i < sl_NB; i++)
       fputc(fgetc(F), Fsl);
     if (ferror(Fsl)) {
-      printf("File error in %s\n", dbnames.c_str());
+      printf("File error in %s\n", dbfile.c_str());
       exit(1);
     }
     fclose(Fsl);
@@ -200,7 +196,6 @@ void Polyi_2_DBo(char *polyi, char *dbo) {
   }
   fclose(F);
 }
-
 void Init_DB(NF_List *_NFL) {
   /* Read the database, create RAM_poly;
      for given, nv, nuc the matching is as follows:
