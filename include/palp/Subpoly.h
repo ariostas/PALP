@@ -92,6 +92,8 @@ typedef struct {
   /* Iteration state for Read_H_poly_from_DB (replaces static locals) */
   unsigned char last_uc[NUC_Nmax];
   int last_ms3;
+  /* Iteration state for Read_H_ucNF_from_DB (replaces static totNF) */
+  Along readHucNF_TotNF;
 } DataBase;
 
 typedef struct {

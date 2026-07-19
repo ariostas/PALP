@@ -3161,6 +3161,7 @@ void Open_DB(char *dbin, DataBase **_DB, int info) {
     return;
   }
   DB = new DataBase();
+  DB->readHucNF_TotNF = 0;
   *_DB = DB;
   strcpy(dbname.data(), dbin);
   strcat(dbname.data(), ".info");
@@ -3254,7 +3255,6 @@ void Close_DB(DataBase *DB) {
 }
 int Read_H_ucNF_from_DB(DataBase *DB, unsigned char *uc) /* p=next read pos */
 {
-  static Along totNF;
   int rest;
   if (DB == nullptr) {
     fputs("Error: Read_H_ucNF_from_DB called with nullptr database\n", stderr);
@@ -3285,11 +3285,11 @@ int Read_H_ucNF_from_DB(DataBase *DB, unsigned char *uc) /* p=next read pos */
           if (DB->NFnum[DB->v][++(DB->nu)])
             break;
       } else {
-        if (totNF != DB->nNF) {
+        if (DB->readHucNF_TotNF != DB->nNF) {
           fprintf(stderr,
                   "Error: Read_H_ucNF_from_DB total NF mismatch "
                   "totNF=%lld DB->nNF=%lld\n",
-                  (long long)totNF, (long long)DB->nNF);
+                  (long long)DB->readHucNF_TotNF, (long long)DB->nNF);
           exit(1);
         }
         return 0;
@@ -3310,16 +3310,16 @@ int Read_H_ucNF_from_DB(DataBase *DB, unsigned char *uc) /* p=next read pos */
     fputs("Error: Read_H_ucNF_from_DB zero rest\n", stderr);
     exit(1);
   }
-  if (totNF >= DB->nNF) {
+  if (DB->readHucNF_TotNF >= DB->nNF) {
     fprintf(
         stderr,
         "Error: Read_H_ucNF_from_DB totNF %lld not less than DB->nNF %lld\n",
-        (long long)totNF, (long long)DB->nNF);
+        (long long)DB->readHucNF_TotNF, (long long)DB->nNF);
     exit(1);
   }
   AuxGet_uc(DB->Fv[DB->v], &DB->nu, uc);
   ++DB->p;
-  totNF++;
+  DB->readHucNF_TotNF++;
   return 1;
 }
 
