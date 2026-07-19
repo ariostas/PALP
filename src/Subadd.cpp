@@ -1559,30 +1559,34 @@ void AuxNextGoodBase(int *v, int *nx, Base_List *BL) /* nx= v*d -d*(d-1)/2 */
   (*bn)--;
   BL->v[*v]++;
 }
+namespace {
+Base_List *baseListSingleton = nullptr;
+} // namespace
+
 void Init_BaseList(Base_List **bl, int *d) /* once: alloc and init BaseList */
 {
-  static Base_List *BL = nullptr;
   int i; /* always: set *bl=BL=&BaseList */
-  if (BL != nullptr) {
-    *bl = BL;
+  if (baseListSingleton != nullptr) {
+    *bl = baseListSingleton;
     return;
   }
-  *bl = BL = (Base_List *)malloc(sizeof(Base_List));
-  if (BL == nullptr) {
+  baseListSingleton = (Base_List *)malloc(sizeof(Base_List));
+  if (baseListSingleton == nullptr) {
     fputs("Error: Init_BaseList allocation failed\n", stderr);
     exit(1);
   }
   for (i = *d; i <= VERT_Nmax; i++) {
     int nx = NX(*d, i), bn = 3, nuco, nucn;
-    BL->v[i] = 1;
+    baseListSingleton->v[i] = 1;
     AuxBase2nUC(&bn, &nx, &nuco);
-    nucn = BL->nuc[i][0] = nuco;
+    nucn = baseListSingleton->nuc[i][0] = nuco;
     while (nucn == nuco) {
       bn++;
       AuxBase2nUC(&bn, &nx, &nucn);
     }
-    BL->base[i][0] = bn - 1;
+    baseListSingleton->base[i][0] = bn - 1;
   }
+  *bl = baseListSingleton;
 }
 void Bmin2BaseUCn(int *d, int *v, int *bmin, int *base, int *nuc) {
   int i, *n, nx = NX(*d, *v);
@@ -1624,30 +1628,34 @@ void NUCtoBase(int *d, int *v, int *nuc, int *Base) {
 }
 
 #ifdef USE_UNIT_ENCODE
+namespace {
+Base_List *unitBaseListSingleton = nullptr;
+} // namespace
+
 void UNIT_Init_BaseList(Base_List **bl, int *d) /* once: ainit BaseList */
 {
-  static Base_List *BL = nullptr;
   int i; /* always: set *bl=BL=&BaseList */
-  if (BL != nullptr) {
-    *bl = BL;
+  if (unitBaseListSingleton != nullptr) {
+    *bl = unitBaseListSingleton;
     return;
   }
-  *bl = BL = (Base_List *)malloc(sizeof(Base_List));
-  if (BL == nullptr) {
+  unitBaseListSingleton = (Base_List *)malloc(sizeof(Base_List));
+  if (unitBaseListSingleton == nullptr) {
     fputs("Error: UNIT_Init_BaseList allocation failed\n", stderr);
     exit(1);
   }
   for (i = *d; i <= VERT_Nmax; i++) {
     int nx = UNIT_NX(*d, i), bn = 3, nuco, nucn;
-    BL->v[i] = 1;
+    unitBaseListSingleton->v[i] = 1;
     AuxBase2nUC(&bn, &nx, &nuco);
-    nucn = BL->nuc[i][0] = nuco;
+    nucn = unitBaseListSingleton->nuc[i][0] = nuco;
     while (nucn == nuco) {
       bn++;
       AuxBase2nUC(&bn, &nx, &nucn);
     }
-    BL->base[i][0] = bn - 1;
+    unitBaseListSingleton->base[i][0] = bn - 1;
   }
+  *bl = unitBaseListSingleton;
 }
 void UNIT_Bmin2BaseUCn(int *d, int *v, int *bmin, int *base, int *nuc) {
   int i, *n, nx = UNIT_NX(*d, *v);
