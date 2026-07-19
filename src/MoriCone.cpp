@@ -2965,10 +2965,14 @@ void ComputeStanleyReisner(PolyPointList *P, int nI, Inci64 *I, int *NrInz,
   free(IV);
 }
 
+namespace {
+Inci64 *triListInciBuffer = nullptr;
+} // namespace
+
 void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag,
                          FILE *in, FILE *out) {
   int i, j, n, nI, NrInz, nIA = 0, Ntri = 0;
-  static Inci64 *I = nullptr;
+  Inci64 *&I = triListInciBuffer;
   triang T, SR;
   long long Abi = Compute_Abi(_P);
   Inci64 *SRG = (Inci64 *)malloc(Abi);
