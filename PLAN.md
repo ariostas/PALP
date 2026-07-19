@@ -189,18 +189,18 @@ each verified by the full test suite.
 file-by-file to `std::vector`, `std::unique_ptr`, or stack objects. Each
 conversion is one commit.
 
-- [ ] **8.1** `src/MoriCone.cpp` — `Inci64 *A/B/IV/SRG/I` allocations
+- [x] **8.1** `src/MoriCone.cpp` — `Inci64 *A/B/IV/SRG/I` allocations
   (lines 699, 771, 2635, 2909–2911, 2987) → `std::vector<Inci64>` or
   `std::unique_ptr<Inci64[]>`. Already has TODO comments.
-- [ ] **8.2** `src/Polynf.cpp` — `FaceInfo *`, `PolyPointList *`, `FibW *`,
+- [x] **8.2** `src/Polynf.cpp` — `FaceInfo *`, `PolyPointList *`, `FibW *`,
   `ek3fli *`, `Long **root` allocations → `std::unique_ptr` / stack.
-- [ ] **8.3** `src/E_Poly.cpp` — `Poset_Element *`, `SPoly *`, `Interval *`,
+- [x] **8.3** `src/E_Poly.cpp` — `Poset_Element *`, `SPoly *`, `Interval *`,
   `BPoly *` calloc/free (lines 1295–1342) → `std::vector`.
-- [ ] **8.4** `src/Subadd.cpp` — `PEnt *`, `PPEnt *`, `int *SLp`,
+- [x] **8.4** `src/Subadd.cpp` — `PEnt *`, `PPEnt *`, `int *SLp`,
   `unsigned char *NewNF`, `Base_List *`, `NF_List *`, filename `char *`
   (lines 116–119, 351, 437, 457, 756, 758, 1570, 1635, 2123, 2643) →
   `std::vector` / `std::unique_ptr` / `std::string`.
-- [ ] **8.5** `src/Subdb.cpp` — `new DataBase` / `delete DB` (lines 3163,
+- [x] **8.5** `src/Subdb.cpp` — `new DataBase` / `delete DB` (lines 3163,
   3253) → `std::unique_ptr<DataBase>` or stack ownership.
 - [ ] **8.6** Remaining filename `char *` buffers across `Subdb.cpp` (already
   half-migrated to `std::vector<char>`) → `std::string` + `+=` / `+` /
