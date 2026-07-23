@@ -77,7 +77,7 @@ int Read_HyperSurf(int *he, int divclassnr, int maxline,
   return i;
 }
 
-void HyperSurfSingular(PolyPointList *P, triang *T, triang *SR,
+void HyperSurfSingular(PolyPointList *P, Triang *T, Triang *SR,
                        MORI_Flags *_Flag, FibW *F, int *cp, FILE *out) {
   int p = SR->v, d = SR->d, i, j, r, N = 0; /* N=not(0th)=offset(IP) */
   int divclassnr = *cp;

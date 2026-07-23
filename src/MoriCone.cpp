@@ -84,7 +84,7 @@ int Inci64_LT(Inci64 A, Inci64 B) { return ((A & B) == A) ? (A != B) : 0; }
 // int Inci64_LmR(Inci64 *A,Inci64 *B){return (*A==*B) ? 0 : ((*A>*B) ? 1:-1);}
 // int Inci64_diff(const void *A,const void *B){return Inci64_LmR(A,B);}
 
-void PRNtriang(triang *SR, const char *c, FILE *out) {
+void PRNtriang(Triang *SR, const char *c, FILE *out) {
   printf("%d %s\n", SR->n, c);
   for (int i = 0; i < SR->n; i++) {
     if (i)
@@ -341,7 +341,7 @@ void IDerr(void) {
   puts("\n       ********       INPUT DATA ERROR    	  ********");
 }
 
-int Make_triCD2F(triang *T, Inci64 *cd2I, FILE *out) {
+int Make_triCD2F(Triang *T, Inci64 *cd2I, FILE *out) {
   int i, j, cd2n = 0;
   for (i = 1; i < T->n; i++)
     for (j = 0; j < i; j++) {
@@ -369,7 +369,7 @@ int Make_triCD2F(triang *T, Inci64 *cd2I, FILE *out) {
   return cd2n;
 }
 
-int Check_Mori(PolyPointList *P, int p, triang *T,
+int Check_Mori(PolyPointList *P, int p, Triang *T,
                FILE *out) { // strongly convex(?)
   int nI = T->n;
   Inci64 *I = T->I, cd2F[CD2F_Nmax];
@@ -679,7 +679,7 @@ void Print_Mori(PolyPointList *P, int p, int nI, Inci64 *I, FILE *out) {
 
 /* Triangles are of the form $T=I+2^n  with  I<2^n,  G not <=I and |I|=dim
  */
-void Triang_from_SR(triang *TR, triang *SR) { /* consistency check ... */
+void Triang_from_SR(Triang *TR, Triang *SR) { /* consistency check ... */
   int i = 1, p = TR->v = SR->v, j = p / 2, d = TR->d = SR->d, s = SR->n, m = 0,
       k, l, r;
   Inci64 *S = SR->I, *T = TR->I, *M, *N;
@@ -744,7 +744,7 @@ void Triang_from_SR(triang *TR, triang *SR) { /* consistency check ... */
     T[k] = M[k];
 }
 
-void StanleyReisner(triang *SR, triang *T,
+void StanleyReisner(Triang *SR, Triang *T,
                     FILE *out) { /* pre-allocate and compute SR(T) */
   Inci64 *S = SR->I, *I = T->I, *A, *M, *N, U = 1;
   long long binco = T->v; /* Binom.Coeff */
@@ -823,7 +823,7 @@ void StanleyReisner(triang *SR, triang *T,
   SR->d = T->d;
   {
     int ok = 1;
-    triang TeST;
+    Triang TeST;
     TeST.I = A;
     TeST.nmax = 2 * binco; //
     Triang_from_SR(&TeST, SR);
@@ -855,7 +855,7 @@ void StanleyReisner(triang *SR, triang *T,
 
 void InterSectionRing(Inci64 *Tri, int *t, PolyPointList *P, int p,
                       MORI_Flags *_Flag, FibW *F, FILE *out) {
-  triang T, SR;
+  Triang T, SR;
   Inci64 srI[VERT_Nmax];
   T.v = p;
   T.n = *t;
@@ -941,7 +941,7 @@ int ConeAngle(Long *L, Long *R) {
 
 namespace {
 constexpr int ANfan = 20; // alloc number of max 2nd-fans
-constexpr int ANtri = 20; // alloc number of max triang.
+constexpr int ANtri = 20; // alloc number of max Triang.
 } // namespace
 
 Inci64 FindPolyCircuits(PolyPointList *P, int p, Inci64 F, int f) {
@@ -1402,7 +1402,7 @@ int Triang3dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
                  Inci64 *CT[ANtri], int *nmt, int *nt, FILE *out) {
   Matrix A, B;
   Inci64 C = 0;
-  int tmt = 0;                                        // #triang in max.tri's
+  int tmt = 0;                                        // #Triang in max.tri's
   int R[VERT_Nmax][POLY_Dmax], nrp[VERT_Nmax], r = 0; // Rays, #ray-Pts, #rays
   int d = P->n, i, j, f = 0, z = 0, F[VERT_Nmax],
       Z[VERT_Nmax]; // P.x [ F [ Z [ R < z ]]]
@@ -1970,14 +1970,14 @@ int Compatible_Tri(Inci64 CA, Inci64 CB, int a, Inci64 *A, int b, Inci64 *B,
 }
 
 //	list maximal 2ndary fans of facets with descending dimensions
-//	forall compatible max triangulations make (induced) triang of facets
+//	forall compatible max triangulations make (induced) Triang of facets
 
 void GKZsubdivide(Inci64 *F, int f, PolyPointList *P, int p, int *Tp, int *ntp,
                   int nPS, MORI_Flags *_Flag, FibW *_F, FILE *out) {
   int c, d = P->n, d2, i, j, t = 00; // d2=dim(2ndaryFan)
   std::vector<Inci64> T(naT);
   Inci64 *X = &T[nPS];
-  Inci64 C[ANfan], *CT[ANfan][ANtri]; // C=circuit, CT=triang
+  Inci64 C[ANfan], *CT[ANfan][ANtri]; // C=circuit, CT=Triang
   int nmt[ANfan], nt[ANfan * ANtri],
       nmf = 0; // NumMaxTri, NumTriang, NumMax2Fan
   Inci64 MT[VERT_Nmax * POLY_Dmax], *_CT[ANfan];
@@ -2154,7 +2154,7 @@ void Subdivide(PolyPointList *P, int v, Inci64 I[], int p, Inci64 *T, int *t,
     }
   } // ns2= # on triangles  =>  p-v-ns2 on edges
 
-  if (nPS == 0) { // no triang. needed
+  if (nPS == 0) { // no Triang. needed
     InterSectionRing(T, t, P, p, _Flag, F, out);
     return;
   } else if ((P->n != 4) || (p > v + 3)) {
@@ -2962,7 +2962,7 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag,
                          FILE *in, FILE *out) {
   int i, j, n, nI, NrInz, nIA = 0, Ntri = 0;
   Inci64 *&I = triListInciBuffer;
-  triang T, SR;
+  Triang T, SR;
   long long Abi = Compute_Abi(_P);
   Inci64 *SRG = (Inci64 *)malloc(Abi);
   auto _POF_owner = std::make_unique<PolyPointList>();
@@ -3026,7 +3026,7 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag,
       SR.I = SRG;
 
       /*
-        Redefine triang T, SR with the digit corresponding to the origin
+        Redefine Triang T, SR with the digit corresponding to the origin
         (first inci entry to the left) dropped.
       */
 
@@ -3051,7 +3051,7 @@ void TriList_to_MoriList(PolyPointList *_P, FibW *F, MORI_Flags *_Flag,
       //	}
 
       /*
-       * Invert ordering of digits of the triang and SR-ideal
+       * Invert ordering of digits of the Triang and SR-ideal
        * incidences: e.g. 110 100--> 011 001
        */
 

@@ -32,7 +32,7 @@ HyperSurfSingular() is called for each triangulation of the polytope.
 */
 
 /*** from Moricone.c ***/
-struct triang {
+struct Triang {
   int d, v, n, nmax;
   Inci64 *I;
 };
@@ -92,7 +92,7 @@ Print triangulation and call StanleyReisner(SR,T). Call
 HyperSurfaceSingular(P,T,SR...). Call Print_Mori(P,p,t,Tri).
 */
 
-void StanleyReisner(triang *SR, triang *T, FILE *out = stdout);
+void StanleyReisner(Triang *SR, Triang *T, FILE *out = stdout);
 /*
 Determine and print the SR ideal.
 */
@@ -122,13 +122,13 @@ void fprI(int N, Inci64 I, FILE *out = stdout); /* print INCIDENCE to file */
 int Inci64_LE(Inci64 A, Inci64 B);
 int Inci64_LT(Inci64 A, Inci64 B);
 
-void PRNtriang(triang *SR, const char *c, FILE *out = stdout);
+void PRNtriang(Triang *SR, const char *c, FILE *out = stdout);
 /*
 print (Inci64) triangulation
 */
 
 /*** from SingularInput.c ***/
-void HyperSurfSingular(PolyPointList *P, triang *T, triang *SR,
+void HyperSurfSingular(PolyPointList *P, Triang *T, Triang *SR,
                        MORI_Flags *_Flag, FibW *F, int *cp, FILE *out = stdout);
 /*
 Interface between the Mori and SINGULAR. Given the polytope P and the linear
