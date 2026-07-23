@@ -2789,16 +2789,16 @@ void Add_Ref_Fibers(Long PM[][POLY_Dmax], int *d, int *v, int *s,
   }
 }
 
-typedef struct {
+struct Ek3Fli {
   GL_Long G[VERT_Nmax][POLY_Dmax][POLY_Dmax],
       GK[VERT_Nmax][POLY_Dmax][POLY_Dmax], B[VERT_Nmax][POLY_Dmax][POLY_Dmax];
   int nf;
   PolyPointList F;
-} ek3fli;
+};
 void Fiber_Rec_New_Point(PolyPointList *_P, int *v, /* already selected r pts */
                          GL_Long ***G, GL_Long *GI[POLY_Dmax][POLY_Dmax],
                          GL_Long **GN, GL_Long T[][POLY_Dmax], int *s, int r,
-                         ek3fli *F, int *fdim) {
+                         Ek3Fli *F, int *fdim) {
   int i, j, k, *d = &_P->n, *n = &s[r] /*,p=_P->np-1*/;
   GL_Long *X = T[r];
   for (*n = s[r - 1] + 1; *n < _P->np - (*fdim) + r; (*n)++) {
@@ -2829,7 +2829,7 @@ void Fiber_Rec_New_Point(PolyPointList *_P, int *v, /* already selected r pts */
     }
   }
 }
-void Reflexive_Fibrations(PolyPointList *P, int nv, ek3fli *F, int fdim) {
+void Reflexive_Fibrations(PolyPointList *P, int nv, Ek3Fli *F, int fdim) {
   int n, i, j, d = P->n, s[POLY_Dmax];
   GL_Long T[POLY_Dmax + 1][POLY_Dmax],
       *X = T[0], **G[POLY_Dmax], *GN[POLY_Dmax], *GI[POLY_Dmax][POLY_Dmax],
@@ -3018,8 +3018,8 @@ void Print_Elliptic_K3_Fibrations(PolyPointList *P, int edim,
 }
 void All_CDn_Fibrations(PolyPointList *P, int nv, int cd, FILE *out) {
   int x, fdim = P->n - cd;
-  auto F_owner = std::make_unique<ek3fli>();
-  ek3fli *F = F_owner.get();
+  auto F_owner = std::make_unique<Ek3Fli>();
+  Ek3Fli *F = F_owner.get();
   PolyPointList *A = &F->F;
   Reflexive_Fibrations(P, nv, F, fdim);
   for (x = 0; x < F->nf; x++) {
@@ -3082,8 +3082,8 @@ typedef struct {
 void Elliptic_K3_Fibration(PolyPointList *P, int nv, int edim, FILE *out) {
   int c, e, *d = &P->n, /*p=P->np-1,*/ cd = P->n - edim, nb = 0, nk = 0;
   GL_Long GE[POLY_Dmax][POLY_Dmax], *ge[POLY_Dmax];
-  auto F_owner = std::make_unique<ek3fli>();
-  ek3fli *F = F_owner.get();
+  auto F_owner = std::make_unique<Ek3Fli>();
+  Ek3Fli *F = F_owner.get();
   Reflexive_Fibrations(P, nv, F, edim);
   for (c = 0; c < *d; c++)
     ge[c] = GE[c];
