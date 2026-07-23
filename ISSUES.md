@@ -374,11 +374,12 @@ and the detailed commit messages for the full context of each fix.
   `src/cws.cpp` (line 599), `src/lgotwist.cpp` (lines 1192–1197),
   `src/MoriCone.cpp` (lines 2517–2520, 2541–2551)
 - **Severity**: Medium
-- **Status**: Open
-- **Description**: `char c = fgetc(in);` stores the `int` return of
-  `fgetc` in a `char`, losing the EOF sentinel. If `char` is unsigned,
-  EOF becomes 255 and is indistinguishable from a valid byte; if signed,
-  EOF becomes -1 but is not explicitly checked. Should use `int c`.
+- **Status**: Closed
+- **Description**: `char c = fgetc(in);` stored the `int` return of `fgetc`
+  in a `char`, losing the EOF sentinel. Fixed by changing all sites in
+  `Coord.cpp`, `cws.cpp`, and `MoriCone.cpp` to `int c` and rewriting
+  whitespace-skip loops to stop on EOF. `lgotwist.cpp` was already fixed in
+  #59.
 
 ### 72. VLA usage (non-standard C++)
 - **File**: `src/MoriCone.cpp` (lines 2004, 2006),
