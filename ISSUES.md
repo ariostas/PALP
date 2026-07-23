@@ -298,44 +298,45 @@ and the detailed commit messages for the full context of each fix.
 - **File**: `src/MoriCone.cpp`
 - **Line**: 849
 - **Severity**: Low
-- **Status**: Open
-- **Description**: `sumS + > T->I[i];` inside `#ifdef TRIANG_CHECKSUM`
-  (never defined) is a syntax error. The block is dead but would fail to
-  compile if the macro were ever enabled. Remove the block.
+- **Status**: Closed
+- **Description**: `sumS + > T->I[i];` inside `#ifdef TRIANG_CHECKSUM` was a
+  syntax error. Was fixed during an earlier migration pass; the block has been
+  removed.
 
 ### 64. Dead static counter in `GL_Lattice_Basis`
 - **File**: `src/Polynf.cpp`
 - **Line**: 3865
 - **Severity**: Low
-- **Status**: Open
-- **Description**: `static int x;` is incremented (`x++` at line 3866) but
-  never read. Dead code; remove.
+- **Status**: Closed
+- **Description**: `static int x;` was incremented (`x++`) but never read.
+  Was fixed during an earlier migration pass; the counter has been removed.
 
 ### 65. Static mutable state in `Make_New_CEqs`
 - **File**: `src/Vertex.cpp`
 - **Lines**: 821–822
 - **Severity**: Low
-- **Status**: Open
-- **Description**: `static CEqList Bad_C; static INCI Bad_C_I[CEQ_Nmax];` —
-  persistent mutable state, not thread-safe, not reentrant. Move to
-  anonymous namespace.
+- **Status**: Closed
+- **Description**: `static CEqList Bad_C; static INCI Bad_C_I[CEQ_Nmax];` were
+  persistent mutable state. Was fixed during an earlier migration pass; they
+  have been replaced with local/RAII storage.
 
 ### 66. Static `PolyPointList` in `FE_Close_the_Hole`
 - **File**: `src/Subpoly.cpp`
 - **Line**: 148
 - **Severity**: Low
-- **Status**: Open
-- **Description**: `static PolyPointList P;` — persistent mutable state,
-  not thread-safe. Move to anonymous namespace or allocate locally.
+- **Status**: Closed
+- **Description**: `static PolyPointList P;` was persistent mutable state.
+  Was fixed during an earlier migration pass; it has been replaced with local
+  allocation.
 
 ### 67. Static `Inci64 *I` in `TriList_to_MoriList`
 - **File**: `src/MoriCone.cpp`
 - **Line**: 2984
 - **Severity**: Low
-- **Status**: Open
-- **Description**: `static Inci64 *I = NULL;` owns a `malloc`'d buffer
-  cached across calls. Not reentrant; prevents RAII conversion. Move to
-  `std::vector<Inci64>` owned by the caller.
+- **Status**: Closed
+- **Description**: `static Inci64 *I = NULL;` owned a `malloc`'d buffer
+  cached across calls. Was fixed during an earlier migration pass; it has been
+  replaced with a `std::vector<Inci64>` owned by the caller.
 
 ### 68. Large commented-out code blocks
 - **File**: multiple (`MoriCone.cpp`, `Polynf.cpp`, `Subadd.cpp`,
