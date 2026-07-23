@@ -84,13 +84,13 @@ int Init_rVM_VPM(PolyPointList *P, VertexNumList *_V, EqList *_F, /* in */
 
 typedef struct {
   int base[VERT_Nmax + 1][NB_MAX], nuc[VERT_Nmax + 1][NB_MAX], v[VERT_Nmax + 1];
-} Base_List;
+} BaseList;
 
 void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
                int *NV, int *nUC, unsigned char *UC,          /* OUT */
                NF_List *StatsL, FILE *out); /* optional stats */
 void Print_Statistics(NF_List *, FILE *out = stdout);
-void Init_BaseList(Base_List **BL, int *d); /* malloc + init.; BL=&(list) */
+void Init_BaseList(BaseList **BL, int *d); /* malloc + init.; BL=&(list) */
 void Insert_PPent_into_Pent(NF_List *S);
 void Read_In_File(NF_List *);
 void Read_Aux_File(NF_List *);
@@ -1537,7 +1537,7 @@ void AuxBase2nUC(int *base, int *nx, int *nuc) /* b^nx-2=x0+x1*USM+... */
   BasePutInt(&i, &m, &X);
   *nuc = 2 * X.n - (X.x[X.n - 1] < 256);
 }
-void AuxNextGoodBase(int *v, int *nx, Base_List *BL) /* nx= v*d -d*(d-1)/2 */
+void AuxNextGoodBase(int *v, int *nx, BaseList *BL) /* nx= v*d -d*(d-1)/2 */
 {
   int *bo = &(BL->base[*v][BL->v[*v] - 1]), nuct,
       *bn = &(BL->base[*v][BL->v[*v]]), *nucn = &(BL->nuc[*v][BL->v[*v]]);
@@ -1551,17 +1551,17 @@ void AuxNextGoodBase(int *v, int *nx, Base_List *BL) /* nx= v*d -d*(d-1)/2 */
   BL->v[*v]++;
 }
 namespace {
-Base_List *baseListSingleton = nullptr;
+BaseList *baseListSingleton = nullptr;
 } // namespace
 
-void Init_BaseList(Base_List **bl, int *d) /* once: alloc and init BaseList */
+void Init_BaseList(BaseList **bl, int *d) /* once: alloc and init BaseList */
 {
   int i; /* always: set *bl=BL=&BaseList */
   if (baseListSingleton != nullptr) {
     *bl = baseListSingleton;
     return;
   }
-  baseListSingleton = (Base_List *)malloc(sizeof(Base_List));
+  baseListSingleton = (BaseList *)malloc(sizeof(BaseList));
   if (baseListSingleton == nullptr) {
     fputs("Error: Init_BaseList allocation failed\n", stderr);
     exit(1);
@@ -1581,7 +1581,7 @@ void Init_BaseList(Base_List **bl, int *d) /* once: alloc and init BaseList */
 }
 void Bmin2BaseUCn(int *d, int *v, int *bmin, int *base, int *nuc) {
   int i, *n, nx = NX(*d, *v);
-  Base_List *BL;
+  BaseList *BL;
   Init_BaseList(&BL, d);
   n = &(BL->v[*v]);
   i = *n - 1;
@@ -1599,7 +1599,7 @@ void Bmin2BaseUCn(int *d, int *v, int *bmin, int *base, int *nuc) {
 }
 void NUCtoBase(int *d, int *v, int *nuc, int *Base) {
   int i, *n, nx = NX(*d, *v);
-  Base_List *BL;
+  BaseList *BL;
   Init_BaseList(&BL, d);
   n = &(BL->v[*v]);
   i = *n - 1;
@@ -1620,17 +1620,17 @@ void NUCtoBase(int *d, int *v, int *nuc, int *Base) {
 
 #ifdef USE_UNIT_ENCODE
 namespace {
-Base_List *unitBaseListSingleton = nullptr;
+BaseList *unitBaseListSingleton = nullptr;
 } // namespace
 
-void UNIT_Init_BaseList(Base_List **bl, int *d) /* once: ainit BaseList */
+void UNIT_Init_BaseList(BaseList **bl, int *d) /* once: ainit BaseList */
 {
   int i; /* always: set *bl=BL=&BaseList */
   if (unitBaseListSingleton != nullptr) {
     *bl = unitBaseListSingleton;
     return;
   }
-  unitBaseListSingleton = (Base_List *)malloc(sizeof(Base_List));
+  unitBaseListSingleton = (BaseList *)malloc(sizeof(BaseList));
   if (unitBaseListSingleton == nullptr) {
     fputs("Error: UNIT_Init_BaseList allocation failed\n", stderr);
     exit(1);
@@ -1650,7 +1650,7 @@ void UNIT_Init_BaseList(Base_List **bl, int *d) /* once: ainit BaseList */
 }
 void UNIT_Bmin2BaseUCn(int *d, int *v, int *bmin, int *base, int *nuc) {
   int i, *n, nx = UNIT_NX(*d, *v);
-  Base_List *BL;
+  BaseList *BL;
   UNIT_Init_BaseList(&BL, d);
   n = &(BL->v[*v]);
   i = *n - 1;
@@ -1667,7 +1667,7 @@ void UNIT_Bmin2BaseUCn(int *d, int *v, int *bmin, int *base, int *nuc) {
 }
 void UNIT_NUCtoBase(int *d, int *v, int *nuc, int *Base) {
   int i, *n, nx = UNIT_NX(*d, *v);
-  Base_List *BL;
+  BaseList *BL;
   UNIT_Init_BaseList(&BL, d);
   n = &(BL->v[*v]);
   i = *n - 1;

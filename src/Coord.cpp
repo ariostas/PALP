@@ -1178,7 +1178,7 @@ void Make_CWS_Points(CWS *Cin, PolyPointList *_P, FILE *out) {
 typedef struct {
   Long s, g, *N, **G;
   int *p;
-} Tri_GLZ_MPaux;
+} TriGLZMpAux;
 Long Tri_GLZ_Norm(int *d, Long **S) /* sum-norm = default */
 {
   Long norm = 0;
@@ -1202,7 +1202,7 @@ Long Tri_GLZ_Norm(int *d, Long **S) /* sum-norm = default */
   return norm;
 #endif
 }
-void Tri_GLZ_Basis_Perm(int *d, int *pi, /* int *pinv, */ Tri_GLZ_MPaux *AP) {
+void Tri_GLZ_Basis_Perm(int *d, int *pi, /* int *pinv, */ TriGLZMpAux *AP) {
   Long g, norm, N[AMBI_Dmax], M[AMBI_Dmax][AMBI_Dmax], *S[AMBI_Dmax];
   int i, j; /* if(pi[0]>pi[1]) return; */ /* eliminate equiv. permut. */
   for (i = 0; i < *d; i++) {
@@ -1233,7 +1233,7 @@ void Tri_GLZ_Basis_Perm(int *d, int *pi, /* int *pinv, */ Tri_GLZ_MPaux *AP) {
 #ifndef NO_COORD_IMPROVEMENT
 /* improved by permutation pi=pinv^-1 */
 Long Wperm_to_GLZ(Long *W, int *d, Long **G, int *P) {
-  Tri_GLZ_MPaux AS;
+  TriGLZMpAux AS;
   int i, j, pi[AMBI_Dmax], pinv[AMBI_Dmax];
   AS.s = 0;
   AS.N = W;
