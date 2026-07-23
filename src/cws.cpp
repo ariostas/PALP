@@ -837,18 +837,18 @@ void Init_IP_CWS(int narg, char *fn[], FILE *in, FILE *out) {
 
 /*  ==========             ALL  IP  WEIGHTS  in  d <= 4     	==========  */
 
-typedef struct {
+struct Weights {
   int n[W_Nmax + 1];
-} weights;
-typedef Rat ratmat[W_Nmax][W_Nmax];
-typedef Rat ratvec[W_Nmax];
-typedef struct {
+};
+using RatMat = Rat[W_Nmax][W_Nmax];
+using RatVec = Rat[W_Nmax];
+struct WSaux {
   int wnum, N, points[W_Nmax][W_Nmax], nsubsets[W_Nmax - 1],
       subsets[W_Nmax - 1][10][W_Nmax];
-  weights wli[WDIM];
-} WSaux;
+  Weights wli[WDIM];
+};
 
-int weicomp(weights w1, weights w2, int *_N)
+int weicomp(Weights w1, Weights w2, int *_N)
 /* w2-w1, i.e. pos for w1<w2,neg for w1>w2  */
 {
   int i = *_N;
@@ -856,7 +856,7 @@ int weicomp(weights w1, weights w2, int *_N)
     i--;
   return w2.n[i] - w1.n[i];
 }
-void insertat(WSaux *X, weights ww, int position) {
+void insertat(WSaux *X, Weights ww, int position) {
   int i, j;
   for (i = X->wnum - 1; i >= position; i--)
     for (j = 0; j <= X->N; j++)
@@ -866,7 +866,7 @@ void insertat(WSaux *X, weights ww, int position) {
   X->wnum++;
 }
 
-void addweight(WSaux *X, weights wn) {
+void addweight(WSaux *X, Weights wn) {
   int i, p, n0, n1, k;
   if (X->wnum >= WDIM) {
     if (X->wnum > WDIM)
@@ -915,7 +915,7 @@ void addweight(WSaux *X, weights wn) {
   } else
     insertat(X, wn, 0);
 }
-int checkwrite(WSaux *X, weights ws) {
+int checkwrite(WSaux *X, Weights ws) {
   int i;
   for (i = 0; i < X->N; i++)
     if (!ws.n[i])
@@ -923,10 +923,10 @@ int checkwrite(WSaux *X, weights ws) {
   addweight(X, ws);
   return 1;
 }
-weights testweisys(WSaux *X, int npoints) {
-  weights tws;
-  ratmat rm;
-  ratvec newboundwei, boundwei[10], rattws, rs;
+Weights testweisys(WSaux *X, int npoints) {
+  Weights tws;
+  RatMat rm;
+  RatVec newboundwei, boundwei[10], rattws, rs;
   int i, ii, j, k, nboundwei = 0, New, rankrm, one[W_Nmax];
   Long minnbw, maxnbw;
   for (k = 0; k < X->nsubsets[npoints - 2]; k++ /* alle 0-systeme */) {
@@ -999,7 +999,7 @@ line from ii'th line */
 }
 void createweights(WSaux *X, int npoints, FILE *out) {
   int x0, x1, x2, x3, x4, sum, maxx;
-  weights tws;
+  Weights tws;
   tws = testweisys(X, npoints);
   if (checkwrite(X, tws))
     if (npoints < X->N) {
@@ -1552,19 +1552,19 @@ void T_Addweight(T_weight win, T_aux *X) {
 }
 /*  ==========  	  End of MAKE WEIGHTS d>4:		==========  */
 
-/*  ==========       	    ALL  CWS  in  d <= 4		==========  */
-typedef struct {
+/*  ==========      	    ALL  CWS  in  d <= 4		==========  */
+struct Wei2 {
   int d, w[2];
-} wei2;
-typedef struct {
+};
+struct Wei3 {
   int d, w[3];
-} wei3;
-typedef struct {
+};
+struct Wei4 {
   int d, w[4];
-} wei4;
-const wei2 W2 = {2, {1, 1}};
-const wei3 W3[3] = {{3, {1, 1, 1}}, {4, {1, 1, 2}}, {6, {1, 2, 3}}};
-const wei4 W4[95] = {
+};
+const Wei2 W2 = {2, {1, 1}};
+const Wei3 W3[3] = {{3, {1, 1, 1}}, {4, {1, 1, 2}}, {6, {1, 2, 3}}};
+const Wei4 W4[95] = {
     {4, {1, 1, 1, 1}},    {5, {1, 1, 1, 2}},    {6, {1, 1, 2, 2}},
     {6, {1, 1, 1, 3}},    {7, {1, 1, 2, 3}},    {8, {1, 2, 2, 3}},
     {8, {1, 1, 2, 4}},    {9, {1, 2, 3, 3}},    {9, {1, 1, 3, 4}},
