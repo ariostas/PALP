@@ -16,6 +16,21 @@
 /*   L->dbname points at constant string => don't change, use:
  *   dbname, which has "File_Ext_NCmax" extra characters allocated !!!     */
 
+namespace {
+// Copy one byte from src to dst, aborting on read/write EOF or error.
+void copyByteChecked(FILE *src, FILE *dst) {
+  int c = fgetc(src);
+  if (c == EOF) {
+    fputs("Error: unexpected EOF while copying database stream\n", stderr);
+    exit(1);
+  }
+  if (fputc(c, dst) == EOF) {
+    fputs("Error: failed to write database stream\n", stderr);
+    exit(1);
+  }
+}
+} // namespace
+
 /*   uchar=unsigned char        uint=unsigned int
  *   NP=#Polys  NB=#Bytes  #files=#nv's with NP>0  #lists=#(nv,nuc) with NP>0
  *
@@ -161,7 +176,7 @@ void Polyi_2_DBo(char *polyi, char *dbo) {
         if (L.NFnum[v][nu]) {
           int vnuNB = nu * L.NFnum[v][nu];
           for (i = 0; i < vnuNB; i++)
-            fputc(fgetc(F), Fv);
+            copyByteChecked(F, Fv);
         }
       if (ferror(Fv)) {
         printf("File error in %s\n", dbfile.c_str());
@@ -180,7 +195,7 @@ void Polyi_2_DBo(char *polyi, char *dbo) {
       exit(1);
     }
     for (i = 0; i < sl_NB; i++)
-      fputc(fgetc(F), Fsl);
+      copyByteChecked(F, Fsl);
     if (ferror(Fsl)) {
       printf("File error in %s\n", dbfile.c_str());
       exit(1);
@@ -2623,7 +2638,7 @@ void Sort_Hodge(char *dbaux, char *dbout) {
             /* for (j=0;j<4;j++) {c=fgetc(Fchia); fputc(c,Fh[h12]);}
             for (j=0;j<c%64;j++) fputc(fgetc(Fchia),Fh[h12]);}*/
             for (j = 0; j < 3; j++)
-              fputc(fgetc(Fchia), Fh[h12]);
+              copyByteChecked(Fchia, Fh[h12]);
             nuc = fgetc(Fchia);
             fputc(nuc, Fh[h12]);
             c = fgetc(Fchia);
@@ -2634,7 +2649,7 @@ void Sort_Hodge(char *dbaux, char *dbout) {
             }
             fputc(c, Fh[h12]);
             for (j = 0; j < nuc % 64 - 1; j++)
-              fputc(fgetc(Fchia), Fh[h12]);
+              copyByteChecked(Fchia, Fh[h12]);
           }
           if (ferror(Fchia)) {
             printf("File error in Fchia at dh=%d v=%d\n", dh, v);
