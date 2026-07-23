@@ -6,10 +6,6 @@
 
 #define NO_COORD_IMPROVEMENT /* switch off weight permutation */
 
-using CWLatticeBasis = struct {
-  Long x[AMBI_Dmax][AMBI_Dmax];
-  int n, N;
-};
 
 void Make_CWS_Points(CWS *_C, PolyPointList *_P, FILE *out);
 void Make_RGC_Points(CWS *Cin, PolyPointList *_P);

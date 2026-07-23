@@ -21,10 +21,6 @@ constexpr bool write_cws = true; /* output CWS data in nef Hodge output */
 
 /*  ==========            l o c a l  T Y P E D E F s            ==========  */
 
-using CWLatticeBasis = struct {
-  Long x[AMBI_Dmax][AMBI_Dmax];
-  int n, N;
-};
 struct Pstat {
   Long P[POINT_Nmax];
   Long n;

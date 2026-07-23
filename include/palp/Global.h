@@ -192,6 +192,11 @@ The matrix whose entries are the pairings av+c between the vertices v and
 the equations (a,c).
 */
 
+struct CWLatticeBasis {
+  Long x[AMBI_Dmax][AMBI_Dmax];
+  int n, N;
+};
+
 struct BaHo {
   int mp, mv, np, nv, n, pic, cor, h22;
   std::array<int, POLY_Dmax - 1> h1;
