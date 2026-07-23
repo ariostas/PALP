@@ -208,12 +208,11 @@ conversion is one commit.
 
 ### Phase 9 — `std::array` / `std::vector` / `std::span` for arrays
 
-- [ ] **9.1** Convert struct member C-arrays with compile-time-known sizes to
-  `std::array`. Start with the small, leaf structs (`Equation`, `PEnt`,
-  `PPEnt`, `BaHo`, `VaHo`, `Step`, `V_Flag`, `M_Rank`, `Subset`, `DxD`,
-  `VPerm`). Large structs (`PolyPointList`, `FibW`, `FaceInfo`, `PartList`)
-  are deferred until RAII is complete and the impact on stack usage is
-  assessed.
+- [x] **9.1** Convert struct member C-arrays with compile-time-known sizes to
+  `std::array`: `Equation::a`, `BaHo::h1`, `VaHo::h`, `C5stats::max_h1`,
+  `C5stats::max_nf`. `PEnt`/`PPEnt` have no arrays and were already
+  converted to plain structs in Phase 10.1. Large structs
+  (`PolyPointList`, `FibW`, `FaceInfo`, `PartList`) remain C-arrays.
 - [ ] **9.2** Convert function signatures taking decayed C-array parameters
   (`Long M[][VERT_Nmax]`, `Long *V`, `int *d`) to `std::span<T>` (C++20) or
   reference-to-`std::array` where the size is known. Replace `int *d`/`int *v`
