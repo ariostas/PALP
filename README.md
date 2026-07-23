@@ -160,21 +160,13 @@ files.
 ```
 
 The `-M` option prints any polytopes whose mirrors are not already present in
-the binary list. After the first pass `missing_mirrors.txt` is typically
-**not** empty: the initial CWS list does not generate every mirror partner. The
-missing mirrors (printed as ASCII weight systems) must be added back to the
-classification and the check repeated until no more mirrors are missing:
-
-```bash
-# Add the missing mirrors to the binary list and re-check.
-while [ -s missing_mirrors.txt ]; do
-    ./class-4d.x -a -pi class4d.bin -po class4d.bin missing_mirrors.txt
-    ./class-4d.x -M -pi class4d.bin > missing_mirrors.txt
-done
-```
-
-When the list is finally closed under mirror symmetry, the total number of
-distinct normal forms is the Kreuzer–Skarke result: **473,800,776**.
+the binary list. After a *complete* generation this file should be **empty**;
+that emptiness is the criterion used to verify that no polytope has been missed.
+If it is not empty, the missing mirrors correspond to weight systems that were
+not in the original input. Add those weight systems to the input list, rerun
+`class.x`, and check again. Repeat until `missing_mirrors.txt` is empty. The
+total number of distinct normal forms in the final closed list is the
+Kreuzer–Skarke result: **473,800,776**.
 
 For production use the recommended workflow is to use a binary database rather
 than a single binary file:
