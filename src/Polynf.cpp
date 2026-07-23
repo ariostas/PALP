@@ -1903,7 +1903,7 @@ int SimpUnimod(PolyPointList *P, VertexNumList *V, EqList *E, int vol) {
       if (0 == Eval_Eq_on_V(&E->e[e], X, d)) {
         if (i == d)
           return 0;
-        Y[i++] = E->e[e].a;
+        Y[i++] = E->e[e].a.data();
       } /* simplicial */
     if (vol)
       if (1 != (i = SimplexVolume(Y, d)))
@@ -2319,7 +2319,7 @@ int ConifoldSing(PolyPointList *P, VertexNumList *V, EqList *E,
       exit(1);
     }
     for (i = 0; i < e; i++)
-      X[i] = E->e[el[i]].a;
+      X[i] = E->e[el[i]].a.data();
     if (e == 4) {
       for (i = 0; i < P->n; i++)
         if (X[0][i] + X[1][i] - X[2][i] - X[3][i])

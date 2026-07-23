@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
@@ -151,7 +152,8 @@ V.nv is the number of vertices of P.
 */
 
 struct Equation {
-  Long a[POLY_Dmax], c;
+  std::array<Long, POLY_Dmax> a;
+  Long c;
 };
 /*
 This structure determines an equation of the type ax+c=0, explicitly:

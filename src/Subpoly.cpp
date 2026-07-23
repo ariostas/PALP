@@ -864,7 +864,7 @@ void Reduce_Poly(PolyPointList *_P, EqList *_E, KeepList *_KL, NF_List *_NFL,
   }
 
   /* Generate RedVec: */
-  if (!Make_RedVec(_P->n, BE.a, RedVec, out)) {
+  if (!Make_RedVec(_P->n, BE.a.data(), RedVec, out)) {
     Print_PPL(_P, "");
     fprintf(out, "Bad Facet: ");
     for (j = 0; j < _P->n; j++)
