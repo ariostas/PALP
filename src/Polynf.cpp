@@ -1371,13 +1371,10 @@ void Print2_VM(VMat VM, int d, int p, FILE *out) {
     for (j = 0; j < p; j++)
       fprintf(out, "%2ld%c", VM[i][j], (j == p - 1) ? '\n' : ' ');
 }
-typedef struct {
-  int p[SYM_Nmax][VERT_Nmax];
-} VPerm;
 int InvariantSubspace(PolyPointList *P, VertexNumList *V, EqList *E,
                       FILE *out) {
   int i, v, r = 0, p = 0, pri, EVsn, sn;
-  VPerm VP;
+  VPermList VP;
   Long NF[POLY_Dmax][VERT_Nmax];
   VMat Inv;
   EVsn = Make_Poly_Sym_NF(P, V, E, &sn, VP.p, NF, 0, 0, 0, out);

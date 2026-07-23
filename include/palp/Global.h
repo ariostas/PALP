@@ -224,6 +224,10 @@ This list is an extension of the PolyPointList with the combined weight system.
 W[i][j] is the j'th weight; nw is the number of weight systems.
 */
 
+struct VPermList {
+  int p[SYM_Nmax][VERT_Nmax];
+};
+
 struct C5stats {
   long n_nonIP, n_IP_nonRef, n_ref, // numbers of WS of certain types
       max_w, nr_max_w, // maximum weight in the reflexive/non-reflexive cases

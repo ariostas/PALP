@@ -82,10 +82,6 @@ void PrintUsage(char *c) {
   puts("Output:   as specified by options");
 }
 
-typedef struct {
-  int p[SYM_Nmax][VERT_Nmax];
-} VPermList;
-
 int main(int narg, char *fn[]) {
   int n = 0, k, FilterFlag = 0, lg = 0, s = 0, i = 0, m = 0, p = 0, v = 0,
       e = 0, d = 0, t = 0, z = 0, S = 0, N = 0, I = 0, r = 0, nc = 0, g = 0,
