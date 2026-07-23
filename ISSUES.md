@@ -444,11 +444,11 @@ and the detailed commit messages for the full context of each fix.
 - **File**: `src/MoriCone.cpp`
 - **Line**: 962
 - **Severity**: Low
-- **Status**: Open
+- **Status**: Closed
 - **Description**: `#define BZangle(a, b) (ConeAngle(B.x[Z[a]], B.x[Z[b]]))`
-  is the last remaining function-like macro (the others were converted in
-  Phase 4). It captures `B` and `Z` implicitly. Should become an inline
-  function taking `Matrix &B, const int *Z, int a, int b`.
+  was the last function-like macro and implicitly captured `B` and `Z`.
+  Replaced with `inline int BZangle(Matrix &B, const int *Z, int a, int b)`
+  and updated all call sites.
 
 ### 79. `COEFF_Nmax` macro references local variables
 - **File**: `src/LG.cpp`
