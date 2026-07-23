@@ -193,7 +193,8 @@ the equations (a,c).
 */
 
 struct BaHo {
-  int mp, mv, np, nv, n, pic, cor, h22, h1[POLY_Dmax - 1];
+  int mp, mv, np, nv, n, pic, cor, h22;
+  std::array<int, POLY_Dmax - 1> h1;
 };
 /*
 This structure is related to Batyrev's formulas for Hodge numbers.
@@ -223,9 +224,9 @@ struct C5stats {
       max_w, nr_max_w, // maximum weight in the reflexive/non-reflexive cases
       nr_n_w[MAXLD], n_w[MAXLD]; // numbers of weights of given [ld]
   int nr_max_mp, nr_max_mv, nr_max_nv, max_mp, max_mv, max_np, max_nv, max_h22,
-      max_h1[POLY_Dmax - 1], // max values of certain entries of BH
-      min_chi, max_chi,
-      max_nf[POLY_Dmax + 1]; // range for chi, max facet numbers
+      min_chi, max_chi;
+  std::array<int, POLY_Dmax - 1> max_h1; // max values of certain entries of BH
+  std::array<int, POLY_Dmax + 1> max_nf; // range for chi, max facet numbers
 };
 /*
 statistics on large lists of weight systems, cf. classification of 4fold weights

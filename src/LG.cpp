@@ -636,7 +636,8 @@ void Write_WH(Weight *_W, BaHo *_BH, VaHo *_VH, int rc, int tc,
       if (6 < _P->n)
         fprintf(out, " [???]\n");
       else /* Euler number */ {
-        int chi = 0, *ho = _BH->h1; // if(tc) ho=_VH->h[1];
+        int chi = 0;
+        int *ho = _BH->h1.data(); // if(tc) ho=_VH->h[1];
         if (_P->n == 3)
           chi = 4 + ho[1];
         if (_P->n == 4)

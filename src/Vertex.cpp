@@ -1417,9 +1417,8 @@ void PrintFaceIPs(PolyPointList *_P, FaceInfo *_I) {
 void Eval_BaHo(FaceInfo *_I, BaHo *_BH) {
   /* Calculate Hodge/Picard numbers from FaceInfo */
   int i, j, n = _BH->n;
-  int *h1;
+  int *h1 = _BH->h1.data();
   _BH->cor = 0;
-  h1 = _BH->h1;
   for (i = 0; i < n - 1; i++)
     h1[i] = 0;
   h1[1] += _BH->np - n - 1;

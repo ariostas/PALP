@@ -44,7 +44,7 @@ struct Weight { /* Eq: Ei.c=Ai Ei.a[]=Bi[]} */
 
 struct VaHo {
   int D, E, sts;
-  Pint h[POLY_Dmax][POLY_Dmax];
+  std::array<std::array<Pint, POLY_Dmax>, POLY_Dmax> h;
 };
 
 
