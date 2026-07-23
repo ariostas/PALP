@@ -229,17 +229,8 @@ conversion is one commit.
   `struct Name { ... };` and `typedef T Name[N];` to
   `using Name = std::array<T, N>;` (or `using Name = T[N];` where the
   typedef is used as a function-parameter decay helper). File-by-file.
-- [x] **10.2** Resolve duplicate type definitions: `Matrix` (Mori.h:157 and
-  Polynf.cpp:1706 → one shared header), `VPerm`/`VPermList` (Polynf.cpp:1373
-  and poly.cpp:85 → shared header), `CWLatticeBasis` (Coord.cpp:9 and
-  nef.cpp:24 → shared header), `subl_int` (Subpoly.h:66 vs Subpoly.cpp:8 →
-  remove the .cpp duplicate).
-- [ ] **10.2a** `AmbiPointList` (LG.h:51 forward decl vs Nef.h:66 full def
-  → consolidate): deferred because LG.h and Nef.h already have an agreed
-  forward-declaration/full-definition split that avoids a circular include.
-- [ ] **10.2b** `symlist` (LG.cpp:2546 vs lgotwist.cpp:96): these are
-  actually different structs/types despite the same name; rename the LG.cpp
-  one to avoid confusion.
+- [x] **10.2** Resolve duplicate type definitions: `Matrix`, `VPerm`/
+  `VPermList`, `CWLatticeBasis`, `subl_int`, and `symlist`/`SymList`.
 - [ ] **10.3** Rename lowercase struct type names to PascalCase:
   `skelet`→`Skelet`, `prili`→`PriLi`, `smon`→`SMon`, `weights`→`Weights`,
   `wei2/3/4`→`Wei2/3/4`, `ek3fli`→`Ek3Fli`, `symlist`(LG)→`SymList`,
