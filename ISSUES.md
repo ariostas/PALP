@@ -353,10 +353,10 @@ and the detailed commit messages for the full context of each fix.
 - **File**: `src/Vertex.cpp`
 - **Lines**: 323–326
 - **Severity**: Low
-- **Status**: Open
+- **Status**: Closed
 - **Description**: `constexpr bool LLong_EEV = true; constexpr bool TEST_EEV
-  = false;` are declared but never referenced. `EEV_To_Equation` always
-  uses the `LLong` path unconditionally. Remove.
+  = false;` were declared but never referenced. Removed; `EEV_To_Equation`
+  continues to use the `LLong` path unconditionally.
 
 ### 70. ~1,000+ `exit(1)` calls in library functions
 - **File**: all `src/*.cpp` except driver `main()` functions
