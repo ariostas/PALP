@@ -1,4 +1,5 @@
 #include <palp/Global.h>
+#include <palp/Mori.h>
 #include <palp/Rat.h>
 
 #include <array>
@@ -1703,10 +1704,6 @@ int SemiSimpleRoots(PolyPointList *P, EqList *E, Long **R) {
   return N;
 }
 
-typedef struct {
-  int v, d;
-  Long **x;
-} Matrix;                                   /* Line[v][d] */
 void Init_Matrix(Matrix *M, int v, int d) { /* v=#vec, d=dim */
   int i;
   M->x = (Long **)malloc(v * (sizeof(Long *) + d * sizeof(Long)));
