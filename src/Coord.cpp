@@ -6,7 +6,6 @@
 
 #define NO_COORD_IMPROVEMENT /* switch off weight permutation */
 
-
 void Make_CWS_Points(CWS *_C, PolyPointList *_P, FILE *out);
 void Make_RGC_Points(CWS *Cin, PolyPointList *_P);
 void CWS_to_PermCWS(CWS *Cin, CWS *C, int *pi);

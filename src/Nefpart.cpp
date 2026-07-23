@@ -688,8 +688,8 @@ void Copy_PTL(PartList *_IN_PTL, PartList *_OUT_PTL) {
 }
 
 void Select_Sv(int S[], VFlag *_VF, MMatrix *_M, GMatrix *_G, XMatrix *_X,
-               XMatrix *_Y, MRank *_MR, FVList *_FVl, Step step,
-               PartList *_PTL, NEF_Flags *_F, FILE *out) {
+               XMatrix *_Y, MRank *_MR, FVList *_FVl, Step step, PartList *_PTL,
+               NEF_Flags *_F, FILE *out) {
 
   int i;
   if (Next_Step(_FVl, &step)) {
