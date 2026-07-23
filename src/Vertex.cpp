@@ -322,11 +322,6 @@ int VNL_to_DEL(PolyPointList *_P, VertexNumList *_V, EqList *_DE) {
   return 1;
 }
 
-namespace {
-constexpr bool LLong_EEV = true; /* 1 @ [4662 4 20 333 422 1554 2329] */
-constexpr bool TEST_EEV = false; /* compare Long to LLong EEV */
-} // namespace
-
 Equation EEV_To_Equation(Equation *_E1, Equation *_E2, Long *_V, int n) {
   /* Calculate the equation spanned by _V and the intersection of _E1, _E2  */
   int i;
