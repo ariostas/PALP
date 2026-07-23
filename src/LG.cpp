@@ -23,8 +23,6 @@ int AddMono_M = 1;
 
 #define NO_COORD_IMPROVEMENT
 
-#define COEFF_Nmax (d * D + 2 * N)
-
 #undef W_PERM_CODE
 int Is_Gen_CY(int index, PolyPointList *P) {
   int i;
@@ -2338,10 +2336,8 @@ void Calc_VaHo(Weight *W, VaHo *V, FILE *out) {
     for (j = i + 1; j < N; j++)
       if (w[j] < w[i])
         swap(&w[i], &w[j]);
-#ifndef COEFF_Nmax
-#define COEFF_Nmax (d * D + 2 * N) /* 22999000 for W_Nmax == 6 */
-#endif
-  P->A = Z->A = COEFF_Nmax;
+  const int coeffNmax = d * D + 2 * N; /* 22999000 for W_Nmax == 6 */
+  P->A = Z->A = coeffNmax;
   R->A = w[N - 1] + 1; // printf("%d %d %d", P->A, Z->A, R->A);
   AllocPoCoLi(P);
   AllocPoCoLi(Z);
