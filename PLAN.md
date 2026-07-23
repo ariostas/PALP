@@ -231,10 +231,12 @@ conversion is one commit.
   typedef is used as a function-parameter decay helper). File-by-file.
 - [x] **10.2** Resolve duplicate type definitions: `Matrix`, `VPerm`/
   `VPermList`, `CWLatticeBasis`, `subl_int`, and `symlist`/`SymList`.
-- [ ] **10.3** Rename lowercase struct type names to PascalCase:
+- [x] **10.3** Rename lowercase struct type names to PascalCase:
   `skelet`→`Skelet`, `prili`→`PriLi`, `smon`→`SMon`, `weights`→`Weights`,
   `wei2/3/4`→`Wei2/3/4`, `ek3fli`→`Ek3Fli`, `symlist`(LG)→`SymList`,
   `triang`→`Triang`, `ratmat`/`ratvec`→`RatMat`/`RatVec`.
+  Also converted the renamed local `typedef struct` declarations to plain
+  `struct` declarations (completing Phase 10.1 for the remaining files).
 
 ### Phase 11 — Naming convention migration (LLVM style)
 
