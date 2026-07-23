@@ -454,12 +454,11 @@ and the detailed commit messages for the full context of each fix.
 - **File**: `src/LG.cpp`
 - **Lines**: 26, 2338
 - **Severity**: Low
-- **Status**: Open
-- **Description**: `#define COEFF_Nmax (d * D + 2 * N)` is an object-like
-  macro that expands to an expression referencing local variables `d`,
-  `D`, `N` from the enclosing function. It is defined twice (lines 26 and
-  2338) in different functions with the same formula. Should be a
-  `const int` local or a small inline helper.
+- **Status**: Closed
+- **Description**: `#define COEFF_Nmax (d * D + 2 * N)` was an object-like
+  macro referencing local variables `d`, `D`, `N`. Replaced with
+  `const int coeffNmax = d * D + 2 * N;` in `Calc_VaHo`; the duplicate
+  top-level macro was also removed.
 
 ### 80. Magic numbers in physics formulas
 - **File**: `src/Polynf.cpp` (lines 641–647, 1432, 2285, 2428),
