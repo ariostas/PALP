@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-using subl_int = LLong;
 constexpr bool UnAided_IP_Check = (POLY_Dmax > 4);
 constexpr bool SIMPLE_CTH = false;
 constexpr bool INCOMPLETE_SL_REDUCTION = false;
