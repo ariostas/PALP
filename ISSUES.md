@@ -484,8 +484,8 @@ and the detailed commit messages for the full context of each fix.
 ### 82. Missing `return` after `exit()` in stubs
 - **File**: `src/MoriCone.cpp` (lines 108–109, 316–317)
 - **Severity**: Low
-- **Status**: Open
-- **Description**: `int INCI_LmR(...) { puts("Implement INCI_LmR");
-  exit(1); }` ends without `return` after `exit(1)`. Technically UB if
-  `exit` didn't terminate (it does, but compilers warn). Add `return 0;`
-  or mark `[[noreturn]]`.
+- **Status**: Closed
+- **Description**: The `INCI_LmR` stub referenced in the issue no longer
+  exists; the only remaining stub in that area (`Print_Inci64_list`) is
+  `void`-returning, so no return-after-`exit` warning applies. Closing as
+  resolved by earlier cleanup.
