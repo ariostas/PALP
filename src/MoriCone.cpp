@@ -933,7 +933,9 @@ int ConeAngle(Long *L, Long *R) {
   return (AcuteAngle(L, R) > 0) ? 0 : -1;
 } // [pi,)->-1
 
-#define BZangle(a, b) (ConeAngle(B.x[Z[a]], B.x[Z[b]])) // Gale-points
+inline int BZangle(Matrix &B, const int *Z, int a, int b) {
+  return ConeAngle(B.x[Z[a]], B.x[Z[b]]);
+} // Gale-points
 /*
  *   2d: secondary POLYGON: return nmt = #(maximal triangulations)
  *   V[]=facet points; rays R [ r<nr ] [ i<nrp[r] ];
@@ -1243,12 +1245,12 @@ int Triang2dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
   nrp[0] = 1;
   R[0][0] = 0; // Z[z]::T[0] {circuits} in F[]::=facet
   for (i = 1; i < z; i++)
-    if (0 <= (k = BZangle(i, 0))) { // points with positive angle
+    if (0 <= (k = BZangle(B, Z, i, 0))) { // points with positive angle
       if (k == 0)
         r = 0; // else if(nr==1) r=1; // insert@ 0 < r <=nr; add@ 0 <= r <nr
       else
         for (r = 1; r < nr; r++)
-          if ((k = BZangle(i, *R[r])) <= 0)
+          if ((k = BZangle(B, Z, i, *R[r])) <= 0)
             break;
       {
         int J, L;
@@ -1266,14 +1268,14 @@ int Triang2dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
     }
 
   for (i = 1; i < z; i++)
-    if (0 > (k = BZangle(i, 0))) { // points with negative angle
+    if (0 > (k = BZangle(B, Z, i, 0))) { // points with negative angle
       if (neg == 0) {
         r = neg = nr;
         k = 1;
       } // init neg.
       else
         for (r = neg; r < nr; r++)
-          if ((k = BZangle(i, *R[r])) <= 0)
+          if ((k = BZangle(B, Z, i, *R[r])) <= 0)
             break;
       // printf("i=%d: neg=%d nr=%d  ->  k=%d r=%d\n",i,neg,nr,k,r);
       {
@@ -1304,7 +1306,7 @@ int Triang2dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
   i = 0;
   k = 0;
   for (r = 0; r < nr; r++) {
-    if (BZangle(*R[(r + 1) % nr], *R[r]) <= 0) {
+    if (BZangle(B, Z, *R[(r + 1) % nr], *R[r]) <= 0) {
       fputs("Error: Triang2dSFan rays are not strictly ordered\n", stderr);
       exit(1);
     }
@@ -1319,7 +1321,7 @@ int Triang2dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
       }
       k += R[r][j];
       if (j)
-        if (BZangle(R[r][j - 1], R[r][j]) != 0) {
+        if (BZangle(B, Z, R[r][j - 1], R[r][j]) != 0) {
           fputs("Error: Triang2dSFan collinear ray points expected\n", stderr);
           exit(1);
         }
@@ -1339,7 +1341,7 @@ int Triang2dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
     int a, s = (r + 1) % nr; // triangulation for cone (R[r],R[s])
     Inci64 PC = 0, *CI = CT[*nmt];
     nt[*nmt] = 0;
-    if (BZangle(*R[s], *R[r]) <= 0) {
+    if (BZangle(B, Z, *R[s], *R[r]) <= 0) {
       fputs("Error: Triang2dSFan adjacent rays are not strictly ordered\n",
             stderr);
       exit(1);
@@ -1347,13 +1349,13 @@ int Triang2dSFan(PolyPointList *P, int p, Inci64 FI, Inci64 *X,
     //    if((nrp[r]>1)&&(nrp[s]>1))		// maximal triangulations only
     for (j = 1; j < nr; j++) {
       int b, y;
-      if (BZangle(*R[y = (r + j) % nr], *R[r]) <= 0)
+      if (BZangle(B, Z, *R[y = (r + j) % nr], *R[r]) <= 0)
         break;
       for (i = 1; i < nr; i++) {
         int x;
-        if (BZangle(*R[s], *R[x = (nr - i + s) % nr]) <= 0)
+        if (BZangle(B, Z, *R[s], *R[x = (nr - i + s) % nr]) <= 0)
           break;
-        if (BZangle(*R[y], *R[x]) > 0)
+        if (BZangle(B, Z, *R[y], *R[x]) > 0)
           for (a = 0; a < nrp[x]; a++)
             for (b = 0; b < nrp[y]; b++)
               PC |= (CI[nt[*nmt]++] =
