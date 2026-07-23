@@ -475,10 +475,11 @@ and the detailed commit messages for the full context of each fix.
 - **File**: `src/Subdb.cpp`
 - **Lines**: 168, 186, 2788, 2790–2797, 3041–3051
 - **Severity**: Medium
-- **Status**: Open
-- **Description**: `fputc(fgetc(F), Fv);` copies bytes without checking
-  for EOF. If `fgetc` returns EOF, `fputc(EOF, ...)` writes 255 (or -1
-  cast to unsigned char), corrupting the output file.
+- **Status**: Closed
+- **Description**: `fputc(fgetc(F), Fv);` copied bytes without checking
+  for EOF. Replaced with a namespace helper `copyByteChecked(src, dst)`
+  that aborts on EOF or write error. All four sites in `Polyi_2_DBo` and
+  `Make_Hodge_db` were updated.
 
 ### 82. Missing `return` after `exit()` in stubs
 - **File**: `src/MoriCone.cpp` (lines 108–109, 316–317)
