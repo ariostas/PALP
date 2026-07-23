@@ -13,7 +13,7 @@ void CWS_to_PermCWS(CWS *Cin, CWS *C, int *pi);
 /*  ==========  	  I/O functions:                	==========  */
 
 int IsNextDigit(FILE *in) {
-  char c;
+  int c;
   c = fgetc(in);
   ungetc(c, in);
   if (c == '0')
@@ -211,8 +211,8 @@ int ReadCwsPp(CWS *_CW, PolyPointList *_P, int codim, int index, FILE *in,
     puts("  or `#lines #columns' (= `PolyDim #Points' or `#Points PolyDim'):");
   }
   for (i = 0; i < AMBI_Dmax * (AMBI_Dmax + 1); i++) {
-    char c;
-    while (' ' == (c = fgetc(in)))
+    int c;
+    while ((c = fgetc(in)) == ' ')
       ;
     ungetc(c, in); /* read blanks */
     if (IsNextDigit(in)) {
@@ -398,8 +398,8 @@ int Read_PP(PolyPointList *_P, FILE *in) {
     printf("`#lines #columns' (= `PolyDim #Points' or `#Points PolyDim'):\n");
   };
   for (i = 0; i < AMBI_Dmax * (AMBI_Dmax + 1); i++) {
-    char c;
-    while (' ' == (c = fgetc(in)))
+    int c;
+    while ((c = fgetc(in)) == ' ')
       ;
     ungetc(c, in); /* read blanks */
     if (IsNextDigit(in)) {
@@ -500,8 +500,8 @@ int Read_CWS(CWS *_CW, PolyPointList *_P, FILE *in, FILE *out) {
     printf("Degrees and weights  `d1 w11 w12 ... d2 w21 w22 ...':\n");
   };
   for (i = 0; i < AMBI_Dmax * (AMBI_Dmax + 1); i++) {
-    char c;
-    while (' ' == (c = fgetc(in)))
+    int c;
+    while ((c = fgetc(in)) == ' ')
       ;
     ungetc(c, in); /* read blanks */
     if (IsNextDigit(in)) {

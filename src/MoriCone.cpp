@@ -2492,21 +2492,21 @@ void FE(char *c) {
 
 /*needed from Read_Tri*/
 void Read_EOL(FILE *in) {
-  char c;
+  int c;
   while ('\n' != (c = fgetc(in)))
-    if (feof(in))
+    if (c == EOF)
       FE("EOF");
 }
 
 int ReadInt(FILE *in) {
   int n;
-  char c = fgetc(in);
-  if (!IsDigit(c) && (c != '-'))
+  int c = fgetc(in);
+  if ((c == EOF) || (!IsDigit(c) && (c != '-')))
     FE("ReadInt");
   ungetc(c, in);
   if (fscanf(in, "%d", &n) != 1)
     FE("ReadInt");
-  while (' ' == (c = fgetc(in)))
+  while ((c = fgetc(in)) == ' ')
     ;
   ungetc(c, in);
   return n;
@@ -2516,11 +2516,11 @@ int ReadInt(FILE *in) {
 Inci64 Read_INCI(int p, FILE *in, FILE *out) {
   Inci64 X =
       Inci64_1(); /* dirty: starts with the 1 required by the old format */
-  char c;
-  while (' ' == (c = fgetc(in)))
+  int c;
+  while ((c = fgetc(in)) == ' ')
     ;
   ungetc(c, in);
-  while (IsDigit(c = fgetc(in))) {
+  while (((c = fgetc(in)) != EOF) && IsDigit(c)) {
     if (c >= '2') {
       fputs("Error: Read_INCI expects binary digits only\n", stderr);
       exit(1);

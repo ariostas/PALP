@@ -602,8 +602,8 @@ void AddHalf(FILE *in, FILE *out) {
   n = 0;
   while (1) {
     for (i = 0; i < AMBI_Dmax * (AMBI_Dmax + 1); i++) {
-      char c;
-      while (' ' == (c = fgetc(in)))
+      int c;
+      while ((c = fgetc(in)) == ' ')
         ;
       ungetc(c, in); /* read blanks */
       if (IsNextDigit(in)) {
