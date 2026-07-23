@@ -288,10 +288,11 @@ and the detailed commit messages for the full context of each fix.
 - **File**: `src/Subdb.cpp`
 - **Lines**: 1172, 1177, 2228, 2233, 3920, 3926
 - **Severity**: Medium
-- **Status**: Open
-- **Description**: `v = fgetc(F);` and `nu = fgetc(F);` are used as array
-  indices (`L.nNUC[v]`, `DB->Fv[v]`, etc.) without checking for EOF. If
-  `fgetc` returns `-1`, the subsequent array access is out-of-bounds.
+- **Status**: Closed
+- **Description**: `v = fgetc(F);` and `nu = fgetc(F);` were used as array
+  indices without checking for EOF. Was fixed during an earlier migration
+  pass; all four read sites now use `int ch = fgetc(F);` and check
+  `if (ch == EOF)` before assigning to `v` or `nu`.
 
 ### 63. Syntax error in dead `TRIANG_CHECKSUM` block
 - **File**: `src/MoriCone.cpp`
