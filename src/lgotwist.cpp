@@ -131,19 +131,19 @@ spectrum hodlist[HODDIM];
 /*  ======================================================================  */
 /*  ==========                abelmax                           ==========  */
 /*  ======================================================================  */
-typedef struct {
+struct Skelet {
   int p[NM], a[NM], N;
-} skelet; /* p: pointer; a: exponent */
-typedef struct {
+}; /* p: pointer; a: exponent */
+struct PriLi {
   int p[NPN], m[NPN];
-} prili; /* p[0]=#(primes); m[0]=Max mult.*/
+}; /* p[0]=#(primes); m[0]=Max mult.*/
 
-int readline(skelet *); /* reads: "string[#+1] exp_0 ... exp_# ... \n" */
-void analy(skelet); /* calculate: order of evaluation; loops; pointed at by;*/
-prili pmax; /* global var. for prime decomposistion of Lcm of group orders */
-void printpri(prili);
+int readline(Skelet *); /* reads: "string[#+1] exp_0 ... exp_# ... \n" */
+void analy(Skelet); /* calculate: order of evaluation; loops; pointed at by;*/
+PriLi pmax; /* global var. for prime decomposistion of Lcm of group orders */
+void printpri(PriLi);
 
-int readline(skelet *s) /* reads: "string[#+1] exp_0 ... exp_# ... \n" */
+int readline(Skelet *s) /* reads: "string[#+1] exp_0 ... exp_# ... \n" */
 {
   int i;
   s->N = 0;
@@ -186,7 +186,7 @@ int prime[] = {2,   3,   5,   7,   11,  13,  17,  19,  23,  29,  31,  37,  41,
                827, 829, 839, 853, 857, 859, 863, 877, 881, 883, 887, 907, 911,
                919, 929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997};
 
-void printpri(prili li) {
+void printpri(PriLi li) {
   int i;
   fprintf(palpContext.out, "\nlist of primes:\n");
   for (i = 1; i <= *li.p; i++) {
@@ -203,10 +203,10 @@ void printpri(prili li) {
   fprintf(palpContext.out, "\n");
 }
 
-prili prideco(long x) {
+PriLi prideco(long x) {
   int n = 0, p;
   long q;
-  prili l;
+  PriLi l;
   *l.p = *l.m = 1;
   l.m[1] = 0;
   while (x >= ((p = prime[n++]) * p)) {
@@ -229,10 +229,10 @@ prili prideco(long x) {
   return l;
 }
 
-void maxpri(prili pn) /* pmax = prime decomposistion of Lcm of group orders */
+void maxpri(PriLi pn) /* pmax = prime decomposistion of Lcm of group orders */
 {
   int i = 1, j = 1, n = 1;
-  prili po = pmax;
+  PriLi po = pmax;
   *pmax.m = std::max(*po.m, *pn.m);
   po.p[*po.p + 1] = pn.p[*pn.p + 1] = po.p[*po.p] + pn.p[*pn.p] + 1;
   if (*po.p) {
@@ -265,7 +265,7 @@ void maxpri(prili pn) /* pmax = prime decomposistion of Lcm of group orders */
  *   dividing the corresponding exponent s.a[], divide the orders of the    *
  *   groups corresponding to inv[] by t_k and evaluate the new generator    */
 /*   finally repeat this for the loop of i and evaluate its symm.-generator */
-void analy(skelet s) {
+void analy(Skelet s) {
   long ph[NM][NM + 1],          /* p[i][0] = order of sym. i<s.N */
       d, num[NM], den[NM] = {}; /* (n_i)/d == (num_i)/(den_i) */
   int i, j, n, ord[NM + 1],     /* order of evaluation (right to left) */
@@ -327,7 +327,7 @@ void analy(skelet s) {
            n--) {              /* go backwards thru trees according to "ord"  */
         int *nt = inv[ord[n]]; /* nt points at the vector of ptrs. at ord[n] */
         if (*nt) {
-          prili pli;
+          PriLi pli;
           long tli[NM], Lcm = *ph[nt[1]];
           tli[1] = 1;
           for (j = 2; j <= *nt; j++) {
@@ -362,7 +362,7 @@ void analy(skelet s) {
        */
       /*   remember that ord[1],...,ord[lopo] point at the loop */
       if (*lo > 1) {
-        prili pli;
+        PriLi pli;
         long P = s.a[lo[*lo]], b[NM + 1], tli[NM], Lcm;
         b[1] = 1;
         for (j = 1; j < *lo; ++j)
@@ -616,7 +616,7 @@ void gooddets()
 /*     Routines for checking the link criterion                             */
 /****************************************************************************/
 
-typedef int smon[1];
+typedef int SMon[1];
 
 pointlist pointernum;
 int linklist[NM][MAXPN], targlist[NM][MAXPN], monlist[NM][MAXPN];
@@ -625,7 +625,7 @@ int linklist[NM][MAXPN], targlist[NM][MAXPN], monlist[NM][MAXPN];
 /*    targlist[i][j] indicates subtargets of linklist[i][j]          */
 /*    monlist[i][j] is the actual monomial realising linklist[i][j]  */
 
-int symcheck(symlist sum, int link, smon mon) {
+int symcheck(symlist sum, int link, SMon mon) {
   /* symcheck checks whether there is a monomial mon in
    * the variables indicated by link whose total weight is sum[0] and which
    * transforms under the k'th symmetry with a phase sum[k];
@@ -667,7 +667,7 @@ int checklink(int link, int targets) {
    * by our theorem is checked by recursive calls of checklink.               */
   int i, j, pn;
   int newtarg, newlink;
-  smon mon;
+  SMon mon;
   symlist dw;
   if (symcheck(d, link, mon))
     return 0;
@@ -1308,7 +1308,7 @@ void LgoTwistInit(int narg, char *fn[]) {
 }
 
 int main(int narg, char *fn[]) {
-  skelet s;
+  Skelet s;
   LgoTwistInit(narg, fn);
   /*   if (narg>1) palpContext.in=fopen(fn[1],"r");		aao2.6	  002244
      4 3 4 3 4 3 else { palpContext.in=stdin; ctx.stdi=1; printf("usage:
