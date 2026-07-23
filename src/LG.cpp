@@ -2547,15 +2547,15 @@ int OLDTrans_Check(
 
 typedef struct {
   int d, m[POLY_Dmax];
-} symlist;
+} SymList;
 
-int symcheck(symlist sum, int link, Weight W, int *mask) {
+int symcheck(SymList sum, int link, Weight W, int *mask) {
   /* symcheck returns 1 if there is a monomial in
    * the variables indicated by link whose total weight is sum.d and which
    * transforms under the k'th symmetry with a phase sum.m[k];    */
 
   int i, j, k, check, expo, newlink;
-  symlist newsum;
+  SymList newsum;
 
   for (i = 0; i < W.N; i++)
     if (link & mask[i]) {
@@ -2585,7 +2585,7 @@ int symcheck(symlist sum, int link, Weight W, int *mask) {
 
 int Trans_Check(Weight W) { /* returns 1 if non-degenerate potential exists */
   int i, j, k, l;           /* j represents the link!!!        */
-  symlist dw;
+  SymList dw;
   static TransCheckData data;
   if (W.N > W_Nmax) {
     fputs("Error: Trans_Check weight count exceeds W_Nmax\n", stderr);
