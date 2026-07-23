@@ -63,10 +63,10 @@ constexpr bool show_nfx_limit = true; /* exit on NFX_LIMIT violation */
 
 /*   ------  local typedefs and headers	------ */
 
-using PERM = struct {
+using Perm = struct {
   int C[VERT_Nmax], L[VERT_Nmax], s;
 };
-using vNF = struct {
+using VNF = struct {
   int nv, nf, ns;
 };
 
@@ -96,15 +96,15 @@ void Eval_Poly_NF(int *d, int *v, int *f, Long VM[POLY_Dmax][VERT_Nmax],
                   FILE *out);
 
 void Make_VPM_NF(int *v, int *f, Long VPM[VERT_Nmax][VERT_Nmax], /* in */
-                 PERM *CL, int *ns,
+                 Perm *CL, int *ns,
                  Long VPM_NF[VERT_Nmax][VERT_Nmax]); /* out */
 
-void Aux_pNF_from_vNF(PERM *CL, int *ns, int *v, int *d,
+void Aux_pNF_from_vNF(Perm *CL, int *ns, int *v, int *d,
                       Long VM[POLY_Dmax][VERT_Nmax],          /* in */
                       Long pNF[POLY_Dmax][VERT_Nmax], int *t, /* out */
                       FILE *out);
 
-void New_pNF_Order(int *v, int *f, PERM *CL, int *ns, Long VPM_NF[][VERT_Nmax]);
+void New_pNF_Order(int *v, int *f, Perm *CL, int *ns, Long VPM_NF[][VERT_Nmax]);
 
 int Make_Poly_NF(PolyPointList *_P, VertexNumList *_V, EqList *_F,
                  Long pNF[POLY_Dmax][VERT_Nmax]); /* 1 if reflexive */
@@ -360,7 +360,7 @@ int Init_rVM_VPM(PolyPointList *_P, VertexNumList *_V, EqList *_F,     /* in */
   return ref;
 }
 
-void New_pNF_Order(int *v, int *f, PERM *CL, int *ns,
+void New_pNF_Order(int *v, int *f, Perm *CL, int *ns,
                    Long VPM_NF[][VERT_Nmax]) {
   int i, j, pi[VERT_Nmax], c[VERT_Nmax];
   Long maxP[VERT_Nmax], sumP[VERT_Nmax];
@@ -425,7 +425,7 @@ void Eval_Poly_NF(int *d, int *v, int *f, Long VM[POLY_Dmax][VERT_Nmax],
                   Long VPM[VERT_Nmax][VERT_Nmax],        /* in */
                   Long pNF[POLY_Dmax][VERT_Nmax], int t, /* out */
                   FILE *out) {
-  auto CL = std::make_unique<PERM[]>(SYM_Nmax + 1);
+  auto CL = std::make_unique<Perm[]>(SYM_Nmax + 1);
   auto VPM_NF = std::make_unique<Long[][VERT_Nmax]>(VERT_Nmax);
   int ns;
   Make_VPM_NF(v, f, VPM, CL.get(), &ns, VPM_NF.get());
@@ -484,13 +484,13 @@ void Eval_Poly_NF(int *d, int *v, int *f, Long VM[POLY_Dmax][VERT_Nmax],
  *   In each step, i.e. after finding n lines of NF, their {Cp,Lp}'s and sym.
  *   s[i]=l, s[j]=i for i<j<=l  iff  {i,...,l} equiv;  else s[i]=i;
  */
-void Aux_vNF_Line(int l, vNF *_X, Long x[][VERT_Nmax], PERM *CL, int *S,
+void Aux_vNF_Line(int l, VNF *_X, Long x[][VERT_Nmax], Perm *CL, int *S,
                   int *_ns) {
   int n = (*_ns), cf = 0; /*  cf=CompareFlag (ref. exists & o.k.      */
   Long *y, r[VERT_Nmax];  /*  r=ReferenceLine; y->X[line]		    */
   while (n--) /*  go over CL (n from  *_ns-1  to  0), ns_* changes!  */
   {
-    PERM nP[VERT_Nmax];
+    Perm nP[VERT_Nmax];
     int c = 0, L = l - 1, np = 0, *C, ccf = cf; /*  ccf=column compare flag */
     *nP = CL[n];
     while (++L < _X->nf) /*  init nP (from 1st col.) */
@@ -584,10 +584,10 @@ void Aux_vNF_Line(int l, vNF *_X, Long x[][VERT_Nmax], PERM *CL, int *S,
     }
   }
 }
-void Aux_vNF_Init(vNF *_X, Long x[][VERT_Nmax], PERM *CL, int *S, int *_ns) {
+void Aux_vNF_Init(VNF *_X, Long x[][VERT_Nmax], Perm *CL, int *S, int *_ns) {
   int i, j, nn;
   Long *b, *y;
-  PERM P, *q, *p; /* b=x[nb] -> best;  y=x[nn] -> next */
+  Perm P, *q, *p; /* b=x[nb] -> best;  y=x[nn] -> next */
   for (i = 0; i < _X->nf; i++)
     P.L[i] = i;
   for (j = 0; j < _X->nv; j++)
@@ -680,7 +680,7 @@ void TEST_pNF(int *C, Long V[][VERT_Nmax], Long X[][VERT_Nmax], int *n, int *nv,
   }
 }
 
-void Aux_Make_Triang(PERM *CL, int ns, Long V[][VERT_Nmax], int *n, int *nv,
+void Aux_Make_Triang(Perm *CL, int ns, Long V[][VERT_Nmax], int *n, int *nv,
                      int *t, FILE *out) {
   int i, j, s, x = 0, g = 0, ps = 1; /* x :: make X :: if X>Y */
   Long X[POLY_Dmax][VERT_Nmax], Y[POLY_Dmax][VERT_Nmax];
@@ -786,13 +786,13 @@ void Aux_Make_Triang(PERM *CL, int ns, Long V[][VERT_Nmax], int *n, int *nv,
  *	Aux_pNF_from_vNF	uses	Aux_Make_Triang
  */
 void Make_VPM_NF(int *v, int *f, Long x[VERT_Nmax][VERT_Nmax],         /* in */
-                 PERM *CL, int *ns, Long VPM_NF[VERT_Nmax][VERT_Nmax]) /* out */
+                 Perm *CL, int *ns, Long VPM_NF[VERT_Nmax][VERT_Nmax]) /* out */
 {
   int i, j, S[VERT_Nmax];
   int nsF = 0, nsM = 0; /* make VPM NF */
 
-  vNF auX;
-  vNF *_X = &auX;
+  VNF auX;
+  VNF *_X = &auX;
   _X->nv = *v;
   _X->nf = *f; /* x=VPM */
   *ns = 1;
@@ -817,7 +817,7 @@ void Make_VPM_NF(int *v, int *f, Long x[VERT_Nmax][VERT_Nmax],         /* in */
     printf("WARNing: ns_max=%d -> ns=%d\n", nsM, *ns);
 }
 
-void Aux_pNF_from_vNF(PERM *CL, int *ns, int *v, int *d,
+void Aux_pNF_from_vNF(Perm *CL, int *ns, int *v, int *d,
                       Long VM[POLY_Dmax][VERT_Nmax],          /* in */
                       Long pNF[POLY_Dmax][VERT_Nmax], int *t, /* out */
                       FILE *out) {
@@ -880,7 +880,7 @@ int Make_Poly_Sym_NF(PolyPointList *_P, VertexNumList *_V, EqList *_F,
                      Long NF[POLY_Dmax][VERT_Nmax], int traced, int S, int N,
                      FILE *out) {
   int i, j, ns, t = -1, *d = &_P->n, *v = &_V->nv, *f = &_F->ne, *C;
-  auto CL = std::make_unique<PERM[]>(SYM_Nmax + 1);
+  auto CL = std::make_unique<Perm[]>(SYM_Nmax + 1);
   Long VM[POLY_Dmax][VERT_Nmax];
   auto VPM = std::make_unique<Long[][VERT_Nmax]>(VERT_Nmax);
   auto VPM_NF = std::make_unique<Long[][VERT_Nmax]>(VERT_Nmax);
@@ -957,7 +957,7 @@ void Aux_NF_Coord(PolyPointList *_P, Long VM[POLY_Dmax][VERT_Nmax], int *C,
 void NF_Coordinates(PolyPointList *_P, VertexNumList *_V, EqList *_F)
 /* needs converted EqList !! */
 {
-  auto CL = std::make_unique<PERM[]>(SYM_Nmax + 1);
+  auto CL = std::make_unique<Perm[]>(SYM_Nmax + 1);
   Long VM[POLY_Dmax][VERT_Nmax];
   auto VPM = std::make_unique<Long[][VERT_Nmax]>(VERT_Nmax);
   int ns;
@@ -966,9 +966,9 @@ void NF_Coordinates(PolyPointList *_P, VertexNumList *_V, EqList *_F)
   {
     auto VPM_NF = std::make_unique<Long[][VERT_Nmax]>(VERT_Nmax);
     Make_VPM_NF(&_V->nv, &_F->ne, VPM.get(), CL.get(), &ns,
-                VPM_NF.get()); /* get PERM */
+                VPM_NF.get()); /* get Perm */
     New_pNF_Order(&_V->nv, &_F->ne, CL.get(), &ns,
-                  VPM_NF.get()); /* improve PERM */
+                  VPM_NF.get()); /* improve Perm */
   }
   Aux_NF_Coord(_P, VM, CL[0].C, &_P->n, &_P->np, &_V->nv); /* improve _P */
   {

@@ -33,11 +33,11 @@ typedef struct {
 
 typedef struct {
   int s[VERT_Nmax];
-} V_Flag;
+} VFlag;
 
 typedef struct {
   int m[FACE_Nmax];
-} M_Rank;
+} MRank;
 
 typedef struct {
   int M[POLY_Dmax][POLY_Dmax];
@@ -59,7 +59,7 @@ typedef struct {
 typedef struct {
   int Vp[SYM_Nmax][VERT_Nmax];
   int ns;
-} SYM;
+} SymPerm;
 
 typedef struct {
   int A[POLY_Dmax];
@@ -318,7 +318,7 @@ void Bubble_PTL(PartList *_PTL, int s[]) {
   _PTL->n = _PTL->n - diff;
 }
 
-void Remove_Sym(SYM *_VP, PartList *_PTL, PartList *_S_PTL) {
+void Remove_Sym(SymPerm *_VP, PartList *_PTL, PartList *_S_PTL) {
 
   int n = 1, i, j, k;
   std::vector<int> _s(_PTL->n);
@@ -445,7 +445,7 @@ int Codim_Check(int S[], int *_codim, int *_Nv) {
   return gp_flag;
 }
 
-int Fix_M(Step *_step, XMatrix *_Y, MMatrix *_M, int S[], M_Rank *_MR,
+int Fix_M(Step *_step, XMatrix *_Y, MMatrix *_M, int S[], MRank *_MR,
           FVList *_FVl) {
 
   int f_flag = 1, i = 0, j, m, IP;
@@ -468,7 +468,7 @@ int Fix_M(Step *_step, XMatrix *_Y, MMatrix *_M, int S[], M_Rank *_MR,
 }
 
 int Check_Consistence(Step *_step, XMatrix *_Y, MMatrix *_M, int S[],
-                      M_Rank *_MR, FVList *_FVl) {
+                      MRank *_MR, FVList *_FVl) {
 
   int c_flag = 1, i = 0, j, IP;
 
@@ -488,7 +488,7 @@ int Check_Consistence(Step *_step, XMatrix *_Y, MMatrix *_M, int S[],
   return c_flag;
 }
 
-int New_V(V_Flag *_VF, int *_i) {
+int New_V(VFlag *_VF, int *_i) {
 
   int new_flag = 0;
 
@@ -513,18 +513,18 @@ int Next_Step(FVList *_FVl, Step *_step) {
   return step_flag;
 }
 
-void New_VFlag(V_Flag *_VF, /* int *_Nv, */ int *_n) { _VF->s[*_n] = 1; }
+void New_VFlag(VFlag *_VF, /* int *_Nv, */ int *_n) { _VF->s[*_n] = 1; }
 
-void Old_VFlag(V_Flag *_VF, /* int *_Nv, */ int *_n) { _VF->s[*_n] = 0; }
+void Old_VFlag(VFlag *_VF, /* int *_Nv, */ int *_n) { _VF->s[*_n] = 0; }
 
-void Raise_M_Rank(M_Rank *_MR, int *_facet) { _MR->m[*_facet] += 1; }
+void Raise_M_Rank(MRank *_MR, int *_facet) { _MR->m[*_facet] += 1; }
 
-void Lower_M_Rank(M_Rank *_MR, int *_facet) { _MR->m[*_facet] -= 1; }
+void Lower_M_Rank(MRank *_MR, int *_facet) { _MR->m[*_facet] -= 1; }
 
-void Zero_M_Rank(M_Rank *_MR, int *_facet) { _MR->m[*_facet] = 0; }
+void Zero_M_Rank(MRank *_MR, int *_facet) { _MR->m[*_facet] = 0; }
 
-void Initial_Conditions(MMatrix *_M, XMatrix *_Y, M_Rank *_MR, Step *_step,
-                        FVList *_FVl, V_Flag *_VF, int S[], int *_codim,
+void Initial_Conditions(MMatrix *_M, XMatrix *_Y, MRank *_MR, Step *_step,
+                        FVList *_FVl, VFlag *_VF, int S[], int *_codim,
                         int *_dim, PartList *_PTL) {
 
   int i;
@@ -687,8 +687,8 @@ void Copy_PTL(PartList *_IN_PTL, PartList *_OUT_PTL) {
   _OUT_PTL->codim = _IN_PTL->codim;
 }
 
-void Select_Sv(int S[], V_Flag *_VF, MMatrix *_M, GMatrix *_G, XMatrix *_X,
-               XMatrix *_Y, M_Rank *_MR, FVList *_FVl, Step step,
+void Select_Sv(int S[], VFlag *_VF, MMatrix *_M, GMatrix *_G, XMatrix *_X,
+               XMatrix *_Y, MRank *_MR, FVList *_FVl, Step step,
                PartList *_PTL, NEF_Flags *_F, FILE *out) {
 
   int i;
@@ -778,8 +778,8 @@ void part_nef(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   MMatrix *_M;
   GMatrix *_G;
   Step step;
-  V_Flag VF;
-  M_Rank MR;
+  VFlag VF;
+  MRank MR;
   int i, f[FACE_Nmax], S[VERT_Nmax] = {0};
 
   PartList *_PTL;
@@ -819,7 +819,7 @@ void part_nef(PolyPointList *_P, VertexNumList *_V, EqList *_E,
   Initial_Conditions(_M, _Y, &MR, &step, &FVl, &VF, S, _codim, &_P->n, _PTL);
   Select_Sv(S, &VF, _M, _G, _X, _Y, &MR, &FVl, step, _PTL, _F, out);
   if (_F->Sym) {
-    auto _VP = std::make_unique<SYM>();
+    auto _VP = std::make_unique<SymPerm>();
 
     Poly_Sym(_P, _V, _E, &_VP->ns, _VP->Vp, out);
     Remove_Sym(_VP.get(), _PTL, _OUT_PTL);

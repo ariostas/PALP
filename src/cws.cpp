@@ -26,7 +26,7 @@ PalpContext palpContext;
 typedef struct {
   int u[NFmax];
   int nu;
-} CWS_type;
+} CwsType;
 
 void PrintCWSUsage(char *c) {
   int i;
@@ -1346,20 +1346,20 @@ constexpr bool ALLOWHALF = true; /* i.e. trivial LG potentials */
 constexpr bool CHAT = false;     /* 3 ... for positive c_1 */
 } // namespace
 
-typedef int T_weight[AMBI_Dmax + 2]; /* NM::AMBI_Dmax */
+typedef int TWeight[AMBI_Dmax + 2]; /* NM::AMBI_Dmax */
 typedef struct {
   int n, d, wnum, jmax;
-  T_weight wei, wli[TWDIM];
-} T_aux;
+  TWeight wei, wli[TWDIM];
+} TAux;
 
 void T_Chon(int, int, int, int,
-            T_aux *); /* i, {-fermat,0=closed,+open}, nmax, g */
-void T_Addweight(T_weight, T_aux *X);
-int PPT_Check(T_weight nli, T_aux *X);
+            TAux *); /* i, {-fermat,0=closed,+open}, nmax, g */
+void T_Addweight(TWeight, TAux *X);
+int PPT_Check(TWeight nli, TAux *X);
 
 void Make_Trans_Weights(int n, int dmin, int dmax, FILE *out /*,int rFlag */) {
   int i, j, inc = 1;
-  T_aux X;
+  TAux X;
   X.n = n;
   X.wnum = 0;
   /* out = stdout; */
@@ -1395,7 +1395,7 @@ void Make_Trans_Weights(int n, int dmin, int dmax, FILE *out /*,int rFlag */) {
  * resolved pointer is urp; in addition put all fermats to the left (urp<0).*
  * i has to point at l>=urp                                                 */
 /* let j run; check mod(d||(d-n),j); if (upr) check if upr is resolved by j;*/
-void T_Chon(int i, int urp, int nm, int g, T_aux *X) {
+void T_Chon(int i, int urp, int nm, int g, TAux *X) {
   int res, j, l = 0, ip = i + 1, jm = palp::min(nm, X->jmax);
   if (i < X->n)
     for (j = (i == X->n - 1) ? (1 + nm - jm) : 1; j <= jm; j++) {
@@ -1451,7 +1451,7 @@ void T_Chon(int i, int urp, int nm, int g, T_aux *X) {
   }
 }
 /*  ppcheck checks whether the formal poincare polynomial is a polynomial  */
-int PPT_Check(T_weight nli, T_aux *X) {
+int PPT_Check(TWeight nli, TAux *X) {
   int i = 0, n, t, tt, j, d = X->d;
   if (d != nli[nli[0]]) {
     fprintf(stderr, "Error: PPT_Check degree mismatch d=%d != nli[%d]=%d\n", d,
@@ -1495,14 +1495,14 @@ int PPT_Check(T_weight nli, T_aux *X) {
   T_Addweight(nli, X);
   return 1;
 }
-int T_Weicomp(T_weight w1, T_weight w2) /* w2-w1,i.e.pos if w1<w2,neg if w1>w2*/
+int T_Weicomp(TWeight w1, TWeight w2) /* w2-w1,i.e.pos if w1<w2,neg if w1>w2*/
 {
   int i = 1;
   while ((i <= (*w1)) && (w1[i] == w2[i]))
     i++;
   return w2[i] - w1[i];
 }
-void T_Insertat(T_weight ww, int position, T_aux *X) {
+void T_Insertat(TWeight ww, int position, TAux *X) {
   int i, j;
   for (i = X->wnum - 1; i >= position; i--)
     for (j = 0; j < X->wli[i][0] + 2; j++)
@@ -1511,9 +1511,9 @@ void T_Insertat(T_weight ww, int position, T_aux *X) {
     X->wli[position][j] = ww[j];
   X->wnum++;
 }
-void T_Addweight(T_weight win, T_aux *X) {
+void T_Addweight(TWeight win, TAux *X) {
   int i, p, n0, n1;
-  T_weight wn;
+  TWeight wn;
   for (i = 0; i < *win + 2; i++)
     wn[i] = win[i];
   for (i = 1; i < wn[0]; i++)
@@ -2289,7 +2289,7 @@ void Make_IP_CWS(int narg, char *fn[], FILE *out) {
   FILE *INFILE[NFmax] = {nullptr}, *AUXFILE[NFmax] = {nullptr};
   char *infile[NFmax] = {nullptr}, *outfile = nullptr, *a;
   int n = 0, d = 0, u = -1, nF = 0, i, D[NFmax];
-  CWS_type t;
+  CwsType t;
 
   t.nu = 0;
   for (i = 0; i < NFmax; i++)
