@@ -166,57 +166,58 @@ and the detailed commit messages for the full context of each fix.
 - **File**: `src/Vertex.cpp`
 - **Line**: 1591
 - **Severity**: High
-- **Status**: Open
-- **Description**: `EyD[j] = _E->e[i].c * Den;` uses `i` (the loop variable
+- **Status**: Closed
+- **Description**: `EyD[j] = _E->e[i].c * Den;` used `i` (the loop variable
   of the preceding `for` loop, which holds `n` at this point) instead of `j`
-  (the current outer-loop index). Should be `_E->e[j].c * Den`. Affects
-  correctness of `QComplete_Poly`.
+  (the current outer-loop index). Was fixed during an earlier migration pass;
+  the current code reads `_E->e[j].c * Den`.
 
 ### 50. Self-swap no-op in `Calc_VaHo`
 - **File**: `src/LG.cpp`
 - **Line**: 2427
 - **Severity**: High
-- **Status**: Open
-- **Description**: `if (w[j] < w[i]) swap(&w[j], &w[j]);` swaps `w[j]` with
-  itself; both arguments are `w[j]`. Should be `swap(&w[i], &w[j])`. The
-  sort is a no-op, affecting twisted-sector weight computation.
+- **Status**: Closed
+- **Description**: `if (w[j] < w[i]) swap(&w[j], &w[j]);` swapped `w[j]`
+  with itself. Was fixed during an earlier migration pass; the current code
+  reads `swap(&w[i], &w[j])`.
 
 ### 51. Wrong loop index in `Read_WZeight`
 - **File**: `src/LG.cpp`
 - **Lines**: 250–251
 - **Severity**: High
-- **Status**: Open
-- **Description**: `for (k = 0; k < a; k++) Za[j] /= g;` divides `Za[j]`
-  (where `j == d`) repeatedly instead of `Za[k]`. Should be `Za[k] /= g;`.
-  Affects sublattice weight reading.
+- **Status**: Closed
+- **Description**: `for (k = 0; k < a; k++) Za[j] /= g;` divided `Za[j]`
+  (where `j == d`) repeatedly instead of `Za[k]`. Was fixed during an earlier
+  migration pass; the current code reads `Za[k] /= g`.
 
 ### 52. Division-by-zero check on wrong element in `Compute_X0`
 - **File**: `src/Coord.cpp`
 - **Line**: 977
 - **Severity**: Medium
-- **Status**: Open
+- **Status**: Closed
 - **Description**: `if (_C->W[j][0]) { if (_C->d[j] % _C->W[j][N]) return 0; }`
-  checks `W[j][0]` for zero but divides by `W[j][N]`. When `N > 0`, this can
-  divide by zero if `W[j][0] != 0` but `W[j][N] == 0`.
+  checked `W[j][0]` for zero but divided by `W[j][N]`. Was fixed during an
+  earlier migration pass; the current code checks the same element it divides
+  by in both the base case (`W[j][0]`) and the recursive case (`W[j][N]`).
 
 ### 53. XOR instead of multiplication in `prideco`
 - **File**: `src/lgotwist.cpp`
 - **Line**: 212
 - **Severity**: High
-- **Status**: Open
-- **Description**: `(p = prime[n++]) ^ 2` uses bitwise XOR (`^`) instead of
-  `p * p`. Prime decomposition may terminate early or loop incorrectly.
-  Should be `p * p`.
+- **Status**: Closed
+- **Description**: `(p = prime[n++]) ^ 2` used bitwise XOR (`^`) instead of
+  `p * p`. Was fixed during an earlier migration pass; the current code reads
+  `(p = prime[n++]) * p`.
 
 ### 54. Wrong indices in `Make_211_CWS` comparison
 - **File**: `src/cws.cpp`
 - **Line**: 2206
 - **Severity**: Medium
-- **Status**: Open
+- **Status**: Closed
 - **Description**: `if ((W[0].w[0] != W[0].w[1]) && (W[1].w[0] != W[2].w[0]))`
-  compares `W[1].w[0]` with `W[2].w[0]` (indices 1 and 2) instead of
-  `W[1].w[0]` with `W[1].w[1]` (both indices of `W[1]`), unlike the sibling
-  patterns at lines 2154, 2162, 2169. Likely a copy-paste bug.
+  compared `W[1].w[0]` with `W[2].w[0]` instead of `W[1].w[0]` with `W[1].w[1]`.
+  Was fixed during an earlier migration pass; the current code reads
+  `(W[1].w[0] != W[1].w[1])`.
 
 ### 55. `Fgcd` / `LFgcd` divide by zero
 - **File**: `src/Rat.cpp`
