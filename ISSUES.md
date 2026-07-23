@@ -223,74 +223,66 @@ and the detailed commit messages for the full context of each fix.
 - **File**: `src/Rat.cpp`
 - **Lines**: 105–108, 355
 - **Severity**: High
-- **Status**: Open
-- **Description**: `Fgcd(Long a, Long b)` does `a %= b` without checking
-  `b == 0`. If `b` is zero, this is undefined behavior (integer division by
-  zero). Same bug in `LFgcd` (line 355). The other gcd variants
-  (`NNgcd:116`, `LNNgcd:366`) correctly guard with `if (!b) return a;`.
+- **Status**: Closed
+- **Description**: `Fgcd(Long a, Long b)` did `a %= b` without checking
+  `b == 0`. Was fixed during an earlier migration pass; both `Fgcd` and `LFgcd`
+  now guard with `if (!b) return a;` at the top, matching `NNgcd`/`LNNgcd`.
 
 ### 56. `lcm` / `Flcm` overflow risk
 - **File**: `src/cws.cpp`
 - **Lines**: 16, 377
 - **Severity**: Medium
-- **Status**: Open
-- **Description**: `inline Long lcm(Long a, Long b) { return (a * b) /
-  NNgcd(a, b); }` computes `a * b` before dividing, which can overflow even
-  when `lcm(a, b)` fits in `Long`. Should be `(a / NNgcd(a, b)) * b`. Same
-  in `Flcm` (line 377). The `Lcm` in `lgotwist.cpp:55` already does this
-  correctly.
+- **Status**: Closed
+- **Description**: `lcm` and `Flcm` computed `(a * b) / NNgcd(a, b)`, which
+  can overflow even when the result fits in `Long`. Was fixed during an earlier
+  migration pass; both now compute `(a / g) * b`.
 
 ### 57. UB shift in `Inci64` operations
 - **File**: `src/MoriCone.cpp`
 - **Line**: 3055
 - **Severity**: High
-- **Status**: Open
-- **Description**: `T.I[i] &= ~(1 << (T.v - 1));` uses `int` literal `1`.
-  When `T.v - 1 >= 32` (i.e., `VERT_Nmax > 32`, which holds for
-  `POLY_Dmax >= 5` where `VERT_Nmax == 64`), this is undefined behavior
-  (shift by >= width of int). Should be `Inci64(1) << (T.v - 1)`.
+- **Status**: Closed
+- **Description**: `T.I[i] &= ~(1 << (T.v - 1));` used an `int` literal `1`.
+  Was fixed during an earlier migration pass; the current code reads
+  `~(Inci64(1) << (T.v - 1))`.
 
 ### 58. Use of out-of-scope loop variable in `MakeRefWeights`
 - **File**: `src/LG.cpp`
 - **Line**: 986
 - **Severity**: Medium
-- **Status**: Open
-- **Description**: `puts(i ? "" : " 0");` uses `i` after the `for` loop that
-  declared it has ended. In C++ this is ill-formed; in practice `i` holds
-  `P->n`, so the expression is always truthy and the function always prints
-  `""`, never `" 0"` for empty polynomials. Likely intended to print `" 0"`
-  when `P->n == 0`.
+- **Status**: Closed
+- **Description**: `puts(i ? "" : " 0");` used `i` after the `for` loop that
+  declared it had ended. Was fixed during an earlier migration pass; the
+  current code prints based on `P->n` directly:
+  `if (P->n) puts(""); else puts(" 0");`.
 
 ### 59. EOF never detected in `lgotwist.cpp` skeleton reader
 - **File**: `src/lgotwist.cpp`
 - **Lines**: 1192–1197
 - **Severity**: Medium
-- **Status**: Open
+- **Status**: Closed
 - **Description**: `char c; while ('\n' != (c = fgetc(palpContext.in)))
-  if (c == EOF) {...}` — `c` is `char`, but `fgetc` returns `int` and
-  `EOF` is `-1`. If `char` is unsigned, `c == EOF` is never true; if
-  signed, `c` becomes `-1` (not `'\n'` or `' '`), so the loop reads past
-  EOF. Should use `int c`.
+  if (c == EOF) {...}` stored `fgetc`'s `int` return in a `char`. Was fixed
+  during an earlier migration pass; the current `ReadEOL()` uses `int c` and
+  checks `c == EOF`.
 
 ### 60. `static Along totNF` leaks state across databases
 - **File**: `src/Subdb.cpp`
 - **Line**: 3257
 - **Severity**: Medium
-- **Status**: Open
-- **Description**: `static Along totNF;` in `Read_H_ucNF_from_DB` persists
-  across calls with different `DB` arguments. Calling with DB1 then DB2
-  compares DB2's totals against DB1's leftover `totNF`, producing wrong
-  results. Should be an anonymous-namespace variable or threaded through
-  the call site.
+- **Status**: Closed
+- **Description**: `static Along totNF;` in `Read_H_ucNF_from_DB` persisted
+  across calls with different `DB` arguments. Was fixed during an earlier
+  migration pass; the counter is now `DB->readHucNF_TotNF`, stored per database.
 
 ### 61. `int` overflow in `Ind * Ind * Ind`
 - **File**: `src/Polynf.cpp`
 - **Line**: 2447
 - **Severity**: Medium
-- **Status**: Open
+- **Status**: Closed
 - **Description**: `int Ind = Divisibility_Index(P, V), I3 = Ind * Ind * Ind;`
-  — `Ind * Ind * Ind` overflows `int` if `Ind` is large (e.g., `Ind = 1626`
-  gives `I3 ≈ 4.3e9 > INT_MAX`). Should use `Long`.
+  overflowed `int` for large `Ind`. Was fixed during an earlier migration
+  pass; the current code computes `Long I3 = static_cast<Long>(Ind) * Ind * Ind;`.
 
 ### 62. Missing EOF checks on `fgetc` used as array index
 - **File**: `src/Subdb.cpp`
