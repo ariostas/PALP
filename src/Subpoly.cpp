@@ -12,9 +12,9 @@ constexpr bool TEST_Aided_IP_Check = false;
 
 constexpr int IMPROVE_SL_COORD = 0; /* 0=no  1=SL(old)  2=GL(new) */
 
-typedef struct {
+struct KeepList {
   int nk, k[VERT_Nmax];
-} KeepList;
+};
 
 /*  ==========	Auxiliary routines from other modules           ==========  */
 

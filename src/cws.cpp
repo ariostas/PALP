@@ -23,10 +23,10 @@ constexpr Long mod(Long a, Long b) { return a % b; }
 
 PalpContext palpContext;
 
-typedef struct {
+struct CwsType {
   int u[NFmax];
   int nu;
-} CwsType;
+};
 
 void PrintCWSUsage(char *c) {
   int i;
@@ -142,7 +142,7 @@ int main(int narg, char *fn[]) {
   return 0;
 }
 
-typedef struct {
+struct RgcClassData {
   int d, r2, allow11;
   Long wnum, winum, candnum;
   Long x[POLY_Dmax + 1][POLY_Dmax];
@@ -150,7 +150,7 @@ typedef struct {
   INCI qI[POLY_Dmax][EQUA_Nmax];
   int f0[POLY_Dmax];
   Equation wli[WDIM];
-} RgcClassData;
+};
 
 int RgcWeicomp(Equation w1, Equation w2, int d) {
   /* w2-w1, i.e. pos for w1<w2,neg for w1>w2  */
@@ -1346,11 +1346,11 @@ constexpr bool ALLOWHALF = true; /* i.e. trivial LG potentials */
 constexpr bool CHAT = false;     /* 3 ... for positive c_1 */
 } // namespace
 
-typedef int TWeight[AMBI_Dmax + 2]; /* NM::AMBI_Dmax */
-typedef struct {
+using TWeight = int[AMBI_Dmax + 2]; /* NM::AMBI_Dmax */
+struct TAux {
   int n, d, wnum, jmax;
   TWeight wei, wli[TWDIM];
-} TAux;
+};
 
 void T_Chon(int, int, int, int,
             TAux *); /* i, {-fermat,0=closed,+open}, nmax, g */

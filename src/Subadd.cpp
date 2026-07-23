@@ -82,9 +82,9 @@ int Init_rVM_VPM(PolyPointList *P, VertexNumList *_V, EqList *_F, /* in */
                  Long VM[POLY_Dmax][VERT_Nmax],   /* out */
                  Long VPM[VERT_Nmax][VERT_Nmax]); /* return reflexive */
 
-typedef struct {
+struct BaseList {
   int base[VERT_Nmax + 1][NB_MAX], nuc[VERT_Nmax + 1][NB_MAX], v[VERT_Nmax + 1];
-} BaseList;
+};
 
 void VF_2_ucNF(PolyPointList *P, VertexNumList *V, EqList *E, /* IN */
                int *NV, int *nUC, unsigned char *UC,          /* OUT */
@@ -1391,10 +1391,10 @@ constexpr int UNIT_OFF = 4;
 constexpr int LL_BASE = 32767; /* limit for 64-bit BaseGetInt */
 } // namespace
 
-typedef struct {
+struct UXLong {
   int n;
   unsigned short x[Nint_XLong];
-} UXLong;
+};
 
 void XPrint(UXLong *X) {
   int i;

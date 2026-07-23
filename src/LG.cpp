@@ -1765,14 +1765,14 @@ void pff(char *c) {
   fflush(0);
 }
 
-typedef struct {
+struct MobiusData {
   int X, n;
   std::vector<int>
       data_storage; /* divisors d[0..n-1] followed by triangular matrix rows */
   std::vector<int *> mt_storage;
   int *d;
   int **mt;
-} /* mt[i][j]=mobius(j,i) */ MobiusData;
+}; /* mt[i][j]=mobius(j,i) */
 
 void MakeMobius(MobiusData *M, int X) /* d[i] divisors, mt[i][j] 0<=j<=i<=n */
 {

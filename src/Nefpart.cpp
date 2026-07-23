@@ -15,57 +15,57 @@ void Poly_Sym(PolyPointList *_P, VertexNumList *_V, EqList *_F, int *sym_num,
 
 /*   ===============	local Typedefs and Headers	===================  */
 
-typedef struct {
+struct VList {
   int nv;           /*   #vertices of face */
   int v[VERT_Nmax]; /*   vertices of face */
-} VList;
+};
 
-typedef struct {
+struct FVList {
   int Nv;    /*   #vertices */
   int nf;    /*   #facets */
   VList *vl; /*   vertices of facets */
-} FVList;
+};
 
-typedef struct {
+struct Step {
   int f;
   int v;
-} Step;
+};
 
-typedef struct {
+struct VFlag {
   int s[VERT_Nmax];
-} VFlag;
+};
 
-typedef struct {
+struct MRank {
   int m[FACE_Nmax];
-} MRank;
+};
 
-typedef struct {
+struct MMatrix {
   int M[POLY_Dmax][POLY_Dmax];
   int d;
   int codim;
-} MMatrix;
+};
 
-typedef struct {
+struct XMatrix {
   int d;
   int nv;
   Long X[POLY_Dmax][VERT_Nmax];
-} XMatrix;
+};
 
-typedef struct {
+struct GMatrix {
   int d;
   GL_Long G[POLY_Dmax][POLY_Dmax];
-} GMatrix;
+};
 
-typedef struct {
+struct SymPerm {
   int Vp[SYM_Nmax][VERT_Nmax];
   int ns;
-} SymPerm;
+};
 
-typedef struct {
+struct Subset {
   int A[POLY_Dmax];
   int m;
   int M;
-} Subset;
+};
 
 int GLZ_Start_Simplex(PolyPointList *_P, VertexNumList *_V, CEqList *_C);
 

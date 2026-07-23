@@ -63,10 +63,10 @@ constexpr bool show_nfx_limit = true; /* exit on NFX_LIMIT violation */
 
 /*   ------  local typedefs and headers	------ */
 
-using Perm = struct {
+struct Perm {
   int C[VERT_Nmax], L[VERT_Nmax], s;
 };
-using VNF = struct {
+struct VNF {
   int nv, nf, ns;
 };
 
@@ -3076,9 +3076,9 @@ void Print_GLZ(GL_Long G[][POLY_Dmax], int d, const char *c, FILE *out) {
     Fputs("", out);
   }
 }
-typedef struct {
+struct DxD {
   GL_Long x[POLY_Dmax][POLY_Dmax];
-} DxD; /* workaround for -O3 */
+}; /* workaround for -O3 */
 void Elliptic_K3_Fibration(PolyPointList *P, int nv, int edim, FILE *out) {
   int c, e, *d = &P->n, /*p=P->np-1,*/ cd = P->n - edim, nb = 0, nk = 0;
   GL_Long GE[POLY_Dmax][POLY_Dmax], *ge[POLY_Dmax];

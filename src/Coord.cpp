@@ -1175,10 +1175,10 @@ void Make_CWS_Points(CWS *Cin, PolyPointList *_P, FILE *out) {
 
 /*  ==========    Coordinate improvement via CWS-Permutations   ==========  */
 
-typedef struct {
+struct TriGLZMpAux {
   Long s, g, *N, **G;
   int *p;
-} TriGLZMpAux;
+};
 Long Tri_GLZ_Norm(int *d, Long **S) /* sum-norm = default */
 {
   Long norm = 0;
