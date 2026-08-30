@@ -7,7 +7,9 @@
 # CMake files
 build
 install
-*.cmake
 CMakeCache.txt
 CMakeFiles
-
+cmake_install.cmake
+CTestTestfile.cmake
+Testing
+test-tree
