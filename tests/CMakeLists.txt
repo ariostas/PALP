@@ -76,13 +76,23 @@ foreach(script IN LISTS PALP_TEST_SCRIPTS)
     set(script_modes long)
   endif()
 
+  # Scripts whose every example shells out to Singular skip themselves when it
+  # is missing (see tests/lib/run-test.sh). They still exit 0, so tell CTest to
+  # report them as skipped rather than passed. Only whole-script gates are
+  # matched here, so this can never hide a real failure in a mixed script.
+  set(script_skip_regex "")
+  if (script_contents MATCHES "SKIPREASON=\"Singular is not installed\"")
+    set(script_skip_regex "SKIP \\(Singular is not installed\\)")
+  endif()
+
   foreach(dim IN LISTS PALP_TEST_DIMENSIONS)
     add_test(NAME "${name}-${dim}d"
       COMMAND "${CMAKE_COMMAND}" -E env "DIM=${dim}"
               "${PALP_SH_EXECUTABLE}" "${script}"
       WORKING_DIRECTORY "${PALP_TEST_WORKDIR}")
     set_tests_properties("${name}-${dim}d" PROPERTIES
-      LABELS "palp;dim${dim}")
+      LABELS "palp;dim${dim}"
+      SKIP_REGULAR_EXPRESSION "${script_skip_regex}")
 
     foreach(mode IN LISTS script_modes)
       add_test(NAME "${name}-${dim}d-${mode}"
@@ -92,7 +102,8 @@ foreach(script IN LISTS PALP_TEST_SCRIPTS)
       # No default 1500s timeout: these are the checks the suite deliberately
       # skips unless asked for, and they can run for hours.
       set_tests_properties("${name}-${dim}d-${mode}" PROPERTIES
-        LABELS "palp;dim${dim};long" TIMEOUT 0)
+        LABELS "palp;dim${dim};long" TIMEOUT 0
+        SKIP_REGULAR_EXPRESSION "${script_skip_regex}")
     endforeach()
   endforeach()
 endforeach()

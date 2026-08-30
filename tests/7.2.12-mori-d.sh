@@ -6,6 +6,13 @@
 
 : ${DIM:=6}
 
+# Every example below makes mori shell out to Singular ("Singular -q < ...",
+# see SingularInput.c), which is an optional external dependency.
+if ! have_program Singular; then
+    SKIP=true
+    SKIPREASON="Singular is not installed"
+fi
+
 # Page 64
 COMMAND="echo '5 1 1 1 1 1 0 2 0 0 0 0 1 1' | ./mori-${DIM}d.x -fd"
 DESCRIPTION="mori-${DIM}d.x -d example on page 64"
@@ -21,5 +28,5 @@ Arithmetic genera: 4 1 4 4 4 5
 dPs: 1 ; d2(6)  nonint: 1 ; d2 
 EOF
 )
-run_test
+run_test "${SKIP}" "${SKIPREASON}"
 

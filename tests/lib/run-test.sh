@@ -1,3 +1,18 @@
+# The tests compare program output verbatim, and some of them post-process it
+# with utilities whose behaviour depends on the locale -- "sort" in particular
+# collates punctuation differently outside the C locale, which reorders lines
+# that begin with a minus sign. Pin the locale so the expected output in the
+# scripts is the only thing that matters.
+LC_ALL=C
+export LC_ALL
+
+# Succeeds if the named program can be found in PATH. Used by the scripts
+# whose examples shell out to an external tool, so that they skip instead of
+# failing when the tool is not installed.
+have_program() {
+    command -v "$1" >/dev/null 2>&1
+}
+
 # Run one test and print the result. Most of its arguments
 # are passed via environment variables and are required:
 #
